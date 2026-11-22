@@ -48,6 +48,8 @@ jobs:
     name: test (windows-latest, not required yet)
     runs-on: windows-latest
     continue-on-error: true
+    # A cold build takes about 20 minutes there. A test that hangs should not take six hours.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
