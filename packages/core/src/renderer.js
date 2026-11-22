@@ -103,6 +103,19 @@ class BlitzNode {
 	getAttribute(name) {
 		return this.attrs?.get(name) ?? null;
 	}
+	/**
+	 * Listen on this node, as on a DOM element. Code that holds a node
+	 * (an attachment, an action, a `bind:this`) has no other way to.
+	 * @param {string} type
+	 * @param {Function} handler
+	 */
+	addEventListener(type, handler) {
+		add_listener(this, type, handler);
+	}
+	/** @param {string} type @param {Function} handler */
+	removeEventListener(type, handler) {
+		remove_listener(this, type, handler);
+	}
 }
 
 const has_weak_refs =
@@ -229,6 +242,39 @@ function insert_one(parent, node, anchor) {
  * @type {Map<string, number>}
  */
 const listener_counts = new Map();
+
+/**
+ * @param {BlitzNode} target
+ * @param {string} type
+ * @param {Function} handler
+ */
+function add_listener(target, type, handler) {
+	const listeners = (target.listeners ??= new Map());
+	let handlers = listeners.get(type);
+	if (handlers === undefined) listeners.set(type, (handlers = []));
+	handlers.push(handler);
+
+	const count = listener_counts.get(type) ?? 0;
+	listener_counts.set(type, count + 1);
+	if (count === 0) ops.push(OP.LISTEN, str(type));
+}
+
+/**
+ * @param {BlitzNode} target
+ * @param {string} type
+ * @param {Function} handler
+ */
+function remove_listener(target, type, handler) {
+	const handlers = target.listeners?.get(type);
+	if (handlers === undefined) return;
+	const index = handlers.indexOf(handler);
+	if (index === -1) return;
+	handlers.splice(index, 1);
+
+	const count = (listener_counts.get(type) ?? 1) - 1;
+	listener_counts.set(type, count);
+	if (count === 0) ops.push(OP.UNLISTEN, str(type));
+}
 
 class BlitzEvent {
 	/**
@@ -432,28 +478,8 @@ const renderer = createRenderer({
 		if (parent.type !== FRAGMENT) ops.push(OP.REMOVE, node.id);
 	},
 
-	addEventListener(target, type, handler) {
-		const listeners = (target.listeners ??= new Map());
-		let handlers = listeners.get(type);
-		if (handlers === undefined) listeners.set(type, (handlers = []));
-		handlers.push(handler);
-
-		const count = listener_counts.get(type) ?? 0;
-		listener_counts.set(type, count + 1);
-		if (count === 0) ops.push(OP.LISTEN, str(type));
-	},
-
-	removeEventListener(target, type, handler) {
-		const handlers = target.listeners?.get(type);
-		if (handlers === undefined) return;
-		const index = handlers.indexOf(handler);
-		if (index === -1) return;
-		handlers.splice(index, 1);
-
-		const count = (listener_counts.get(type) ?? 1) - 1;
-		listener_counts.set(type, count);
-		if (count === 0) ops.push(OP.UNLISTEN, str(type));
-	}
+	addEventListener: add_listener,
+	removeEventListener: remove_listener
 });
 
 export default renderer;

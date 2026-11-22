@@ -107,7 +107,16 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `vm` context for this reason. QuickJS-ng does provide `performance`,
   `queueMicrotask`, `WeakRef`, `FinalizationRegistry`; it does not provide
   `console` or timers (see `shims.js`).
-- **Svelte features unavailable to custom renderers:** `bind:` on elements,
+- **`bind:` on elements is rewritten by the preset** (`packages/vite/src/bindings.js`)
+  because Svelte refuses it for custom renderers: `bind:this` and `bind:value`
+  become attachments, anything else compiles and warns. Attachments and
+  actions get a `BlitzNode`, which has `addEventListener`/`removeEventListener`
+  and little else of the DOM.
+- **Libraries that assume a browser fail at run time, not at compile time.**
+  Bits UI (under shadcn-svelte) needs `window`, `document`, `EventTarget`,
+  focus and measuring. `examples/shadcn/probe.mjs` shows where each component
+  stops.
+- **Svelte features unavailable to custom renderers:**
   `transition:`/`animate:`/`in:`/`out:`, `<svelte:window|body|document|head>`,
   `css: 'injected'`, hydration, event delegation. Svelte does not bubble events
   for custom renderers; `dispatch()` in `renderer.js` does.

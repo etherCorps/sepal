@@ -317,6 +317,41 @@ router (3,800 lines in 3.0.1) is written against `location`, `history`,
 `document`, `fetch` and dynamic `import()`, mounts its root without a
 renderer option, and its build expects a server pass.
 
+## Component libraries: shadcn-svelte
+
+Tested with shadcn-svelte 1.8 (its CLI, the `vega` preset, 16 components).
+
+**The styling system works completely**: the Tailwind v4 theme, its `oklch()`
+variables, variants (`tailwind-variants`), Lucide icons and the Inter font all
+render as on the web.
+
+| Works | Does not work yet |
+|---|---|
+| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Dialog, Select, Tooltip, Accordion, Checkbox, Switch, Tabs |
+
+The split is not about shadcn. The components on the left are markup and
+classes. The ones on the right are built on Bits UI, which assumes a browser:
+
+- Accordion and Tooltip throw `window is not defined`.
+- Checkbox fails while loading: `EventTarget is not defined`.
+- Select throws on pointer down; Dialog does not open (it renders into
+  `document.body`).
+- Switch and Tabs change their own state attributes when clicked, but the
+  bound value does not reach the parent, and whether a tab's panel swaps was
+  not confirmed.
+
+Typing into an Input is untested, like all text input.
+
+Out of the box none of it compiled, because every shadcn component has
+`bind:this={ref}` on its root element and Svelte refuses that for custom
+renderers. The preset now rewrites element bindings before Svelte sees them
+(`packages/vite/src/bindings.js`), which is what made the left column work,
+and applies to any component library.
+
+`examples/shadcn` is a page of the working components. `node probe.mjs` in
+that directory compiles and runs each file in `src/probes` and reports where
+it fails.
+
 ## Icons and images
 
 ![The icon probe](docs/icons-probe.png)
@@ -562,6 +597,7 @@ packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
   src/routing.svelte.js   the in-memory router: page, goto, back, load, errors
   src/Router.svelte       renders layouts around the current page
   src/router.js           the router's public API
+  src/bindings.js         rewrites `bind:` on elements, which Svelte refuses here
 packages/cli/             @ethercorps/svelte-blitz-cli: the svelte-blitz command
 packages/create/          @ethercorps/create-svelte-blitz
   template/               the starter it copies
@@ -593,6 +629,7 @@ crates/host/              the `svelte-blitz-host` crate
 crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with two fixes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
+examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
 ```
 
 ## How it works
@@ -653,6 +690,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Updater on a real bundle: 0.1.0 finds 0.2.0, verifies, replaces itself, relaunches; code signature still valid | `scripts/updater-e2e.sh` (macOS) |
 | Desktop APIs from JavaScript: fetch (methods, bodies, redirects, errors), files (text, bytes, directories), URL and path scopes, every call refused without permission, a slow request not blocking the UI | `tests/desktop.rs` |
 | Desktop APIs on a real Mac: HTTPS fetch to api.github.com, a file in the app data directory, confirm and file-open dialogs appearing, maximise, minimise | example run with `VITE_AUTO=<button>` |
+| shadcn-svelte components from its CLI: nine render and react, `bind:this` reaches the element | `tests/shadcn.rs`, `examples/shadcn/probe.mjs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
 | Timer wake-ups, and silence when no timer is running | `timers_wake_the_event_loop` |
 | Removed nodes are freed on the host after GC | `removed_nodes_are_freed` |
@@ -692,8 +730,10 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 
 ## Limitations
 
-- `bind:`, `transition:`, `animate:`, `<svelte:window>`, `<svelte:head>` are
-  rejected by Svelte for custom renderers. Use `value={x}` + `oninput`.
+- `transition:`, `animate:`, `<svelte:window>` and `<svelte:head>` are rejected
+  by Svelte for custom renderers. So is `bind:` on elements, but the preset
+  rewrites it: `bind:this` and `bind:value` (on inputs) work, and other
+  element bindings compile and warn that they do nothing.
 - Desktop APIs cover fetch, files, dialogs, clipboard, opening links and basic
   window control. See "Desktop APIs" for what is missing.
 - Images and other resources load from data: URLs and the app directory only; no network.

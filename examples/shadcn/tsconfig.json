@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"target": "es2022",
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		// "dom" is here for Svelte's element and event types only. The app runs
+		// in QuickJS: there is no `window`, `document` or `fetch` at runtime.
+		"lib": ["es2023", "dom"],
+		"types": ["vite/client", "@ethercorps/svelte-blitz-vite/ambient"],
+		"paths": { "$lib": ["./src/lib"], "$lib/*": ["./src/lib/*"] },
+		"strict": true,
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"skipLibCheck": true
+	},
+	"include": ["src", "vite.config.ts", "app.config.ts"]
+}

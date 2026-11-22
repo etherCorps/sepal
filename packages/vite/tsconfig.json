@@ -19,5 +19,5 @@
 	},
 	"include": ["src"],
 	// The preset and the route scanner run in Node and are checked by tsconfig.node.json.
-	"exclude": ["src/vite.js", "src/routes.js"]
+	"exclude": ["src/vite.js", "src/routes.js", "src/bindings.js"]
 }

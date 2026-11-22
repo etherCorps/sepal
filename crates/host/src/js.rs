@@ -150,7 +150,19 @@ impl JsEngine {
                 Ok(true) => continue,
                 Ok(false) => break,
                 Err(error) => {
-                    eprintln!("[js error] uncaught in job: {error:?}");
+                    // The job's context holds the exception that was thrown.
+                    let message = error.0.with(|ctx| {
+                        let exception = ctx.catch();
+                        match exception.as_exception() {
+                            Some(e) => format!(
+                                "{}\n{}",
+                                e.message().unwrap_or_default(),
+                                e.stack().unwrap_or_default()
+                            ),
+                            None => format!("{exception:?}"),
+                        }
+                    });
+                    eprintln!("[js error] uncaught in a promise callback: {message}");
                 }
             }
         }

@@ -21,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { loadConfigFromFile } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { find_host } from '@ethercorps/svelte-blitz-host';
+import { element_bindings } from './bindings.js';
 import { generate_routes } from './routes.js';
 
 const ROUTES_ID = 'virtual:svelte-blitz/routes';
@@ -156,6 +157,8 @@ export function svelteBlitz(inline = {}) {
 	return [
 		svelte({
 			...user,
+			// Ours first: it has to see `bind:` on elements before Svelte refuses it.
+			preprocess: [element_bindings(), ...[user.preprocess ?? []].flat()],
 			// Component <style> blocks go to app.css; `css: 'injected'` needs a document.
 			emitCss: true,
 			compilerOptions: {
