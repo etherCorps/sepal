@@ -5,6 +5,8 @@
 <main
 	class="flex h-screen flex-col items-center justify-center gap-6 bg-slate-50 font-sans text-slate-900"
 >
+	<!-- Files in static/ are copied next to the app and loaded by name. -->
+	<img src="logo.svg" alt="" width="64" height="64" />
 	<h1 class="text-3xl font-semibold">Svelte on Blitz</h1>
 	<p class="text-slate-600">
 		Edit <code class="rounded bg-slate-200 px-1.5 py-0.5 text-sm">src/App.svelte</code> and save.

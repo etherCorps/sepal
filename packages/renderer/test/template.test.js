@@ -68,6 +68,7 @@ try {
 	const manifest = JSON.parse(readFileSync(join(app, 'dist/app.json'), 'utf8'));
 	assert(manifest.name === 'My App' && manifest.id === 'com.example.my-app', 'manifest not written from the template');
 	assert(existsSync(join(app, 'dist/app.js')) && existsSync(join(app, 'dist/icon.png')), 'bundle or icon missing');
+	assert(existsSync(join(app, 'dist/logo.svg')), 'static/ was not copied into the build');
 
 	if (has_host) {
 		run('pnpm', ['exec', 'svelte-blitz', 'screenshot', join(scratch, 'shot.png')], app);

@@ -63,8 +63,12 @@ export function svelteBlitz(options = {}) {
 		}),
 		/** @type {import('vite').Plugin} */ ({
 			name: 'svelte-blitz:config',
-			config() {
+			config(user) {
 				return {
+					// Files in `static/` are copied to the build as they are, so the app
+					// can refer to them by name: `<img src="logo.svg">`. Vite calls this
+					// directory `public`; a `publicDir` in the user's config still wins.
+					...(user.publicDir === undefined ? { publicDir: 'static' } : {}),
 					resolve: {
 						// Selects Svelte's client build with custom renderer support.
 						conditions: ['svelte-custom-renderer', 'svelte', 'module', 'import', 'default']

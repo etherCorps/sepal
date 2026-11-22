@@ -31,7 +31,7 @@ pnpm dev               # the same, reloading on every save
 ## Start a project
 
 ```sh
-svelte-blitz create my-app      # TypeScript, Tailwind, an icon and a manifest
+svelte-blitz create my-app      # TypeScript, Tailwind, an icon, a manifest, static/
 cd my-app
 pnpm install
 pnpm dev                        # opens the app, reloads on save
@@ -196,12 +196,14 @@ Images load from two places and nowhere else:
 </script>
 
 <img src={logo} alt="" />
-<img src="photo.png" alt="" />   <!-- a file next to app.js: put it in public/ -->
+<img src="photo.png" alt="" />   <!-- a file next to app.js: put it in static/ -->
 ```
 
 - `data:` URLs, which is what an `import` of an asset becomes.
-- Files inside the app directory (`dist`, or `Resources` in a bundle). A path
-  that leaves it, through `..` or a symlink, is refused.
+- Files inside the app directory (`dist`, or `Resources` in a bundle).
+  Everything in the project's `static/` directory is copied there by the
+  build, as it is. A path that leaves the app directory, through `..` or a
+  symlink, is refused.
 - There is no network: `http(s):` URLs do not load. A URL that cannot be
   loaded is reported on stderr and the image stays empty.
 
