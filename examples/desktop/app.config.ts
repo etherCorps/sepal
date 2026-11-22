@@ -5,7 +5,6 @@ export default defineConfig({
 		name: 'Desktop APIs',
 		id: 'com.example.desktop-apis',
 		version: '0.1.0',
-		icon: 'icon.png',
 		window: { width: 640, height: 520 }
 	},
 

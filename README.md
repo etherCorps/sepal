@@ -101,7 +101,7 @@ lost. This is a live reload, not Svelte HMR.
 
 ## App config
 
-An app describes itself in `svelte-blitz.config.ts`, next to `vite.config.ts`:
+An app describes itself in `app.config.ts`, next to `vite.config.ts`:
 
 ```ts
 import { defineConfig } from '@ethercorps/svelte-blitz-vite';
@@ -110,7 +110,7 @@ export default defineConfig({
 	app: {
 		name: 'Counter',
 		id: 'com.example.counter',
-		icon: 'icon.png', // PNG, 1024×1024 recommended, relative to the project root
+		// icon: static/icon.png is used when it exists (PNG, square, 1024×1024 recommended)
 		window: { title: 'Svelte on Blitz', width: 800, height: 600 }
 		// version: defaults to the one in package.json
 		// updater: see "Updates"
@@ -136,7 +136,10 @@ overrides the file, key by key. In watch mode, edits to `app` and
 `permissions` are picked up on the next build; a change to `router` needs
 Vite restarted.
 
-The build writes `dist/app.json` and copies the icon to `dist/icon.png`. Point
+The icon is a static file: put it in `static/` and it is copied with the
+rest. `app.icon` names another file there if it is not called `icon.png`.
+
+The build writes `dist/app.json`. Point
 the host at the directory and it picks them up: `svelte-blitz-host dist`.
 Every field is optional; `svelte-blitz-host app.js app.css` still works and
 runs without a manifest.
@@ -371,7 +374,7 @@ svelte-blitz signer generate ~/.keys/my-app.key
 The file is the private key. Keep it secret and backed up: updates signed
 with any other key are refused by every copy of the app already installed.
 
-**2. Tell the app where updates come from**, in `svelte-blitz.config.ts`.
+**2. Tell the app where updates come from**, in `app.config.ts`.
 
 ```ts
 export default defineConfig({
@@ -453,7 +456,7 @@ The updater talks to the feed URL and the archive it names, and nothing else.
 ## Desktop APIs
 
 An app reaches outside its window through the APIs below. All of them are
-**off until `permissions` in `svelte-blitz.config.ts` allows them**, and the
+**off until `permissions` in `app.config.ts` allows them**, and the
 host enforces that, not JavaScript. A refused call rejects with a message
 naming the entry to add.
 

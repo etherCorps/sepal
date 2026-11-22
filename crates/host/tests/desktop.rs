@@ -332,7 +332,7 @@ fn fetch_from_javascript() {
     assert_eq!(
         refused,
         format!(
-            "ERROR: a request to {elsewhere} is not allowed: add it to `permissions.http` in svelte-blitz.config"
+            "ERROR: a request to {elsewhere} is not allowed: add it to `permissions.http` in app.config"
         )
     );
     assert!(run(&mut doc, &format!("fetch('{origin}/leave')")).contains("is not allowed"));

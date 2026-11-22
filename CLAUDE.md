@@ -142,7 +142,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   no running event loop: window calls would be lost and rfd dialogs panic.
 - **Tests must not open dialogs, write the clipboard or open links.** They
   would act on the machine of whoever runs them.
-- **App settings live in `svelte-blitz.config.ts`**, loaded by the preset with
+- **App settings live in `app.config.ts`**, loaded by the preset with
   Vite's `loadConfigFromFile`. `vite.config.ts` only lists plugins.
 - **Never unpack an update before `verify()`.** `install_archive` trusts its
   input; `Updater::download` is what earns that trust.

@@ -2,7 +2,7 @@
 // `app.js` (an IIFE the host can eval) and one `app.css`.
 
 //
-// Settings come from `svelte-blitz.config.ts` (or `.js`/`.mjs`) in the project
+// Settings come from `app.config.ts` (or `.js`/`.mjs`) in the project
 // root, so that `vite.config.ts` stays a list of plugins. Options passed to
 // `svelteBlitz()` directly override the file, key by key.
 //
@@ -31,9 +31,9 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  * What the app tells the host about itself. Written to `dist/app.json`.
  *
  * `name` is the app's name and the fallback window title. `icon` is a PNG
- * (square, 1024×1024 recommended), relative to the Vite root; it is copied to
- * `dist/icon.png`. `width` and `height` are the initial window size in logical
- * pixels. `id` (a bundle identifier such as `com.example.counter`) and
+ * (square, 1024×1024 recommended) in the `static/` directory, named relative to
+ * it; `static/icon.png` is used when `icon` is left out. `width` and `height`
+ * are the initial window size in logical pixels. `id` (a bundle identifier such as `com.example.counter`) and
  * `version` are used when the app is bundled.
  *
  * `updater` turns on self-update: `url` is where the update feed
@@ -93,7 +93,7 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  */
 
 /**
- * The settings in `svelte-blitz.config.ts`.
+ * The settings in `app.config.ts`.
  *
  * @typedef {{
  *   app?: AppManifest,
@@ -104,7 +104,7 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  */
 
 /**
- * For `svelte-blitz.config.ts`: types the settings and returns them unchanged.
+ * For `app.config.ts`: types the settings and returns them unchanged.
  * A function is called with Vite's `{ mode, command }`.
  *
  * @template {Config | ((env: import('vite').ConfigEnv) => Config | Promise<Config>)} T
@@ -115,7 +115,7 @@ export function defineConfig(config) {
 	return config;
 }
 
-const CONFIG_FILES = ['svelte-blitz.config.ts', 'svelte-blitz.config.js', 'svelte-blitz.config.mjs'];
+const CONFIG_FILES = ['app.config.ts', 'app.config.js', 'app.config.mjs'];
 
 /**
  * Read the project's config file, if it has one.
@@ -146,6 +146,8 @@ export function svelteBlitz(inline = {}) {
 	let routes_dir = '';
 	const user = inline.svelte ?? {};
 	let root = '';
+	/** The directory copied into the build as it is (`static/`). Empty when turned off. */
+	let static_dir = '';
 	let out_dir = '';
 	let watching = false;
 	/** @type {import('node:child_process').ChildProcess | null} */
@@ -231,6 +233,7 @@ export function svelteBlitz(inline = {}) {
 			},
 			configResolved(config) {
 				root = config.root;
+				static_dir = config.publicDir;
 				out_dir = resolve(root, config.build.outDir);
 				watching = config.build.watch != null;
 			},
@@ -245,23 +248,24 @@ export function svelteBlitz(inline = {}) {
 			},
 			generateBundle() {
 				if (!options.app && !options.permissions) return;
-				const { icon, ...app } = options.app ?? {};
+				const app = { ...options.app };
 				// The version in package.json is the app's version unless the config says otherwise.
 				if (app.version === undefined) {
 					const pkg = join(root, 'package.json');
 					if (existsSync(pkg)) app.version = JSON.parse(readFileSync(pkg, 'utf8')).version;
 				}
-				const manifest = options.permissions ? { ...app, permissions: options.permissions } : app;
-				if (icon) {
+				// The icon is one of the static files: it is copied into the build with
+				// them, and the manifest names it by the same relative path.
+				if (app.icon === undefined && static_dir && existsSync(join(static_dir, 'icon.png'))) app.icon = 'icon.png';
+				if (app.icon !== undefined) {
 					// The host decodes PNG only; fail here rather than when the app starts.
-					if (!icon.toLowerCase().endsWith('.png')) this.error(`app.icon must be a PNG file, got ${icon}`);
-					this.emitFile({ type: 'asset', fileName: 'icon.png', source: readFileSync(resolve(root, icon)) });
+					if (!app.icon.toLowerCase().endsWith('.png')) this.error(`app.icon must be a PNG file, got ${app.icon}`);
+					if (!static_dir || !existsSync(join(static_dir, app.icon))) {
+						this.error(`app.icon: there is no ${app.icon} in the static directory (${static_dir || 'turned off'})`);
+					}
 				}
-				this.emitFile({
-					type: 'asset',
-					fileName: 'app.json',
-					source: JSON.stringify(icon ? { ...manifest, icon: 'icon.png' } : manifest, null, '\t') + '\n'
-				});
+				const manifest = options.permissions ? { ...app, permissions: options.permissions } : app;
+				this.emitFile({ type: 'asset', fileName: 'app.json', source: JSON.stringify(manifest, null, '\t') + '\n' });
 			}
 		}),
 		{

@@ -94,7 +94,7 @@ impl Permissions {
 
 /// The message for a call the manifest does not allow.
 pub fn denied(what: &str, permission: &str) -> String {
-    format!("{what} is not allowed: add it to `permissions.{permission}` in svelte-blitz.config")
+    format!("{what} is not allowed: add it to `permissions.{permission}` in app.config")
 }
 
 pub struct Api {

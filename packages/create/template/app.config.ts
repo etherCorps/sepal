@@ -5,7 +5,7 @@ export default defineConfig({
 		name: '__NAME__',
 		// Change this to an identifier you own before you ship.
 		id: '__ID__',
-		icon: 'icon.png',
+		// The icon is static/icon.png.
 		window: { width: 800, height: 600 }
 		// Self-update: see "Updates" in the svelte-blitz README.
 		// updater: { url: 'https://example.com/latest.json', pubkey: '…' }

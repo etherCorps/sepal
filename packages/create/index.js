@@ -40,7 +40,7 @@ for (const group of [pkg.dependencies, pkg.devDependencies]) {
 }
 writeFileSync(pkg_path, JSON.stringify(pkg, null, '\t') + '\n');
 
-const config_path = join(target, 'svelte-blitz.config.ts');
+const config_path = join(target, 'app.config.ts');
 const config = readFileSync(config_path, 'utf8')
 	.replace("'__NAME__'", JSON.stringify(name))
 	.replace("'__ID__'", JSON.stringify(`com.example.${slug}`));

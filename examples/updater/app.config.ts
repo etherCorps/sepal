@@ -12,7 +12,6 @@ export default defineConfig(({ mode }) => {
 			name: 'Updater Demo',
 			id: 'com.example.updater-demo',
 			version: env.APP_VERSION ?? '0.1.0',
-			icon: 'icon.png',
 			window: { width: 520, height: 360 },
 			updater: {
 				// Where latest.json is published.

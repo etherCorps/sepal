@@ -1,6 +1,6 @@
 <!--
 	One button per desktop API. Each needs an entry in `permissions`
-	(svelte-blitz.config.ts); take one out and the call is refused with a
+	(app.config.ts); take one out and the call is refused with a
 	message that says what to add.
 -->
 <script lang="ts">
