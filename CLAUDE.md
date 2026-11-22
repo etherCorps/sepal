@@ -38,7 +38,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 
 - `packages/renderer/` — the npm package. `renderer.js` (node mirror, op buffer,
   event bubbling), `shims.js` (console, timers), `index.js` (`mount`, `__sb`
-  entry points), `protocol.js` (opcodes), `vite.js` (Vite preset), `cli.js` (the
+  entry points), `protocol.js` (opcodes), `vite.js` (Vite preset), `routes.js` (build-time
+  scan of `src/routes`), `routing.svelte.js` + `Router.svelte` (the in-memory
+  router; `$app/navigation` and `$app/state` alias to it), `cli.js` (the
   `svelte-blitz` command), `host.js` (finds the host binary), `template/`
   (the starter that `svelte-blitz create` copies).
 - `packages/host-<platform>-<arch>/` — one npm package per platform holding
@@ -51,6 +53,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
+  `examples/routing/` — file-based routing.
 
 ## Invariants — do not break these
 
@@ -94,6 +97,11 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `transition:`/`animate:`/`in:`/`out:`, `<svelte:window|body|document|head>`,
   `css: 'injected'`, hydration, event delegation. Svelte does not bubble events
   for custom renderers; `dispatch()` in `renderer.js` does.
+- **A `.svelte` file without a rune compiles in legacy mode**, where
+  `<Component>` tags are resolved once and never switch. Package components
+  that render other components dynamically need `<svelte:options runes />`.
+- **No `URL`, `URLSearchParams`, `location` or `history` in QuickJS.** The
+  router keeps its own location; do not reach for those.
 - **Resolve condition.** Svelte's custom-renderer build is selected with the
   `svelte-custom-renderer` export condition (set in `vite.js`). Without it
   `svelte/renderer` resolves to a stub that throws.

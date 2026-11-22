@@ -2,14 +2,24 @@
 // `app.js` (an IIFE the host can eval) and one `app.css`.
 
 //
+// If the project has `src/routes`, the entry is the package's router and the
+// route table is generated from that directory (see routes.js). Otherwise the
+// entry is `src/main.js` or `src/main.ts`.
+//
 // In watch mode (`vite build --watch`) with a host binary available, it also
 // opens the app and reloads it in place after every rebuild.
 
 import { spawn, spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { find_host } from './host.js';
+import { generate_routes } from './routes.js';
+
+const ROUTES_ID = 'virtual:svelte-blitz/routes';
+/** @param {string} file a file in this package's `src` */
+const own = (file) => fileURLToPath(new URL(file, import.meta.url));
 
 /**
  * What the app tells the host about itself. Written to `dist/app.json`.
@@ -38,8 +48,7 @@ import { find_host } from './host.js';
  * @returns {import('vite').PluginOption[]}
  */
 export function svelteBlitz(options = {}) {
-	// No extension: Vite resolves `src/main.js` or `src/main.ts`, whichever exists.
-	const entry = options.entry ?? 'src/main';
+	let routes_dir = '';
 	const user = options.svelte ?? {};
 	let root = '';
 	let out_dir = '';
@@ -64,6 +73,11 @@ export function svelteBlitz(options = {}) {
 		/** @type {import('vite').Plugin} */ ({
 			name: 'svelte-blitz:config',
 			config(user) {
+				const project = resolve(user.root ?? '.');
+				routes_dir = join(project, 'src/routes');
+				// No extension: Vite resolves `src/main.js` or `src/main.ts`, whichever exists.
+				const entry = options.entry ?? (existsSync(routes_dir) ? own('./router-entry.js') : 'src/main');
+
 				return {
 					// Files in `static/` are copied to the build as they are, so the app
 					// can refer to them by name: `<img src="logo.svg">`. Vite calls this
@@ -71,7 +85,13 @@ export function svelteBlitz(options = {}) {
 					...(user.publicDir === undefined ? { publicDir: 'static' } : {}),
 					resolve: {
 						// Selects Svelte's client build with custom renderer support.
-						conditions: ['svelte-custom-renderer', 'svelte', 'module', 'import', 'default']
+						conditions: ['svelte-custom-renderer', 'svelte', 'module', 'import', 'default'],
+						// The names a SvelteKit project uses.
+						alias: {
+							$lib: join(project, 'src/lib'),
+							'$app/navigation': own('./navigation.js'),
+							'$app/state': own('./state.js')
+						}
 					},
 					build: {
 						target: 'es2022',
@@ -85,6 +105,17 @@ export function svelteBlitz(options = {}) {
 						}
 					}
 				};
+			},
+			resolveId(id) {
+				if (id === ROUTES_ID) return '\0' + ROUTES_ID;
+			},
+			load(id) {
+				if (id !== '\0' + ROUTES_ID) return;
+				const { code, files } = generate_routes(routes_dir);
+				// Rebuild when a route file is added, removed or changed.
+				this.addWatchFile(routes_dir);
+				for (const file of files) this.addWatchFile(file);
+				return code;
 			},
 			configResolved(config) {
 				root = config.root;

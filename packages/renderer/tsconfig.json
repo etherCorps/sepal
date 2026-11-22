@@ -19,5 +19,5 @@
 	},
 	"include": ["src"],
 	// These run in Node and are checked by tsconfig.node.json.
-	"exclude": ["src/vite.js", "src/host.js", "src/cli.js"]
+	"exclude": ["src/vite.js", "src/host.js", "src/cli.js", "src/routes.js"]
 }

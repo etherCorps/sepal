@@ -295,6 +295,16 @@ go-ahead, tag and publish the alpha.
 - Hands-on checks that need eyes: the window, idle CPU, the Dock icon.
 - Say "publish".
 
+## Added outside the original brief (22 Nov 2026)
+
+- TypeScript in the package and the examples.
+- Dev reload (`vite build --watch`), run from a throwaway bundle on macOS.
+- `svelte-blitz` CLI and a starter template with `static/`.
+- SvelteKit-style file routing (`src/routes`, `load`, `$app/navigation`,
+  `$app/state`). See "Routing" in the README for what differs from SvelteKit.
+  Not done: generated `./$types`, `invalidate`, navigation lifecycle hooks,
+  rerunning only the loads whose inputs changed.
+
 ## Known gaps outside this brief
 
 Text input and IME, keyboard events, `fetch` and other host APIs, state-preserving HMR,

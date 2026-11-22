@@ -39,6 +39,17 @@
     "./protocol": {
       "types": "./types/protocol.d.ts",
       "default": "./src/protocol.js"
+    },
+    "./navigation": {
+      "types": "./types/navigation.d.ts",
+      "default": "./src/navigation.js"
+    },
+    "./state": {
+      "types": "./types/state.d.ts",
+      "default": "./src/state.js"
+    },
+    "./ambient": {
+      "types": "./ambient.d.ts"
     }
   },
   "bin": {
@@ -47,7 +58,8 @@
   "files": [
     "src",
     "types",
-    "template"
+    "template",
+    "ambient.d.ts"
   ],
   "scripts": {
     "check": "tsc && tsc -p tsconfig.node.json",

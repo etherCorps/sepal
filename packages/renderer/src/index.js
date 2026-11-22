@@ -19,6 +19,7 @@ export function mount(component, options = {}) {
 }
 
 export { unmount, renderer, root };
+export { error, redirect } from './routing.svelte.js';
 
 // The host's entry points into JS. It calls these and nothing else.
 /** @type {any} */ (globalThis).__sb = {

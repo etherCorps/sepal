@@ -31,7 +31,7 @@ pnpm dev               # the same, reloading on every save
 ## Start a project
 
 ```sh
-svelte-blitz create my-app      # TypeScript, Tailwind, an icon, a manifest, static/
+svelte-blitz create my-app      # TypeScript, Tailwind, file-based routes, icon, manifest, static/
 cd my-app
 pnpm install
 pnpm dev                        # opens the app, reloads on save
@@ -167,6 +167,88 @@ been run here with a real Developer ID and the result launches; Gatekeeper
 then reports "Unnotarized Developer ID" until it is notarised. **`--notarize`
 has not been run**: it uploads to Apple and needs your credentials.
 
+## Routing
+
+Pages are files in `src/routes`, with SvelteKit's conventions. A project that
+has that directory needs no `main.ts`: the router is the entry.
+
+```
+src/routes/
+  +layout.svelte            wraps every page; stays mounted while pages change
+  +layout.ts                load() for the layout
+  +page.svelte              /
+  +error.svelte             shown for errors and unknown paths
+  about/+page.svelte        /about
+  items/+page.svelte        /items
+  items/[id]/+page.svelte   /items/42          params.id === '42'
+  items/[id]/+page.ts       load() for that page
+  docs/[...path]/+page.svelte   /docs/a/b      params.path === 'a/b'
+  (account)/+layout.svelte  a group: a layout without a path segment
+  (account)/settings/+page.svelte   /settings
+```
+
+```ts
+// src/routes/items/[id]/+page.ts
+import { error } from '@ethercorps/svelte-blitz';
+import { items } from '$lib/items';
+
+export async function load({ params, parent }) {
+	const item = items.find((item) => item.id === params.id);
+	if (!item) error(404, `No item ${params.id}`);
+	return { item, ...(await parent()) };
+}
+```
+
+```svelte
+<!-- src/routes/items/[id]/+page.svelte -->
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+
+	let { data, params } = $props();
+</script>
+
+<h1>{data.item.name}</h1>
+<a href="/items">all items</a>
+<button onclick={() => goto('/')}>home</button>
+<p>{page.url.pathname}</p>
+```
+
+What works as in SvelteKit:
+
+- `+page.svelte`, `+layout.svelte` (nested, with `{@render children()}`),
+  `+error.svelte`, `[param]`, `[...rest]`, `(group)`.
+- `load` in `+page.js`/`.ts` and `+layout.js`/`.ts`, sync or async, with
+  `params`, `url`, `route` and `parent()`. The result arrives as the `data`
+  prop, merged with the layouts' data. The old page stays up until the new
+  one's loads are done.
+- `<a href="/path">` navigates. `goto()` from `$app/navigation`, `page` from
+  `$app/state`, and the `$lib` alias.
+- `error(status, message)` and `redirect(status, location)` inside `load`,
+  imported from `@ethercorps/svelte-blitz`.
+
+What is different, because there is no browser and no server:
+
+- **The location lives in memory.** There is no address bar and no History
+  API. `back()` and `forward()` come from `$app/navigation` instead of
+  `history`.
+- **`page.url` is a plain object** with `pathname`, `search`, `hash`, `href`
+  and `searchParams.get()/has()`. The engine has no `URL` class.
+- **No server files.** `+page.server.*`, `+layout.server.*` and `+server.*`
+  are build errors. So are optional parameters (`[[x]]`) and matchers
+  (`[x=m]`).
+- **No generated `./$types`.** Type `data` and `params` yourself.
+- **Every `load` runs on every navigation**; there is no `invalidate`, and no
+  `beforeNavigate`/`afterNavigate`.
+- **All pages are in one bundle.** There is no code splitting.
+
+`examples/routing` exercises all of it.
+
+Running SvelteKit itself on this renderer is not practical. Its client
+router (3,800 lines in 3.0.1) is written against `location`, `history`,
+`document`, `fetch` and dynamic `import()`, mounts its root without a
+renderer option, and its build expects a server pass.
+
 ## Icons and images
 
 ![The icon probe](docs/icons-probe.png)
@@ -242,6 +324,9 @@ scripts/build-host-package.js builds the host and fills this platform's package
   src/index.js            mount() and the host's entry points (globalThis.__sb)
   src/protocol.js         opcodes shared with the host
   src/vite.js             Vite preset: one app.js (IIFE) + one app.css
+  src/routes.js           reads src/routes into a route table (build time)
+  src/routing.svelte.js   the in-memory router: page, goto, back, load, errors
+  src/Router.svelte       renders layouts around the current page
   types/                  generated .d.ts (not committed)
   test/                   a host written in JS, for testing without Rust
 crates/host/              the `svelte-blitz-host` crate
@@ -259,8 +344,10 @@ crates/host/              the `svelte-blitz-host` crate
   tests/manifest.rs       manifest parsing and icon decoding
   tests/bundle.rs         bundle layout, Info.plist, .icns contents
   tests/icons.rs          icon and image pixels, resource loading
+  tests/routing.rs        file-based routing, by clicking through examples/routing
 crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with two fixes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
+examples/routing/         file-based routes: layouts, params, load, errors
 ```
 
 ## How it works
@@ -316,6 +403,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Clicks through Blitz hit testing, bubbling, `{#if}`, keyed `{#each}` reorder | `counter_app` |
 | Inline SVG and Lucide icons in hex and Tailwind colours, recolouring after a click, `<img>` from a data: URL, a file and an import | `tests/icons.rs` (pixels) + `docs/icons-probe.png` |
 | Resources: only data: URLs and files inside the app directory load; bad URLs do not crash | `tests/icons.rs` |
+| File-based routing: links, params, load data, groups, rest parameters, redirects, error pages, back/forward, slow and overtaken loads | `tests/routing.rs`, `test/routes.test.js` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
 | Timer wake-ups, and silence when no timer is running | `timers_wake_the_event_loop` |
 | Removed nodes are freed on the host after GC | `removed_nodes_are_freed` |

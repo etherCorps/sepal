@@ -3,6 +3,6 @@
 	// ones that may see Node's types.
 	"extends": "./tsconfig.json",
 	"compilerOptions": { "types": ["node"] },
-	"include": ["src/vite.js", "src/host.js", "src/cli.js"],
+	"include": ["src/vite.js", "src/host.js", "src/cli.js", "src/routes.js"],
 	"exclude": []
 }

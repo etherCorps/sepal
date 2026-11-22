@@ -69,6 +69,8 @@ try {
 	assert(manifest.name === 'My App' && manifest.id === 'com.example.my-app', 'manifest not written from the template');
 	assert(existsSync(join(app, 'dist/app.js')) && existsSync(join(app, 'dist/icon.png')), 'bundle or icon missing');
 	assert(existsSync(join(app, 'dist/logo.svg')), 'static/ was not copied into the build');
+	// The template is file-routed: the About page only exists in the bundle if src/routes was read.
+	assert(readFileSync(join(app, 'dist/app.js'), 'utf8').includes('back home'), 'routes were not bundled');
 
 	if (has_host) {
 		run('pnpm', ['exec', 'svelte-blitz', 'screenshot', join(scratch, 'shot.png')], app);
