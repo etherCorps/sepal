@@ -1,5 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-	<!-- Option 2, "Spine": one stroke; the curves of an S, with a lightning bolt for its spine. -->
-	<rect x="100" y="100" width="824" height="824" rx="185" fill="#ff3e00" />
-	<path d="M672 384a160 150 0 0 0-320 0L572 500l-120 24 220 116a160 150 0 0 1-320 0" fill="none" stroke="#fff" stroke-width="96" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="10" />
+	<!-- Split: a rounded tile struck in two by a lightning bolt. The two halves read as the lobes of an S. -->
+	<defs>
+		<linearGradient id="hot" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#ff7a3d" />
+			<stop offset="1" stop-color="#f03400" />
+		</linearGradient>
+		<mask id="strike">
+			<rect width="1024" height="1024" fill="#fff" />
+			<path d="M760 40 430 520h170L270 990" fill="none" stroke="#000" stroke-width="64" stroke-linejoin="miter" stroke-miterlimit="12" />
+		</mask>
+	</defs>
+	<rect x="112" y="112" width="800" height="800" rx="210" fill="url(#hot)" mask="url(#strike)" />
 </svg>

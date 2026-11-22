@@ -1,6 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-	<!-- Option 3, "Strike": a soft orange S with a bolt striking through it. -->
-	<rect x="100" y="100" width="824" height="824" rx="185" fill="#fff7f3" />
-	<path d="M664 372c0-88-76-140-156-140s-148 52-148 132c0 176 304 108 304 288 0 84-72 140-152 140s-152-52-152-140" fill="none" stroke="#ff3e00" stroke-width="104" stroke-linecap="round" />
-	<path d="M600 180 392 524h128l-80 320 212-360H524z" fill="#1f2937" stroke="#fff7f3" stroke-width="64" stroke-linejoin="round" paint-order="stroke" />
+	<!-- Two charges: the upper lobe in Svelte orange, the lower in electric yellow, and a lightning-shaped gap where they meet. -->
+	<defs>
+		<linearGradient id="hot" gradientUnits="userSpaceOnUse" x1="300" y1="250" x2="560" y2="640">
+			<stop offset="0" stop-color="#ff7a3d" />
+			<stop offset="1" stop-color="#ff3e00" />
+		</linearGradient>
+		<linearGradient id="volt" gradientUnits="userSpaceOnUse" x1="470" y1="420" x2="720" y2="800">
+			<stop offset="0" stop-color="#ffd43b" />
+			<stop offset="1" stop-color="#ff9a00" />
+		</linearGradient>
+		<clipPath id="lower"><path d="M949 150 516 400 462 536h100L508 624 75 874V1500H1500V150z" /></clipPath>
+		<mask id="seam">
+			<rect x="-400" y="-400" width="1900" height="1900" fill="#fff" />
+			<path d="M520 392 462 536h100L504 632" fill="none" stroke="#000" stroke-width="34" stroke-linejoin="miter" stroke-miterlimit="12" />
+		</mask>
+	</defs>
+	<g mask="url(#seam)" fill="none" stroke-width="190" stroke-linecap="round">
+		<path d="M664 322H452a95 95 0 0 0 0 190h120a95 95 0 0 1 0 190H360" stroke="url(#hot)" transform="rotate(-30 512 512)" />
+		<g clip-path="url(#lower)">
+			<path d="M400 512h172a95 95 0 0 1 0 190H360" stroke="url(#volt)" transform="rotate(-30 512 512)" />
+		</g>
+	</g>
 </svg>

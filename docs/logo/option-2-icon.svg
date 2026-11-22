@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+	<!-- Split: a rounded tile struck in two by a lightning bolt. The two halves read as the lobes of an S. App icon. -->
+	<defs>
+		<linearGradient id="hot" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#ff7a3d" />
+			<stop offset="1" stop-color="#f03400" />
+		</linearGradient>
+		<mask id="strike">
+			<rect width="1024" height="1024" fill="#fff" />
+			<path d="M760 40 430 520h170L270 990" fill="none" stroke="#000" stroke-width="64" stroke-linejoin="miter" stroke-miterlimit="12" />
+		</mask>
+	</defs>
+	<rect x="100" y="100" width="824" height="824" rx="200" fill="url(#hot)" mask="url(#strike)" />
+</svg>
