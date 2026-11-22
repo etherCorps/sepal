@@ -150,6 +150,16 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   queries, 3D transforms, `overflow: auto` (use `overflow: scroll`),
   `backdrop-filter` outside the Skia backend.
 
+## Looking at a real window without eyes
+
+- `SVELTE_BLITZ_TRACE=1` makes the host print UI-thread timings to stderr:
+  every click, every repaint, every change the app made to the page, and any
+  other step that took longer than 8 ms.
+- In `--watch` mode stdin also accepts `move <x> <y>` and `click <x> <y>`
+  (logical pixels). They enter through the same function OS events do, so a
+  script can drive a real window and read the trace. This does not go through
+  AppKit: it cannot show a problem in how macOS delivers events.
+
 ## Testing approach
 
 - Every behaviour change gets a headless test in `crates/host/tests/`. Use the

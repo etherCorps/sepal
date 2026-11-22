@@ -74,6 +74,12 @@ enum Plan {
     Later(Work),
 }
 
+/// `SVELTE_BLITZ_TRACE` is set: report what the UI thread does (see `window.rs`).
+fn trace_enabled() -> bool {
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ENABLED.get_or_init(|| std::env::var_os("SVELTE_BLITZ_TRACE").is_some())
+}
+
 fn html(name: &str) -> QualName {
     QualName::new(None, ns!(html), LocalName::from(name))
 }
@@ -235,6 +241,9 @@ impl SvelteDocument {
         self.timers
             .set_deadline(self.js.next_timer().map(|at| at - now));
 
+        if turn.changed() && trace_enabled() {
+            eprintln!("[trace] the app changed the page: {} ops", turn.ops);
+        }
         self.last_turn = turn;
         turn
     }

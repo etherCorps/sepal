@@ -6,6 +6,10 @@
 //!
 //! In dev (`--watch`) the host also reads lines from stdin, one per rebuild,
 //! and swaps in a freshly loaded document without closing the window.
+//!
+//! Two more lines are understood on stdin, for driving a real window from a
+//! script: `move <x> <y>` and `click <x> <y>`, in logical pixels. They enter
+//! through the same function the OS's events do.
 
 use std::io::BufRead;
 use std::sync::mpsc::{self, Receiver};
@@ -31,6 +35,32 @@ pub type Reload = Box<dyn Fn() -> Result<App, String>>;
 enum Dev {
     Reload,
     Quit,
+    /// Move the pointer to a point in logical pixels, and optionally click there.
+    Pointer {
+        x: f64,
+        y: f64,
+        click: bool,
+    },
+}
+
+impl Dev {
+    /// What a line on stdin asks for. Anything unrecognised is a reload, which
+    /// is what the Vite preset sends.
+    fn parse(line: &str) -> Self {
+        let mut words = line.split_whitespace();
+        let click = match words.next() {
+            Some("click") => true,
+            Some("move") => false,
+            _ => return Dev::Reload,
+        };
+        match (
+            words.next().and_then(|x| x.parse().ok()),
+            words.next().and_then(|y| y.parse().ok()),
+        ) {
+            (Some(x), Some(y)) => Dev::Pointer { x, y, click },
+            _ => Dev::Reload,
+        }
+    }
 }
 
 /// Run an app until its window is closed. With `reload`, also follow stdin:
@@ -52,7 +82,8 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             .spawn(move || {
                 // Blocks in read(), so this costs nothing between rebuilds.
                 for line in std::io::stdin().lock().lines() {
-                    if line.is_err() || dev_sender.send(Dev::Reload).is_err() {
+                    let Ok(line) = line else { break };
+                    if dev_sender.send(Dev::parse(&line)).is_err() {
                         break;
                     }
                     wake.wake_up();
@@ -96,6 +127,10 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             dock_icon,
             reload,
             dev_events,
+            trace: std::env::var_os("SVELTE_BLITZ_TRACE").map(|_| Trace {
+                started: Instant::now(),
+                first_frame: false,
+            }),
         })
         .map_err(|e| e.to_string())
 }
@@ -108,9 +143,66 @@ struct Host {
     dock_icon: Option<Vec<u8>>,
     reload: Option<Reload>,
     dev_events: Receiver<Dev>,
+    /// Set by `SVELTE_BLITZ_TRACE`: report where the UI thread spends its time.
+    trace: Option<Trace>,
+}
+
+/// Timing of the UI thread, written to stderr as `[trace] +<since launch> …`.
+/// Input and the first frame are always reported; anything else only when it
+/// held the thread for longer than a frame should take.
+struct Trace {
+    started: Instant,
+    first_frame: bool,
+}
+
+impl Trace {
+    /// A frame at 120 Hz. Work shorter than this cannot be felt.
+    const SLOW: std::time::Duration = std::time::Duration::from_millis(8);
+
+    fn report(&mut self, what: &str, began: Instant, always: bool) {
+        let took = began.elapsed();
+        if always || took >= Self::SLOW {
+            let at = began.duration_since(self.started).as_secs_f64();
+            eprintln!(
+                "[trace] +{at:.3}s {what} took {:.1}ms",
+                took.as_secs_f64() * 1000.0
+            );
+        }
+    }
 }
 
 impl Host {
+    /// Feed pointer events to the window as if the OS had sent them.
+    fn pointer(&mut self, event_loop: &dyn ActiveEventLoop, x: f64, y: f64, click: bool) {
+        use winit::event::{ButtonSource, ElementState, MouseButton, PointerSource};
+
+        let Some((&window_id, view)) = self.application.windows.iter().next() else {
+            return;
+        };
+        let scale = view.window.scale_factor();
+        let position = winit::dpi::PhysicalPosition::new(x * scale, y * scale);
+        let moved = WindowEvent::PointerMoved {
+            device_id: None,
+            position,
+            primary: true,
+            source: PointerSource::Mouse,
+        };
+        self.window_event(event_loop, window_id, moved);
+        if click {
+            for state in [ElementState::Pressed, ElementState::Released] {
+                let button = WindowEvent::PointerButton {
+                    device_id: None,
+                    state,
+                    position,
+                    primary: true,
+                    button: ButtonSource::Mouse(MouseButton::Left),
+                    is_macos_activation_click: false,
+                };
+                self.window_event(event_loop, window_id, button);
+            }
+        }
+    }
+
     /// Replace the document with a freshly loaded one. The window, its size and
     /// the viewport scroll position stay; component state starts over.
     fn reload(&mut self) {
@@ -158,15 +250,41 @@ impl ApplicationHandler for Host {
         window_id: WindowId,
         event: WindowEvent,
     ) {
+        let Some(trace) = &mut self.trace else {
+            return self.application.window_event(event_loop, window_id, event);
+        };
+        // The variant's name: "PointerButton", "RedrawRequested", …
+        let name: String = format!("{event:?}")
+            .chars()
+            .take_while(|c| c.is_alphanumeric())
+            .collect();
+        // Input and repaints are always reported: what matters is that one follows the other.
+        let input = matches!(
+            event,
+            WindowEvent::PointerButton { .. }
+                | WindowEvent::KeyboardInput { .. }
+                | WindowEvent::RedrawRequested
+        );
+        let first_frame = matches!(event, WindowEvent::RedrawRequested) && !trace.first_frame;
+        let began = Instant::now();
         self.application.window_event(event_loop, window_id, event);
+        let trace = self.trace.as_mut().unwrap();
+        if first_frame {
+            trace.first_frame = true;
+            trace.report("first frame", began, true);
+        } else {
+            trace.report(&name, began, input);
+        }
     }
 
     fn proxy_wake_up(&mut self, event_loop: &dyn ActiveEventLoop) {
         // Several rebuilds may have queued up while one reload ran: do it once.
         let mut reload = false;
-        for event in self.dev_events.try_iter() {
+        let events: Vec<Dev> = self.dev_events.try_iter().collect();
+        for event in events {
             match event {
                 Dev::Reload => reload = true,
+                Dev::Pointer { x, y, click } => self.pointer(event_loop, x, y, click),
                 Dev::Quit => {
                     // Drop the window before leaving the loop, as blitz-shell does
                     // on close (winit#4135).
@@ -179,7 +297,12 @@ impl ApplicationHandler for Host {
         if reload {
             self.reload();
         }
+        let began = Instant::now();
         self.application.proxy_wake_up(event_loop);
+        if let Some(trace) = &mut self.trace {
+            // Polls the document, and updates the accessibility tree when it changed.
+            trace.report("poll", began, false);
+        }
     }
 
     fn macos_handler(&mut self) -> Option<&mut dyn ApplicationHandlerExtMacOS> {
