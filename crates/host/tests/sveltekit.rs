@@ -1,5 +1,5 @@
-//! SvelteKit itself, built as a single-page app (`examples/sveltekit`), with
-//! its own client router running in the host.
+//! SvelteKit itself, built with `svelteBlitzKit()` (`examples/sveltekit`),
+//! with its own client router running in the host.
 //!
 //! Build the bundle first: `pnpm run build` in the repository root.
 
@@ -41,6 +41,21 @@ fn sveltekit_routes_between_pages() {
     assert_eq!(text(&doc, "#title"), "Home");
     assert_eq!(text(&doc, "#path"), "/");
 
+    // The layout's <style> made it into app.css: the bar is a flex row.
+    let (_, _, _, bar) = doc.rect(doc.query("nav").unwrap()).unwrap();
+    assert_eq!(bar, 48.0);
+    // A static file, written the way SvelteKit apps write it: from the root.
+    let logo = doc.query("#logo").unwrap();
+    assert_eq!(doc.attr(logo, "src").as_deref(), Some("/logo.svg"));
+    let (pixels, width, _) = svelte_blitz_host::screenshot::render_rgba(&mut doc, 800, 600, 1.0);
+    let (x, y, w, h) = doc.rect(logo).unwrap();
+    let at = ((y + h / 2.0) as usize * width as usize + (x + w / 2.0) as usize) * 4;
+    assert!(
+        pixels[at] > 200 && pixels[at + 2] < 120,
+        "the logo is drawn, in its orange: {:?}",
+        &pixels[at..at + 3]
+    );
+
     // The page is alive: a component's own state.
     click(&mut doc, "#count");
     assert_eq!(text(&doc, "#count"), "clicked 1");
@@ -54,11 +69,16 @@ fn sveltekit_routes_between_pages() {
         "/about",
         "`page` from $app/state follows"
     );
+    // `<svelte:head><title>`, which Svelte refuses for a custom renderer and
+    // the build rewrites.
+    let title = |doc: &SvelteDocument| doc.js().eval_string("document.title").unwrap();
+    assert_eq!(title(&doc), "About this app");
 
     // `goto`, to a route with a parameter and a `load` function.
     click(&mut doc, "#go");
     assert_eq!(text(&doc, "#title"), "Item 7");
     assert_eq!(text(&doc, "#double"), "twice that is 14");
+    assert_eq!(title(&doc), "Item 7", "a title with an expression in it");
 
     // The same route with another parameter: `load` runs again.
     click(&mut doc, "#item");

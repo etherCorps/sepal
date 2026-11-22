@@ -436,21 +436,26 @@ Found on the way: SvelteKit listens for link clicks on `<html>`, which the
 DOM layer kept outside the event path; and its startup failed without a word
 (a rejected promise nobody looks at), so the build now makes it report.
 
-To turn it into something supported:
+Shivam's decisions (22 Nov 2026): V8 stays an opt-in build feature;
+SvelteKit is productised; `<svelte:head>` is rewritten.
 
-- Move the two edits and the conversion into `@ethercorps/svelte-blitz-vite`
-  as one plugin, and give a SvelteKit app what the preset gives the others:
-  `app.config.ts`, the manifest, icons, `static/`, dev reload.
-- `<svelte:head>`: a preprocessor like `bindings.js` could turn
-  `<title>` into `document.title = …`; nothing shows a title today anyway
-  except the window, which has its own API.
-- The edits target SvelteKit's internal files. Pin its version and test on
-  every update; the build fails loudly if a pattern is gone.
+Done since: `svelteBlitzKit()` in `@ethercorps/svelte-blitz-vite/sveltekit`
+(`packages/vite/src/sveltekit.js`). It is a SvelteKit adapter (writes
+`dist/app.js`, `app.css`, `app.json` and the static files) plus the two edits
+to SvelteKit's client, and it reads `app.config.ts` and opens and reloads the
+dev window like the other preset. `head.js` rewrites `<svelte:head>` for both
+presets. The host resolves `/file` against the app directory.
+
+Still to do for SvelteKit:
+
+- A template in `create-svelte-blitz`, and `pnpm run test:template` for it.
+- Tested with SvelteKit 3.4.0 only. The two edits (`patch` in
+  `sveltekit.js`) target its internal files; try every new SvelteKit release
+  before raising the peer range.
+- `svelte-check` in the example (`./$types` come from `svelte-kit sync`).
 - Scroll restoration and `afterNavigate` focus handling were not looked at.
-
-Recommendation given to Shivam: worth productising if SvelteKit familiarity
-matters more than owning the router; the built-in router stays either way,
-since it needs none of the DOM layer. Not yet decided.
+- `$app/environment`'s `browser` is true, `building` false: fine. `$env`
+  modules, service workers and remote functions were not tried.
 
 ## Known gaps outside this brief
 

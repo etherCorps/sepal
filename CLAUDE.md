@@ -45,10 +45,16 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `dom.js` (the opt-in DOM layer for web component libraries). Runs in
   QuickJS: no Node code belongs here.
 - `packages/vite/` — `@ethercorps/svelte-blitz-vite`. `vite.js` (the preset),
-  `routes.js` (build-time scan of `src/routes`), `routing.svelte.js` +
+  `sveltekit.js` (`svelteBlitzKit()`: SvelteKit on this renderer, as an
+  adapter plus two edits to SvelteKit's client; see the `patch` table there
+  before touching a SvelteKit version), `app.js` (config file, manifest and
+  dev window, shared by both presets), `head.js` and `bindings.js`
+  (preprocessors for what Svelte refuses), `routes.js` (build-time scan of
+  `src/routes`), `routing.svelte.js` +
   `Router.svelte` (the in-memory router; `$app/navigation` and `$app/state`
-  alias to it), `router.js` (its public API). `vite.js` and `routes.js` run in
-  Node; the rest runs in QuickJS.
+  alias to it), `router.js` (its public API). `vite.js`, `sveltekit.js`,
+  `app.js`, `head.js`, `bindings.js` and `routes.js` run in Node; the rest
+  runs in the engine.
 - `packages/cli/` — the `svelte-blitz` command. `packages/create/` — the
   starter template and the script that copies it.
 - `packages/host/` — `@ethercorps/svelte-blitz-host`: `index.js` finds the
@@ -66,9 +72,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
   `examples/routing/` — file-based routing. `examples/shadcn/` — the DOM
-  layer under a real component library. `examples/sveltekit/` — SvelteKit's
-  own router in the host (a spike: it patches SvelteKit's client at build
-  time, see its `vite.config.ts`).
+  layer under a real component library. `examples/sveltekit/` — a SvelteKit
+  app, built with `svelteBlitzKit()`.
 
 ## Invariants — do not break these
 
@@ -197,7 +202,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   refuses the op. A script that runs for 10 s is stopped (`js.rs`), so a hang
   in JS ends with an error instead of a frozen window.
 - **Svelte features unavailable to custom renderers:**
-  `transition:`/`animate:`/`in:`/`out:`, `<svelte:window|body|document|head>`,
+  `transition:`/`animate:`/`in:`/`out:`, `<svelte:window|body|document>`
+  (`<svelte:head>` too, but `packages/vite/src/head.js` rewrites it),
   `css: 'injected'`, hydration, event delegation. Svelte does not bubble events
   for custom renderers; `dispatch()` in `renderer.js` does.
 - **A `.svelte` file without a rune compiles in legacy mode**, where

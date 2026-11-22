@@ -13,6 +13,7 @@
 // The tree is the renderer's own. An element here is a `BlitzNode`, and every
 // write goes through the renderer into the same op buffer as Svelte's.
 
+import { host_call } from './host-call.js';
 import { TextDecoder, TextEncoder } from './text.js';
 import { URL, URLSearchParams } from './url.js';
 import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_focus, request_measure, root } from './renderer.js';
@@ -1049,6 +1050,8 @@ function memory_storage() {
 	);
 }
 
+let page_title = '';
+
 const document = {
 	nodeType: 9,
 	get baseURI() {
@@ -1058,7 +1061,15 @@ const document = {
 		return address.href;
 	},
 	location,
-	title: '',
+	// The page's title is the window's. Changing the window needs
+	// `permissions.window`; without it the title is only remembered here.
+	get title() {
+		return page_title;
+	},
+	set title(value) {
+		page_title = String(value);
+		host_call('window.set_title', { title: page_title }).catch(() => {});
+	},
 	nodeName: '#document',
 	/** @type {Map<string, Function[]> | null} */
 	listeners: null,

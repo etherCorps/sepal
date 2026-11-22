@@ -313,33 +313,50 @@ With a custom entry the built-in `$app/navigation` and `$app/state` are not
 set up; your router exports its own API. The `Route` and `RouteNode` types
 come from `@ethercorps/svelte-blitz-vite/router`.
 
-### SvelteKit itself (experimental)
+### SvelteKit
 
-`examples/sveltekit` is a real SvelteKit 3 app, built as a single-page app,
-with SvelteKit's own client router running in the host: links, `goto`,
-parameters, `load`, `$app/state` and the back button work, on QuickJS and on
-V8. It is a proof that it can be done, not a supported way to build an app
-yet. What it took, all in that example's `vite.config.ts` and `to-blitz.mjs`:
+A SvelteKit app runs in the host with SvelteKit's own client router: links,
+`goto`, parameters, `load`, `$app/state`, `$app/navigation` and the back
+button. `examples/sveltekit` is one. In `vite.config.ts`, `svelteBlitzKit()`
+takes the place of `sveltekit()`:
 
-- Build with `adapter-static` and a fallback page (no server exists in a
-  desktop app, so nothing server-side can work: no `+page.server.ts`, no form
-  actions, no endpoints), `output.bundleStrategy: 'single'`, and Svelte's
-  `customRenderer` option.
-- Two edits to SvelteKit's client as it is bundled: load the DOM layer and
-  the runtime first, and pass the renderer where SvelteKit mounts its root
-  component. These reach into SvelteKit's own files; an update can break
-  them, and the build stops with a message if it does.
-- A step after the build that turns SvelteKit's output (an HTML page that
-  imports one module) into the `app.js` the host loads.
-- In the DOM layer: `URL`, `URLSearchParams`, `history`, `location`,
-  `sessionStorage`, `TextEncoder`/`TextDecoder`, and events passing through
-  `<html>`, where SvelteKit listens for clicks on links.
+```ts
+import { svelteBlitzKit } from '@ethercorps/svelte-blitz-vite/sveltekit';
+import { defineConfig } from 'vite';
 
-Not working: `<svelte:head>` (Svelte refuses it for custom renderers, so a
-page that sets its title that way does not compile), scroll restoration
-(there is no scroll position to read), and everything the built-in router's
-preset does around the build (`app.config.ts`, the manifest, icons, dev
-reload), which this example does not have.
+export default defineConfig({
+	plugins: [svelteBlitzKit()]
+	// svelteBlitzKit({ kit: { alias: { … } } }) passes options on to SvelteKit
+});
+```
+
+Everything else is as for any svelte-blitz app: settings in `app.config.ts`,
+the icon and other files in `static/`, `vite build` writes `dist/`,
+`vite build --watch` opens the app and reloads it on every save, and
+`svelte-blitz run` and `bundle` work on the result. Needs `@sveltejs/kit`
+3.4 or later in the project; no adapter.
+
+What is different from SvelteKit on the web:
+
+- **No server.** The app is a single-page app, always. `+page.server.ts`,
+  `+layout.server.ts`, `+server.ts`, form actions and prerendering do not
+  exist here; a `load` in `+page.ts` runs in the app. Put
+  `export const ssr = false;` in the root `+layout.ts`.
+- **The address is made up.** The app starts at `http://app.localhost/`, and
+  nothing is ever fetched from there. Static files are addressed from the
+  root as usual (`<img src="/logo.svg">`).
+- **`<svelte:head>`** is rewritten: its `<title>` sets `document.title`, which
+  is the window's title when the app has `permissions.window`. Anything else
+  in it is dropped with a warning, since an app has no `<head>`.
+- **No scroll restoration**, and whatever else needs a part of the browser
+  that the DOM layer does not have (see "Component libraries").
+
+How it works, and what can break: the build edits two places in SvelteKit's
+own client code as it is bundled (to load the DOM layer first, and to mount
+SvelteKit's root component with this renderer), then turns SvelteKit's
+output, an HTML page that imports one module, into the script the host
+loads. Those edits follow SvelteKit's source. If a SvelteKit release changes
+those lines, the build stops and says so. Tested with 3.4.0.
 
 ## Component libraries: shadcn-svelte
 
@@ -708,6 +725,9 @@ packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
   src/Router.svelte       renders layouts around the current page
   src/router.js           the router's public API
   src/bindings.js         rewrites `bind:` on elements, which Svelte refuses here
+  src/head.js             rewrites `<svelte:head>`, likewise
+  src/app.js              app.config.ts, the manifest, the dev window: shared by both presets
+  src/sveltekit.js        svelteBlitzKit(): SvelteKit on this renderer
 packages/cli/             @ethercorps/svelte-blitz-cli: the svelte-blitz command
 packages/create/          @ethercorps/create-svelte-blitz
   template/               the starter it copies
@@ -741,7 +761,7 @@ crates/anyrender_vello_hybrid/   the window's renderer, 0.11.0, with two (see PA
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
-examples/sveltekit/       SvelteKit's own router running in the host (experimental)
+examples/sveltekit/       a SvelteKit app, with SvelteKit's own router
 ```
 
 ## How it works
@@ -813,7 +833,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Children that are added, removed or moved are styled, and so is what depends on their position (`:first-child`, `:nth-child()`, `a + b`, `:empty`) | `tests/restyle.rs` |
 | `:has()`: follows an attribute, a child that arrives or leaves, and the focus, for a parent, an ancestor, what is under it, and siblings on either side | `tests/restyle.rs` |
 | The window's GPU renderer draws what the CPU screenshots show: the same page differs by at most 2/255 per channel | `drive … gpushot:` against `shot:` (needs a GPU; by hand) |
-| SvelteKit's client router in the host: a link, `goto`, a parameter with `load`, `$app/state`, back twice | `tests/sveltekit.rs` |
+| A SvelteKit app built with `svelteBlitzKit()`: a link, `goto`, a parameter with `load`, `$app/state`, back twice, component styles, a static image by root path, `<svelte:head>` titles | `tests/sveltekit.rs`, `test/head.test.js` |
+| SvelteKit in dev: an edit rebuilds, `dist/` has the change, the host is told to reload | by hand, with a stand-in host |
 | `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder` agree with Node's on 231 URLs and on text cut at every byte | `test/url.test.js`, `test/text.test.js` |
 | A promise rejected with nobody listening is reported as `Uncaught (in promise)`; one that is handled is not | `tests/counter.rs`, on both engines |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
@@ -894,8 +915,9 @@ What the time is spent on, from sampling:
 
 ## Limitations
 
-- `transition:`, `animate:`, `<svelte:window>` and `<svelte:head>` are rejected
-  by Svelte for custom renderers. So is `bind:` on elements, but the preset
+- `transition:`, `animate:` and `<svelte:window>` are rejected by Svelte for
+  custom renderers. `<svelte:head>` is too, but the preset rewrites it: its
+  `<title>` sets `document.title` and the rest is dropped. So is `bind:` on elements, but the preset
   rewrites it: `bind:this` and `bind:value` (on inputs) work, and other
   element bindings compile and warn that they do nothing.
 - Desktop APIs cover fetch, files, dialogs, clipboard, opening links and basic
@@ -918,7 +940,7 @@ What the time is spent on, from sampling:
 
 1. Run `pnpm start` on a machine with a display and fix whatever the window turns up.
 2. Type into a real window; then IME.
-3. Decide what to do with the two spikes: V8 and SvelteKit (see `HANDOVER.md`).
+3. A SvelteKit template for `create-svelte-blitz`.
 4. State-preserving HMR, if the full reload turns out not to be enough.
 5. A virtual list component, then packaging per OS.
 6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`

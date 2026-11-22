@@ -42,6 +42,14 @@ impl AppResources {
             "file" => {
                 let root = self.root.as_ref().ok_or("the app has no directory")?;
                 let path = url.to_file_path().map_err(|()| "not a file path")?;
+                // `/logo.svg` is the app's logo.svg, as it would be on a web
+                // server, not a file at the top of the disk. Bundlers write
+                // asset addresses that way.
+                let path = if path.starts_with(root) {
+                    path
+                } else {
+                    root.join(path.strip_prefix("/").unwrap_or(&path))
+                };
                 // Canonical paths on both sides, so neither `..` nor a symlink leads out.
                 let path = path.canonicalize().map_err(|e| e.to_string())?;
                 if !path.starts_with(root) {
