@@ -2,6 +2,7 @@
 import { run_timers, next_timer } from './shims.js';
 import { mount as svelte_mount, unmount } from 'svelte';
 import renderer, { root, dispatch, take_batch, stats, keep_alive } from './renderer.js';
+import { settle_call } from './host-call.js';
 
 /**
  * Mount a component into the window.
@@ -30,6 +31,8 @@ export { unmount, renderer, root };
 	timers: run_timers,
 	/** The next timer deadline on the host clock, or -1. Read at the end of a turn. */
 	next_timer,
+	/** Answer a call the app made to the host (see host-call.js). */
+	resolve: settle_call,
 	/** Node counters, for tests and leak hunting. */
 	stats,
 	/** Pins the root node and the finalizer registry for the life of the app. */

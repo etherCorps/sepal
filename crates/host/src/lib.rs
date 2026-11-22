@@ -13,6 +13,7 @@ pub mod net;
 pub mod ops;
 pub mod testing;
 mod timers;
+pub mod updater;
 
 #[cfg(feature = "screenshot")]
 pub mod screenshot;

@@ -8,7 +8,9 @@ import { find_host, platform } from '@ethercorps/svelte-blitz-host';
 const USAGE = `usage:
   svelte-blitz run [dist]                          open the built app in a window
   svelte-blitz bundle [dist] [out-dir] [--sign <identity>] [--notarize <keychain-profile>]
-                                                   build a macOS .app
+                      [--update-key <private-key-file>] [--update-notes <text>]
+                                                   build a macOS .app; with a key, also the signed update
+  svelte-blitz signer generate <private-key-file>  make the key pair updates are signed with
   svelte-blitz screenshot <out.png> [dist] [WIDTHxHEIGHT]
 
 Build first with \`vite build\`. For dev, \`vite build --watch\` opens the app
@@ -44,6 +46,9 @@ switch (command) {
 		host(dist);
 	case 'bundle':
 		host(['--bundle', ...dist]);
+	case 'signer':
+		if (args[0] !== 'generate' || !args[1]) fail(USAGE);
+		host(['--updater-keygen', args[1]]);
 	case 'screenshot':
 		if (!args[0]) fail(USAGE);
 		host(['--screenshot', args[0], ...(args.length > 1 ? args.slice(1) : ['dist'])]);

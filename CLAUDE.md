@@ -38,7 +38,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 
 - `packages/core/` — `@ethercorps/svelte-blitz`, the runtime. `renderer.js`
   (node mirror, op buffer, event bubbling), `shims.js` (console, timers),
-  `index.js` (`mount`, `__sb` entry points), `protocol.js` (opcodes). Runs in
+  `index.js` (`mount`, `__sb` entry points), `protocol.js` (opcodes),
+  `host-call.js` (async calls to the host), `updater.js` (the update API). Runs in
   QuickJS: no Node code belongs here.
 - `packages/vite/` — `@ethercorps/svelte-blitz-vite`. `vite.js` (the preset),
   `routes.js` (build-time scan of `src/routes`), `routing.svelte.js` +
@@ -55,7 +56,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - All five packages share one version; `scripts/check-versions.js` enforces it.
 - `crates/host/` — the Rust host. `app.rs` (app directory, `app.json`
   manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
-  data: URLs and the app directory only), `js.rs` (QuickJS), `ops.rs` (apply batches),
+  data: URLs and the app directory only), `updater.rs` (self-update and the
+  build side of it), `js.rs` (QuickJS), `ops.rs` (apply batches),
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
@@ -63,6 +65,10 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 
 ## Invariants — do not break these
 
+0. **Host calls only queue.** `__sb_host.call` (used by `host_call()` in JS)
+   pushes a request and returns; the host starts the work at the end of the
+   turn, on a thread, and answers through `__sb.resolve` on a later turn. It
+   must never do work, or touch the document, inside the call itself.
 1. **Writes are batched.** Renderer methods only append integers to the op
    buffer. Nothing calls into Rust while Svelte renders. The host pulls one
    batch per turn with `__sb.take()`.
@@ -123,6 +129,11 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a
   computed colour into a string for another parser has to convert first.
+- **The updater is the only network user.** `updater.rs` fetches the feed and
+  the archive, over HTTPS only (HTTP for loopback). Resources (`net.rs`) never
+  touch the network; keep it that way.
+- **Never unpack an update before `verify()`.** `install_archive` trusts its
+  input; `Updater::download` is what earns that trust.
 - **Blitz CSS gaps** (per its status page): `position: sticky`, container
   queries, 3D transforms, `overflow: auto` (use `overflow: scroll`),
   `backdrop-filter` outside the Skia backend.

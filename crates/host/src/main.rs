@@ -1,8 +1,11 @@
 //! `svelte-blitz-host <dist>`                         open the app in a window
 //! `svelte-blitz-host --watch <dist>`                 same, and reload on every line read from stdin
 //! `svelte-blitz-host --screenshot out.png <dist> [WIDTHxHEIGHT]`
-//! `svelte-blitz-host --bundle <dist> [out-dir] [--sign <identity>] [--notarize <profile>]`
-//!                                                    write <name>.app (default: next to <dist>, in bundle/)
+//! `svelte-blitz-host --bundle <dist> [out-dir] [--sign <identity>] [--notarize <profile>]
+//!                    [--update-key <file>] [--update-notes <text>]`
+//!                                                    write <name>.app (default: next to <dist>, in bundle/),
+//!                                                    and with a key also the signed update for it
+//! `svelte-blitz-host --updater-keygen <file>`        make an update signing key; prints the public half
 //!
 //! `<dist>` is the directory the Vite preset wrote (`app.js`, `app.css`,
 //! `app.json`). `<app.js> [app.css]` is accepted in its place and runs without
@@ -14,6 +17,7 @@ use std::{env, fs, process::ExitCode};
 
 use svelte_blitz_host::app::{App, Manifest};
 use svelte_blitz_host::bundle::bundle_macos;
+use svelte_blitz_host::updater;
 
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -36,13 +40,25 @@ fn parse_size(size: &str) -> Option<(u32, u32)> {
 }
 
 fn run(args: &[String]) -> Result<(), String> {
-    const USAGE: &str = "usage: svelte-blitz-host [--watch | --screenshot out.png] <dist | app.js [app.css]> [WIDTHxHEIGHT]\n       svelte-blitz-host --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>]";
+    const USAGE: &str = "usage: svelte-blitz-host [--watch | --screenshot out.png] <dist | app.js [app.css]> [WIDTHxHEIGHT]\n       svelte-blitz-host --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       svelte-blitz-host --updater-keygen <private-key-file>";
 
     // Launched from Finder or the Dock: no arguments, the app is inside the bundle.
     if args.is_empty()
         && let Some(resources) = bundled_resources()
     {
-        return window(App::from_dir(&resources)?, None);
+        let mut app = App::from_dir(&resources)?;
+        // Resources -> Contents -> Name.app
+        app.bundle = resources
+            .parent()
+            .and_then(Path::parent)
+            .map(Path::to_owned);
+        return window(app, None);
+    }
+
+    if let [flag, rest @ ..] = args
+        && flag == "--updater-keygen"
+    {
+        return keygen(rest.first().ok_or(USAGE)?);
     }
 
     if let [flag, rest @ ..] = args
@@ -75,10 +91,17 @@ fn run(args: &[String]) -> Result<(), String> {
 /// `None` if `<dist>` is missing.
 fn bundle(args: &[String]) -> Result<Option<()>, String> {
     let (mut positional, mut identity, mut profile) = (Vec::new(), None, None);
+    let (mut update_key, mut update_notes) = (None, None);
     let mut args = args.iter();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--sign" => identity = Some(args.next().ok_or("--sign needs a signing identity")?),
+            "--update-key" => {
+                update_key = Some(args.next().ok_or("--update-key needs a private key file")?)
+            }
+            "--update-notes" => {
+                update_notes = Some(args.next().ok_or("--update-notes needs the text")?)
+            }
             "--notarize" => {
                 profile = Some(args.next().ok_or("--notarize needs a keychain profile")?)
             }
@@ -104,8 +127,56 @@ fn bundle(args: &[String]) -> Result<Option<()>, String> {
     if let Some(profile) = profile {
         notarize(&bundle, profile)?;
     }
+
+    // After signing and notarising: the update has to carry the finished app.
+    // The key comes from a file, or from the environment for CI secrets.
+    let private_key = match update_key {
+        Some(file) => Some(read(file)?),
+        None => env::var("SVELTE_BLITZ_UPDATER_KEY").ok(),
+    };
+    if let Some(private_key) = private_key {
+        let manifest = App::from_dir(dist)?.manifest;
+        let version = manifest.version.as_deref().unwrap_or("0.1.0");
+        let pubkey = manifest
+            .updater
+            .as_ref()
+            .map(|config| config.pubkey.as_str());
+        let archive = updater::write_update(
+            &bundle,
+            &out,
+            version,
+            update_notes.map(String::as_str),
+            &private_key,
+            pubkey,
+        )?;
+        // stderr: stdout is the bundle path and nothing else.
+        eprintln!("update: {} (+ .sig, latest.json)", archive.display());
+    }
     println!("{}", bundle.display());
     Ok(Some(()))
+}
+
+/// `--updater-keygen <file>`: write a new private key to `file` and print the
+/// public key that goes into the app manifest.
+fn keygen(file: &str) -> Result<(), String> {
+    use std::io::Write;
+
+    let (private_key, public_key) = updater::generate_keypair()?;
+    // Never overwrite: replacing the key would cut every installed app off from updates.
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+    let mut out = options
+        .open(file)
+        .map_err(|e| format!("cannot create {file}: {e}"))?;
+    writeln!(out, "{private_key}").map_err(|e| format!("cannot write {file}: {e}"))?;
+
+    eprintln!(
+        "Private key written to {file}. Keep it secret and backed up: without it you cannot ship updates.\nPublic key, for `updater.pubkey` in the app manifest:"
+    );
+    println!("{public_key}");
+    Ok(())
 }
 
 /// Run a tool and fail with its name if it does. Its output goes to stderr,
@@ -225,6 +296,7 @@ fn load(args: &[String]) -> Result<Option<(App, &[String])>, String> {
                 }
                 .to_owned()
             }),
+            bundle: None,
         }
     };
     Ok(Some((app, rest)))

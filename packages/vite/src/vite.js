@@ -31,11 +31,17 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  * pixels. `id` (a bundle identifier such as `com.example.counter`) and
  * `version` are used when the app is bundled.
  *
+ * `updater` turns on self-update: `url` is where the update feed
+ * (`latest.json`) is published, `pubkey` is the public half of the key the
+ * updates are signed with (`svelte-blitz signer generate`). The app then
+ * updates itself through `@ethercorps/svelte-blitz/updater`.
+ *
  * @typedef {{
  *   name?: string,
  *   id?: string,
  *   version?: string,
  *   icon?: string,
+ *   updater?: { url: string, pubkey: string },
  *   window?: { title?: string, width?: number, height?: number }
  * }} AppManifest
  */

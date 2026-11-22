@@ -324,11 +324,107 @@ Images load from two places and nowhere else:
   Everything in the project's `static/` directory is copied there by the
   build, as it is. A path that leaves the app directory, through `..` or a
   symlink, is refused.
-- There is no network: `http(s):` URLs do not load. A URL that cannot be
-  loaded is reported on stderr and the image stays empty.
+- Resources never come from the network: `http(s):` URLs do not load. A URL
+  that cannot be loaded is reported on stderr and the image stays empty.
 
 CSS `url()` and `@font-face` go through the same loader but have not been
 tried yet.
+
+## Updates
+
+A bundled app can update itself, in the way Tauri's updater works: it reads a
+small feed, downloads the new version, checks its signature against a key
+built into the app, replaces itself and restarts.
+
+**1. Make a key pair, once.**
+
+```sh
+svelte-blitz signer generate ~/.keys/my-app.key
+# prints the public key
+```
+
+The file is the private key. Keep it secret and backed up: updates signed
+with any other key are refused by every copy of the app already installed.
+
+**2. Tell the app where updates come from.**
+
+```ts
+svelteBlitz({
+	app: {
+		name: 'My App',
+		version: '1.0.0',
+		updater: {
+			url: 'https://github.com/you/my-app/releases/latest/download/latest.json',
+			pubkey: '…the public key…'
+		}
+	}
+})
+```
+
+**3. Offer the update in the app.**
+
+```svelte
+<script lang="ts">
+	import { check } from '@ethercorps/svelte-blitz/updater';
+
+	async function update() {
+		const found = await check();        // null when up to date
+		if (!found) return;
+		console.log(found.version, found.notes);
+		await found.download();             // fetched and verified; nothing replaced yet
+		await found.install();              // replaces the app and starts the new version
+	}
+</script>
+```
+
+**4. Release a new version.** Raise `version`, build, and bundle with the key:
+
+```sh
+vite build
+svelte-blitz bundle --sign "Developer ID Application: …" --notarize my-profile \
+  --update-key ~/.keys/my-app.key --update-notes "What changed"
+```
+
+Next to the `.app` this writes three files. Upload them to the place the feed
+URL points at:
+
+```
+My App-1.1.0-darwin-arm64.app.tar.gz        the update
+My App-1.1.0-darwin-arm64.app.tar.gz.sig    its signature
+latest.json                                 the feed
+```
+
+In CI, `SVELTE_BLITZ_UPDATER_KEY` can hold the private key instead of
+`--update-key`.
+
+What it guarantees:
+
+- An update is installed only if its signature matches the key in the running
+  app. A changed archive, or one signed by someone else, is refused and the
+  app stays as it is.
+- The app never moves to the same or an older version.
+- The feed and the archive are fetched over HTTPS only (plain HTTP is accepted
+  for `127.0.0.1`, for local testing).
+- Bundling refuses a signing key that does not match `updater.pubkey`.
+
+What it does not do yet:
+
+- **Installing is macOS only.** `check()` and `download()` work everywhere;
+  `install()` replaces a `.app` bundle.
+- **No download progress**, and no partial or delta updates: the whole app is
+  downloaded.
+- **`install()` rejects in dev** and whenever the app is not running from a
+  bundle, or cannot write to where it is installed.
+- **A feed for several platforms** is merged when builds of the same version
+  write into the same directory; across CI machines you merge the
+  `platforms` entries yourself.
+
+`examples/updater` has the full flow with a small UI, and
+`scripts/updater-e2e.sh` runs a real update on a Mac: an installed 0.1.0
+finds 0.2.0 on a local server, replaces itself and relaunches.
+
+Updating is the only thing the host uses the network for, and only for the
+feed URL and the archive it names.
 
 ## TypeScript
 
@@ -356,6 +452,8 @@ packages/core/            @ethercorps/svelte-blitz: the runtime
   src/shims.js            console, timers, queueMicrotask for a bare engine
   src/index.js            mount() and the host's entry points (globalThis.__sb)
   src/protocol.js         opcodes shared with the host
+  src/host-call.js        asking the host for work that takes time
+  src/updater.js          check(), download(), install()
   test/                   a host written in JS, for testing without Rust
 packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
   src/vite.js             Vite preset: one app.js (IIFE) + one app.css
@@ -378,6 +476,7 @@ crates/host/              the `svelte-blitz-host` crate
   src/bundle.rs           macOS .app bundle: Info.plist, .icns
   src/document.rs         SvelteDocument: implements blitz_dom::Document
   src/net.rs              loads data: URLs and files from the app directory
+  src/updater.rs          self-update: feed, download, signature, install; and the build side
   src/timers.rs           wakes the event loop for JS timers
   src/window.rs           window + GPU renderer (blitz-shell, Vello Hybrid)
   src/screenshot.rs       CPU rendering to PNG, no display needed
@@ -387,6 +486,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/bundle.rs         bundle layout, Info.plist, .icns contents
   tests/icons.rs          icon and image pixels, resource loading
   tests/routing.rs        file-based routing, by clicking through examples/routing
+  tests/updater.rs        updates against a local server, tampering, the JS API
 crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with two fixes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
@@ -446,6 +546,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Inline SVG and Lucide icons in hex and Tailwind colours, recolouring after a click, `<img>` from a data: URL, a file and an import | `tests/icons.rs` (pixels) + `docs/icons-probe.png` |
 | Resources: only data: URLs and files inside the app directory load; bad URLs do not crash | `tests/icons.rs` |
 | File-based routing: links, params, load data, groups, rest parameters, redirects, error pages, back/forward, slow and overtaken loads | `tests/routing.rs`, `test/routes.test.js` |
+| Updater: signatures, feed rules, a bundle replaced from a local server, tampered and foreign-signed updates refused, the JS API | `tests/updater.rs` |
+| Updater on a real bundle: 0.1.0 finds 0.2.0, verifies, replaces itself, relaunches; code signature still valid | `scripts/updater-e2e.sh` (macOS) |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
 | Timer wake-ups, and silence when no timer is running | `timers_wake_the_event_loop` |
 | Removed nodes are freed on the host after GC | `removed_nodes_are_freed` |
@@ -487,7 +589,8 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 
 - `bind:`, `transition:`, `animate:`, `<svelte:window>`, `<svelte:head>` are
   rejected by Svelte for custom renderers. Use `value={x}` + `oninput`.
-- No `fetch`, storage, or file APIs in JavaScript yet. Each needs a host function in `js.rs`.
+- No `fetch`, storage, or file APIs in JavaScript yet. The updater added the
+  mechanism they would use (`host-call.js`, `HostCall` in `js.rs`).
 - Images and other resources load from data: URLs and the app directory only; no network.
 - `requestAnimationFrame` is a 16 ms timer, not tied to the display.
 - Capture-phase listeners are treated as bubble-phase.

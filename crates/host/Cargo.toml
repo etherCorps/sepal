@@ -18,6 +18,16 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 serde_json = "1"
 data-url = "0.3"
 
+# Updater: fetch the feed and the archive, check the signature, unpack.
+# `flate2`, `semver`, `base64` and `getrandom` are already in the tree.
+ureq = "3"
+ed25519-dalek = "3"
+tar = { version = "0.4", default-features = false }
+flate2 = "1"
+semver = "1"
+base64 = "0.23"
+getrandom = "0.4"
+
 # window
 blitz-shell = { version = "=0.3.0-beta.4", optional = true }
 anyrender_vello_hybrid = { version = "0.11", optional = true }

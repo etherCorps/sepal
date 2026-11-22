@@ -324,6 +324,12 @@ platform binaries into `packages/host/bin` before packing it.
   `$app/state`). See "Routing" in the README for what differs from SvelteKit.
   Not done: generated `./$types`, `invalidate`, navigation lifecycle hooks,
   rerunning only the loads whose inputs changed.
+- Updater (Tauri-style: ed25519 key, `latest.json` feed, JS API). Decided by
+  Shivam: own signing key, app-driven through JS, built-in HTTPS client
+  (`ureq` + rustls, +2.2 MB). Not done: installing on Windows and Linux,
+  download progress, merging feeds across CI machines.
+- Async host calls (`__sb_host.call` / `__sb.resolve`), which `fetch` and
+  other host APIs can now be built on.
 
 ## Known gaps outside this brief
 

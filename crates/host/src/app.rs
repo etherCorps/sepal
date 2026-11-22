@@ -25,6 +25,8 @@ pub struct Manifest {
     /// Bundle identifier, e.g. `com.example.counter`. Used when bundling.
     pub id: Option<String>,
     pub version: Option<String>,
+    /// Where updates come from and the key they must be signed with.
+    pub updater: Option<crate::updater::Config>,
     pub title: Option<String>,
     pub width: Option<u32>,
     pub height: Option<u32>,
@@ -38,6 +40,9 @@ pub struct App {
     /// Where the app was loaded from. Relative URLs (`<img src="logo.png">`)
     /// resolve against it, and nothing outside it can be loaded.
     pub dir: Option<PathBuf>,
+    /// The app bundle this process was started from, when it was. Only then
+    /// can an update replace it.
+    pub bundle: Option<PathBuf>,
 }
 
 impl Manifest {
@@ -56,10 +61,22 @@ impl Manifest {
         };
 
         let window = &value["window"];
+        let updater = match &value["updater"] {
+            Value::Null => None,
+            block => match (block["url"].as_str(), block["pubkey"].as_str()) {
+                (Some(url), Some(pubkey)) => Some(crate::updater::Config {
+                    url: url.to_owned(),
+                    pubkey: pubkey.to_owned(),
+                }),
+                // A half-configured updater would silently never update.
+                _ => return Err("app.json: `updater` needs both `url` and `pubkey`".into()),
+            },
+        };
         Ok(Self {
             name: text(&value["name"]),
             id: text(&value["id"]),
             version: text(&value["version"]),
+            updater,
             title: text(&window["title"]),
             width: size(&window["width"]),
             height: size(&window["height"]),
@@ -92,6 +109,7 @@ impl App {
             css,
             manifest,
             dir: Some(dir.to_owned()),
+            bundle: None,
         })
     }
 }

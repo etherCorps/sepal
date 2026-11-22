@@ -1,8 +1,10 @@
 //! [`SvelteDocument`]: a Blitz document whose tree is driven by a Svelte app.
 
 use std::collections::HashSet;
-use std::sync::Arc;
+use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::{Arc, Mutex};
 use std::task::Context as TaskContext;
+use std::task::Waker;
 
 use blitz_dom::{
     BaseDocument, DocGuard, DocGuardMut, Document, DocumentConfig, EventDriver, EventHandler,
@@ -17,6 +19,7 @@ use crate::js::{EventDetail, JsEngine, Mods};
 use crate::net::AppResources;
 use crate::ops::{self, ApplyStats, NodeMap};
 use crate::timers::TimerWaker;
+use crate::updater::Updater;
 
 /// What one turn (one entry into JS and everything it caused) did.
 #[derive(Default, Debug, Clone, Copy)]
@@ -48,7 +51,16 @@ pub struct SvelteDocument {
     listening: HashSet<String>,
     timers: TimerWaker,
     last_turn: TurnStats,
+    updater: Option<Arc<Updater>>,
+    /// Answers to host calls, sent by the threads doing the work.
+    answers: (Sender<Answer>, Receiver<Answer>),
+    /// Wakes the event loop when an answer is ready. Set once there is a loop.
+    waker: Arc<Mutex<Option<Waker>>>,
 }
+
+/// The id of a host call and its outcome: JSON, or an error message.
+type Answer = (u32, Result<String, String>);
+type Work = Box<dyn FnOnce() -> Result<String, String> + Send>;
 
 fn html(name: &str) -> QualName {
     QualName::new(None, ns!(html), LocalName::from(name))
@@ -64,12 +76,25 @@ impl SvelteDocument {
             net_provider: Some(Arc::new(resources)),
             ..Default::default()
         };
-        Self::new(&app.js, &app.css, config)
+        let updater = app.manifest.updater.clone().map(|config| {
+            let version = app.manifest.version.as_deref().unwrap_or("0.0.0");
+            Arc::new(Updater::new(config, version, app.bundle.clone()))
+        });
+        Self::create(&app.js, &app.css, config, updater)
     }
 
     /// Create the document, load the stylesheet, then evaluate the app bundle,
     /// which mounts the app into `<body>`.
     pub fn new(app_js: &str, app_css: &str, config: DocumentConfig) -> Result<Self, String> {
+        Self::create(app_js, app_css, config, None)
+    }
+
+    fn create(
+        app_js: &str,
+        app_css: &str,
+        config: DocumentConfig,
+        updater: Option<Arc<Updater>>,
+    ) -> Result<Self, String> {
         let mut doc = BaseDocument::new(config);
 
         // <html><head><style>…</style></head><body></body></html>
@@ -101,6 +126,9 @@ impl SvelteDocument {
             listening: HashSet::new(),
             timers: TimerWaker::default(),
             last_turn: TurnStats::default(),
+            updater,
+            answers: mpsc::channel(),
+            waker: Arc::default(),
         };
 
         this.js.eval(app_js)?;
@@ -142,10 +170,20 @@ impl SvelteDocument {
         let mut turn = TurnStats::default();
 
         self.js.run_jobs();
+        // Host calls that finished since the last turn.
+        while let Ok((id, result)) = self.answers.1.try_recv() {
+            self.js.resolve_call(id, result);
+        }
         self.js.run_timers();
         self.js.run_jobs();
 
-        while let Some(batch) = self.js.take_batch() {
+        loop {
+            // Before the batch: a call that is refused on the spot rejects its
+            // promise right here, and what that renders belongs in this turn.
+            self.start_host_calls();
+            let Some(batch) = self.js.take_batch() else {
+                break;
+            };
             let stats =
                 ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, &batch);
             turn.add(stats);
@@ -159,6 +197,68 @@ impl SvelteDocument {
 
         self.last_turn = turn;
         turn
+    }
+
+    /// Start the work JS asked for through `__sb_host.call`, each on its own
+    /// thread. The thread sends its answer back and wakes the event loop; the
+    /// answer is delivered at the start of the next turn.
+    fn start_host_calls(&mut self) {
+        for call in self.js.take_calls() {
+            let work = match self.host_work(&call.name) {
+                Ok(work) => work,
+                Err(refusal) => {
+                    self.js.resolve_call(call.id, Err(refusal));
+                    continue;
+                }
+            };
+            let (answers, waker) = (self.answers.0.clone(), self.waker.clone());
+            let spawned = std::thread::Builder::new()
+                .name(format!("svelte-blitz-{}", call.name))
+                .spawn(move || {
+                    let _ = answers.send((call.id, work()));
+                    if let Some(waker) = &*waker.lock().unwrap() {
+                        waker.wake_by_ref();
+                    }
+                });
+            if let Err(error) = spawned {
+                self.js
+                    .resolve_call(call.id, Err(format!("cannot start {}: {error}", call.name)));
+            }
+        }
+    }
+
+    /// What a host call does, or why it cannot be done.
+    fn host_work(&self, name: &str) -> Result<Work, String> {
+        let Some(action) = name.strip_prefix("updater.") else {
+            return Err(format!("this host has no call named {name}"));
+        };
+        let updater = self
+            .updater
+            .clone()
+            .ok_or("this app has no `updater` in its manifest")?;
+        Ok(match action {
+            "check" => Box::new(move || {
+                let update = updater.check()?;
+                Ok(match update {
+                    None => "null".to_owned(),
+                    Some(update) => serde_json::json!({
+                        "version": update.version,
+                        "current_version": updater.current_version(),
+                        "notes": update.notes,
+                        "date": update.date,
+                    })
+                    .to_string(),
+                })
+            }),
+            "download" => Box::new(move || updater.download().map(|()| "null".to_owned())),
+            "install" => Box::new(move || {
+                let bundle = updater.install()?;
+                crate::updater::relaunch(&bundle)?;
+                // The new version is starting; this one is done.
+                std::process::exit(0)
+            }),
+            _ => return Err(format!("this host has no call named {name}")),
+        })
     }
 
     /// Run a garbage collection in JS and free the host nodes it released.
@@ -196,6 +296,7 @@ impl Document for SvelteDocument {
     fn poll(&mut self, task_context: Option<TaskContext>) -> bool {
         if let Some(cx) = task_context {
             self.timers.set_waker(cx.waker());
+            *self.waker.lock().unwrap() = Some(cx.waker().clone());
         }
         self.settle().changed()
     }

@@ -2,12 +2,16 @@
 //!
 //! The surface between Rust and JS is deliberately tiny:
 //!
-//! * JS calls into Rust through `__sb_host` — logging and a clock.
-//! * Rust calls into JS through `__sb` — `dispatch`, `take`, `timers` and `next_timer`.
+//! * JS calls into Rust through `__sb_host` — logging, a clock, and `call`,
+//!   which asks the host for something that takes time (see [`HostCall`]).
+//! * Rust calls into JS through `__sb` — `dispatch`, `take`, `timers`,
+//!   `next_timer`, and `resolve` to answer a `call`.
 //!
 //! Tree mutations never cross this boundary one at a time. They are pulled as
 //! one [`Batch`] per turn by [`JsEngine::take_batch`].
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::time::Instant;
 
 use rquickjs::{CatchResultExt, Context, Ctx, Function, Object, Runtime, TypedArray, Value};
@@ -51,9 +55,23 @@ pub struct Mods {
     pub shift: bool,
 }
 
+/// A request from JS for work the host does off the UI thread (an update
+/// check, a download). JS gets a promise; the host answers later with
+/// [`JsEngine::resolve_call`].
+///
+/// Making the request only queues it. Nothing happens, and nothing in the
+/// document is touched, until the host picks the queue up at the end of the turn.
+pub struct HostCall {
+    pub id: u32,
+    pub name: String,
+    /// The arguments as JSON.
+    pub args: String,
+}
+
 pub struct JsEngine {
     runtime: Runtime,
     context: Context,
+    calls: Rc<RefCell<Vec<HostCall>>>,
 }
 
 impl JsEngine {
@@ -61,6 +79,8 @@ impl JsEngine {
         let runtime = Runtime::new().map_err(|e| e.to_string())?;
         let context = Context::full(&runtime).map_err(|e| e.to_string())?;
         let start = Instant::now();
+        let calls = Rc::new(RefCell::new(Vec::new()));
+        let queue = calls.clone();
 
         context
             .with(|ctx| -> rquickjs::Result<()> {
@@ -82,12 +102,23 @@ impl JsEngine {
                     })?,
                 )?;
 
+                host.set(
+                    "call",
+                    Function::new(ctx.clone(), move |id: u32, name: String, args: String| {
+                        queue.borrow_mut().push(HostCall { id, name, args });
+                    })?,
+                )?;
+
                 ctx.globals().set("__sb_host", host)?;
                 Ok(())
             })
             .map_err(|e| e.to_string())?;
 
-        Ok(Self { runtime, context })
+        Ok(Self {
+            runtime,
+            context,
+            calls,
+        })
     }
 
     /// Evaluate a script (the app bundle) and run the microtasks it queued.
@@ -171,6 +202,28 @@ impl JsEngine {
                 None
             }
         }
+    }
+
+    /// The host calls JS has made since the last time this was asked.
+    pub fn take_calls(&self) -> Vec<HostCall> {
+        std::mem::take(&mut *self.calls.borrow_mut())
+    }
+
+    /// Settle the promise behind a host call: `Ok` carries the result as JSON,
+    /// `Err` the message of the error to reject with.
+    pub fn resolve_call(&self, id: u32, result: Result<String, String>) {
+        let outcome = self.context.with(|ctx| -> rquickjs::Result<()> {
+            let resolve: Function = entry(&ctx)?.get("resolve")?;
+            let (ok, payload) = match result {
+                Ok(json) => (true, json),
+                Err(message) => (false, message),
+            };
+            resolve.call((id, ok, payload))
+        });
+        if let Err(error) = outcome {
+            self.report("answering a host call", error);
+        }
+        self.run_jobs();
     }
 
     /// Run the timers that are due.

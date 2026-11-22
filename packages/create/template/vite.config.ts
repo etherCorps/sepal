@@ -13,6 +13,8 @@ export default defineConfig({
 				version: '0.1.0',
 				icon: 'icon.png',
 				window: { width: 800, height: 600 }
+				// Self-update: see "Updates" in the svelte-blitz README.
+				// updater: { url: 'https://example.com/latest.json', pubkey: '…' }
 			}
 		})
 	]
