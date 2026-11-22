@@ -17,6 +17,9 @@ pub struct JsEngine {
     entered: Rc<Cell<Instant>>,
     /// A promise was rejected with no handler since the last report.
     rejected: Rc<Cell<bool>>,
+    /// The time JS sees, in milliseconds, once the host has taken the clock
+    /// over (`set_time`). Until then it is the real time since the start.
+    time: Rc<Cell<Option<f64>>>,
 }
 
 impl JsEngine {
@@ -60,6 +63,8 @@ impl JsEngine {
         )));
         let context = Context::full(&runtime).map_err(|e| e.to_string())?;
         let start = Instant::now();
+        let time = Rc::new(Cell::new(None));
+        let set = time.clone();
         let calls = Rc::new(RefCell::new(Vec::new()));
         let queue = calls.clone();
 
@@ -79,7 +84,8 @@ impl JsEngine {
                 host.set(
                     "now",
                     Function::new(ctx.clone(), move || -> f64 {
-                        start.elapsed().as_secs_f64() * 1000.0
+                        set.get()
+                            .unwrap_or_else(|| start.elapsed().as_secs_f64() * 1000.0)
                     })?,
                 )?;
 
@@ -101,6 +107,7 @@ impl JsEngine {
             calls,
             entered,
             rejected,
+            time,
         })
     }
 
@@ -295,6 +302,16 @@ impl JsEngine {
                 None
             }
         }
+    }
+
+    /// Take the clock JS sees (`performance.now()`, timers) away from real
+    /// time and put it at `ms`. From then on it only moves when this is called.
+    ///
+    /// For a document that is not in a window: its animations run on a clock
+    /// the caller moves, and a script that waits for one with a timer has to
+    /// be on the same clock, or a slow machine lets the timer win.
+    pub fn set_time(&self, ms: f64) {
+        self.time.set(Some(ms));
     }
 
     /// The current value of the clock JS sees through `performance.now()`.

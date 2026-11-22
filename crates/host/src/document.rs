@@ -300,6 +300,12 @@ impl SvelteDocument {
         }));
 
         let js = JsEngine::new()?;
+        // Outside a window, time is the caller's to move (`advance_time`), for
+        // scripts as for animations: one clock, or a script that waits for an
+        // animation with a timer finishes at a different moment on every machine.
+        if !hold_host_calls {
+            js.set_time(0.0);
+        }
         // A forced layout, as in a browser: a script that measures a node gets
         // its box as of now, which means applying what the script has written
         // and laying out first. The one place where a read crosses into the
@@ -376,7 +382,9 @@ impl SvelteDocument {
 
     /// Move the animation clock of a document that is not in a window.
     pub(crate) fn advance_time(&mut self, seconds: f64) {
-        self.page.borrow_mut().headless_time += seconds;
+        let mut page = self.page.borrow_mut();
+        page.headless_time += seconds;
+        self.js.set_time(page.headless_time * 1000.0);
     }
 
     pub fn js(&self) -> &JsEngine {

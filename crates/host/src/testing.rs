@@ -36,7 +36,6 @@ impl SvelteDocument {
         let mut left = seconds;
         while left > 0.0 {
             let step = left.min(STEP);
-            std::thread::sleep(std::time::Duration::from_secs_f64(step));
             self.advance_time(step);
             self.settle();
             self.resolve();

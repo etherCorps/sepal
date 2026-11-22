@@ -281,9 +281,14 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   they go through real hit testing and Blitz's event driver.
 - For anything visual, render with `screenshot::render_rgba` and assert on
   pixels, then look at the PNG yourself before trusting the assertion.
-- Headless time stands still. A CSS transition or a timer chain only moves
-  when the test calls `doc.wait(seconds)`; without it you assert on the first
-  frame of an animation.
+- Headless time stands still, for scripts (`performance.now()`, timers) and
+  animations alike. A CSS transition or a timer chain only moves when the
+  test calls `doc.wait(seconds)`; without it you assert on the first frame of
+  an animation. Do not `thread::sleep` to let a timer come due: it will not.
+  Only a document made with `for_window` runs on real time
+  (`timers_wake_the_event_loop`). The two clocks were separate once, and
+  macOS CI, four times slower, let timers overtake the animations they
+  waited for.
 - `doc.rect()` and `doc.click(node)` ignore CSS transforms; hit testing does
   not. For a translated element, use `click_at`.
 - Renderer-only changes: extend `packages/core/test/mock-host.test.js`.

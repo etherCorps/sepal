@@ -4,7 +4,6 @@
 //! Build the bundle first: `pnpm run build` in the repository root.
 
 use std::path::Path;
-use std::time::Duration;
 
 use svelte_blitz_host::SvelteDocument;
 use svelte_blitz_host::app::App;
@@ -197,9 +196,7 @@ fn a_slow_load_keeps_the_old_page_until_it_is_done() {
     click(&mut doc, "#nav-slow");
     assert_eq!(at(&doc), place("Home", "/", "/"), "still loading");
 
-    std::thread::sleep(Duration::from_millis(260));
-    doc.settle();
-    doc.resolve();
+    doc.wait(0.26);
     assert_eq!(at(&doc), place("Slow", "/slow", "/slow"));
     assert_eq!(text(&doc, "#waited"), "waited 200 ms");
 
@@ -207,8 +204,6 @@ fn a_slow_load_keeps_the_old_page_until_it_is_done() {
     click(&mut doc, "#nav-home");
     click(&mut doc, "#nav-slow");
     click(&mut doc, "#nav-about");
-    std::thread::sleep(Duration::from_millis(260));
-    doc.settle();
-    doc.resolve();
+    doc.wait(0.26);
     assert_eq!(at(&doc), place("About", "/about", "/about"));
 }

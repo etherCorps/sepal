@@ -4,6 +4,7 @@
 //!
 //! Build the bundle first: `pnpm run build` in the repository root.
 
+use std::path::Path;
 use std::time::Instant;
 
 use blitz_dom::DocumentConfig;
@@ -228,7 +229,11 @@ fn timers_wake_the_event_loop() {
     let (sender, woken) = mpsc::channel();
     let waker = Waker::from(Arc::new(Notify(sender)));
 
-    let mut doc = load();
+    // As in a window: only there does time pass by itself. In any other
+    // document the clock is the test's to move (`doc.wait`).
+    let dist = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/counter/dist");
+    let app = svelte_blitz_host::app::App::from_dir(Path::new(dist)).unwrap();
+    let mut doc = SvelteDocument::for_window(&app).unwrap();
     doc.layout(800, 600);
     doc.poll(Some(Context::from_waker(&waker)));
 

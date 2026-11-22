@@ -23,6 +23,16 @@ struct Host {
     measure: RefCell<Option<Measure>>,
     /// A promise was rejected with no handler since the last report.
     rejected: std::cell::Cell<bool>,
+    /// The time JS sees once the host has taken the clock over (`set_time`).
+    time: std::cell::Cell<Option<f64>>,
+}
+
+impl Host {
+    fn now(&self) -> f64 {
+        self.time
+            .get()
+            .unwrap_or_else(|| self.start.elapsed().as_secs_f64() * 1000.0)
+    }
 }
 
 pub struct JsEngine {
@@ -119,6 +129,7 @@ impl JsEngine {
             calls: RefCell::new(Vec::new()),
             measure: RefCell::new(None),
             rejected: std::cell::Cell::new(false),
+            time: std::cell::Cell::new(None),
         });
         isolate.set_slot(host.clone());
         isolate.set_promise_reject_callback(promise_rejected);
@@ -342,9 +353,15 @@ impl JsEngine {
         })
     }
 
+    /// Take the clock JS sees away from real time and put it at `ms`. As in
+    /// the QuickJS wrapper: for a document whose animation clock is moved by hand.
+    pub fn set_time(&self, ms: f64) {
+        self.host.time.set(Some(ms));
+    }
+
     /// The current value of the clock JS sees through `performance.now()`.
     pub fn now(&self) -> f64 {
-        self.host.start.elapsed().as_secs_f64() * 1000.0
+        self.host.now()
     }
 
     /// Force a garbage collection. Finalizers queue `DROP` ops for the next batch.
@@ -589,7 +606,7 @@ fn log(scope: &mut v8::PinScope, args: v8::FunctionCallbackArguments, _: v8::Ret
 /// `__sb_host.now()`
 fn now(scope: &mut v8::PinScope, _: v8::FunctionCallbackArguments, mut result: v8::ReturnValue) {
     if let Some(host) = host_of(scope) {
-        result.set_double(host.start.elapsed().as_secs_f64() * 1000.0);
+        result.set_double(host.now());
     }
 }
 
