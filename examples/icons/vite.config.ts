@@ -3,5 +3,9 @@ import tailwindcss from '@tailwindcss/vite';
 import { svelteBlitz } from '@ethercorps/svelte-blitz-vite';
 
 export default defineConfig({
-	plugins: [tailwindcss(), svelteBlitz()]
+  plugins: [tailwindcss(), svelteBlitz({
+    app: {
+      name: "Icons Test",
+    }
+	})]
 });
