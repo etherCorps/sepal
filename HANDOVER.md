@@ -287,8 +287,8 @@ list them in `optionalDependencies`), the CI matrix, `codegen-units`/
 go-ahead, tag and publish the alpha.
 
 **CI (23 Nov 2026).** `.github/workflows/ci.yml` runs on every push:
-`pnpm test` on Linux and macOS and the host tests on V8, all passing, and a
-Windows job that is allowed to fail. What it took to get there:
+`pnpm test` on Linux and macOS and the host tests on V8, all passing. What
+it took to get there:
 
 - A test that compared with Node's `URL`: Node 22 (CI) and 26 (this Mac)
   disagree in four corners, which the test now skips.
@@ -296,10 +296,29 @@ Windows job that is allowed to fail. What it took to get there:
   ran scripts on real time and animations on the test's clock; the runner is
   four times slower and the two drifted apart. They are one clock now
   (`JsEngine::set_time`), and `doc.wait()` no longer sleeps.
-- Windows: paths with `\` compared against Vite's and SvelteKit's `/` in
-  three places (`sveltekit.js`, `vite.js`, `routes.js`). The type checks, all
-  seven example builds and the JS tests before the route test passed there
-  after the first two; see the latest run for how far it gets now.
+
+**Windows: on hold (Shivam, 23 Nov 2026).** The CI job is still there but
+only runs when started by hand (`gh workflow run ci.yml`). Where it stands,
+from run 45059364101:
+
+- The host builds with MSVC. Passing: type checks, all example builds, the JS
+  tests, and the host's `bundle`, `counter`, `icons`, `manifest`, `restyle`,
+  `routing`, `shadcn`, `sveltekit` and `updater` tests.
+- What was fixed to get there: paths with `\` compared against Vite's and
+  SvelteKit's `/` (`sveltekit.js`, `vite.js`, `routes.js`); `/logo.svg`
+  resolving to `D:\logo.svg` (`net.rs` now works on URLs); and QuickJS's
+  1 MB stack limit, which is about 220 calls deep with MSVC's frames, too few
+  for a Bits UI page. The limit is 4 MB now and the Windows main thread is
+  linked with 8 MB (`build.rs`).
+- Still failing, three things. `calls_nest_deeply…` in `js.rs`: 887 calls
+  deep on Windows against 4159 on macOS, under the test's floor of 2000;
+  either the floor is per platform or the limit goes up there.
+  `what_may_be_opened` in `tests/desktop.rs`: the path that would be opened
+  comes back canonical, which on Windows is `\\?\C:\…`; the test expects
+  the path it gave, and whether the shell opens a `\\?\` path is not known.
+  And `test:template`: `pnpm pack` fails when started from the test.
+- Never tried: opening a window, the release build, the updater installing.
+  Windows is not in the release workflow's matrix.
 
 **Release workflow (23 Nov 2026).** `.github/workflows/release.yml`. Run by
 hand (Actions -> Release -> Run workflow, or `gh workflow run release.yml`)

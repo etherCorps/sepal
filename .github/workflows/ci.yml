@@ -3,6 +3,8 @@ name: CI
 on:
   push:
   pull_request:
+  # By hand, which is the only way the Windows job runs.
+  workflow_dispatch:
 
 # A newer push to the same branch makes the older run pointless.
 concurrency:
@@ -42,10 +44,13 @@ jobs:
       - run: pnpm run build
       - run: cargo test --manifest-path crates/host/Cargo.toml --features "screenshot engine-v8"
 
-  # Windows has never been built. This job is here to find out what it takes;
-  # until it passes, a failure does not fail the run.
+  # Windows is on hold (23 Nov 2026): the host builds and most of its tests
+  # pass, see HANDOVER.md for what is left. Twenty minutes on every push is
+  # too much for a job nobody is looking at, so it only runs when started by
+  # hand: `gh workflow run ci.yml`.
   windows:
-    name: test (windows-latest, not required yet)
+    name: test (windows-latest, on hold)
+    if: github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
     continue-on-error: true
     # A cold build takes about 20 minutes there. A test that hangs should not take six hours.
