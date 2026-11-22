@@ -145,7 +145,17 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `settle()` when the app measures. They must agree on the animation time;
   `window.rs` points the shell's clock at `document::animation_clock()`.
 - **Event target id 0** means "outside everything the app made". Only the
-  DOM layer listens to it (`host_hooks.outside`).
+  DOM layer listens to it (`host_hooks.outside`). Key presses arrive there
+  when nothing has the focus.
+- **Focus has two owners that must agree.** The host moves it (a press, Tab)
+  and says so with focus events; JavaScript moves it with `focus()`, which
+  delivers its own events at once and tells the host with the `FOCUS` op. The
+  host sends no events for a `FOCUS` op, or listeners would hear them twice.
+- **On macOS Backspace is not a key press to Blitz** but a command from the
+  system (`AppleStandardKeybinding("deleteBackward:")`). `doc.press` in
+  `testing.rs` sends both, as a real keyboard does.
+- **`preventDefault()` on `pointerup` must not cancel the click** (it does
+  not in a browser, it does in Blitz). `JsEventHandler` drops it.
 - **`BlitzNode`'s own fields must not take DOM names.** The node id is
   `node_id` because `id` is the HTML attribute; a collision corrupts the op
   stream without an error.
@@ -175,7 +185,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   than assuming. `anyrender_vello_hybrid 0.11` and `anyrender_vello_cpu 0.18`
   are the releases that match blitz's `anyrender 0.14`.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in three places, all marked
+  It differs from crates.io 0.3.0-beta.4 in five places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a
@@ -211,6 +221,10 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   (logical pixels). They enter through the same function OS events do, so a
   script can drive a real window and read the trace. This does not go through
   AppKit: it cannot show a problem in how macOS delivers events.
+  `key <name>` (`key Escape`) and `type <text>` press keys; those start one
+  step later, at the document, because winit cannot build a key event.
+- Positions for those commands come from `drive … rect:SEL` at the window's
+  size. They go stale whenever the page's content changes.
 
 ## Testing approach
 
@@ -238,9 +252,15 @@ host-side freeing after GC, CPU screenshots.
 Verified on macOS arm64: all of the above through `pnpm test`, and that the
 window opens and idles at 0% CPU with no wake-ups.
 
-**Never run:** Windows builds, the window on Linux, text input, IME, keyboard
-events. On macOS, painting, clicks, wheel scrolling, hover and resize in the
-window have not been confirmed by eye yet.
+Keyboard and text input are verified headless (Tab, Enter and Space on
+buttons, typing and editing keys in an input, arrows and Escape in Bits UI
+components) and by scripted keys in a macOS window. Those scripted keys start
+at the document: nothing has checked how winit and AppKit deliver real key
+presses.
+
+**Never run:** Windows builds, the window on Linux, IME, clipboard shortcuts
+in a text field. On macOS, painting, clicks, wheel scrolling, hover and resize
+in the window have not been confirmed by eye yet.
 
 ## Conventions
 

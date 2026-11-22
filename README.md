@@ -328,7 +328,7 @@ render as on the web.
 
 | Works | Works with `dom: true` | Does not work yet |
 |---|---|---|
-| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip | Closing on Escape, focus trapping, exit animations |
+| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip, with mouse and keyboard | Exit animations |
 
 The first column is markup and classes. Everything else is built on Bits UI,
 which is written for a browser: it reads `window` and `document`, listens on
@@ -389,9 +389,6 @@ Not there:
   is part-way through the animation Blitz is still running on it.
 - Scrolling is not reported as `scroll` events, so a popup does not follow
   its anchor while the page scrolls under it.
-- Nothing closes on Escape, and focus is not trapped, since keyboard events
-  have never been run in the host.
-
 A page that shows a `Skeleton` never goes idle: its pulse is an animation
 that does not end, and Blitz redraws while one is running.
 
@@ -411,7 +408,22 @@ any app:
   `<body>` with `pointer-events: none`) used to be dropped. With the DOM
   layer it goes to `document` with `<html>` as its target, as in a browser.
 
-Typing into an Input is untested, like all text input.
+### Keyboard
+
+Works, with or without `dom: true`: Tab and Shift+Tab move the focus, Enter
+and Space press the focused button, link or checkbox, typing and the editing
+keys change a text input (`bind:value` follows), and `keydown`/`keyup` reach
+the app with `key`, `code` and the modifier flags. A focus ring styled with
+`:focus-visible` shows for keyboard focus and not after a click.
+
+With `dom: true`, `element.focus()` and `blur()` move the real focus, and
+`document.activeElement` follows whoever moved it. That is what Bits UI needs:
+a Select takes arrow keys, Enter and Escape, a Dialog moves the focus into
+itself, keeps Tab inside, closes on Escape and gives the focus back.
+
+Not there: IME, `:focus-within`, and a focus ring that knows whether a
+`focus()` call followed a click (it always shows). Clipboard shortcuts in a
+text field exist in Blitz but have not been tried.
 
 Out of the box none of it compiled, because every shadcn component has
 `bind:this={ref}` on its root element and Svelte refuses that for custom
@@ -698,7 +710,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/routing.rs        file-based routing, by clicking through examples/routing
   tests/updater.rs        updates against a local server, tampering, the JS API
   tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
-crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with three fixes (see PATCH.md)
+crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with five fixes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
@@ -766,6 +778,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Bits UI components on the DOM layer: Switch and Checkbox (bound value reaches the page), Tabs, Accordion, Dialog (opens over the page, closes on a click outside) | `tests/shadcn.rs`, `test/dom.test.js` |
 | Measuring: a script sees what it just changed, an Accordion slides open to its measured height, a Select opens under its trigger in the same turn and picks an item, a Tooltip is centred over what is hovered, `ResizeObserver`, `innerWidth` and `resize` follow the window, an idle turn reports nothing | `tests/shadcn.rs`, `test/dom.test.js` |
 | The same Select and Accordion in a real window on macOS, by scripted clicks and the trace: they open and close, a click takes 2 to 4 ms, then no more redraws | `SVELTE_BLITZ_TRACE=1` with `--watch` |
+| Keyboard: Tab, Enter and Space on buttons, typing and editing keys in a bound input, a Select driven by arrows, Enter and Escape, a Dialog that traps Tab and returns the focus, focus ring for keyboard only | `tests/shadcn.rs`, `tests/counter.rs`, `test/dom.test.js` |
+| The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SVELTE_BLITZ_TRACE=1` with `--watch` |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
@@ -802,8 +816,10 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
   but nobody has looked at the Dock yet.
 - Windows builds, and the window on Linux. That includes the window icon on
   Windows and X11.
-- Text input, IME, focus and keyboard events. The event payloads are wired
-  (`key`, `code`, `value`) but no test types into a field.
+- Real key presses. Keyboard tests and the scripted keys start at the
+  document; nobody has typed into a window, so how winit and AppKit deliver
+  keys (and Backspace, which macOS sends as a command) is unconfirmed. IME has
+  not been tried at all.
 
 ## Limitations
 
@@ -830,8 +846,8 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 ## Next steps
 
 1. Run `pnpm start` on a machine with a display and fix whatever the window turns up.
-2. Text input: a controlled `<input>` test, then IME.
-3. Host modules: `fetch`, clipboard, window controls.
+2. Type into a real window; then IME.
+3. Exit animations for Bits UI: computed styles and `animationend`.
 4. State-preserving HMR, if the full reload turns out not to be enough.
 5. A virtual list component, then packaging per OS.
 6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`

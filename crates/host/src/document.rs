@@ -1,6 +1,6 @@
 //! [`SvelteDocument`]: a Blitz document whose tree is driven by a Svelte app.
 
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::{Cell, Ref, RefCell, RefMut};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::sync::mpsc::{self, Receiver, Sender};
@@ -10,11 +10,14 @@ use std::task::Waker;
 
 use blitz_dom::{
     BaseDocument, DocGuard, DocGuardMut, Document, DocumentConfig, EventDriver, EventHandler,
-    LocalName, NodeId, QualName, ns,
+    LocalName, NodeId, QualName, local_name, ns,
 };
 use blitz_traits::events::{
-    BlitzKeyEvent, BlitzPointerEvent, DomEvent, DomEventData, EventState, UiEvent,
+    BlitzKeyEvent, BlitzPointerEvent, BlitzPointerId, DomEvent, DomEventData, EventState,
+    MouseEventButton, MouseEventButtons, PointerCoords, UiEvent,
 };
+
+use keyboard_types::{Key, NamedKey};
 
 use crate::api::{Api, Work, denied};
 use crate::app::App;
@@ -614,13 +617,23 @@ impl Document for SvelteDocument {
             // The document stays borrowed for the whole dispatch, which is
             // also what refuses a forced layout from inside a handler.
             let page = &mut *self.page.borrow_mut();
+            let activates = activated_by(&page.doc, &event);
+            let cancelled = Cell::new(false);
             let handler = JsEventHandler {
                 js: &self.js,
                 nodes: &page.nodes,
                 listening: &page.listening,
+                cancelled: &cancelled,
             };
             let mut driver = EventDriver::new(&mut page.doc, handler);
             driver.handle_ui_event(event);
+            // Enter and Space press the button that has the focus. Blitz moves
+            // the focus with Tab but leaves this out.
+            if let Some(click) = activates
+                && !cancelled.get()
+            {
+                driver.handle_dom_event(click);
+            }
         }
         self.settle();
     }
@@ -640,6 +653,67 @@ struct JsEventHandler<'a> {
     js: &'a JsEngine,
     nodes: &'a NodeMap,
     listening: &'a HashSet<String>,
+    /// Set when a handler cancelled a `keydown`.
+    cancelled: &'a Cell<bool>,
+}
+
+/// The click a key press stands for, if it is Enter or Space on a focused
+/// button, link or checkbox. To be sent after the `keydown`, unless a handler
+/// cancelled that.
+// ponytail: Space clicks on `keydown`; a browser waits for `keyup`.
+fn activated_by(doc: &BaseDocument, event: &UiEvent) -> Option<DomEvent> {
+    let UiEvent::KeyDown(key) = event else {
+        return None;
+    };
+    let enter = key.key == Key::Named(NamedKey::Enter);
+    let space = key.key == Key::Character(" ".into());
+    if !(enter || space) || key.is_auto_repeating || !key.modifiers.is_empty() {
+        return None;
+    }
+    let id = doc.get_focussed_node_id()?;
+    let element = doc.get_node(id)?.element_data()?;
+    if element.attr(local_name!("disabled")).is_some() {
+        return None;
+    }
+    let kind = element.attr(local_name!("type")).unwrap_or("");
+    let pressed = match &*element.name.local {
+        "button" | "summary" => true,
+        "a" => enter && element.attr(local_name!("href")).is_some(),
+        "input" => match kind {
+            "checkbox" | "radio" => space,
+            "button" | "submit" | "reset" => true,
+            _ => false,
+        },
+        _ => false,
+    };
+    if !pressed {
+        return None;
+    }
+    // Where a pointer would have been: the middle of the element.
+    let rect = doc.get_client_bounding_rect(id)?;
+    let (x, y) = (
+        (rect.x + rect.width / 2.0) as f32,
+        (rect.y + rect.height / 2.0) as f32,
+    );
+    let click = BlitzPointerEvent {
+        id: BlitzPointerId::Mouse,
+        is_primary: true,
+        coords: PointerCoords {
+            page_x: x,
+            page_y: y,
+            screen_x: x,
+            screen_y: y,
+            client_x: x,
+            client_y: y,
+        },
+        button: MouseEventButton::Main,
+        buttons: MouseEventButtons::None,
+        mods: Default::default(),
+        details: Default::default(),
+        element: Default::default(),
+        active_pointers: Default::default(),
+    };
+    Some(DomEvent::new(id, DomEventData::Click(click)))
 }
 
 impl EventHandler for JsEventHandler<'_> {
@@ -666,8 +740,18 @@ impl EventHandler for JsEventHandler<'_> {
         let detail = event_detail(&event.data);
         let flags = self.js.dispatch(target, name, event.bubbles, &detail);
 
-        if flags & ops::DISPATCH_PREVENT_DEFAULT != 0 {
+        // In a browser the click that ends a press is not a default action
+        // of `pointerup`, so cancelling one does not cancel the other. In Blitz
+        // it is, so for these two events the cancellation stops here.
+        let ends_a_press = matches!(
+            event.data,
+            DomEventData::PointerUp(_) | DomEventData::MouseUp(_)
+        );
+        if flags & ops::DISPATCH_PREVENT_DEFAULT != 0 && !ends_a_press {
             event_state.prevent_default();
+            if matches!(event.data, DomEventData::KeyDown(_)) {
+                self.cancelled.set(true);
+            }
         }
         if flags & ops::DISPATCH_STOP_PROPAGATION != 0 {
             event_state.stop_propagation();

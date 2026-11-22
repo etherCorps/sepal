@@ -16,7 +16,8 @@ const ARITY = {
 	[OP.DROP]: 1,
 	[OP.LISTEN]: 1,
 	[OP.UNLISTEN]: 1,
-	[OP.MEASURE]: 1
+	[OP.MEASURE]: 1,
+	[OP.FOCUS]: 1
 };
 
 export class MockHost {
@@ -26,6 +27,8 @@ export class MockHost {
 		this.listening = new Set();
 		/** Ids of the nodes the app wants boxes for. */
 		this.measured = new Set();
+		/** The node with the keyboard focus, when the app moved it. */
+		this.focused = null;
 		this.time = 0;
 		this.wake = -1;
 		this.logs = [];
@@ -124,6 +127,9 @@ export class MockHost {
 					break;
 				case OP.MEASURE:
 					this.measured.add(this.node(a).id);
+					break;
+				case OP.FOCUS:
+					this.focused = a === 0 ? null : this.node(a);
 					break;
 			}
 		}

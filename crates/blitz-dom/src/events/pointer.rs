@@ -505,6 +505,41 @@ pub(crate) fn handle_pointerdown(
             } else {
                 doc.clear_text_selection();
             }
+
+            // svelte-blitz patch: a press moves the focus, as in a browser: to
+            // the nearest ancestor that can take it (a button, a link,
+            // anything with `tabindex`), or away from whatever had it.
+            // Upstream moves the focus on `click` instead, and only to a few
+            // kinds of element. No focus ring: that is for the keyboard.
+            let mut focus_target = Some(actual_target);
+            while let Some(id) = focus_target {
+                let node = &doc.nodes[id];
+                let takes_focus = node.is_focussable()
+                    || node.element_data().is_some_and(|el| {
+                        !el.has_attr(local_name!("disabled"))
+                            && el.attr_parsed::<i32>(local_name!("tabindex")).is_some()
+                    });
+                if takes_focus {
+                    break;
+                }
+                focus_target = node.parent;
+            }
+            generate_focus_events(
+                doc,
+                &mut |doc| match focus_target {
+                    Some(id) => {
+                        if doc.set_focus_to(id) {
+                            doc.snapshot_node_and(id, ElementState::FOCUSRING, |node| {
+                                if let Some(el) = node.element_data_mut() {
+                                    el.element_state.remove(ElementState::FOCUSRING);
+                                }
+                            });
+                        }
+                    }
+                    None => doc.clear_focus(),
+                },
+                dispatch_event,
+            );
         }
         ClickTarget::TextInput {
             content_box_offset,
@@ -811,10 +846,10 @@ pub(crate) fn handle_click(
         false
     };
 
-    // If nothing is matched then clear focus
-    if !matched {
-        generate_focus_events(doc, &mut |doc| doc.clear_focus(), dispatch_event);
-    }
+    // svelte-blitz patch: upstream clears the focus here when the click
+    // matched nothing. The press already moved it (see `handle_pointerdown`),
+    // and a click that lands elsewhere, or comes from the keyboard, must not.
+    let _ = matched;
 
     // Dispatch double-click event if this is the second click in quick succession
     // (click_count was already computed in handle_mousedown)

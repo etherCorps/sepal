@@ -18,7 +18,8 @@ export const OP = {
 	DROP: 9, // node (JS object was garbage collected; free it)
 	LISTEN: 10, // type (first listener for this event type anywhere)
 	UNLISTEN: 11, // type (last listener for this event type removed)
-	MEASURE: 12 // node (report its box after every layout that changes it)
+	MEASURE: 12, // node (report its box after every layout that changes it)
+	FOCUS: 13 // node (move the keyboard focus to it; 0 = to nothing)
 };
 
 /** Id of the mount target. The host maps it to <body>. */

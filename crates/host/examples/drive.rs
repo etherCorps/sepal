@@ -5,7 +5,8 @@
 //! cargo run --features screenshot --example drive -- <app dir> [WIDTHxHEIGHT] <step>...
 //! ```
 //!
-//! Steps, in order: `click:SELECTOR`, `clickat:X,Y`, `move:X,Y`, `time:SECONDS` (timers
+//! Steps, in order: `click:SELECTOR`, `clickat:X,Y`, `move:X,Y`, `key:NAME`
+//! (as `KeyboardEvent.key`), `type:TEXT`, `time:SECONDS` (timers
 //! and animations move on), `text:SELECTOR`, `count:SELECTOR`,
 //! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `shot:FILE.png`.
 //!
@@ -52,6 +53,16 @@ fn main() {
                 doc.move_to(x.parse().unwrap(), y.parse().unwrap());
                 doc.wait(0.12);
                 println!("  move {rest}")
+            }
+            "key" => {
+                doc.press(rest);
+                doc.wait(0.12);
+                println!("  key {rest}")
+            }
+            "type" => {
+                doc.type_text(rest);
+                doc.wait(0.12);
+                println!("  type {rest}")
             }
             "eval" => println!("  eval: {:?}", doc.js().eval_string(rest)),
             "shot" => {

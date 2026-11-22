@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with three changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with five changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -30,11 +30,30 @@ container's padding and border: a button in a `padding: 24px` box only took
 clicks 24 px below and to the right of where it was drawn. The point is now
 moved back for every child. `tests/shadcn.rs` has the test.
 
-Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) and (3) were not checked. Remove this directory and
+**4. A press moves the focus.** `src/events/pointer.rs`, `handle_pointerdown`
+and `handle_click`: in a browser the focus moves when the mouse button goes
+down, to the nearest ancestor that can take it (a button, a link, anything
+with `tabindex`), or away from whatever had it. Upstream moves it on `click`,
+only to text inputs, checkboxes and a few others, and clears it after any
+click that matched none of those. So a clicked `<button>` never had the focus
+(no keys reached it), and a click that landed somewhere else, or was
+synthesised from the keyboard, took the focus away from the element that had
+just been given it. The press now does it, without a focus ring, and
+`handle_click` no longer clears. Component libraries depend on this: Bits UI
+handles a Select's arrow keys on its trigger, which has the focus because it
+was pressed.
+
+**5. `:focus-visible` matches.** `src/stylo.rs`: upstream answers `false` for
+this pseudo-class, so no focus ring styled with it ever shows, which is every
+Tailwind `focus-visible:` utility. It now matches elements whose state has
+`FOCUSRING`, which Blitz already sets on keyboard focus (and change 4 leaves
+off for a press). `:focus-within` is still always false.
+
+Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) were not checked. Remove this directory and
 the `[patch]` entry once a release contains the fix.
 
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the three changes (search for
+directory with that version's source and reapply the five changes (search for
 `svelte-blitz patch`).

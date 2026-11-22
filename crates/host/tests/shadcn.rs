@@ -373,6 +373,139 @@ fn the_app_is_told_when_the_layout_changes() {
     assert_eq!(eval(&doc, "resizes + ',' + sizes.length"), "1,2");
 }
 
+fn focused(doc: &SvelteDocument) -> String {
+    doc.query(":focus")
+        .and_then(|node| doc.attr(node, "id").or_else(|| doc.attr(node, "data-slot")))
+        .unwrap_or_default()
+}
+
+#[test]
+fn typing_changes_a_bound_input() {
+    let mut doc = load();
+    click(&mut doc, "#name");
+    assert_eq!(focused(&doc), "name");
+    doc.type_text(" Lovelace");
+    assert_eq!(text(&doc, "#greeting"), "Hello, Ada Lovelace.");
+    doc.press("Backspace");
+    doc.press("ArrowLeft");
+    doc.press("Delete");
+    assert_eq!(text(&doc, "#greeting"), "Hello, Ada Lovela.");
+}
+
+/// Tab moves the focus, Enter and Space press what has it, and the focus
+/// ring is for the keyboard: a click focuses a button without one.
+#[test]
+fn buttons_work_from_the_keyboard() {
+    let mut doc = load();
+    doc.press("Tab");
+    assert_eq!(focused(&doc), "count");
+    assert_eq!(
+        doc.query(":focus-visible"),
+        doc.query("#count"),
+        "the focus ring is on"
+    );
+    doc.press("Enter");
+    assert_eq!(text(&doc, "#count"), "Clicked 1");
+    doc.press(" ");
+    assert_eq!(text(&doc, "#count"), "Clicked 2");
+    assert_eq!(
+        focused(&doc),
+        "count",
+        "pressing it does not lose the focus"
+    );
+
+    click(&mut doc, "#inline");
+    assert_eq!(focused(&doc), "inline");
+    assert!(
+        doc.query(":focus-visible").is_none(),
+        "no ring after a click"
+    );
+    assert_eq!(text(&doc, "#count"), "Clicked 3");
+
+    // A click on nothing in particular takes the focus away.
+    doc.click_at(880.0, 680.0);
+    assert_eq!(focused(&doc), "");
+}
+
+#[test]
+fn a_select_is_driven_from_the_keyboard() {
+    let mut doc = load();
+    // Opened with the mouse: the press focuses the trigger, so the keys go to it.
+    click(&mut doc, "#fruit");
+    doc.wait(0.2);
+    assert_eq!(focused(&doc), "fruit");
+    let highlighted = |doc: &SvelteDocument| {
+        doc.query("[data-select-item][data-highlighted]")
+            .and_then(|node| doc.attr(node, "data-value"))
+    };
+    assert_eq!(highlighted(&doc).as_deref(), Some("apple"));
+    doc.press("ArrowDown");
+    doc.press("ArrowDown");
+    assert_eq!(highlighted(&doc).as_deref(), Some("cherry"));
+    doc.press("Enter");
+    doc.wait(0.3);
+    assert_eq!(text(&doc, "#fruit"), "cherry");
+    assert!(doc.query("[data-select-content]").is_none(), "closed");
+
+    // And without the mouse: the trigger still has the focus.
+    doc.press("Enter");
+    doc.wait(0.2);
+    assert!(
+        doc.query("[data-select-content]").is_some(),
+        "Enter opens it"
+    );
+    doc.press("ArrowUp");
+    doc.press("Enter");
+    doc.wait(0.3);
+    assert_eq!(text(&doc, "#fruit"), "banana");
+
+    doc.press("ArrowDown");
+    doc.wait(0.2);
+    assert!(
+        doc.query("[data-select-content]").is_some(),
+        "so does an arrow"
+    );
+    doc.press("Escape");
+    doc.wait(0.3);
+    assert!(
+        doc.query("[data-select-content]").is_none(),
+        "Escape closes it"
+    );
+    assert_eq!(text(&doc, "#fruit"), "banana");
+}
+
+/// Bits UI moves the focus into a Dialog (`focus()` from JavaScript, which
+/// the host follows), keeps Tab inside it, closes it on Escape and gives the
+/// focus back to the button that opened it.
+#[test]
+fn a_dialog_keeps_the_keyboard_and_gives_it_back() {
+    let mut doc = load();
+    // Which part of the dialog: its elements have generated ids.
+    let part = |doc: &SvelteDocument| {
+        doc.query(":focus")
+            .and_then(|node| doc.attr(node, "data-slot"))
+            .unwrap_or_default()
+    };
+    click(&mut doc, "#open-dialog");
+    doc.wait(0.3);
+    assert_eq!(part(&doc), "dialog-content");
+    doc.press("Tab");
+    assert_eq!(part(&doc), "dialog-close");
+    // The page behind is not reachable.
+    for _ in 0..3 {
+        doc.press("Tab");
+        assert!(
+            part(&doc).starts_with("dialog-"),
+            "still inside: {}",
+            part(&doc)
+        );
+    }
+    doc.press("Escape");
+    doc.wait(0.4);
+    assert!(doc.query("[role=dialog]").is_none(), "closed");
+    assert_eq!(focused(&doc), "open-dialog");
+}
+
 /// Blitz used to hit-test a box that sits in a line of text as if it were
 /// shifted by its container's padding (see crates/blitz-dom/PATCH.md).
 #[test]

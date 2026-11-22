@@ -104,6 +104,28 @@ host.settle();
 host.dispatch({ id: 0 }, 'pointerdown');
 assert.equal(run('outside'), true);
 
+// --- focus: JavaScript moves it with an op, and hears its own events at once ----------
+run(`
+	globalThis.focus_log = [];
+	for (const type of ['focusin', 'focusout']) document.addEventListener(type, (event) => focus_log.push(type + ' ' + event.target.id));
+`);
+host.settle();
+assert.equal(run(`document.activeElement === document.body`), true);
+assert.equal(run(`document.getElementById('count').focus(), document.activeElement.id`), 'count');
+assert.equal(host.focused, null, 'the host is told at the end of the turn');
+host.settle();
+assert.equal(host.focused, host.by_id('count'));
+// Focus does not land on something that cannot take it.
+assert.equal(run(`document.getElementById('greeting').focus(), document.activeElement.id`), 'count');
+assert.equal(run(`document.getElementById('name').focus(), focus_log.join()`), 'focusin count,focusout count,focusin name');
+// When the host moves the focus (a click, Tab), it says so with events.
+host.dispatch(host.by_id('count'), 'focusin');
+assert.equal(run(`document.activeElement.id`), 'count');
+run(`document.activeElement.blur()`);
+host.settle();
+assert.equal(host.focused, null);
+assert.equal(run(`document.activeElement === document.body`), true);
+
 // --- a node cannot go inside itself ------------------------------------------------
 // The host would loop forever on a tree with a cycle in it.
 assert.throws(() => run(`document.querySelector('main').firstElementChild.appendChild(document.querySelector('main'))`), /descendant/);

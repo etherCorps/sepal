@@ -475,7 +475,11 @@ impl selectors::Element for BlitzNode<'_> {
             NonTSPseudoClass::Enabled => self.element_state().contains(ElementState::ENABLED),
             NonTSPseudoClass::Focus => self.element_state().contains(ElementState::FOCUS),
             NonTSPseudoClass::FocusWithin => false,
-            NonTSPseudoClass::FocusVisible => false,
+            // svelte-blitz patch: upstream answers `false`, so nothing styled
+            // with `:focus-visible` (every Tailwind focus ring) ever shows.
+            NonTSPseudoClass::FocusVisible => {
+                self.element_state().contains(ElementState::FOCUSRING)
+            }
             NonTSPseudoClass::Fullscreen => false,
             NonTSPseudoClass::Hover => self.element_state().contains(ElementState::HOVER),
             NonTSPseudoClass::Indeterminate => false,

@@ -154,6 +154,17 @@ export function request_measure(node) {
 }
 
 /**
+ * Move the host's keyboard focus: key events go to this node from now on, and
+ * it gets the focus ring. The host sends no focus events for it; whoever
+ * asked already knows.
+ * @param {BlitzNode | null} node `null` takes the focus away from everything
+ */
+export function request_focus(node) {
+	if (node === null) ops.push(OP.FOCUS, 0);
+	else if (node.node_id !== 0) ops.push(OP.FOCUS, node.node_id);
+}
+
+/**
  * Entry points the host only uses when a module that wants them is loaded.
  *
  * `outside` is the node an event belongs to when it hit nothing the app made:

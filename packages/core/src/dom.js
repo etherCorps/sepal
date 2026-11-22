@@ -13,7 +13,7 @@
 // The tree is the renderer's own. An element here is a `BlitzNode`, and every
 // write goes through the renderer into the same op buffer as Svelte's.
 
-import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_measure, root } from './renderer.js';
+import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_focus, request_measure, root } from './renderer.js';
 
 const g = /** @type {any} */ (globalThis);
 const proto = /** @type {any} */ (BlitzNode.prototype);
@@ -821,12 +821,15 @@ Object.assign(proto, /** @type {Record<string, any> & ThisType<any>} */ ({
 	click() {
 		this.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
 	},
-	// The host has a focus of its own, which a click moves. This moves the one
-	// JavaScript sees; the host is not told, so the focus ring does not follow.
+	// The host owns the keyboard focus: a click or Tab moves it and the host
+	// says so with focus events. Moving it from here is the other direction:
+	// the host is told with an op, and the events are delivered right away,
+	// because code that calls `focus()` reads `activeElement` on the next line.
 	focus() {
-		if (active === this) return;
+		if (active === this || !is_focusable(this)) return;
 		const previous = active;
 		active = this;
+		request_focus(this);
 		if (previous !== null) {
 			deliver(previous, new FocusEvent('blur', { relatedTarget: this }));
 			deliver(previous, new FocusEvent('focusout', { bubbles: true, relatedTarget: this }));
@@ -837,10 +840,22 @@ Object.assign(proto, /** @type {Record<string, any> & ThisType<any>} */ ({
 	blur() {
 		if (active !== this) return;
 		active = null;
+		request_focus(null);
 		deliver(this, new FocusEvent('blur', {}));
 		deliver(this, new FocusEvent('focusout', { bubbles: true }));
 	}
 }));
+
+/**
+ * What `focus()` works on: controls and links, and anything with `tabindex`.
+ * On anything else it does nothing, and callers check `activeElement` to see.
+ * @param {any} node
+ */
+function is_focusable(node) {
+	if (node.type !== 'element' || node.attrs?.has('disabled')) return false;
+	if (node.attrs?.has('tabindex') || node.attrs?.has('contenteditable')) return true;
+	return /^(button|input|select|textarea|summary)$/i.test(node.name) || (/^(a|area)$/i.test(node.name) && node.attrs?.has('href'));
+}
 
 /** A DOM class that elements with one of these tag names count as. @param {((node: any) => boolean)} test */
 const node_class = (test) => {
@@ -879,6 +894,8 @@ const document = {
 	readyState: 'complete',
 	dir: 'ltr',
 	get activeElement() {
+		// What had the focus may have left the page since.
+		if (active !== null && !(/** @type {any} */ (root).contains(active))) active = null;
 		return active ?? root;
 	},
 	hasFocus: () => true,

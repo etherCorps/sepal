@@ -4,10 +4,11 @@
 
 use blitz_dom::{Document, NodeId};
 use blitz_traits::events::{
-    BlitzPointerEvent, BlitzPointerId, MouseEventButton, MouseEventButtons, PointerCoords,
-    PointerDetails, UiEvent,
+    BlitzKeyEvent, BlitzPointerEvent, BlitzPointerId, KeyState, MouseEventButton,
+    MouseEventButtons, PointerCoords, PointerDetails, UiEvent,
 };
 use blitz_traits::shell::{ColorScheme, Viewport};
+use keyboard_types::{Code, Key, Location, Modifiers, NamedKey};
 
 use crate::SvelteDocument;
 
@@ -100,10 +101,70 @@ impl SvelteDocument {
         self.resolve();
     }
 
+    /// Press and release a key, as a keyboard would. `key` is what
+    /// `KeyboardEvent.key` says: a name ("Escape", "ArrowDown", "Tab",
+    /// "Enter") or the character typed ("a", " ").
+    pub fn press(&mut self, key: &str) {
+        self.press_with(key, Modifiers::empty());
+    }
+
+    /// [`press`](Self::press) with modifier keys held.
+    pub fn press_with(&mut self, key: &str, modifiers: Modifiers) {
+        for state in [KeyState::Pressed, KeyState::Released] {
+            let event = key_event(key, modifiers, state);
+            self.handle_ui_event(match state {
+                KeyState::Pressed => UiEvent::KeyDown(event),
+                KeyState::Released => UiEvent::KeyUp(event),
+            });
+            // On macOS the system turns editing keys into commands, and Blitz
+            // leaves Backspace to that.
+            if cfg!(target_os = "macos") && state == KeyState::Pressed && key == "Backspace" {
+                self.handle_ui_event(UiEvent::AppleStandardKeybinding("deleteBackward:".into()));
+            }
+        }
+        self.resolve();
+    }
+
+    /// Type text, one key per character.
+    pub fn type_text(&mut self, text: &str) {
+        for character in text.chars() {
+            self.press(&character.to_string());
+        }
+    }
+
     /// Click the centre of a node. The document must have been laid out.
     pub fn click(&mut self, node: NodeId) {
         let (x, y, width, height) = self.rect(node).expect("node has no layout");
         self.click_at((x + width / 2.0) as f32, (y + height / 2.0) as f32);
+    }
+}
+
+fn key_event(key: &str, modifiers: Modifiers, state: KeyState) -> BlitzKeyEvent {
+    // A name that `Key` does not know is a character.
+    let key: Key = key.parse().unwrap_or_else(|_| Key::Character(key.into()));
+    let (code, text) = match &key {
+        Key::Character(typed) => {
+            let character = typed.chars().next().unwrap_or(' ');
+            let code = match character {
+                'a'..='z' | 'A'..='Z' => format!("Key{}", character.to_ascii_uppercase()),
+                '0'..='9' => format!("Digit{character}"),
+                ' ' => "Space".to_owned(),
+                _ => String::new(),
+            };
+            (code, Some(typed.as_str().into()))
+        }
+        Key::Named(NamedKey::Enter) => ("Enter".to_owned(), Some("\r".into())),
+        Key::Named(named) => (named.to_string(), None),
+    };
+    BlitzKeyEvent {
+        key,
+        code: code.parse().unwrap_or(Code::Unidentified),
+        modifiers,
+        location: Location::Standard,
+        is_auto_repeating: false,
+        is_composing: false,
+        state,
+        text,
     }
 }
 

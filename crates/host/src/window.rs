@@ -41,12 +41,21 @@ enum Dev {
         y: f64,
         click: bool,
     },
+    /// Press these keys, each named as `KeyboardEvent.key` names it.
+    Keys(Vec<String>),
 }
 
 impl Dev {
     /// What a line on stdin asks for. Anything unrecognised is a reload, which
     /// is what the Vite preset sends.
     fn parse(line: &str) -> Self {
+        // `key Escape`, `key ArrowDown`; `type some text` is a key per character.
+        if let Some(name) = line.strip_prefix("key ") {
+            return Dev::Keys(vec![name.trim().to_owned()]);
+        }
+        if let Some(text) = line.strip_prefix("type ") {
+            return Dev::Keys(text.chars().map(String::from).collect());
+        }
         let mut words = line.split_whitespace();
         let click = match words.next() {
             Some("click") => true,
@@ -203,6 +212,24 @@ impl Host {
         }
     }
 
+    /// Press keys in the window's document. Unlike pointer events these do
+    /// not pass through winit, which has no way to make a key event: they
+    /// start where Blitz would hand one to the document.
+    fn keys(&mut self, keys: &[String]) {
+        let Some(view) = self.application.windows.values_mut().next() else {
+            return;
+        };
+        let began = Instant::now();
+        let doc = view.downcast_doc_mut::<SvelteDocument>();
+        for key in keys {
+            doc.press(key);
+        }
+        view.request_redraw();
+        if let Some(trace) = &mut self.trace {
+            trace.report(&format!("keys {keys:?}"), began, true);
+        }
+    }
+
     /// Hand a window event to Blitz, timing it when tracing is on.
     fn forward(
         &mut self,
@@ -311,6 +338,7 @@ impl ApplicationHandler for Host {
             match event {
                 Dev::Reload => reload = true,
                 Dev::Pointer { x, y, click } => self.pointer(event_loop, x, y, click),
+                Dev::Keys(keys) => self.keys(&keys),
                 Dev::Quit => {
                     // Drop the window before leaving the loop, as blitz-shell does
                     // on close (winit#4135).

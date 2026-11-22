@@ -20,6 +20,7 @@ pub const DROP: i32 = 9; // node
 pub const LISTEN: i32 = 10; // type
 pub const UNLISTEN: i32 = 11; // type
 pub const MEASURE: i32 = 12; // node
+pub const FOCUS: i32 = 13; // node (0 = none)
 
 /// The JS id of the mount target, mapped to `<body>`.
 pub const ROOT_ID: u32 = 1;
@@ -315,6 +316,17 @@ pub fn apply_batch(
                 let o = operands!(1);
                 listening.remove(string(o[0]));
             }
+            FOCUS => {
+                let o = operands!(1);
+                // No focus events from here: the script that asked has
+                // already told its own listeners.
+                if o[0] == 0 {
+                    mutator.doc.clear_focus();
+                } else {
+                    let id = node!(o[0]);
+                    mutator.doc.set_focus_to(id);
+                }
+            }
             MEASURE => {
                 let o = operands!(1);
                 node!(o[0]);
@@ -352,6 +364,8 @@ mod tests {
             REMOVE, 99,
             MEASURE, 99,
             MEASURE, 2,
+            FOCUS, 99,
+            FOCUS, 3,
             77,                   // not an opcode
         ];
         let batch = Batch {
@@ -364,5 +378,6 @@ mod tests {
         assert_eq!(doc.get_node(span).unwrap().parent, Some(div));
         assert_eq!(doc.get_node(div).unwrap().parent, None, "no cycle");
         assert_eq!(nodes.measured().iter().collect::<Vec<_>>(), [&2]);
+        assert_eq!(doc.get_focussed_node_id(), Some(span));
     }
 }

@@ -80,7 +80,7 @@
 			</div>
 			<Alert>
 				<AlertTitle>Heads up</AlertTitle>
-				<AlertDescription>Nothing here closes on Escape yet: keyboard events have never been run.</AlertDescription>
+				<AlertDescription>Try the keyboard: Tab, Enter, Space, arrows in the select, Escape. Things close without their exit animation.</AlertDescription>
 			</Alert>
 		</div>
 	</div>

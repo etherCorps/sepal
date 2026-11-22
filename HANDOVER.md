@@ -339,13 +339,11 @@ platform binaries into `packages/host/bin` before packing it.
 - A DOM layer for web component libraries (`dom: true`, Shivam's choice
   after the shadcn probe), then layout measurement for it (also his call):
   Switch, Checkbox, Tabs, Accordion, Dialog, Select and Tooltip from
-  shadcn-svelte work with the mouse. A measurement is a forced layout
+  shadcn-svelte work with mouse and keyboard. A measurement is a forced layout
   (`__sb_host.measure`, the one exception to invariant 2, which Shivam asked
   for so that the Accordion slides open), and the host also reports boxes
   after each layout. See "Measuring the page" in the README.
   Not done:
-  - Keyboard: Escape, focus trap, arrow keys in a Select. Blocked on
-    keyboard events, which have never been run at all.
   - Exit animations. Bits UI asks `getComputedStyle(node).animationName`
     whether to wait, gets nothing, and closes at once; it would also need
     `animationend` events. Computed styles could be answered the way
@@ -354,9 +352,19 @@ platform binaries into `packages/host/bin` before packing it.
   - The other Bits UI components (Popover, DropdownMenu, Combobox, …) were
     not tried. They use the same pieces as Select and Tooltip.
 
+- Keyboard and text input: Tab, Enter/Space on buttons, typing, `focus()`
+  from JavaScript (`FOCUS` op). Two more Blitz patches came with it (a press
+  moves the focus; `:focus-visible` matches), see `crates/blitz-dom/PATCH.md`.
+- SvelteKit itself was looked at again (Kit 3.0.1) once the DOM layer existed.
+  Still blocked by things that are not DOM: Kit mounts its root without a
+  renderer option, its build is a server pass plus module chunks, QuickJS has
+  no `URL` or `history`, and Svelte refuses `<svelte:head>` for custom
+  renderers. Suggested to Shivam: a time-boxed spike, shipping Kit as a second
+  router if it runs. Not started; his call.
+
 ## Known gaps outside this brief
 
-Text input and IME, keyboard events, state-preserving HMR,
+IME, real key presses in a window (only scripted ones were run), state-preserving HMR,
 `requestAnimationFrame` tied to the display, multiple
 windows, the scriptc experiment. See "Next steps" in `README.md`. Do not pull
 these into the icon or release work unless one turns out to block it.

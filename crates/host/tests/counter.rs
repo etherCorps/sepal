@@ -135,6 +135,24 @@ fn removed_nodes_are_freed() {
     assert!(doc.live_nodes() < 20, "only the root is left");
 }
 
+/// The keyboard needs nothing from the app: Tab moves the focus to the first
+/// button, and Enter and Space press it.
+#[test]
+fn the_keyboard_presses_buttons() {
+    let mut doc = load();
+    doc.layout(800, 600);
+    doc.press("Tab");
+    assert_eq!(doc.query(":focus"), doc.query("#inc"));
+    doc.press("Enter");
+    doc.press(" ");
+    let inc = doc.query("#inc").unwrap();
+    assert_eq!(doc.text(inc), "count is 2");
+    // Enter on something that is not a control does nothing.
+    doc.click_at(790.0, 590.0);
+    doc.press("Enter");
+    assert_eq!(doc.text(inc), "count is 2");
+}
+
 #[test]
 fn idle_turns_do_no_work() {
     use blitz_dom::Document;
