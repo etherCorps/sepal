@@ -859,9 +859,10 @@ What the time is spent on, from sampling:
   renderer's glyph atlas is now on (a patch to the vendored
   `anyrender_vello_hybrid`), which cut the time spent painting by half. A
   page with an endless animation, such as a `Skeleton`, still never idles.
-- **The engine.** The same 1000-row shuffle that takes 36 ms here takes 6 ms
-  in V8 with its JIT off and 2.5 ms with it on. See `HANDOVER.md` for what a
-  different engine would cost.
+- **The engine.** QuickJS is an interpreter. The host can be built on V8
+  instead (`cargo build --features engine-v8`, experimental): long lists get
+  about 3.5 times faster and components about 1.5 times once warm, for a
+  binary of 62 MB instead of 24. `HANDOVER.md` has the table.
 
 ## Limitations
 

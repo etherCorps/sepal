@@ -12,6 +12,8 @@ publish = false
 blitz-dom = { version = "=0.3.0-beta.4", features = ["scrollbars"] }
 blitz-traits = "=0.3.0-beta.4"
 rquickjs = { version = "0.14", features = ["array-buffer"] }
+# A second engine, behind the `engine-v8` feature. See `src/js/v8.rs`.
+v8 = { version = "152", optional = true }
 keyboard-types = "0.8"
 # `image` and `data-url` are already in the tree through blitz-dom.
 image = { version = "0.25", default-features = false, features = ["png"] }
@@ -71,6 +73,9 @@ window = [
     "dep:objc2-foundation",
 ]
 screenshot = ["dep:blitz-paint", "dep:anyrender", "dep:anyrender_vello_cpu", "dep:png"]
+# Run the app in V8 (with its JIT) instead of QuickJS. Bigger binary, faster
+# JavaScript. Experimental.
+engine-v8 = ["dep:v8"]
 
 [[example]]
 name = "drive"

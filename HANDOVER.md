@@ -367,20 +367,60 @@ platform binaries into `packages/host/bin` before packing it.
   - Turns are bound by JavaScript in QuickJS. Nothing to tune on the Rust
     side; opening a Dialog took the same 8 ms in the release build and in
     the dev build (which optimises dependencies).
-  - The JavaScript engine. Measured the counter's 1000-row shuffle in the
-    mock host under Node: 2.5 ms in V8, 5.9 ms in V8 with `--jitless`, 36 ms
-    here. Half of QuickJS's time is `Array.prototype.includes` on Svelte's
-    dependency lists (quadratic in the list, a native loop in V8, a call per
-    element in QuickJS). Our own JavaScript (renderer.js, dom.js, shims.js)
-    is about 5% of a turn, so there is nothing to win by rewriting it.
-    Options, for Shivam to choose: V8 through the `v8` crate (JIT; roughly
-    +30 MB on a 25 MB binary, more memory, a JIT entitlement when signed) or
-    JavaScriptCore on macOS (system framework, no size, macOS only). Only
-    `js.rs` knows the engine.
+  - The JavaScript engine: see "V8 spike" below.
   - Memory of a drawn window was seen at about 110 MB and at about 330 MB in
     different runs of the same page. Not understood; it is on the GPU side.
   - `codegen-units` and `opt-level` (step 4 below) were not measured: with the
     time in QuickJS they will mostly change the size.
+
+## V8 spike (22 Nov 2026)
+
+Question: what does a JIT engine cost and buy here? Built as a second engine
+behind a cargo feature (`--features engine-v8`, `crates/host/src/js/v8_engine.rs`,
+the `v8` crate 152). QuickJS is still the default and nothing ships V8.
+
+All 63 host tests pass on both engines.
+
+| | QuickJS | V8 |
+|---|---|---|
+| Release binary | 24.0 MB | 62.4 MB |
+| Start to first layout, counter / shadcn | 0.18 s / 0.14 s | 0.08 s / 0.11 s |
+| Peak memory, headless, counter / shadcn | 63 / 50 MB | 96 / 69 MB |
+| Counter: click the button | 1.0 ms | 1.0 ms |
+| Counter: select a row among 1000 | 4.8 ms | 1.8 ms |
+| Counter: shuffle 1000 rows | 35 ms | 10 ms |
+| shadcn: open a Dialog, first time | 8.4 ms | 9.8 ms |
+| shadcn: open a Dialog, after a few times | 8.3 ms | 5.5 ms |
+| shadcn: open a Select, first time | 19.7 ms | 21.1 ms |
+| shadcn: open a Select, after a few times | 17 ms | 12 ms |
+
+Timings are of a whole click, headless, on a loaded machine: read them as
+ratios. What they say:
+
+- Work that is mostly JavaScript (long lists) is about 3.5 times faster.
+- A component opening is 1.4 to 1.5 times faster once it has been opened a
+  few times, because half of that click is layout and styling, which the
+  engine does not touch.
+- The first time anything runs, V8 is no faster, and slightly slower: it
+  compiles each function when it is first called and its JIT only pays off
+  on code that has run a few times. A code cache made at build time would
+  help the first; not tried.
+- With `SVELTE_BLITZ_V8_FLAGS=--jitless` V8 lands between the two.
+
+Not done, and needed before V8 could ship:
+
+- Signing. A hardened-runtime app needs the
+  `com.apple.security.cs.allow-jit` entitlement for the JIT; `bundle.rs`
+  signs without entitlements today. Or ship it jitless.
+- The watchdog thread is woken twice for every call into JavaScript. Cheap,
+  but it is a wake-up per event that QuickJS does not have.
+- `cargo fetch` now downloads the `v8` crate (large) even for a QuickJS
+  build, because optional dependencies are still resolved.
+- JavaScriptCore on macOS (no size cost, macOS only) was not tried.
+
+Recommendation given to Shivam: keep QuickJS as the default; offer V8 as a
+build option for apps with long lists or heavy computation, where it is worth
+38 MB. Not yet decided.
 
 ## Known gaps outside this brief
 

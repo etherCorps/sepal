@@ -60,7 +60,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - `crates/host/` — the Rust host. `app.rs` (app directory, `app.json`
   manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
   data: URLs and the app directory only), `updater.rs` (self-update and the
-  build side of it), `api/` (desktop APIs and their permission checks), `js.rs` (QuickJS), `ops.rs` (apply batches),
+  build side of it), `api/` (desktop APIs and their permission checks), `js.rs` (the engine: `js/quickjs.rs`,
+  or `js/v8_engine.rs` with `--features engine-v8`), `ops.rs` (apply batches),
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
@@ -139,6 +140,15 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `base_mut()` and `handle_ui_event` do wholesale. Forget one and scripts
   measure a stale page; clear it too eagerly and opening a Select costs 150
   layouts instead of 7.
+- **Two engines, one `JsEngine`.** QuickJS is the default. `--features
+  engine-v8` builds the host on V8 instead; the whole test suite passes on
+  both (`cargo test --features "screenshot engine-v8"`). Anything added to
+  one wrapper has to be added to the other. V8 specifics that cost time to
+  find: microtasks are set to explicit (or they run inside Blitz's dispatch),
+  the isolate is only entered while in use (V8 insists isolates are left in
+  reverse order, and a dev reload does the opposite), finalizers need the
+  platform's message loop pumped, and a script can only be stopped from
+  another thread.
 - **Where time goes** (measured 22 Nov 2026, see README "Performance"): turns
   are bound by JavaScript in QuickJS, an interpreter, not by Blitz. Do not
   optimise Rust before `SVELTE_BLITZ_TRACE=1` says layouts are the cost.
