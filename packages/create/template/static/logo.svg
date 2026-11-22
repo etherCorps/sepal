@@ -1,4 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-	<rect width="64" height="64" rx="14" fill="#4f46e5" />
-	<path d="M36 10 18 36h12l-3 18 19-28H33z" fill="#fff" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+	<!-- svelte-blitz: a rounded tile struck in two by a lightning bolt. The bolt is the gap. -->
+	<defs>
+		<linearGradient id="hot" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#ff7a3d" />
+			<stop offset="1" stop-color="#f03400" />
+		</linearGradient>
+		<mask id="strike">
+			<rect width="1024" height="1024" fill="#fff" />
+			<path d="M760 40 430 520h170L270 990" fill="none" stroke="#000" stroke-width="64" stroke-linejoin="miter" stroke-miterlimit="12" />
+		</mask>
+	</defs>
+	<rect x="112" y="112" width="800" height="800" rx="210" fill="url(#hot)" mask="url(#strike)" />
 </svg>

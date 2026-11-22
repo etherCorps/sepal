@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo/logo.svg" width="112" alt="svelte-blitz logo"></p>
+
 # svelte-blitz
 
 Svelte apps in a native window, without a webview and without Node at runtime.
