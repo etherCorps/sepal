@@ -36,7 +36,9 @@ fn main() {
         match verb {
             "click" => match doc.query(rest) {
                 Some(node) => {
+                    let began = std::time::Instant::now();
                     doc.click(node);
+                    println!("  ({:.1}ms)", began.elapsed().as_secs_f64() * 1000.0);
                     doc.wait(0.12);
                     println!("  clicked {rest}")
                 }

@@ -358,6 +358,22 @@ platform binaries into `packages/host/bin` before packing it.
   renderers. Suggested to Shivam: a time-boxed spike, shipping Kit as a second
   router if it runs. Not started; his call.
 
+- Performance pass (22 Nov 2026). Fixed: a measurement no longer lays out
+  when nothing changed (opening a Select went from 153 layouts to 7), ops that
+  cannot show do not cause a redraw, and Blitz no longer restyles a whole list
+  for one attribute change (patch 7). Looked at and left:
+  - Turns are bound by JavaScript in QuickJS. Nothing to tune on the Rust
+    side; opening a Dialog took the same 8 ms in the release build and in
+    the dev build (which optimises dependencies).
+  - Text is rasterised again on every frame. `vello_gpu` has a glyph atlas
+    cache (`.atlas_cache(true)` on the glyph run) that `anyrender_vello_hybrid`
+    0.11 does not turn on. Turning it on means vendoring that crate too, and
+    someone has to look at the text afterwards: not done.
+  - Memory of a drawn window was seen at about 110 MB and at about 330 MB in
+    different runs of the same page. Not understood; it is on the GPU side.
+  - `codegen-units` and `opt-level` (step 4 below) were not measured: with the
+    time in QuickJS they will mostly change the size.
+
 ## Known gaps outside this brief
 
 IME, real key presses in a window (only scripted ones were run), state-preserving HMR,

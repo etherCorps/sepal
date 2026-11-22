@@ -712,7 +712,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/routing.rs        file-based routing, by clicking through examples/routing
   tests/updater.rs        updates against a local server, tampering, the JS API
   tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
-crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with five fixes (see PATCH.md)
+crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with seven changes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
@@ -783,6 +783,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Exit animations: an Accordion slides shut and is hidden after, a Dialog is still on the page while it fades | `tests/shadcn.rs` |
 | Keyboard: Tab, Enter and Space on buttons, typing and editing keys in a bound input, a Select driven by arrows, Enter and Escape, a Dialog that traps Tab and returns the focus, focus ring for keyboard only | `tests/shadcn.rs`, `tests/counter.rs`, `test/dom.test.js` |
 | The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SVELTE_BLITZ_TRACE=1` with `--watch` |
+| An attribute change restyles descendants and siblings, with and without sibling selectors in play | `tests/restyle.rs` |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
@@ -823,6 +824,37 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
   document; nobody has typed into a window, so how winit and AppKit deliver
   keys (and Backspace, which macOS sends as a command) is unconfirmed. IME has
   not been tried at all.
+
+## Performance
+
+Measured on an M-series Mac, the shadcn rows in a window with
+`SVELTE_BLITZ_TRACE=1` (which prints how long each input took and how many
+layouts it needed), the counter rows headless with the `drive` example. Time
+from the press to the page being ready to paint:
+
+| | |
+|---|---|
+| Counter: click the button (one text node) | 1 ms |
+| Counter: select a row among 1000 | 5 ms |
+| Counter: shuffle 1000 rows | 36 ms |
+| shadcn: toggle an Accordion | 3 ms |
+| shadcn: open a Dialog (199 ops) | 8 ms |
+| shadcn: open a Select (291 ops, placed by Floating UI) | 22 ms |
+| Start to first layout: counter (3000 nodes) / shadcn page | 0.17 s / 0.10 s |
+
+What the time is spent on, from sampling:
+
+- **JavaScript.** The 1000-row cases are almost entirely Svelte running in
+  QuickJS, which interprets and has no JIT. Expect code that loops over
+  thousands of items to run several times slower than in a browser.
+- **Layouts forced by measuring.** A library that writes a style and measures
+  again makes the host lay out each time, as a browser would. Opening the
+  Select does that 7 times, 9 ms in all.
+- **A frame.** While anything animates, Blitz paints the whole window every
+  refresh: about 1.3 ms of work per frame here, of which half is drawing text
+  again (the renderer's glyph cache is off in this version). A page with an
+  endless animation, such as a `Skeleton`, therefore never idles and holds
+  10 to 20% of a core.
 
 ## Limitations
 

@@ -143,6 +143,9 @@ impl NodeMap {
 #[derive(Default, Debug, Clone, Copy)]
 pub struct ApplyStats {
     pub ops: usize,
+    /// Ops that can change what is on screen. Creating a node, freeing one,
+    /// and registering a listener or a measurement cannot.
+    pub visible: usize,
     pub created: usize,
     pub dropped: usize,
 }
@@ -212,6 +215,12 @@ pub fn apply_batch(
     while i < ops.len() {
         let code = ops[i];
         stats.ops += 1;
+        if !matches!(
+            code,
+            CREATE_ELEMENT | CREATE_TEXT | CREATE_COMMENT | DROP | LISTEN | UNLISTEN | MEASURE
+        ) {
+            stats.visible += 1;
+        }
 
         match code {
             CREATE_ELEMENT => {

@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with six changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with seven changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -55,11 +55,25 @@ running on a node ends. The animation sets are private to the crate, and the
 host needs this to answer `element.getAnimations()`, which component libraries
 wait on before they remove an element that is animating out.
 
-Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) were not checked; (6) is an addition, not a fix. Remove this directory and
+**7. Siblings are restyled only when they can depend on each other.**
+`src/mutator.rs`, `set_attribute` and `clear_attribute`: upstream restyles the
+whole subtree of the parent whenever an attribute is set, in case a selector
+such as `a + b` or `a ~ b` styles a sibling by it. On a list of 1000 rows that
+restyles all of them for one class change. Stylo records on the parent whether
+a selector with a sibling combinator was ever tried on its children
+(`HAS_SLOW_SELECTOR_LATER_SIBLINGS`), so the parent is now only restyled when
+that is set. `crates/host/tests/restyle.rs` checks that descendants and
+siblings still follow an attribute change, in a family that has such a
+selector and in one that does not.
+
+Known and unchanged: an ancestor styled with `:has()` is not restyled when
+what it looks for changes later. That is so upstream too.
+
+Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) and (7) were not checked; (6) is an addition, not a fix. Remove this directory and
 the `[patch]` entry once a release contains the fix.
 
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the six changes (search for
+directory with that version's source and reapply the seven changes (search for
 `svelte-blitz patch`).

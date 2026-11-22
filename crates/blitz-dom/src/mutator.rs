@@ -277,17 +277,7 @@ impl DocumentMutator<'_> {
             }
             node.mark_damaged();
 
-            // TODO: make this fine grained / conditional based on ElementSelectorFlags
-            let parent = node.parent;
-            if let Some(parent_id) = parent {
-                let parent = &mut self.doc.nodes[parent_id];
-                if let Some(mut data) = parent
-                    .try_stylo_element_data_mut()
-                    .and_then(|s| s.get_mut())
-                {
-                    data.hint |= RestyleHint::restyle_subtree();
-                }
-            }
+            self.restyle_siblings_of(node_id);
 
             // Mark ancestors dirty so the style traversal visits this subtree.
             // Without this, the traversal may skip nodes with pending RestyleHint/damage
@@ -399,6 +389,36 @@ impl DocumentMutator<'_> {
         }
     }
 
+    // svelte-blitz patch: upstream restyles the whole subtree of the parent on
+    // every attribute that is set (and none of it when one is removed). That
+    // is there for selectors that reach from one sibling to another, `a + b`
+    // and `a ~ b`, and it makes one class change on a row of a long list
+    // restyle the entire list. Stylo records on the parent whether any such
+    // selector was tried on its children, so the siblings are only restyled
+    // when one was.
+    fn restyle_siblings_of(&mut self, node_id: NodeId) {
+        use selectors::matching::ElementSelectorFlags;
+
+        let Some(parent_id) = self.doc.nodes[node_id].parent else {
+            return;
+        };
+        let parent = &mut self.doc.nodes[parent_id];
+        let siblings_depend_on_each_other = parent.element_data().is_some_and(|element| {
+            element.selector_flags.get().intersects(
+                ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS
+                    | ElementSelectorFlags::HAS_SLOW_SELECTOR
+                    | ElementSelectorFlags::HAS_SLOW_SELECTOR_NTH_OF,
+            )
+        });
+        if siblings_depend_on_each_other
+            && let Some(mut data) = parent
+                .try_stylo_element_data_mut()
+                .and_then(|s| s.get_mut())
+        {
+            data.hint |= RestyleHint::restyle_subtree();
+        }
+    }
+
     pub fn clear_attribute(&mut self, node_id: NodeId, name: QualName) {
         let node_is_in_document = self.doc.nodes[node_id].flags.is_in_document();
         if node_is_in_document {
@@ -411,10 +431,11 @@ impl DocumentMutator<'_> {
                 data.damage.insert(ALL_DAMAGE);
             }
             node.mark_damaged();
+            self.restyle_siblings_of(node_id);
 
             // Mark ancestors dirty so the style traversal visits this subtree.
             // Without this, the traversal may skip nodes with pending RestyleHint/damage.
-            node.mark_ancestors_dirty();
+            self.doc.nodes[node_id].mark_ancestors_dirty();
         }
 
         if name.local == local_name!("id") && node_is_in_document {

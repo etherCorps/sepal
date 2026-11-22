@@ -32,6 +32,8 @@ use crate::updater::Updater;
 pub struct TurnStats {
     pub batches: usize,
     pub ops: usize,
+    /// Ops that can change what is on screen (see [`ApplyStats`]).
+    pub visible: usize,
     pub created: usize,
     pub dropped: usize,
 }
@@ -40,12 +42,14 @@ impl TurnStats {
     fn add(&mut self, stats: ApplyStats) {
         self.batches += 1;
         self.ops += stats.ops;
+        self.visible += stats.visible;
         self.created += stats.created;
         self.dropped += stats.dropped;
     }
 
+    /// The page may look different now: the window has to be redrawn.
     pub fn changed(&self) -> bool {
-        self.ops > 0
+        self.visible > 0
     }
 }
 
@@ -69,11 +73,37 @@ struct Page {
     windowed: bool,
     /// Batches a forced layout applied, not yet counted in a turn's stats.
     forced: Vec<ApplyStats>,
+    /// Layouts done since the last trace line, and the time they took.
+    layouts: (u32, std::time::Duration),
+    /// When the page was last laid out here, on the animation clock, if
+    /// nothing has touched the document since. A script measures many nodes
+    /// in a row; only the first of them should pay for a layout.
+    laid_out_at: Option<f64>,
 }
 
 impl Page {
     fn apply(&mut self, batch: &crate::js::Batch) -> ApplyStats {
-        ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, batch)
+        let stats = ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, batch);
+        if stats.visible > 0 {
+            self.laid_out_at = None;
+        }
+        stats
+    }
+
+    /// Whether the last layout still describes the page. While something is
+    /// animating that is only true for a moment: a few milliseconds later
+    /// boxes have moved.
+    fn layout_is_current(&self) -> bool {
+        const SAME_MOMENT: f64 = 0.004;
+        self.laid_out_at
+            .is_some_and(|at| !self.doc.is_animating() || (self.time() - at).abs() < SAME_MOMENT)
+    }
+
+    /// Lay the page out unless the last layout is still good.
+    fn layout_if_stale(&mut self) {
+        if !self.layout_is_current() {
+            self.layout();
+        }
     }
 
     /// The time on the clock the animations run on.
@@ -88,7 +118,11 @@ impl Page {
     /// Lay the page out, as of now on that clock.
     fn layout(&mut self) {
         let time = self.time();
+        let began = std::time::Instant::now();
         self.doc.resolve(time);
+        self.laid_out_at = Some(time);
+        self.layouts.0 += 1;
+        self.layouts.1 += began.elapsed();
     }
 
     /// For how many more seconds a CSS animation or transition runs on a
@@ -261,6 +295,8 @@ impl SvelteDocument {
             headless_time: 0.0,
             windowed: hold_host_calls,
             forced: Vec::new(),
+            layouts: Default::default(),
+            laid_out_at: None,
         }));
 
         let js = JsEngine::new()?;
@@ -276,15 +312,20 @@ impl SvelteDocument {
             if !page.has_size() {
                 return None;
             }
+            let mut restyle = false;
             if let Some(batch) = take() {
+                // Scripts turn an animation off to measure what is under it.
+                // Blitz stops the animation in that pass but still styles the
+                // node with it, so such a node is styled once more.
+                restyle = page
+                    .nodes
+                    .blitz(id)
+                    .is_some_and(|node| page.doc.animations_end(node).is_some());
                 let stats = page.apply(&batch);
                 page.forced.push(stats);
             }
-            page.layout();
-            // Scripts turn an animation off to measure what is under it. Blitz
-            // stops the animation in that pass but still styles the node with
-            // it, so the node is styled once more.
-            if page.doc.is_animating()
+            page.layout_if_stale();
+            if restyle
                 && let Some(node) = page.nodes.blitz(id)
                 && let Some(node) = page.doc.get_node_mut(node)
             {
@@ -320,7 +361,11 @@ impl SvelteDocument {
     }
 
     pub fn base_mut(&mut self) -> RefMut<'_, BaseDocument> {
-        RefMut::map(self.page.borrow_mut(), |page| &mut page.doc)
+        RefMut::map(self.page.borrow_mut(), |page| {
+            // Whoever asks for this may change anything.
+            page.laid_out_at = None;
+            &mut page.doc
+        })
     }
 
     /// Lay the page out now. A window does this before it paints; tests and
@@ -372,7 +417,9 @@ impl SvelteDocument {
         // An app that measures the page is told the new layout now, before
         // the frame is drawn, and may change the page again in answer: a
         // popup moves next to its button once it knows where the button is.
-        let mut moved = turn.changed();
+        // Any op counts here, not only visible ones: a node that was just
+        // marked for measuring is owed its first report.
+        let mut moved = turn.ops > 0;
         for round in 0.. {
             if !moved || !self.measuring() {
                 break;
@@ -383,7 +430,7 @@ impl SvelteDocument {
                 );
                 break;
             }
-            self.page.borrow_mut().layout();
+            self.page.borrow_mut().layout_if_stale();
             if !self.report_layout() {
                 break;
             }
@@ -399,7 +446,12 @@ impl SvelteDocument {
             .set_deadline(self.js.next_timer().map(|at| at - now));
 
         if turn.changed() && trace_enabled() {
-            eprintln!("[trace] the app changed the page: {} ops", turn.ops);
+            let (layouts, took) = std::mem::take(&mut self.page.borrow_mut().layouts);
+            eprintln!(
+                "[trace] the app changed the page: {} ops, {layouts} layouts in {:.1}ms",
+                turn.ops,
+                took.as_secs_f64() * 1000.0
+            );
         }
         self.last_turn = turn;
         turn
@@ -632,6 +684,8 @@ impl Document for SvelteDocument {
             // The document stays borrowed for the whole dispatch, which is
             // also what refuses a forced layout from inside a handler.
             let page = &mut *self.page.borrow_mut();
+            // Input moves hover, focus and scroll positions.
+            page.laid_out_at = None;
             let activates = activated_by(&page.doc, &event);
             let cancelled = Cell::new(false);
             let handler = JsEventHandler {
