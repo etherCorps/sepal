@@ -24,7 +24,15 @@ delete env.SVELTE_BLITZ_HOST;
 
 /** @param {string} command @param {string[]} args @param {string} cwd */
 const run = (command, args, cwd) =>
-	execFileSync(command, args, { cwd, env, stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8' });
+	execFileSync(command, args, {
+		cwd,
+		env,
+		stdio: ['ignore', 'pipe', 'inherit'],
+		encoding: 'utf8',
+		// On Windows pnpm is a .cmd file, which only a shell can start. Nothing
+		// passed to it here has a space in it.
+		shell: process.platform === 'win32' && command === 'pnpm'
+	});
 /** @param {unknown} condition @param {string} message */
 const assert = (condition, message) => {
 	if (!condition) throw new Error(message);
@@ -73,7 +81,8 @@ try {
 		// workspace file also keeps the project out of this repository's workspace.
 		const overrides = Object.entries(tarballs)
 			.filter(([name]) => name !== '@ethercorps/create-svelte-blitz')
-			.map(([name, tarball]) => `  "${name}": "file:${tarball}"\n`);
+			// `/` on Windows too: a backslash in a quoted YAML string starts an escape.
+			.map(([name, tarball]) => `  "${name}": "file:${tarball.replaceAll('\\', '/')}"\n`);
 		writeFileSync(join(app, 'pnpm-workspace.yaml'), `packages: []\noverrides:\n${overrides.join('')}`);
 		run('pnpm', ['install', '--prefer-offline'], app);
 
