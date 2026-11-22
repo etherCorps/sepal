@@ -33,3 +33,5 @@ runs:
       with:
         workspaces: crates/host
         key: ${{ inputs.cache-key }}
+        # A failing test does not make the build any less worth keeping.
+        cache-on-failure: true
