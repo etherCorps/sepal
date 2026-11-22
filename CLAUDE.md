@@ -205,7 +205,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   renderer): glyph atlas on, and `render_to_rgba` for drawing without a
   window. See its `PATCH.md`. Same rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in eight places, all marked
+  It differs from crates.io 0.3.0-beta.4 in nine places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a

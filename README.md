@@ -712,7 +712,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/routing.rs        file-based routing, by clicking through examples/routing
   tests/updater.rs        updates against a local server, tampering, the JS API
   tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
-crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with eight changes (see PATCH.md)
+crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with nine changes (see PATCH.md)
 crates/anyrender_vello_hybrid/   the window's renderer, 0.11.0, with two (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
@@ -785,6 +785,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Keyboard: Tab, Enter and Space on buttons, typing and editing keys in a bound input, a Select driven by arrows, Enter and Escape, a Dialog that traps Tab and returns the focus, focus ring for keyboard only | `tests/shadcn.rs`, `tests/counter.rs`, `test/dom.test.js` |
 | The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SVELTE_BLITZ_TRACE=1` with `--watch` |
 | An attribute change restyles descendants and siblings, with and without sibling selectors in play | `tests/restyle.rs` |
+| Children that are added, removed or moved are styled, and so is what depends on their position (`:first-child`, `:nth-child()`, `a + b`, `:empty`) | `tests/restyle.rs` |
 | `:has()`: follows an attribute, a child that arrives or leaves, and the focus, for a parent, an ancestor, what is under it, and siblings on either side | `tests/restyle.rs` |
 | The window's GPU renderer draws what the CPU screenshots show: the same page differs by at most 2/255 per channel | `drive … gpushot:` against `shot:` (needs a GPU; by hand) |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |

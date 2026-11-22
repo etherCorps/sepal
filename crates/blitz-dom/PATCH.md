@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with eight changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with nine changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -87,11 +87,29 @@ selector and in one that does not.
 
 `crates/host/tests/restyle.rs` has the test.
 
-Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5), (7) and (8) were not checked; (6) is an addition, not a fix. Remove this directory and
+**9. Adding and removing children restyles what depends on it, no more and
+no less.** `src/mutator.rs`, the function behind `append_children` and
+`insert_nodes_before`, and `remove_node`:
+
+- Upstream restyles everything under the parent when a child is added. A
+  dialog appended to `<body>` restyles the whole page. Now only the added
+  nodes are styled, unless a selector that depends on a child's position
+  (`:first-child`, `:last-child`, `:nth-child()`, `a + b`) or on there being
+  children (`:empty`) was tried on that parent's children, which Stylo
+  records on the parent. Then the parent's subtree is restyled as before.
+- Upstream restyles nothing when a child is removed, so `:last-child`,
+  `:nth-child()` and `:empty` kept matching what they matched before the
+  removal. With the same condition, the parent's subtree is now restyled.
+
+Opening a Select from the shadcn example (its list is appended to `<body>`
+and measured seven times): best of 8 runs, 39.7 ms before, 20.1 ms after.
+`crates/host/tests/restyle.rs` has the test.
+
+Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) and (7) to (9) were not checked; (6) is an addition, not a fix. Remove this directory and
 the `[patch]` entry once a release contains the fix.
 
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the eight changes (search for
+directory with that version's source and reapply the nine changes (search for
 `svelte-blitz patch`).

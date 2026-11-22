@@ -361,7 +361,8 @@ platform binaries into `packages/host/bin` before packing it.
 - Performance pass (22 Nov 2026). Fixed: a measurement no longer lays out
   when nothing changed (opening a Select went from 153 layouts to 7), ops that
   cannot show do not cause a redraw, Blitz no longer restyles a whole list
-  for one attribute change (patch 7), and the renderer keeps a glyph atlas
+  for one attribute change (patch 7) or everything under a parent when a
+  child is added (patch 9), and the renderer keeps a glyph atlas
   (`crates/anyrender_vello_hybrid`, vendored for it). Looked at and left:
   - Turns are bound by JavaScript in QuickJS. Nothing to tune on the Rust
     side; opening a Dialog took the same 8 ms in the release build and in

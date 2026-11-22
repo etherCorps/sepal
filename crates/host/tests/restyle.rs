@@ -232,3 +232,117 @@ fn has_follows_what_it_looks_for() {
     );
     assert_eq!(size(&doc, "born").0, 100.0);
 }
+
+const CHILD_CSS: &str = "
+    div { height: 10px; width: 10px }
+    .plain > .item { width: 20px }
+    .plain .deep { width: 25px }
+    .edges > .item:first-child { width: 30px }
+    .edges > .item:last-child { width: 40px }
+    .nth > .item:nth-child(2) { width: 50px }
+    .pairs > .item + .item { width: 60px }
+    .hollow:empty { width: 70px }
+    .from .moved { width: 80px }
+    .to .moved { width: 90px }
+";
+
+/// Adding and removing children: what was added is styled, and so is
+/// everything whose style depends on where it sits among its siblings.
+/// Upstream restyles all of the parent's subtree for that; the patched copy
+/// only when such a selector is in play.
+#[test]
+fn children_that_come_and_go_are_styled_along_with_what_depends_on_them() {
+    let js = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../examples/shadcn/dist/app.js"
+    ))
+    .expect("run `pnpm run build` in the repository root first");
+    let mut doc = SvelteDocument::new(&js, CHILD_CSS, Default::default()).unwrap();
+    doc.layout(800, 600);
+    let eval = |doc: &mut SvelteDocument, code: &str| {
+        doc.js().eval_string(code).unwrap();
+        doc.settle();
+        doc.resolve();
+    };
+    let width = |doc: &SvelteDocument, id: &str| {
+        doc.rect(
+            doc.query(&format!("#{id}"))
+                .unwrap_or_else(|| panic!("no #{id}")),
+        )
+        .unwrap()
+        .2
+    };
+    eval(
+        &mut doc,
+        "(() => {
+            globalThis.add = (parent, id, name = 'item', before = null) => {
+                const node = document.createElement('div');
+                node.className = name;
+                node.id = id;
+                document.getElementById(parent).insertBefore(node, before && document.getElementById(before));
+                return node;
+            };
+            document.body.textContent = '';
+            for (const name of ['plain', 'edges', 'nth', 'pairs', 'hollow', 'from', 'to']) {
+                const node = document.createElement('div');
+                node.className = name;
+                node.id = name;
+                document.body.appendChild(node);
+            }
+            return '';
+        })()",
+    );
+    assert_eq!(width(&doc, "hollow"), 70.0);
+
+    // Nothing here depends on position: the new nodes are styled, with what is in them.
+    eval(
+        &mut doc,
+        "add('plain', 'p1'); add('p1', 'p1deep', 'deep'); ''",
+    );
+    assert_eq!((width(&doc, "p1"), width(&doc, "p1deep")), (20.0, 25.0));
+    eval(&mut doc, "add('plain', 'p2'); ''");
+    assert_eq!((width(&doc, "p1"), width(&doc, "p2")), (20.0, 20.0));
+
+    // `:first-child` and `:last-child` move to whoever is first and last now.
+    eval(&mut doc, "add('edges', 'e1'); ''");
+    assert_eq!(width(&doc, "e1"), 40.0, "the only child is the last one");
+    eval(&mut doc, "add('edges', 'e2'); ''");
+    assert_eq!((width(&doc, "e1"), width(&doc, "e2")), (30.0, 40.0));
+    eval(&mut doc, "add('edges', 'e0', 'item', 'e1'); ''");
+    assert_eq!(
+        (width(&doc, "e0"), width(&doc, "e1"), width(&doc, "e2")),
+        (30.0, 10.0, 40.0)
+    );
+    eval(&mut doc, "document.getElementById('e2').remove(); ''");
+    assert_eq!((width(&doc, "e0"), width(&doc, "e1")), (30.0, 40.0));
+
+    // `:nth-child()`: inserting in front renumbers the rest.
+    eval(&mut doc, "add('nth', 'n1'); add('nth', 'n2'); ''");
+    assert_eq!((width(&doc, "n1"), width(&doc, "n2")), (10.0, 50.0));
+    eval(&mut doc, "add('nth', 'n0', 'item', 'n1'); ''");
+    assert_eq!(
+        (width(&doc, "n0"), width(&doc, "n1"), width(&doc, "n2")),
+        (10.0, 50.0, 10.0)
+    );
+
+    // `a + b`: a new first child gives the old first one something before it.
+    eval(&mut doc, "add('pairs', 'q1'); ''");
+    assert_eq!(width(&doc, "q1"), 10.0);
+    eval(&mut doc, "add('pairs', 'q0', 'item', 'q1'); ''");
+    assert_eq!((width(&doc, "q0"), width(&doc, "q1")), (10.0, 60.0));
+
+    // `:empty` stops matching, and matches again.
+    eval(&mut doc, "add('hollow', 'h1'); ''");
+    assert_eq!(width(&doc, "hollow"), 10.0);
+    eval(&mut doc, "document.getElementById('h1').remove(); ''");
+    assert_eq!(width(&doc, "hollow"), 70.0);
+
+    // A node that moves is styled by where it is now.
+    eval(&mut doc, "add('from', 'm', 'moved'); ''");
+    assert_eq!(width(&doc, "m"), 80.0);
+    eval(
+        &mut doc,
+        "document.getElementById('to').appendChild(document.getElementById('m')); ''",
+    );
+    assert_eq!(width(&doc, "m"), 90.0);
+}

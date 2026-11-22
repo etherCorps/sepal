@@ -390,6 +390,25 @@ impl DocumentMutator<'_> {
         }
     }
 
+    // svelte-blitz patch: whether a selector that depends on where a child
+    // sits among its siblings (`:first-child`, `:nth-child()`, `a + b`), or
+    // on there being children at all (`:empty`), was ever tried on this
+    // node's children. Stylo records that on the parent while it matches.
+    fn children_depend_on_position(parent: &Node) -> bool {
+        use selectors::matching::ElementSelectorFlags;
+
+        // Not an element (the document): no flags to go by, assume so.
+        parent.element_data().is_none_or(|element| {
+            element.selector_flags.get().intersects(
+                ElementSelectorFlags::HAS_SLOW_SELECTOR
+                    | ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS
+                    | ElementSelectorFlags::HAS_SLOW_SELECTOR_NTH_OF
+                    | ElementSelectorFlags::HAS_EDGE_CHILD_SELECTOR
+                    | ElementSelectorFlags::HAS_EMPTY_SELECTOR,
+            )
+        })
+    }
+
     // svelte-blitz patch: upstream restyles the whole subtree of the parent on
     // every attribute that is set (and none of it when one is removed). That
     // is there for selectors that reach from one sibling to another, `a + b`
@@ -575,6 +594,17 @@ impl DocumentMutator<'_> {
             self.mutations_occurred |= node_is_in_document;
             let parent = &mut self.doc.nodes[parent_id];
             parent.insert_damage(ALL_DAMAGE);
+            // svelte-blitz patch: upstream restyles nothing here, so after a
+            // removal `:last-child`, `:nth-child()` and `:empty` keep
+            // matching what they matched before.
+            if node_is_in_document
+                && Self::children_depend_on_position(parent)
+                && let Some(mut data) = parent
+                    .try_stylo_element_data_mut()
+                    .and_then(|s| s.get_mut())
+            {
+                data.hint |= RestyleHint::restyle_subtree();
+            }
             // Mark ancestors dirty so the style traversal visits this subtree.
             parent.mark_ancestors_dirty();
             parent.children.retain(|id| *id != node_id);
@@ -741,11 +771,18 @@ impl DocumentMutator<'_> {
         let new_parent = &mut self.doc.nodes[parent_id];
         new_parent.insert_damage(ALL_DAMAGE);
 
-        // TODO: make this fine grained / conditional based on ElementSelectorFlags
+        // svelte-blitz patch: upstream restyles everything under the parent
+        // when a child is added, so a dialog appended to <body> restyles the
+        // whole page. That is only needed when a selector that depends on
+        // where a child sits among its siblings (`:first-child`,
+        // `:nth-child()`, `a + b`, `:empty`) was tried here, which Stylo
+        // records on the parent. Otherwise only what was added is styled.
+        let siblings_depend_on_position = Self::children_depend_on_position(new_parent);
         if new_parent_is_in_document {
-            if let Some(mut data) = new_parent
-                .try_stylo_element_data_mut()
-                .and_then(|s| s.get_mut())
+            if siblings_depend_on_position
+                && let Some(mut data) = new_parent
+                    .try_stylo_element_data_mut()
+                    .and_then(|s| s.get_mut())
             {
                 data.hint |= RestyleHint::restyle_subtree();
             }
@@ -763,6 +800,18 @@ impl DocumentMutator<'_> {
             let child = &mut self.doc.nodes[child_id];
             let child_was_in_doc = child.flags.is_in_document();
             child.parent = Some(parent_id);
+
+            // svelte-blitz patch (see above): the added node itself. One that
+            // was styled somewhere else inherits from a new parent now; one
+            // that never was is styled when the traversal gets to it, which
+            // the dirty bits on the way down make sure of.
+            if new_parent_is_in_document && !siblings_depend_on_position {
+                if let Some(mut data) = child.try_stylo_element_data_mut().and_then(|s| s.get_mut())
+                {
+                    data.hint |= RestyleHint::restyle_subtree();
+                }
+                child.mark_ancestors_dirty();
+            }
 
             if new_parent_is_in_document && !child_was_in_doc {
                 self.process_added_subtree(child_id);
