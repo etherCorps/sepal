@@ -1,0 +1,79 @@
+{
+  "name": "@ethercorps/svelte-blitz",
+  "version": "0.1.0",
+  "description": "Svelte apps in a native window, without a webview: a Svelte custom renderer for the Blitz HTML/CSS engine",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etherCorps/svelte-blitz.git",
+    "directory": "packages/renderer"
+  },
+  "homepage": "https://github.com/etherCorps/svelte-blitz#readme",
+  "bugs": "https://github.com/etherCorps/svelte-blitz/issues",
+  "keywords": [
+    "svelte",
+    "blitz",
+    "desktop",
+    "native",
+    "renderer",
+    "tailwind",
+    "gui"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./renderer": {
+      "types": "./types/renderer.d.ts",
+      "default": "./src/renderer.js"
+    },
+    "./vite": {
+      "types": "./types/vite.d.ts",
+      "default": "./src/vite.js"
+    },
+    "./protocol": {
+      "types": "./types/protocol.d.ts",
+      "default": "./src/protocol.js"
+    }
+  },
+  "bin": {
+    "svelte-blitz": "./src/cli.js"
+  },
+  "files": [
+    "src",
+    "types",
+    "template"
+  ],
+  "scripts": {
+    "check": "tsc && tsc -p tsconfig.node.json",
+    "prepare": "tsc && tsc -p tsconfig.node.json"
+  },
+  "peerDependencies": {
+    "svelte": "^5.59.0",
+    "@sveltejs/vite-plugin-svelte": ">=7",
+    "vite": ">=8"
+  },
+  "peerDependenciesMeta": {
+    "@sveltejs/vite-plugin-svelte": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {
+    "@ethercorps/svelte-blitz-darwin-arm64": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/node": "^26.6.6",
+    "svelte": "^5.59.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.8"
+  }
+}

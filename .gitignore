@@ -1,0 +1,8 @@
+node_modules
+dist
+target
+packages/renderer/types
+bundle
+# built by scripts/build-host-package.js
+packages/host-*/svelte-blitz-host*
+.DS_Store

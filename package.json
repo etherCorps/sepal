@@ -1,0 +1,23 @@
+{
+  "name": "svelte-blitz-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm --filter counter build",
+    "build:host": "node scripts/build-host-package.js",
+    "check": "pnpm -r check",
+    "test:js": "pnpm run build && node packages/renderer/test/mock-host.test.js",
+    "test:host": "pnpm run build && cargo test --manifest-path crates/host/Cargo.toml --features screenshot",
+    "test:template": "node packages/renderer/test/template.test.js",
+    "test": "pnpm run check && pnpm run test:js && pnpm run test:host && pnpm run test:template",
+    "dev": "cargo build --manifest-path crates/host/Cargo.toml && SVELTE_BLITZ_HOST=$PWD/crates/host/target/debug/svelte-blitz-host pnpm --filter counter watch",
+    "start": "pnpm run build && cargo run --release --manifest-path crates/host/Cargo.toml -- examples/counter/dist",
+    "start:icons": "pnpm run build && cargo run --release --manifest-path crates/host/Cargo.toml -- examples/icons/dist",
+    "screenshot": "pnpm run build && cargo run --manifest-path crates/host/Cargo.toml --features screenshot -- --screenshot screenshot.png examples/counter/dist",
+    "bundle": "pnpm run build && cargo run --release --manifest-path crates/host/Cargo.toml -- --bundle examples/counter/dist"
+  }
+}

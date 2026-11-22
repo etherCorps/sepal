@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+	<!-- 824px tile on a 1024px canvas: the margin macOS expects around a Dock icon. -->
+	<defs>
+		<linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#6366f1" />
+			<stop offset="1" stop-color="#4338ca" />
+		</linearGradient>
+	</defs>
+	<rect x="100" y="100" width="824" height="824" rx="185" fill="url(#g)" />
+	<path d="M560 220 330 560h170l-40 244 234-344H524z" fill="#fff" stroke="#fff" stroke-width="24" stroke-linejoin="round" />
+</svg>

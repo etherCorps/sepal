@@ -1,0 +1,70 @@
+[package]
+name = "svelte-blitz-host"
+version = "0.1.0"
+edition = "2024"
+description = "Runs a Svelte app compiled for the svelte-blitz renderer in a native window"
+license = "MIT"
+repository = "https://github.com/etherCorps/svelte-blitz"
+# Shipped as prebuilt binaries through npm, not through crates.io.
+publish = false
+
+[dependencies]
+blitz-dom = { version = "=0.3.0-beta.4", features = ["scrollbars"] }
+blitz-traits = "=0.3.0-beta.4"
+rquickjs = { version = "0.14", features = ["array-buffer"] }
+keyboard-types = "0.8"
+# Both are already in the tree through blitz-dom; `image` decodes the app icon.
+image = { version = "0.25", default-features = false, features = ["png"] }
+serde_json = "1"
+
+# window
+blitz-shell = { version = "=0.3.0-beta.4", optional = true }
+anyrender_vello_hybrid = { version = "0.11", optional = true }
+# Same pin as blitz-shell. Needed directly for window attributes and to wrap
+# the application handler.
+winit = { version = "=0.31.0-beta.3", optional = true }
+
+# headless screenshots (CPU rasteriser, no GPU or display needed)
+blitz-paint = { version = "=0.3.0-beta.4", optional = true, features = ["scrollbars"] }
+anyrender = { version = "0.14", optional = true }
+anyrender_vello_cpu = { version = "0.18", optional = true }
+png = { version = "0.18", optional = true }
+
+# The Dock icon of an unbundled binary can only be set through AppKit.
+# Versions match the ones winit already pulls in.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = { version = "0.6", optional = true }
+objc2-app-kit = { version = "0.3", optional = true, default-features = false, features = [
+    "NSApplication",
+    "NSImage",
+    "NSResponder",
+] }
+objc2-foundation = { version = "0.3", optional = true, default-features = false, features = [
+    "NSBundle",
+    "NSData",
+    "NSProcessInfo",
+    "NSString",
+] }
+
+[features]
+default = ["window"]
+window = [
+    "dep:blitz-shell",
+    "dep:anyrender_vello_hybrid",
+    "dep:winit",
+    "dep:objc2",
+    "dep:objc2-app-kit",
+    "dep:objc2-foundation",
+]
+screenshot = ["dep:blitz-paint", "dep:anyrender", "dep:anyrender_vello_cpu", "dep:png"]
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+lto = "thin"
+# The binary ships through npm; symbols are a third of its size.
+strip = true
