@@ -50,6 +50,9 @@ pub struct SvelteDocument {
     nodes: NodeMap,
     /// Event types that have at least one listener. Everything else never enters JS.
     listening: HashSet<String>,
+    /// The animation clock, in seconds, when there is no window: tests and
+    /// screenshots move it with `wait`. In a window the shell supplies the time.
+    pub(crate) headless_time: f64,
     timers: TimerWaker,
     last_turn: TurnStats,
     updater: Option<Arc<Updater>>,
@@ -168,6 +171,7 @@ impl SvelteDocument {
             js,
             nodes,
             listening: HashSet::new(),
+            headless_time: 0.0,
             timers: TimerWaker::default(),
             last_turn: TurnStats::default(),
             updater,

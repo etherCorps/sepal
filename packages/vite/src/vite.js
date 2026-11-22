@@ -96,11 +96,17 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
 /**
  * The settings in `app.config.ts`.
  *
+ * `dom: true` is for apps that use component libraries written for the web.
+ * It builds the app as a browser bundle and loads a small DOM
+ * (`window`, `document`, element methods; see `@ethercorps/svelte-blitz/dom`)
+ * before anything else, so those libraries find what they reach for.
+ *
  * @typedef {{
  *   app?: AppManifest,
  *   permissions?: Permissions,
  *   router?: RouterOptions,
- *   entry?: string
+ *   entry?: string,
+ *   dom?: boolean
  * }} Config
  */
 
@@ -145,6 +151,8 @@ export function svelteBlitz(inline = {}) {
 	/** @type {import('vite').ConfigEnv} */
 	let config_env = { mode: 'production', command: 'build' };
 	let routes_dir = '';
+	/** The entry module, absolute and without extension, when `dom` is on. */
+	let dom_entry = '';
 	const user = inline.svelte ?? {};
 	let root = '';
 	/** The directory copied into the build as it is (`static/`). Empty when turned off. */
@@ -191,14 +199,18 @@ export function svelteBlitz(inline = {}) {
 						: // No extension: Vite resolves `src/main.js` or `src/main.ts`, whichever exists.
 							(options.entry ?? 'src/main');
 
+				if (options.dom) dom_entry = resolve(project, entry).replace(/\.[cm]?[jt]s$/, '');
+
 				return {
 					// Files in `static/` are copied to the build as they are, so the app
 					// can refer to them by name: `<img src="logo.svg">`. Vite calls this
 					// directory `public`; a `publicDir` in the user's config still wins.
 					...(user.publicDir === undefined ? { publicDir: 'static' } : {}),
 					resolve: {
-						// Selects Svelte's client build with custom renderer support.
-						conditions: ['svelte-custom-renderer', 'svelte', 'module', 'import', 'default'],
+						// Selects Svelte's client build with custom renderer support. With
+						// `dom`, `browser` as well: libraries check it at build time to
+						// decide whether there is a DOM to work with.
+						conditions: ['svelte-custom-renderer', ...(options.dom ? ['browser'] : []), 'svelte', 'module', 'import', 'default'],
 						// The names a SvelteKit project uses. The `$app` ones belong to
 						// the built-in router; another router brings its own API.
 						alias: {
@@ -223,6 +235,13 @@ export function svelteBlitz(inline = {}) {
 			},
 			resolveId(id) {
 				if (id === ROUTES_ID) return '\0' + ROUTES_ID;
+			},
+			transform(code, id) {
+				// The DOM has to exist before any library module runs, so it is the
+				// entry module's first import.
+				if (dom_entry !== '' && id.replace(/\.[cm]?[jt]s$/, '') === dom_entry) {
+					return { code: `import '@ethercorps/svelte-blitz/dom';\n${code}`, map: null };
+				}
 			},
 			load(id) {
 				if (id !== '\0' + ROUTES_ID) return;

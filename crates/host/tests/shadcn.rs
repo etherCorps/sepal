@@ -8,8 +8,7 @@ use std::path::Path;
 use svelte_blitz_host::SvelteDocument;
 use svelte_blitz_host::app::App;
 
-#[test]
-fn shadcn_components_render_and_react() {
+fn load() -> SvelteDocument {
     let dist = Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../examples/shadcn/dist"
@@ -17,7 +16,29 @@ fn shadcn_components_render_and_react() {
     let app = App::from_dir(dist).expect("run `pnpm run build` in the repository root first");
     let mut doc = SvelteDocument::for_app(&app).unwrap();
     doc.layout(900, 700);
-    let text = |doc: &SvelteDocument, selector: &str| doc.text(doc.query(selector).unwrap());
+    doc
+}
+
+fn text(doc: &SvelteDocument, selector: &str) -> String {
+    doc.text(doc.query(selector).unwrap())
+}
+
+fn attr(doc: &SvelteDocument, selector: &str, name: &str) -> Option<String> {
+    doc.attr(doc.query(selector).unwrap(), name)
+}
+
+fn click(doc: &mut SvelteDocument, selector: &str) {
+    let node = doc
+        .query(selector)
+        .unwrap_or_else(|| panic!("nothing matches {selector}"));
+    doc.click(node);
+    doc.settle();
+    doc.resolve();
+}
+
+#[test]
+fn shadcn_components_render_and_react() {
+    let mut doc = load();
 
     // Every shadcn component has `bind:this={ref}` on its root element, which
     // Svelte refuses for a custom renderer. The preset rewrites it; the page
@@ -53,4 +74,125 @@ fn shadcn_components_render_and_react() {
         Some("Ada")
     );
     assert_eq!(text(&doc, "#greeting"), "Hello, Ada.");
+}
+
+/// The components built on Bits UI, which is written for a browser. They run
+/// on the DOM layer that `dom: true` in app.config.ts loads.
+#[test]
+fn bits_ui_components_work_on_the_dom_layer() {
+    let mut doc = load();
+
+    // `bind:checked` passes through two components that both spread their
+    // props. Svelte finds the setter by asking a Proxy for a property
+    // descriptor, which QuickJS answers wrongly without the fix in shims.js.
+    assert_eq!(text(&doc, "#switch-state"), "Switch is off");
+    click(&mut doc, "#switch");
+    assert_eq!(text(&doc, "#switch-state"), "Switch is on");
+    assert_eq!(
+        attr(&doc, "#switch", "data-state").as_deref(),
+        Some("checked")
+    );
+    click(&mut doc, "#switch");
+    assert_eq!(text(&doc, "#switch-state"), "Switch is off");
+
+    click(&mut doc, "#check");
+    assert_eq!(text(&doc, "#check-state"), "Checked");
+    assert_eq!(
+        attr(&doc, "#check", "aria-checked").as_deref(),
+        Some("true")
+    );
+
+    // Tabs: both panels exist and one is hidden. A click swaps which, and the
+    // triggers swap state.
+    assert_eq!(
+        text(&doc, "[data-tabs-content]:not([hidden]) .tab-panel"),
+        "Account panel"
+    );
+    click(&mut doc, "[data-tabs-trigger][data-value=password]");
+    assert_eq!(
+        text(&doc, "[data-tabs-content]:not([hidden]) .tab-panel"),
+        "Password panel"
+    );
+    assert_eq!(
+        attr(
+            &doc,
+            "[data-tabs-trigger][data-value=password]",
+            "data-state"
+        )
+        .as_deref(),
+        Some("active")
+    );
+    assert_eq!(
+        attr(
+            &doc,
+            "[data-tabs-trigger][data-value=account]",
+            "data-state"
+        )
+        .as_deref(),
+        Some("inactive")
+    );
+
+    // Accordion: closed content takes no room; open content does, once the
+    // opening animation is over.
+    let height = |doc: &SvelteDocument| doc.query("#answer").and_then(|n| doc.rect(n)).map(|r| r.3);
+    assert!(height(&doc).is_none_or(|h| h == 0.0), "closed at first");
+    click(&mut doc, "[data-accordion-trigger]");
+    assert_eq!(
+        attr(&doc, "[data-accordion-trigger]", "aria-expanded").as_deref(),
+        Some("true")
+    );
+    doc.wait(0.4);
+    assert!(
+        height(&doc).is_some_and(|h| h > 10.0),
+        "open: {:?}",
+        height(&doc)
+    );
+}
+
+/// A Dialog is mounted into `document.body`, dims the page behind it, and is
+/// dismissed by a click outside, which Bits UI detects with capture listeners
+/// on `document`.
+#[test]
+fn a_dialog_opens_over_the_page_and_closes() {
+    let mut doc = load();
+    let pixel = |doc: &mut SvelteDocument, x: usize, y: usize| {
+        let (pixels, width, _) = svelte_blitz_host::screenshot::render_rgba(doc, 900, 700, 1.0);
+        let at = (y * width as usize + x) * 4;
+        [pixels[at], pixels[at + 1], pixels[at + 2]]
+    };
+    assert!(doc.query("[role=dialog]").is_none());
+    assert_eq!(pixel(&mut doc, 5, 5), [255, 255, 255]);
+
+    click(&mut doc, "#open-dialog");
+    // Past the fade-in.
+    doc.wait(0.3);
+    assert_eq!(
+        text(&doc, "[role=dialog] [data-slot=dialog-title]"),
+        "Are you sure?"
+    );
+    let dimmed = pixel(&mut doc, 5, 5);
+    assert!(dimmed[0] < 245, "the overlay dims the page: {dimmed:?}");
+    // The box itself is in the middle of the window; this is its left padding.
+    assert_eq!(pixel(&mut doc, 240, 350), [255, 255, 255]);
+
+    doc.click_at(5.0, 690.0);
+    // Past the fade-out, and the timer that unlocks scrolling after it.
+    doc.wait(0.4);
+    assert!(doc.query("[role=dialog]").is_none(), "closed");
+    assert_eq!(pixel(&mut doc, 5, 5), [255, 255, 255]);
+    assert_eq!(attr(&doc, "body", "style"), None, "scrolling is unlocked");
+}
+
+/// Blitz used to hit-test a box that sits in a line of text as if it were
+/// shifted by its container's padding (see crates/blitz-dom/PATCH.md).
+#[test]
+fn a_button_in_a_line_of_text_is_clicked_where_it_is_drawn() {
+    let mut doc = load();
+    // Just inside its top left corner: the middle of a button this size is
+    // still inside the shifted box.
+    let (x, y, ..) = doc.rect(doc.query("#inline").unwrap()).unwrap();
+    doc.click_at(x as f32 + 3.0, y as f32 + 3.0);
+    doc.settle();
+    doc.resolve();
+    assert_eq!(text(&doc, "#count"), "Clicked 1");
 }

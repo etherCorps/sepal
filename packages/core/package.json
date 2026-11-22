@@ -58,6 +58,10 @@
     "./window": {
       "types": "./types/window.d.ts",
       "default": "./src/window.js"
+    },
+    "./dom": {
+      "types": "./types/dom.d.ts",
+      "default": "./src/dom.js"
     }
   },
   "files": [

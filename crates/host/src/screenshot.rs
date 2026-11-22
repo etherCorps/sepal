@@ -18,6 +18,7 @@ pub fn render_rgba(
     let physical_width = (width as f32 * scale).round() as u32;
     let physical_height = (height as f32 * scale).round() as u32;
 
+    let time = doc.headless_time;
     let base = doc.base_mut();
     base.set_viewport(Viewport::new(
         physical_width,
@@ -25,7 +26,7 @@ pub fn render_rgba(
         scale,
         ColorScheme::Light,
     ));
-    base.resolve(0.0);
+    base.resolve(time);
 
     let pixels = render_to_buffer::<VelloCpuImageRenderer, _>(
         |scene| {

@@ -16,12 +16,30 @@ impl SvelteDocument {
     pub fn layout(&mut self, width: u32, height: u32) {
         let base = self.base_mut();
         base.set_viewport(Viewport::new(width, height, 1.0, ColorScheme::Light));
-        base.resolve(0.0);
+        self.resolve();
     }
 
     /// Restyle and relayout after a change.
     pub fn resolve(&mut self) {
-        self.base_mut().resolve(0.0);
+        let time = self.headless_time;
+        self.base_mut().resolve(time);
+    }
+
+    /// Let time pass: timers that come due fire, and CSS transitions and
+    /// animations move on by `seconds`.
+    ///
+    /// In steps, as a window would: one timer often starts the next.
+    pub fn wait(&mut self, seconds: f64) {
+        const STEP: f64 = 0.02;
+        let mut left = seconds;
+        while left > 0.0 {
+            let step = left.min(STEP);
+            std::thread::sleep(std::time::Duration::from_secs_f64(step));
+            self.headless_time += step;
+            self.settle();
+            self.resolve();
+            left -= step;
+        }
     }
 
     pub fn query(&self, selector: &str) -> Option<NodeId> {

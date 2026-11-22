@@ -59,14 +59,15 @@ export function take_batch() {
 
 let next_id = ROOT_ID + 1;
 
-class BlitzNode {
+export class BlitzNode {
 	/**
 	 * @param {'element' | 'text' | 'comment' | 'fragment'} type
 	 * @param {number} id 0 for fragments, which never exist on the host
 	 */
 	constructor(type, id) {
 		this.type = type;
-		this.id = id;
+		/** The id the host knows this node by. Not `id`: that is the HTML attribute, which the DOM layer exposes. */
+		this.node_id = id;
 		/** @type {BlitzNode | null} */
 		this.parent = null;
 		/** @type {BlitzNode | null} */
@@ -139,7 +140,7 @@ const finalizer = has_weak_refs
 /** @param {'element' | 'text' | 'comment'} type */
 function create_node(type) {
 	const node = new BlitzNode(type, next_id++);
-	finalizer?.register(node, node.id);
+	finalizer?.register(node, node.node_id);
 	return node;
 }
 
@@ -218,18 +219,25 @@ function link(parent, node, anchor) {
  */
 function insert_one(parent, node, anchor) {
 	if (node === anchor) return;
+	// As in the DOM: a node cannot be put inside itself. Refusing here keeps the
+	// mirror a tree, and the stack trace points at whoever asked.
+	for (let /** @type {BlitzNode | null} */ ancestor = parent; ancestor !== null; ancestor = ancestor.parent) {
+		if (ancestor === node) throw new Error('cannot insert a node into itself or one of its descendants');
+	}
 	if (anchor !== null && anchor.parent !== parent) anchor = null;
 
 	const old_parent = node.parent;
 	unlink(node);
 	link(parent, node, anchor);
 
-	if (parent.type !== FRAGMENT) {
+	// Id 0 means "not on the host": fragments, and the DOM layer's stand-ins
+	// for <html> and <head>.
+	if (parent.node_id !== 0) {
 		// The host's insert has DOM semantics: it detaches from the old parent first.
-		ops.push(OP.INSERT, parent.id, node.id, anchor ? anchor.id : 0);
-	} else if (old_parent !== null && old_parent.type !== FRAGMENT) {
-		// Moved from the real tree into a fragment, which the host knows nothing about.
-		ops.push(OP.REMOVE, node.id);
+		ops.push(OP.INSERT, parent.node_id, node.node_id, anchor ? anchor.node_id : 0);
+	} else if (old_parent !== null && old_parent.node_id !== 0) {
+		// Moved from the real tree to somewhere the host knows nothing about.
+		ops.push(OP.REMOVE, node.node_id);
 	}
 }
 
@@ -244,14 +252,23 @@ function insert_one(parent, node, anchor) {
 const listener_counts = new Map();
 
 /**
- * @param {BlitzNode} target
+ * Capture listeners are kept under their own key, so the two phases of an
+ * event read from separate lists. No event type contains a space.
+ * @param {string} type
+ */
+const capture_key = (type) => `${type} capture`;
+
+/**
+ * @param {{ listeners: Map<string, Function[]> | null }} target a node, or anything else that holds listeners
  * @param {string} type
  * @param {Function} handler
+ * @param {boolean} [capture] run on the way down to the target instead of on the way up
  */
-function add_listener(target, type, handler) {
+export function add_listener(target, type, handler, capture = false) {
 	const listeners = (target.listeners ??= new Map());
-	let handlers = listeners.get(type);
-	if (handlers === undefined) listeners.set(type, (handlers = []));
+	const key = capture ? capture_key(type) : type;
+	let handlers = listeners.get(key);
+	if (handlers === undefined) listeners.set(key, (handlers = []));
 	handlers.push(handler);
 
 	const count = listener_counts.get(type) ?? 0;
@@ -260,12 +277,13 @@ function add_listener(target, type, handler) {
 }
 
 /**
- * @param {BlitzNode} target
+ * @param {{ listeners: Map<string, Function[]> | null }} target
  * @param {string} type
  * @param {Function} handler
+ * @param {boolean} [capture]
  */
-function remove_listener(target, type, handler) {
-	const handlers = target.listeners?.get(type);
+export function remove_listener(target, type, handler, capture = false) {
+	const handlers = target.listeners?.get(capture ? capture_key(type) : type);
 	if (handlers === undefined) return;
 	const index = handlers.indexOf(handler);
 	if (index === -1) return;
@@ -276,7 +294,7 @@ function remove_listener(target, type, handler) {
 	if (count === 0) ops.push(OP.UNLISTEN, str(type));
 }
 
-class BlitzEvent {
+export class BlitzEvent {
 	/**
 	 * @param {string} type
 	 * @param {BlitzNode} target
@@ -326,27 +344,57 @@ export function dispatch(target_id, type, bubbles, detail) {
 		if ('checked' in detail) target.checked = detail.checked;
 	}
 
-	const event = new BlitzEvent(type, target, bubbles, detail ?? null);
+	return deliver(target, new BlitzEvent(type, target, bubbles, detail ?? null));
+}
 
-	/** @type {BlitzNode | null} */
-	let node = target;
-	while (node !== null) {
-		const handlers = node.listeners?.get(type);
-		if (handlers !== undefined && handlers.length > 0) {
-			event.currentTarget = node;
-			// copy: a handler may add or remove listeners
-			for (const handler of handlers.slice()) {
-				try {
-					handler.call(node, event);
-				} catch (error) {
-					// `console` comes from shims.js; the ES lib does not declare it.
-					/** @type {any} */ (globalThis).console.error(`Error in ${type} handler:`, error);
-				}
-				if (event.__stopped_immediately) break;
+/**
+ * Where an event goes after the mount target, in order. Empty by default; the
+ * optional DOM layer (dom.js) puts its `document` and `window` here.
+ * @type {{ listeners: Map<string, Function[]> | null }[]}
+ */
+export const outer_targets = [];
+
+/**
+ * Run an event's listeners: on the target, then up through its ancestors if
+ * it bubbles, then on the outer targets.
+ *
+ * @param {BlitzNode} target
+ * @param {any} event anything shaped like a `BlitzEvent`
+ * @returns {number} DISPATCH_* flags
+ */
+export function deliver(target, event) {
+	const type = event.type;
+	event.target = target;
+
+	/** @type {{ listeners: Map<string, Function[]> | null }[]} */
+	const path = [];
+	for (let /** @type {BlitzNode | null} */ node = target; node !== null; node = node.parent) path.push(node);
+	path.push(...outer_targets);
+
+	/** @param {{ listeners: Map<string, Function[]> | null }} node @param {string} key */
+	const run = (node, key) => {
+		const handlers = node.listeners?.get(key);
+		if (handlers === undefined || handlers.length === 0) return;
+		event.currentTarget = node;
+		// copy: a handler may add or remove listeners
+		for (const handler of handlers.slice()) {
+			try {
+				handler.call(node, event);
+			} catch (error) {
+				// `console` comes from shims.js; the ES lib does not declare it.
+				/** @type {any} */ (globalThis).console.error(`Error in ${type} handler:`, error);
 			}
+			if (event.__stopped_immediately) break;
 		}
-		if (!bubbles || event.__stopped) break;
-		node = node.parent;
+	};
+
+	// Down to the target, then back up: capture listeners see the event before
+	// the target does, whether or not the event bubbles.
+	const capture = capture_key(type);
+	for (let i = path.length - 1; i >= 0 && !event.__stopped; i--) run(path[i], capture);
+	for (let i = 0; i < path.length && !event.__stopped; i++) {
+		run(path[i], type);
+		if (!event.bubbles) break;
 	}
 
 	return (
@@ -378,22 +426,22 @@ const renderer = createRenderer({
 	createElement(name) {
 		const node = create_node(ELEMENT);
 		node.name = name;
-		elements.set(node.id, has_weak_refs ? new WeakRef(node) : node);
-		ops.push(OP.CREATE_ELEMENT, node.id, str(name));
+		elements.set(node.node_id, has_weak_refs ? new WeakRef(node) : node);
+		ops.push(OP.CREATE_ELEMENT, node.node_id, str(name));
 		return node;
 	},
 
 	createText(data) {
 		const node = create_node(TEXT);
 		node.data = data;
-		ops.push(OP.CREATE_TEXT, node.id, str(data));
+		ops.push(OP.CREATE_TEXT, node.node_id, str(data));
 		return node;
 	},
 
 	createComment(data) {
 		const node = create_node(COMMENT);
 		node.data = data;
-		ops.push(OP.CREATE_COMMENT, node.id, str(data));
+		ops.push(OP.CREATE_COMMENT, node.node_id, str(data));
 		return node;
 	},
 
@@ -409,7 +457,7 @@ const renderer = createRenderer({
 		text = text == null ? '' : String(text);
 		if (node.data === text) return;
 		node.data = text;
-		ops.push(OP.SET_TEXT, node.id, str(text));
+		ops.push(OP.SET_TEXT, node.node_id, str(text));
 	},
 
 	getAttribute(element, name) {
@@ -432,13 +480,13 @@ const renderer = createRenderer({
 		const attrs = (element.attrs ??= new Map());
 		if (attrs.get(name) === normalized) return;
 		attrs.set(name, normalized);
-		ops.push(OP.SET_ATTR, element.id, str(name), str(normalized));
+		if (element.node_id !== 0) ops.push(OP.SET_ATTR, element.node_id, str(name), str(normalized));
 	},
 
 	removeAttribute(element, name) {
 		if (name === 'checked') element.checked = false;
 		if (!element.attrs?.delete(name)) return;
-		ops.push(OP.REMOVE_ATTR, element.id, str(name));
+		if (element.node_id !== 0) ops.push(OP.REMOVE_ATTR, element.node_id, str(name));
 	},
 
 	getFirstChild(node) {
@@ -475,11 +523,18 @@ const renderer = createRenderer({
 		const parent = node.parent;
 		if (parent === null) return;
 		unlink(node);
-		if (parent.type !== FRAGMENT) ops.push(OP.REMOVE, node.id);
+		if (parent.node_id !== 0) ops.push(OP.REMOVE, node.node_id);
 	},
 
-	addEventListener: add_listener,
-	removeEventListener: remove_listener
+	/** @param {BlitzNode} target @param {string} type @param {Function} handler */
+	addEventListener(target, type, handler) {
+		add_listener(target, type, handler);
+	},
+
+	/** @param {BlitzNode} target @param {string} type @param {Function} handler */
+	removeEventListener(target, type, handler) {
+		remove_listener(target, type, handler);
+	}
 });
 
 export default renderer;

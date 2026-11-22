@@ -10,9 +10,9 @@
 //! Tree mutations never cross this boundary one at a time. They are pulled as
 //! one [`Batch`] per turn by [`JsEngine::take_batch`].
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use rquickjs::{CatchResultExt, Context, Ctx, Function, Object, Runtime, TypedArray, Value};
 
@@ -72,11 +72,33 @@ pub struct JsEngine {
     runtime: Runtime,
     context: Context,
     calls: Rc<RefCell<Vec<HostCall>>>,
+    /// When the host last handed control to JavaScript. Read by the watchdog.
+    entered: Rc<Cell<Instant>>,
 }
 
 impl JsEngine {
     pub fn new() -> Result<Self, String> {
+        Self::with_limit(RUNAWAY_SCRIPT)
+    }
+
+    fn with_limit(limit: Duration) -> Result<Self, String> {
         let runtime = Runtime::new().map_err(|e| e.to_string())?;
+        let entered = Rc::new(Cell::new(Instant::now()));
+        let since = entered.clone();
+        // The engine calls this every few thousand operations while a script
+        // runs. Returning `true` stops the script with an error it cannot catch.
+        runtime.set_interrupt_handler(Some(Box::new(move || {
+            if since.get().elapsed() < limit {
+                return false;
+            }
+            // Start over, so the report and whatever runs next get their own time.
+            since.set(Instant::now());
+            eprintln!(
+                "[js error] a script ran for {:?} without returning and was stopped; the app may be in a broken state",
+                limit
+            );
+            true
+        })));
         let context = Context::full(&runtime).map_err(|e| e.to_string())?;
         let start = Instant::now();
         let calls = Rc::new(RefCell::new(Vec::new()));
@@ -118,12 +140,20 @@ impl JsEngine {
             runtime,
             context,
             calls,
+            entered,
         })
+    }
+
+    /// Every call into JavaScript goes through here, so the watchdog times
+    /// one stretch of script and not the whole life of the app.
+    fn enter(&self) -> &Context {
+        self.entered.set(Instant::now());
+        &self.context
     }
 
     /// Evaluate a script (the app bundle) and run the microtasks it queued.
     pub fn eval(&self, code: &str) -> Result<(), String> {
-        self.context.with(|ctx| {
+        self.enter().with(|ctx| {
             ctx.eval::<(), _>(code)
                 .catch(&ctx)
                 .map_err(|e| e.to_string())
@@ -134,7 +164,7 @@ impl JsEngine {
 
     /// Evaluate an expression and return its string value. Handy in tests.
     pub fn eval_string(&self, code: &str) -> Result<String, String> {
-        let out = self.context.with(|ctx| {
+        let out = self.enter().with(|ctx| {
             ctx.eval::<String, _>(code)
                 .catch(&ctx)
                 .map_err(|e| e.to_string())
@@ -145,6 +175,7 @@ impl JsEngine {
 
     /// Run promise reactions and other queued jobs until the queue is empty.
     pub fn run_jobs(&self) {
+        self.entered.set(Instant::now());
         loop {
             match self.runtime.execute_pending_job() {
                 Ok(true) => continue,
@@ -170,7 +201,7 @@ impl JsEngine {
 
     /// Deliver a DOM event to the renderer's dispatcher. Returns `DISPATCH_*` flags.
     pub fn dispatch(&self, target: u32, name: &str, bubbles: bool, detail: &EventDetail) -> u32 {
-        let result = self.context.with(|ctx| -> rquickjs::Result<u32> {
+        let result = self.enter().with(|ctx| -> rquickjs::Result<u32> {
             let dispatch: Function = entry(&ctx)?.get("dispatch")?;
             let detail = detail_object(&ctx, detail)?;
             dispatch.call((target, name, bubbles, detail))
@@ -186,7 +217,7 @@ impl JsEngine {
 
     /// Pull the pending op batch, if anything changed since the last call.
     pub fn take_batch(&self) -> Option<Batch> {
-        let result = self.context.with(|ctx| -> rquickjs::Result<Option<Batch>> {
+        let result = self.enter().with(|ctx| -> rquickjs::Result<Option<Batch>> {
             let take: Function = entry(&ctx)?.get("take")?;
             let value: Value = take.call(())?;
             let Some(batch) = value.as_object() else {
@@ -224,7 +255,7 @@ impl JsEngine {
     /// Settle the promise behind a host call: `Ok` carries the result as JSON,
     /// `Err` the message of the error to reject with.
     pub fn resolve_call(&self, id: u32, result: Result<String, String>) {
-        let outcome = self.context.with(|ctx| -> rquickjs::Result<()> {
+        let outcome = self.enter().with(|ctx| -> rquickjs::Result<()> {
             let resolve: Function = entry(&ctx)?.get("resolve")?;
             let (ok, payload) = match result {
                 Ok(json) => (true, json),
@@ -240,7 +271,7 @@ impl JsEngine {
 
     /// Run the timers that are due.
     pub fn run_timers(&self) {
-        let result = self.context.with(|ctx| -> rquickjs::Result<()> {
+        let result = self.enter().with(|ctx| -> rquickjs::Result<()> {
             let timers: Function = entry(&ctx)?.get("timers")?;
             timers.call(())
         });
@@ -251,7 +282,7 @@ impl JsEngine {
 
     /// The next timer deadline in host-clock milliseconds, if any timer is pending.
     pub fn next_timer(&self) -> Option<f64> {
-        let result = self.context.with(|ctx| -> rquickjs::Result<f64> {
+        let result = self.enter().with(|ctx| -> rquickjs::Result<f64> {
             let next_timer: Function = entry(&ctx)?.get("next_timer")?;
             next_timer.call(())
         });
@@ -283,7 +314,7 @@ impl JsEngine {
     }
 
     fn report(&self, what: &str, error: rquickjs::Error) {
-        let message = self.context.with(|ctx| {
+        let message = self.enter().with(|ctx| {
             if error.is_exception() {
                 let exception = ctx.catch();
                 match exception.as_exception() {
@@ -301,6 +332,12 @@ impl JsEngine {
         eprintln!("[js error] while {what}: {message}");
     }
 }
+
+/// How long one stretch of JavaScript may run before it is interrupted.
+///
+/// The app shares the UI thread with the window: while a script runs, nothing
+/// is drawn and no input is read. Ten seconds of that is not slow, it is stuck.
+const RUNAWAY_SCRIPT: Duration = Duration::from_secs(10);
 
 /// `globalThis.__sb`, installed by the `@ethercorps/svelte-blitz` package.
 fn entry<'js>(ctx: &Ctx<'js>) -> rquickjs::Result<Object<'js>> {
@@ -359,5 +396,20 @@ fn detail_object<'js>(ctx: &Ctx<'js>, detail: &EventDetail) -> rquickjs::Result<
             object.set("value", value.as_str())?;
             Ok(object.into_value())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_script_that_never_returns_is_stopped() {
+        let js = JsEngine::with_limit(Duration::from_millis(200)).unwrap();
+        let started = Instant::now();
+        assert!(js.eval("for (;;) {}").is_err());
+        assert!(started.elapsed() < Duration::from_secs(5));
+        // The engine is still usable, and a later script gets its own time.
+        assert_eq!(js.eval_string("String(1 + 1)").unwrap(), "2");
     }
 }

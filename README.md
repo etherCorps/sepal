@@ -121,6 +121,7 @@ export default defineConfig({
 		// what the app may do outside its window; see "Desktop APIs"
 	}
 	// router: see "Your own router"
+	// dom: true, for component libraries written for the web; see "Component libraries"
 });
 ```
 
@@ -325,32 +326,71 @@ Tested with shadcn-svelte 1.8 (its CLI, the `vega` preset, 16 components).
 variables, variants (`tailwind-variants`), Lucide icons and the Inter font all
 render as on the web.
 
-| Works | Does not work yet |
-|---|---|
-| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Dialog, Select, Tooltip, Accordion, Checkbox, Switch, Tabs |
+| Works | Works with `dom: true` | Does not work yet |
+|---|---|---|
+| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog | Select, Tooltip |
 
-The split is not about shadcn. The components on the left are markup and
-classes. The ones on the right are built on Bits UI, which assumes a browser:
+The first column is markup and classes. Everything else is built on Bits UI,
+which is written for a browser: it reads `window` and `document`, listens on
+them, creates elements, moves focus and measures boxes.
 
-- Accordion and Tooltip throw `window is not defined`.
-- Checkbox fails while loading: `EventTarget is not defined`.
-- Select throws on pointer down; Dialog does not open (it renders into
-  `document.body`).
-- Switch and Tabs change their own state attributes when clicked, but the
-  bound value does not reach the parent, and whether a tab's panel swaps was
-  not confirmed.
+### `dom: true`
+
+```ts
+// app.config.ts
+export default defineConfig({ dom: true });
+```
+
+This builds the app as a browser bundle (the `browser` export condition) and
+loads `@ethercorps/svelte-blitz/dom` before anything else. That module puts a
+small DOM on top of the renderer's own tree: `window`, `document`, selectors
+(`querySelector`, `matches`, `closest`), attributes, `classList`, `style`,
+`dataset`, tree edits, `Event` and its subclasses, `EventTarget`,
+`AbortController`, listeners on `document` and `window`, focus tracking. Every
+write goes through the same op buffer as Svelte's, so nothing about how the
+host works changes. It is opt-in: an app that does not ask for it gets none of
+it, and the rule that the bundle runs on ECMAScript built-ins alone still
+holds for the layer itself.
+
+What it cannot do is **measure**. `getBoundingClientRect()` returns an empty
+rectangle, `getComputedStyle()` an empty style, and `ResizeObserver` never
+calls back, because layout lives in the host and JavaScript only writes to
+it. So:
+
+- Select opens, but its list is placed at the top left corner instead of
+  under its trigger. Tooltip, Popover and menus would do the same: they all
+  position themselves with Floating UI, from measurements.
+- Accordion opens and closes, but jumps instead of sliding: its animation
+  runs to a measured height, which is 0.
+- Dialog needs no measuring and works fully with the mouse: it opens, dims
+  the page, and closes from its cross or a click outside.
+- Nothing closes on Escape, and focus is not trapped, since keyboard events
+  have never been run in the host.
+
+Three things had to be fixed underneath to get this far, and they apply to
+any app:
+
+- QuickJS answers `Object.getOwnPropertyDescriptor(proxy, key)` with a data
+  descriptor even when the proxy's trap returned a getter and setter. Svelte
+  asks that to find the setter of a bound prop that passes through
+  `{...rest}` props, so `bind:` stopped at the first wrapper component.
+  `shims.js` works around it.
+- Blitz hit-tested a box in a line of text (a `<button>` that is not a flex
+  or grid item) as if it were shifted by its container's padding. Fixed in
+  the patched `blitz-dom`.
+- Capture-phase listeners now run in the capture phase.
 
 Typing into an Input is untested, like all text input.
 
 Out of the box none of it compiled, because every shadcn component has
 `bind:this={ref}` on its root element and Svelte refuses that for custom
-renderers. The preset now rewrites element bindings before Svelte sees them
-(`packages/vite/src/bindings.js`), which is what made the left column work,
-and applies to any component library.
+renderers. The preset rewrites element bindings before Svelte sees them
+(`packages/vite/src/bindings.js`), which applies to any component library.
 
 `examples/shadcn` is a page of the working components. `node probe.mjs` in
-that directory compiles and runs each file in `src/probes` and reports where
-it fails.
+that directory compiles and runs each file in `src/probes` and reports
+whether it loads; `cargo run --features screenshot --example drive` (in
+`crates/host`) clicks through a built app and prints what happened.
 
 ## Icons and images
 
@@ -590,6 +630,7 @@ packages/core/            @ethercorps/svelte-blitz: the runtime
   src/updater.js          check(), download(), install()
   src/fetch.js            the global fetch
   src/fs.js, dialog.js, clipboard.js, shell.js, window.js   desktop APIs
+  src/dom.js              window, document and element methods, for `dom: true`
   test/                   a host written in JS, for testing without Rust
 packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
   src/vite.js             Vite preset: one app.js (IIFE) + one app.css
@@ -626,7 +667,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/routing.rs        file-based routing, by clicking through examples/routing
   tests/updater.rs        updates against a local server, tampering, the JS API
   tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
-crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with two fixes (see PATCH.md)
+crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with three fixes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
@@ -691,6 +732,9 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Desktop APIs from JavaScript: fetch (methods, bodies, redirects, errors), files (text, bytes, directories), URL and path scopes, every call refused without permission, a slow request not blocking the UI | `tests/desktop.rs` |
 | Desktop APIs on a real Mac: HTTPS fetch to api.github.com, a file in the app data directory, confirm and file-open dialogs appearing, maximise, minimise | example run with `VITE_AUTO=<button>` |
 | shadcn-svelte components from its CLI: nine render and react, `bind:this` reaches the element | `tests/shadcn.rs`, `examples/shadcn/probe.mjs` |
+| Bits UI components on the DOM layer: Switch and Checkbox (bound value reaches the page), Tabs, Accordion, Dialog (opens over the page, closes on a click outside) | `tests/shadcn.rs`, `test/dom.test.js` |
+| A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
+| A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
 | Timer wake-ups, and silence when no timer is running | `timers_wake_the_event_loop` |
 | Removed nodes are freed on the host after GC | `removed_nodes_are_freed` |
@@ -738,7 +782,10 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
   window control. See "Desktop APIs" for what is missing.
 - Images and other resources load from data: URLs and the app directory only; no network.
 - `requestAnimationFrame` is a 16 ms timer, not tied to the display.
-- Capture-phase listeners are treated as bubble-phase.
+- Nothing in JavaScript can measure the page: no `getBoundingClientRect`
+  with real numbers, no `ResizeObserver`. Libraries that position things from
+  measurements (Floating UI) put them in the wrong place.
+- A script that runs for 10 seconds without returning is stopped.
 - An element is put in the SVG namespace by its name alone. `a`, `title`,
   `style` and `script` are always HTML, also inside an `<svg>`.
 - Blitz itself is beta. Its status page lists `position: sticky`, container

@@ -72,7 +72,11 @@ window = [
 ]
 screenshot = ["dep:blitz-paint", "dep:anyrender", "dep:anyrender_vello_cpu", "dep:png"]
 
-# One-line fix for inline SVG colours; see crates/blitz-dom/PATCH.md.
+[[example]]
+name = "drive"
+required-features = ["screenshot"]
+
+# Three small fixes; see crates/blitz-dom/PATCH.md.
 [patch.crates-io]
 blitz-dom = { path = "../blitz-dom" }
 

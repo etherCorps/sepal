@@ -1484,13 +1484,16 @@ impl Node {
             let child_position = child.taffy_position();
             let mut child_x = x;
             let mut child_y = y;
+            // svelte-blitz patch: upstream undoes the offset for out-of-flow
+            // children only. Inline boxes are placed relative to this node's
+            // border box as well (see `layout/inline.rs`), so without this a
+            // button in a line of text is hit-tested as if it were shifted by
+            // its container's padding and border.
+            if self.flags.is_inline_root() {
+                child_x += content_box_offset.x;
+                child_y += content_box_offset.y;
+            }
             if child_position.is_out_of_flow() {
-                // Out-of-flow children's layout location is relative to this node's
-                // border box, so undo the inline-root content-box offset applied above
-                if self.flags.is_inline_root() {
-                    child_x += content_box_offset.x;
-                    child_y += content_box_offset.y;
-                }
                 // Fixed-position children of the root element are positioned
                 // against the viewport and do not scroll with it. (A fixed box
                 // whose containing block is a transformed ancestor scrolls with

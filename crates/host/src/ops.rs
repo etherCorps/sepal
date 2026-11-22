@@ -241,6 +241,24 @@ pub fn apply_batch(
                 let o = operands!(3);
                 let parent = node!(o[0]);
                 let child = node!(o[1]);
+                // A node cannot go inside itself. Blitz does not check, and a
+                // cycle in its tree makes the next walk up the ancestors loop forever.
+                let mut ancestor = Some(parent);
+                let mut cyclic = false;
+                while let Some(id) = ancestor {
+                    if id == child {
+                        cyclic = true;
+                        break;
+                    }
+                    ancestor = mutator.parent_id(id);
+                }
+                if cyclic {
+                    eprintln!(
+                        "[host] refused to insert node {} into its own descendant {}",
+                        o[1], o[0]
+                    );
+                    continue;
+                }
                 // Only use the anchor if it really is a child of `parent`;
                 // otherwise fall back to appending rather than corrupting the tree.
                 let anchor = (o[2] != 0)
@@ -296,4 +314,38 @@ pub fn apply_batch(
     }
 
     stats
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use blitz_dom::DocumentConfig;
+
+    /// Invariant 8: a batch is app input. A bad one is skipped, not obeyed.
+    #[test]
+    fn a_malformed_batch_is_refused_without_panicking() {
+        let mut doc = BaseDocument::new(DocumentConfig::default());
+        let mut nodes = NodeMap::default();
+        let mut listening = HashSet::new();
+        #[rustfmt::skip]
+        let ops = vec![
+            CREATE_ELEMENT, 2, 0, // <div>
+            CREATE_ELEMENT, 3, 1, // <span>
+            INSERT, 2, 3, 0,      // span into div
+            INSERT, 3, 2, 0,      // div into its own child: a cycle
+            INSERT, 2, 2, 0,      // div into itself
+            SET_ATTR, 99, 0, 0,   // a node that does not exist
+            REMOVE, 99,
+            77,                   // not an opcode
+        ];
+        let batch = Batch {
+            ops,
+            strings: vec!["div".into(), "span".into()],
+        };
+        apply_batch(&mut doc, &mut nodes, &mut listening, &batch);
+
+        let (div, span) = (nodes.blitz(2).unwrap(), nodes.blitz(3).unwrap());
+        assert_eq!(doc.get_node(span).unwrap().parent, Some(div));
+        assert_eq!(doc.get_node(div).unwrap().parent, None, "no cycle");
+    }
 }

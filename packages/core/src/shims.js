@@ -21,6 +21,52 @@ function format(value) {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Engine fix: accessor descriptors through a Proxy
+//
+// In QuickJS-ng, `Object.getOwnPropertyDescriptor(proxy, key)` returns a data
+// descriptor (`value`, `writable`) even when the proxy's trap returned an
+// accessor (`get`, `set`). Svelte asks exactly that question to find the
+// setter of a bound prop that travels through `{...rest}` props, so without
+// this a `bind:` stops at the first component that also spreads its props.
+//
+// The fix: remember each proxy's handler, and answer from its trap directly.
+// ---------------------------------------------------------------------------
+
+(() => {
+	const probe = new Proxy({}, { getOwnPropertyDescriptor: () => ({ get: () => 1, set() {}, enumerable: true, configurable: true }) });
+	// An engine without the bug keeps its own, complete, behaviour.
+	if (typeof Object.getOwnPropertyDescriptor(probe, 'x')?.set === 'function') return;
+
+	const NativeProxy = Proxy;
+	/** @type {WeakMap<object, { target: object, handler: ProxyHandler<any> }>} */
+	const proxies = new WeakMap();
+	/** @this {any} @param {object} target @param {ProxyHandler<any>} handler */
+	const Tracked = function (target, handler) {
+		const proxy = new NativeProxy(target, handler);
+		proxies.set(proxy, { target, handler });
+		return proxy;
+	};
+	Tracked.revocable = (/** @type {object} */ target, /** @type {ProxyHandler<any>} */ handler) => {
+		const result = NativeProxy.revocable(target, handler);
+		proxies.set(result.proxy, { target, handler });
+		return result;
+	};
+	g.Proxy = Tracked;
+
+	for (const owner of [Object, Reflect]) {
+		const native = owner.getOwnPropertyDescriptor;
+		owner.getOwnPropertyDescriptor = function (/** @type {any} */ object, /** @type {PropertyKey} */ key) {
+			const known = object !== null && typeof object === 'object' ? proxies.get(object) : undefined;
+			const trap = known?.handler.getOwnPropertyDescriptor;
+			// Only an accessor is lost, so only an accessor is answered from here.
+			const answer = typeof trap === 'function' ? trap.call(known?.handler, known?.target, /** @type {any} */ (key)) : undefined;
+			if (answer && (answer.get || answer.set)) return { enumerable: false, configurable: false, ...answer };
+			return native.call(owner, object, key);
+		};
+	}
+})();
+
 if (typeof g.console === 'undefined') {
 	const make = (/** @type {number} */ level) => (/** @type {unknown[]} */ ...args) => host.log?.(level, args.map(format).join(' '));
 	const noop = () => {};

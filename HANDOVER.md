@@ -336,10 +336,20 @@ platform binaries into `packages/host/bin` before packing it.
   decision): `fetch`, files, dialogs, clipboard, open, window. Not done:
   notifications, menus, tray, shortcuts, multiple windows, a settings store.
 
+- A DOM layer for web component libraries (`dom: true`, Shivam's choice
+  after the shadcn probe): Switch, Checkbox, Tabs, Accordion and Dialog from
+  shadcn-svelte work. Not done, and the next step if this continues: letting
+  JavaScript measure the page. Select, Tooltip, Popover and menus all position
+  themselves with Floating UI and land in the top left corner without it. A
+  design that keeps the invariants: JS never asks the host; the host sends the
+  rectangles of the elements JS has asked about after each layout, JS answers
+  `getBoundingClientRect()` from that copy and fires `ResizeObserver` when
+  one changes. Keyboard events (Escape, focus trap) are the other half.
+
 ## Known gaps outside this brief
 
-Text input and IME, keyboard events, `fetch` and other host APIs, state-preserving HMR,
-`requestAnimationFrame` tied to the display, capture-phase listeners, multiple
+Text input and IME, keyboard events, state-preserving HMR,
+`requestAnimationFrame` tied to the display, measuring layout from JavaScript, multiple
 windows, the scriptc experiment. See "Next steps" in `README.md`. Do not pull
 these into the icon or release work unless one turns out to block it.
 

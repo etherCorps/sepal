@@ -33,13 +33,15 @@ for (const name of names.filter((n) => only.length === 0 || only.includes(n))) {
 	try {
 		await build({
 			root, configFile: false, logLevel: 'silent',
-			plugins: [tailwindcss(), svelteBlitz({ router: false, entry, app: {} })],
-			build: { outDir: dir, emptyOutDir: true }
+			plugins: [tailwindcss(), svelteBlitz({ router: false, entry, app: {}, dom: true })],
+			// Not minified: a stack trace from a probe should be readable.
+			build: { outDir: dir, emptyOutDir: true, minify: false }
 		});
 		stage = 'run';
-		const ran = spawnSync(host, ['--screenshot', join(dir, 'shot.png'), dir, '640x360'], { encoding: 'utf8' });
+		const ran = spawnSync(host, ['--screenshot', join(dir, 'shot.png'), dir, '640x360'], { encoding: 'utf8', timeout: 15000 });
 		// The host logs what the app logs: console.warn and console.error, and uncaught errors.
 		detail = (ran.stderr + ran.stdout).trim();
+		if (ran.error) detail = `the host did not finish: ${ran.error.message}`;
 		stage = ran.status !== 0 ? 'run' : /\[js error\]/.test(detail) ? 'errors' : /\[js warn\]/.test(detail) ? 'warns' : 'ok';
 	} catch (error) {
 		detail = String(error.stderr || error.message || error).trim();

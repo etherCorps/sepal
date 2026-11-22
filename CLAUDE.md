@@ -41,7 +41,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `index.js` (`mount`, `__sb` entry points), `protocol.js` (opcodes),
   `host-call.js` (async calls to the host), `updater.js` (the update API),
   `fetch.js` (global `fetch`), `fs.js`, `dialog.js`, `clipboard.js`,
-  `shell.js`, `window.js` (desktop APIs; public names are camelCase). Runs in
+  `shell.js`, `window.js` (desktop APIs; public names are camelCase),
+  `dom.js` (the opt-in DOM layer for web component libraries). Runs in
   QuickJS: no Node code belongs here.
 - `packages/vite/` — `@ethercorps/svelte-blitz-vite`. `vite.js` (the preset),
   `routes.js` (build-time scan of `src/routes`), `routing.svelte.js` +
@@ -113,9 +114,22 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   actions get a `BlitzNode`, which has `addEventListener`/`removeEventListener`
   and little else of the DOM.
 - **Libraries that assume a browser fail at run time, not at compile time.**
-  Bits UI (under shadcn-svelte) needs `window`, `document`, `EventTarget`,
-  focus and measuring. `examples/shadcn/probe.mjs` shows where each component
-  stops.
+  `dom: true` in `app.config.ts` loads `packages/core/src/dom.js`, a DOM on
+  top of the renderer's tree, which is enough for Bits UI's Switch, Checkbox,
+  Tabs, Accordion and Dialog. It cannot measure: `getBoundingClientRect()` is
+  empty, so anything positioned by Floating UI (Select, Tooltip) is misplaced.
+  Do not answer a measurement with a call into the host (invariant 2, and
+  layout is not safe to run inside an event handler).
+- **`BlitzNode`'s own fields must not take DOM names.** The node id is
+  `node_id` because `id` is the HTML attribute; a collision corrupts the op
+  stream without an error.
+- **QuickJS gets `Object.getOwnPropertyDescriptor(proxy, key)` wrong** for
+  accessors. `shims.js` wraps `Proxy` to fix it; Svelte's `bind:` through
+  `{...rest}` props depends on that. V8 does not have the bug, so only the
+  Rust tests see it.
+- **A cycle in the tree hangs Blitz.** `insert_one` throws and `apply_batch`
+  refuses the op. A script that runs for 10 s is stopped (`js.rs`), so a hang
+  in JS ends with an error instead of a frozen window.
 - **Svelte features unavailable to custom renderers:**
   `transition:`/`animate:`/`in:`/`out:`, `<svelte:window|body|document|head>`,
   `css: 'injected'`, hydration, event delegation. Svelte does not bubble events
@@ -135,7 +149,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   than assuming. `anyrender_vello_hybrid 0.11` and `anyrender_vello_cpu 0.18`
   are the releases that match blitz's `anyrender 0.14`.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in two places, both marked
+  It differs from crates.io 0.3.0-beta.4 in three places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a
@@ -164,6 +178,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - `SVELTE_BLITZ_TRACE=1` makes the host print UI-thread timings to stderr:
   every click, every repaint, every change the app made to the page, and any
   other step that took longer than 8 ms.
+- `cargo run --features screenshot --example drive -- <app dir> click:SEL
+  time:0.3 text:SEL shot:out.png` (in `crates/host`) drives a built app
+  headless and prints each step. See the top of `examples/drive.rs`.
 - In `--watch` mode stdin also accepts `move <x> <y>` and `click <x> <y>`
   (logical pixels). They enter through the same function OS events do, so a
   script can drive a real window and read the trace. This does not go through
@@ -176,7 +193,13 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   they go through real hit testing and Blitz's event driver.
 - For anything visual, render with `screenshot::render_rgba` and assert on
   pixels, then look at the PNG yourself before trusting the assertion.
+- Headless time stands still. A CSS transition or a timer chain only moves
+  when the test calls `doc.wait(seconds)`; without it you assert on the first
+  frame of an animation.
+- `doc.rect()` and `doc.click(node)` ignore CSS transforms; hit testing does
+  not. For a translated element, use `click_at`.
 - Renderer-only changes: extend `packages/core/test/mock-host.test.js`.
+  DOM layer changes: `packages/core/test/dom.test.js`, and `tests/shadcn.rs`.
 - Preset and router changes: `packages/vite/test/`, and `tests/routing.rs`.
 - Linux CI needs no display for any of the tests.
 
