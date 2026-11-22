@@ -404,7 +404,8 @@ export function deliver(target, event) {
 	/** @type {{ listeners: Map<string, Function[]> | null }[]} */
 	const path = [];
 	for (let /** @type {BlitzNode | null} */ node = target; node !== null; node = node.parent) path.push(node);
-	path.push(...outer_targets);
+	// (An event that hit nothing starts at the first of these already.)
+	for (const outer of outer_targets) if (outer !== target) path.push(outer);
 
 	/** @param {{ listeners: Map<string, Function[]> | null }} node @param {string} key */
 	const run = (node, key) => {

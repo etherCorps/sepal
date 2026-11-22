@@ -13,6 +13,8 @@
 // The tree is the renderer's own. An element here is a `BlitzNode`, and every
 // write goes through the renderer into the same op buffer as Svelte's.
 
+import { TextDecoder, TextEncoder } from './text.js';
+import { URL, URLSearchParams } from './url.js';
 import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_focus, request_measure, root } from './renderer.js';
 
 const g = /** @type {any} */ (globalThis);
@@ -671,6 +673,20 @@ define(proto, {
 	className: reflected('class'),
 	title: reflected('title'),
 	role: reflected('role'),
+	// For a link, the address it leads to, in full: routers read this and not
+	// the attribute.
+	href: {
+		/** @this {any} */
+		get() {
+			const written = this.attrs?.get('href');
+			if (written === undefined) return '';
+			return URL.parse(written, address.href)?.href ?? written;
+		},
+		/** @this {any} @param {any} value */
+		set(value) {
+			renderer.setAttribute(this, 'href', String(value));
+		}
+	},
 	hidden: reflected_flag('hidden'),
 	disabled: reflected_flag('disabled'),
 	tabIndex: {
@@ -912,8 +928,137 @@ const tag_class = (tags) => node_class((node) => is_element(node) && new RegExp(
 /** Stands in for <html> and <head>: something to hold attributes and styles that go nowhere. */
 const detached = () => new BlitzNode('element', 0);
 
+// ---------------------------------------------------------------------------
+// The address, and the history of it
+//
+// An app is not at a URL: nothing was fetched from anywhere. But routers are
+// written against `location` and `history`, so there is an address, starting
+// at `http://app.localhost/`, that only ever changes through `history` or
+// `location` here. Nothing is loaded when it does; whoever listens to
+// `popstate` decides what that means.
+// ---------------------------------------------------------------------------
+
+const address = new URL('http://app.localhost/');
+/** @type {{ href: string, state: any }[]} */
+const visited = [{ href: address.href, state: null }];
+let visiting = 0;
+
+class PopStateEvent extends Event {
+	/** @param {string} type @param {{ state?: any }} [init] */
+	constructor(type, init = {}) {
+		super(type, init);
+		this.state = init.state ?? null;
+	}
+}
+
+/** Go to another entry and say so, as a browser does after `back()`. @param {number} index */
+function travel(index) {
+	if (index < 0 || index >= visited.length || index === visiting) return;
+	const from = address.href;
+	visiting = index;
+	address.href = visited[index].href;
+	g.dispatchEvent(new PopStateEvent('popstate', { state: visited[index].state }));
+	if (from.split('#')[0] === address.href.split('#')[0] && from !== address.href) {
+		g.dispatchEvent(Object.assign(new Event('hashchange'), { oldURL: from, newURL: address.href }));
+	}
+}
+
+/** @param {any} state @param {string | URL | null | undefined} url @param {boolean} push */
+function record(state, url, push) {
+	if (url !== null && url !== undefined) {
+		const next = new URL(String(url), address.href);
+		if (next.origin !== address.origin) throw new Error(`Cannot go from ${address.origin} to ${next.origin} with history`);
+		address.href = next.href;
+	}
+	if (push) visited.splice(++visiting, Infinity, { href: address.href, state });
+	else visited[visiting] = { href: address.href, state };
+}
+
+const history = {
+	scrollRestoration: 'auto',
+	get length() {
+		return visited.length;
+	},
+	get state() {
+		return visited[visiting].state;
+	},
+	/** @param {any} state @param {string} _title @param {string | URL | null} [url] */
+	pushState: (state, _title, url) => record(state, url, true),
+	/** @param {any} state @param {string} _title @param {string | URL | null} [url] */
+	replaceState: (state, _title, url) => record(state, url, false),
+	// In a browser these take effect in a later task.
+	/** @param {number} [delta] */
+	go: (delta = 0) => void g.setTimeout(() => travel(visiting + delta), 0),
+	back: () => history.go(-1),
+	forward: () => history.go(1)
+};
+
+/** `location`: the address, readable by its parts, and assignable. */
+const location = {
+	/** @param {string | URL} url */
+	assign(url) {
+		record(null, url, true);
+		g.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+	},
+	/** @param {string | URL} url */
+	replace(url) {
+		record(null, url, false);
+		g.dispatchEvent(new PopStateEvent('popstate', { state: null }));
+	},
+	reload() {},
+	toString: () => address.href
+};
+for (const part of /** @type {const} */ (['href', 'origin', 'protocol', 'host', 'hostname', 'port', 'pathname', 'search', 'hash'])) {
+	Object.defineProperty(location, part, {
+		enumerable: true,
+		get: () => address[part],
+		set(value) {
+			if (part === 'origin') return;
+			const next = new URL(address.href);
+			/** @type {any} */ (next)[part] = value;
+			location.assign(next);
+		}
+	});
+}
+
+/** `sessionStorage`: lasts as long as the app runs, which is what a session is here. */
+function memory_storage() {
+	/** @type {Map<string, string>} */
+	const items = new Map();
+	return new Proxy(
+		{
+			/** @param {string} key */
+			getItem: (key) => items.get(String(key)) ?? null,
+			/** @param {string} key @param {string} value */
+			setItem: (key, value) => void items.set(String(key), String(value)),
+			/** @param {string} key */
+			removeItem: (key) => void items.delete(String(key)),
+			clear: () => items.clear(),
+			/** @param {number} index */
+			key: (index) => [...items.keys()][index] ?? null,
+			get length() {
+				return items.size;
+			}
+		},
+		{
+			get: (target, key) => (key in target || typeof key !== 'string' ? /** @type {any} */ (target)[key] : items.get(key)),
+			set: (target, key, value) => (typeof key === 'string' && !(key in target) ? (items.set(key, String(value)), true) : Reflect.set(target, key, value)),
+			deleteProperty: (_, key) => (typeof key === 'string' ? items.delete(key) : false) || true,
+			has: (target, key) => key in target || (typeof key === 'string' && items.has(key))
+		}
+	);
+}
+
 const document = {
 	nodeType: 9,
+	get baseURI() {
+		return address.href;
+	},
+	get URL() {
+		return address.href;
+	},
+	location,
+	title: '',
 	nodeName: '#document',
 	/** @type {Map<string, Function[]> | null} */
 	listeners: null,
@@ -940,6 +1085,8 @@ const document = {
 	/** @param {string} data */
 	createComment: (data) => renderer.createComment(data),
 	createDocumentFragment: () => renderer.createFragment(),
+	/** @param {string} name */
+	getElementsByTagName: (name) => query_all(root, name === '*' ? '*' : name.toLowerCase()),
 	/** @param {string} id */
 	getElementById: (id) => {
 		let found = null;
@@ -985,7 +1132,9 @@ reported_box(root);
 
 /** `window` is the global object; these are its listeners. */
 const window_target = { listeners: /** @type {Map<string, Function[]> | null} */ (null) };
-outer_targets.push(document, window_target);
+// Above <body>: <html>, where routers listen for clicks on links, then the
+// document, then the window.
+outer_targets.push(document.documentElement, document, window_target);
 
 // The host moves focus on its own when the user clicks or tabs. Follow it.
 add_listener(document, 'focusin', (/** @type {any} */ event) => {
@@ -1023,10 +1172,20 @@ provide({
 	self: g,
 	document,
 	navigator: { userAgent: 'svelte-blitz', platform: '', language: 'en-US', languages: ['en-US'], maxTouchPoints: 0, onLine: true },
-	location: { href: 'app://localhost/', origin: 'app://localhost', protocol: 'app:', host: 'localhost', hostname: 'localhost', pathname: '/', search: '', hash: '' },
+	location,
+	history,
+	sessionStorage: memory_storage(),
+	URL,
+	URLSearchParams,
+	TextEncoder,
+	TextDecoder,
+	PopStateEvent,
+	HashChangeEvent: Event,
 	devicePixelRatio: 1,
 	scrollX: 0,
 	scrollY: 0,
+	pageXOffset: 0,
+	pageYOffset: 0,
 	/** @param {string} type @param {any} handler @param {any} [options] */
 	addEventListener: (type, handler, options) => listen(window_target, type, handler, options),
 	/** @param {string} type @param {any} handler @param {any} [options] */
@@ -1065,6 +1224,9 @@ provide({
 	HTMLSelectElement: tag_class('select'),
 	HTMLButtonElement: tag_class('button'),
 	HTMLAnchorElement: tag_class('a'),
+	// An <a> inside an <svg>. Elements here do not know their namespace, and
+	// such a link is given the HTML one (see `SVG_ELEMENTS` in the host).
+	SVGAElement: node_class(() => false),
 	HTMLFormElement: tag_class('form'),
 	HTMLLabelElement: tag_class('label'),
 	Document: class {

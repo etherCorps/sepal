@@ -313,10 +313,33 @@ With a custom entry the built-in `$app/navigation` and `$app/state` are not
 set up; your router exports its own API. The `Route` and `RouteNode` types
 come from `@ethercorps/svelte-blitz-vite/router`.
 
-Running SvelteKit itself on this renderer is not practical. Its client
-router (3,800 lines in 3.0.1) is written against `location`, `history`,
-`document`, `fetch` and dynamic `import()`, mounts its root without a
-renderer option, and its build expects a server pass.
+### SvelteKit itself (experimental)
+
+`examples/sveltekit` is a real SvelteKit 3 app, built as a single-page app,
+with SvelteKit's own client router running in the host: links, `goto`,
+parameters, `load`, `$app/state` and the back button work, on QuickJS and on
+V8. It is a proof that it can be done, not a supported way to build an app
+yet. What it took, all in that example's `vite.config.ts` and `to-blitz.mjs`:
+
+- Build with `adapter-static` and a fallback page (no server exists in a
+  desktop app, so nothing server-side can work: no `+page.server.ts`, no form
+  actions, no endpoints), `output.bundleStrategy: 'single'`, and Svelte's
+  `customRenderer` option.
+- Two edits to SvelteKit's client as it is bundled: load the DOM layer and
+  the runtime first, and pass the renderer where SvelteKit mounts its root
+  component. These reach into SvelteKit's own files; an update can break
+  them, and the build stops with a message if it does.
+- A step after the build that turns SvelteKit's output (an HTML page that
+  imports one module) into the `app.js` the host loads.
+- In the DOM layer: `URL`, `URLSearchParams`, `history`, `location`,
+  `sessionStorage`, `TextEncoder`/`TextDecoder`, and events passing through
+  `<html>`, where SvelteKit listens for clicks on links.
+
+Not working: `<svelte:head>` (Svelte refuses it for custom renderers, so a
+page that sets its title that way does not compile), scroll restoration
+(there is no scroll position to read), and everything the built-in router's
+preset does around the build (`app.config.ts`, the manifest, icons, dev
+reload), which this example does not have.
 
 ## Component libraries: shadcn-svelte
 
@@ -676,6 +699,7 @@ packages/core/            @ethercorps/svelte-blitz: the runtime
   src/fetch.js            the global fetch
   src/fs.js, dialog.js, clipboard.js, shell.js, window.js   desktop APIs
   src/dom.js              window, document and element methods, for `dom: true`
+  src/url.js, text.js     URL, URLSearchParams, TextEncoder, TextDecoder (part of the DOM layer)
   test/                   a host written in JS, for testing without Rust
 packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
   src/vite.js             Vite preset: one app.js (IIFE) + one app.css
@@ -717,6 +741,7 @@ crates/anyrender_vello_hybrid/   the window's renderer, 0.11.0, with two (see PA
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
+examples/sveltekit/       SvelteKit's own router running in the host (experimental)
 ```
 
 ## How it works
@@ -788,6 +813,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Children that are added, removed or moved are styled, and so is what depends on their position (`:first-child`, `:nth-child()`, `a + b`, `:empty`) | `tests/restyle.rs` |
 | `:has()`: follows an attribute, a child that arrives or leaves, and the focus, for a parent, an ancestor, what is under it, and siblings on either side | `tests/restyle.rs` |
 | The window's GPU renderer draws what the CPU screenshots show: the same page differs by at most 2/255 per channel | `drive … gpushot:` against `shot:` (needs a GPU; by hand) |
+| SvelteKit's client router in the host: a link, `goto`, a parameter with `load`, `$app/state`, back twice | `tests/sveltekit.rs` |
+| `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder` agree with Node's on 231 URLs and on text cut at every byte | `test/url.test.js`, `test/text.test.js` |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
@@ -890,7 +917,7 @@ What the time is spent on, from sampling:
 
 1. Run `pnpm start` on a machine with a display and fix whatever the window turns up.
 2. Type into a real window; then IME.
-3. The SvelteKit spike (see `HANDOVER.md`).
+3. Decide what to do with the two spikes: V8 and SvelteKit (see `HANDOVER.md`).
 4. State-preserving HMR, if the full reload turns out not to be enough.
 5. A virtual list component, then packaging per OS.
 6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`

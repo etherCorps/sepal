@@ -65,7 +65,10 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
-  `examples/routing/` — file-based routing.
+  `examples/routing/` — file-based routing. `examples/shadcn/` — the DOM
+  layer under a real component library. `examples/sveltekit/` — SvelteKit's
+  own router in the host (a spike: it patches SvelteKit's client at build
+  time, see its `vite.config.ts`).
 
 ## Invariants — do not break these
 

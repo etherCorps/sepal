@@ -135,6 +135,40 @@ assert.equal(run('[__sb.timers(), __sb.timers(), __sb.timers()].join() + " " + r
 assert.equal(run('__sb.timers() + " " + ran.join()'), 'true c,a,b,late', 'a timer set during a round waits for the next');
 run('__sb.timers()');
 
+// --- the address: `location`, `history`, and links that know where they lead ----------
+assert.equal(run('location.href'), 'http://app.localhost/');
+run(`
+	globalThis.pops = [];
+	window.addEventListener('popstate', (event) => pops.push(location.pathname + ' ' + JSON.stringify(event.state)));
+	history.pushState({ n: 1 }, '', '/one?x=1');
+	history.pushState({ n: 2 }, '', 'two#top');
+`);
+assert.equal(run('[location.pathname, location.search, location.hash, history.length, history.state.n, document.URL].join(" ")'), '/two  #top 3 2 http://app.localhost/two#top');
+assert.equal(run('pops.length'), 0, 'pushState is not a navigation');
+run('history.back()');
+assert.equal(run('location.pathname'), '/two', 'back() happens in a later task');
+host.advance(1);
+assert.equal(run('pops.join() + " " + location.href'), '/one {"n":1} http://app.localhost/one?x=1');
+run('history.go(-1)');
+host.advance(1);
+run('history.forward()');
+host.advance(1);
+assert.equal(run('pops.join("|")'), '/one {"n":1}|/ null|/one {"n":1}');
+assert.throws(() => run(`history.pushState(null, '', 'http://elsewhere.test/')`), /Cannot go/);
+// A link's `href` is where it leads from here, whatever was written in the attribute.
+run(`const link = document.createElement('a'); link.id = 'link'; link.setAttribute('href', '../up?q#h'); document.body.appendChild(link);`);
+assert.equal(run(`document.getElementById('link').href + ' ' + document.getElementById('link').getAttribute('href')`), 'http://app.localhost/up?q#h ../up?q#h');
+run(`document.getElementById('link').remove(); sessionStorage.setItem('k', 'v'); sessionStorage.other = 1`);
+assert.equal(run(`[sessionStorage.getItem('k'), sessionStorage.k, sessionStorage.getItem('other'), sessionStorage.length, sessionStorage.getItem('none')].join()`), 'v,v,1,2,');
+assert.equal(run(`new TextDecoder().decode(new TextEncoder().encode('héllo'))`), 'héllo');
+
+// --- events pass through <html> on the way from <body> to the document ----------------
+run(`globalThis.through = []; document.documentElement.addEventListener('click', () => through.push('html')); document.addEventListener('click', () => through.push('document'));`);
+host.dispatch(host.by_id('count'), 'click');
+assert.equal(run('through.join()'), 'html,document');
+host.dispatch({ id: 0 }, 'click');
+assert.equal(run('through.join()'), 'html,document,html,document', 'an event that starts at <html> is heard there once');
+
 // --- a node cannot go inside itself ------------------------------------------------
 // The host would loop forever on a tree with a cycle in it.
 assert.throws(() => run(`document.querySelector('main').firstElementChild.appendChild(document.querySelector('main'))`), /descendant/);

@@ -351,13 +351,6 @@ platform binaries into `packages/host/bin` before packing it.
 - Keyboard and text input: Tab, Enter/Space on buttons, typing, `focus()`
   from JavaScript (`FOCUS` op). Two more Blitz patches came with it (a press
   moves the focus; `:focus-visible` matches), see `crates/blitz-dom/PATCH.md`.
-- SvelteKit itself was looked at again (Kit 3.0.1) once the DOM layer existed.
-  Still blocked by things that are not DOM: Kit mounts its root without a
-  renderer option, its build is a server pass plus module chunks, QuickJS has
-  no `URL` or `history`, and Svelte refuses `<svelte:head>` for custom
-  renderers. Suggested to Shivam: a time-boxed spike, shipping Kit as a second
-  router if it runs. Not started; his call.
-
 - Performance pass (22 Nov 2026). Fixed: a measurement no longer lays out
   when nothing changed (opening a Select went from 153 layouts to 7), ops that
   cannot show do not cause a redraw, Blitz no longer restyles a whole list
@@ -421,6 +414,45 @@ Not done, and needed before V8 could ship:
 Recommendation given to Shivam: keep QuickJS as the default; offer V8 as a
 build option for apps with long lists or heavy computation, where it is worth
 38 MB. Not yet decided.
+
+## SvelteKit spike (22 Nov 2026)
+
+Question: can SvelteKit's own client router run in the host? Yes.
+`examples/sveltekit` (SvelteKit 3.4, a layout, three routes, one with a
+parameter and a `load`) routes by link, by `goto` and by the back button, on
+both engines. `crates/host/tests/sveltekit.rs` drives it.
+
+Each expected blocker, and what happened:
+
+| Expected blocker | Outcome |
+|---|---|
+| SvelteKit's build may not accept `customRenderer` | It does, server pass included |
+| Output is HTML plus module chunks | `bundleStrategy: 'single'` gives one module; `to-blitz.mjs` turns it into a script (drops the `export`, replaces `import.meta`) and adds what the HTML's start script did |
+| SvelteKit mounts its root without a renderer | One build-time edit to its `client.js` |
+| No `URL`, `history`, `location` in QuickJS | Written (`url.js`, and in `dom.js`), plus `TextEncoder`/`TextDecoder`, `sessionStorage`, `pageXOffset` |
+| `<svelte:head>` is refused for custom renderers | Still refused: a compile error. Not solved |
+
+Found on the way: SvelteKit listens for link clicks on `<html>`, which the
+DOM layer kept outside the event path; and its startup failed without a word
+(a rejected promise nobody looks at), so the build now makes it report.
+
+To turn it into something supported:
+
+- Move the two edits and the conversion into `@ethercorps/svelte-blitz-vite`
+  as one plugin, and give a SvelteKit app what the preset gives the others:
+  `app.config.ts`, the manifest, icons, `static/`, dev reload.
+- `<svelte:head>`: a preprocessor like `bindings.js` could turn
+  `<title>` into `document.title = …`; nothing shows a title today anyway
+  except the window, which has its own API.
+- Report unhandled promise rejections from the host. Today they vanish, in
+  every app, on both engines.
+- The edits target SvelteKit's internal files. Pin its version and test on
+  every update; the build fails loudly if a pattern is gone.
+- Scroll restoration and `afterNavigate` focus handling were not looked at.
+
+Recommendation given to Shivam: worth productising if SvelteKit familiarity
+matters more than owning the router; the built-in router stays either way,
+since it needs none of the DOM layer. Not yet decided.
 
 ## Known gaps outside this brief
 
