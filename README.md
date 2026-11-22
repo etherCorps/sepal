@@ -85,12 +85,25 @@ platform under `bin/<platform>/`, so nobody who installs from npm needs Rust.
 The Vite preset and the CLI ask that package for the path;
 `SVELTE_BLITZ_HOST` overrides it with a host you built yourself.
 
-Only macOS arm64 exists so far: 22.8 MB, about 10 MB packed
-(`pnpm run build:host` builds it into `packages/host/bin/darwin-arm64`). Intel
-macOS, Linux and Windows need a CI build each, and every one adds roughly that
-much to what every user downloads. If that grows uncomfortable, the package
-can switch to fetching only the matching binary on first use; nothing outside
-it would change.
+The release workflow (`.github/workflows/release.yml`) builds it on each
+platform and collects the binaries into the package:
+
+| Platform | Binary |
+|---|---|
+| `darwin-arm64` | 25.2 MB |
+| `darwin-x64` | 26.3 MB |
+| `linux-arm64-gnu` | 29.3 MB |
+| `linux-x64-gnu` (glibc 2.35 and newer) | 32.3 MB |
+
+Windows is not built yet. Together they are 113 MB installed and 49 MB to
+download, for every user, whatever their machine. If that grows
+uncomfortable, the package can switch to fetching only the matching binary on
+first use; nothing outside it would change. `pnpm run build:host` builds the
+one for this machine into `packages/host/bin/<platform>`.
+
+The package also carries `THIRD-PARTY-LICENSES.txt`: the licences of the
+Rust crates and of QuickJS, which are compiled into the binary
+(`scripts/third-party-licenses.js` collects them from the crates themselves).
 
 ## Dev: reload on save
 
@@ -951,7 +964,7 @@ What the time is spent on, from sampling:
 
 1. Run `pnpm start` on a machine with a display and fix whatever the window turns up.
 2. Type into a real window; then IME.
-3. Release work: CI, the other platforms' host binaries, publishing.
+3. Release work: Windows, and publishing (the release workflow has only been run as far as packing).
 4. State-preserving HMR, if the full reload turns out not to be enough.
 5. A virtual list component, then packaging per OS.
 6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`
@@ -963,5 +976,7 @@ MIT, see `LICENSE`.
 
 The host binary statically links Stylo and its companion crates (the CSS
 engine), which are MPL-2.0. That does not change the licence of this code, but
-a distributed binary has to say so and point at their source; a third-party
-licence file generated at release time is still to be added.
+a distributed binary has to say so and point at their source:
+`THIRD-PARTY-LICENSES.txt` in the host package lists every crate in the
+binary with its licence and where its source is, followed by the licence
+texts. `pnpm run build:host` writes it.

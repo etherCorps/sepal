@@ -15,7 +15,7 @@ pnpm run build              # builds examples/counter -> dist/app.js + dist/app.
 pnpm run test:js            # renderer against a JS mock host (fast, no Rust)
 pnpm run test:host          # end-to-end headless tests (QuickJS + blitz-dom)
 pnpm run check              # tsc on the package, svelte-check on the examples
-pnpm run build:host         # release host -> packages/host-<platform>-<arch>/ (the npm binary package)
+pnpm run build:host         # release host -> packages/host/bin/<platform>/, and its THIRD-PARTY-LICENSES.txt
 pnpm run test:template      # pack the packages, create a project from the template, build and render it
 pnpm test                   # check + all test suites
 pnpm run screenshot         # CPU-render examples/counter to screenshot.png

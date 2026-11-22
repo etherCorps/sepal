@@ -286,12 +286,38 @@ list them in `optionalDependencies`), the CI matrix, `codegen-units`/
 `npx svelte-blitz run` opens the app. Then, and only with Shivam's explicit
 go-ahead, tag and publish the alpha.
 
-**CI (22 Nov 2026).** `.github/workflows/ci.yml` has run since the first
-push and passed on Linux until the push of the SvelteKit work, which failed on
-a test that compared with Node's `URL` (Node 22 on CI and 26 locally disagree
-in four corners; the test now skips those). It now has: `pnpm test` on Linux
-and macOS, the host tests on V8, and a Windows job that is allowed to fail
-until Windows has been made to build. Not yet seen running in this form.
+**CI (23 Nov 2026).** `.github/workflows/ci.yml` runs on every push:
+`pnpm test` on Linux and macOS and the host tests on V8, all passing, and a
+Windows job that is allowed to fail. What it took to get there:
+
+- A test that compared with Node's `URL`: Node 22 (CI) and 26 (this Mac)
+  disagree in four corners, which the test now skips.
+- macOS CI failed two shadcn tests that pass on this Mac. A headless document
+  ran scripts on real time and animations on the test's clock; the runner is
+  four times slower and the two drifted apart. They are one clock now
+  (`JsEngine::set_time`), and `doc.wait()` no longer sleeps.
+- Windows: paths with `\` compared against Vite's and SvelteKit's `/` in
+  three places (`sveltekit.js`, `vite.js`, `routes.js`). The type checks, all
+  seven example builds and the JS tests before the route test passed there
+  after the first two; see the latest run for how far it gets now.
+
+**Release workflow (23 Nov 2026).** `.github/workflows/release.yml`. Run by
+hand (Actions -> Release -> Run workflow, or `gh workflow run release.yml`)
+it publishes nothing: it builds the host on macOS arm64 and x64 and Linux x64
+and arm64, runs `test:template` on each with the binary just built (both
+starters created from the packed packages, built, and rendered by the
+packaged host), collects the four binaries and the licence file into
+`packages/host`, packs the five packages and attaches the tarballs to the run
+as the `packages` artifact. That has been run once and passed. Pushing a
+`v<version>` tag does the same and then publishes those tarballs with
+`npm publish --provenance`; that half has never run. It needs an `NPM_TOKEN`
+secret in the repository, and the tag has to equal the packages' version. A
+prerelease version publishes under its own dist-tag (`0.1.0-alpha.0` as
+`alpha`).
+
+Still to do before a first release: decide the version, set `NPM_TOKEN`,
+Windows (not in the release matrix), and take "Nothing is published yet" out
+of the README once it is not true.
 
 ## What only Shivam can do
 
