@@ -11,9 +11,15 @@ const inputs = [
 	'/', '/a/b', 'a/b', './a', '../a', '../../a/b/', '.', '..', '', '?q=1', '?', '#hash', '#', 'a?b#c', '/a/b/../c/./d/', '//other.test/x',
 	'/with space/and"quote', '/ünï/cödé?kéy=välue#frâg', '/a?b=c&d=e f', 'items/7?tab=two#notes', 'http://localhost:3000', 'not a url', 'http://', 'mailto:x@y.z', 'a://', 'custom://host', 'custom://host/p?q#h', 'a:', 'mailto:x@y.z?subject=hi#f'
 ];
+// Where Node's own versions give different answers (22 against 26), there is
+// nothing to agree with. Both are corners no app goes into: a relative path
+// against a URL that has no path to be relative to.
+const unsettled = (input, base) => (base === 'a:' && !/^[a-z]+:|^#/i.test(input)) || (base === 'a://' && input === '..');
+
 let compared = 0;
 for (const base of bases) {
 	for (const input of inputs) {
+		if (unsettled(input, base)) continue;
 		let theirs, ours;
 		try {
 			theirs = describe(new URL(input, base));

@@ -286,6 +286,13 @@ list them in `optionalDependencies`), the CI matrix, `codegen-units`/
 `npx svelte-blitz run` opens the app. Then, and only with Shivam's explicit
 go-ahead, tag and publish the alpha.
 
+**CI (22 Nov 2026).** `.github/workflows/ci.yml` has run since the first
+push and passed on Linux until the push of the SvelteKit work, which failed on
+a test that compared with Node's `URL` (Node 22 on CI and 26 locally disagree
+in four corners; the test now skips those). It now has: `pnpm test` on Linux
+and macOS, the host tests on V8, and a Windows job that is allowed to fail
+until Windows has been made to build. Not yet seen running in this form.
+
 ## What only Shivam can do
 
 - Choose the licence, the repo location and the first version.

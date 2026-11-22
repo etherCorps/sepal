@@ -10,32 +10,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Everything `pnpm test` runs: type checks, the JavaScript tests, the host's
+  # tests, and both starter templates created, built and rendered. No display
+  # is needed: every test is headless, and screenshots render on the CPU.
   test:
-    # No display is needed: every test is headless, and screenshots render on the CPU.
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One platform failing says nothing about the other.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  # The same host tests on the other engine. Whatever one engine wrapper
+  # learns, the other has to as well, and this is what notices when it has not.
+  engine-v8:
+    name: host tests on V8
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Build-time headers for the windowing and font crates. Nothing here is used at test time.
-      - name: System libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            pkg-config libfontconfig1-dev libwayland-dev libxkbcommon-dev \
-            libx11-dev libxcursor-dev libxi-dev libxrandr-dev
-
-      # Version comes from `packageManager` in package.json.
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
         with:
-          node-version: 22
-          cache: pnpm
+          cache-key: v8
+      - run: pnpm install --frozen-lockfile
+      # The host tests read the examples' bundles.
+      - run: pnpm run build
+      - run: cargo test --manifest-path crates/host/Cargo.toml --features "screenshot engine-v8"
 
-      - uses: dtolnay/rust-toolchain@stable
-      # A cold build of Stylo, wgpu and Vello takes several minutes.
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: crates/host
-
+  # Windows has never been built. This job is here to find out what it takes;
+  # until it passes, a failure does not fail the run.
+  windows:
+    name: test (windows-latest, not required yet)
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
       - run: pnpm install --frozen-lockfile
       - run: pnpm test

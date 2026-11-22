@@ -1,0 +1,35 @@
+name: Set up
+description: Node, pnpm, Rust and the system libraries the host is built against.
+
+inputs:
+  cache-key:
+    description: Keeps builds with different features in caches of their own.
+    default: default
+
+runs:
+  using: composite
+  steps:
+    # Build-time headers for the windowing and font crates. Nothing here is used at test time.
+    - name: System libraries
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          pkg-config libfontconfig1-dev libwayland-dev libxkbcommon-dev \
+          libx11-dev libxcursor-dev libxi-dev libxrandr-dev
+
+    # Version comes from `packageManager` in package.json.
+    - uses: pnpm/action-setup@v4
+    # The oldest Node the packages say they support.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+
+    - uses: dtolnay/rust-toolchain@stable
+    # A cold build of Stylo, wgpu and Vello takes several minutes.
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: crates/host
+        key: ${{ inputs.cache-key }}

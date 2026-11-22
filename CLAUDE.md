@@ -290,6 +290,11 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   DOM layer changes: `packages/core/test/dom.test.js`, and `tests/shadcn.rs`.
 - Preset and router changes: `packages/vite/test/`, and `tests/routing.rs`.
 - Linux CI needs no display for any of the tests.
+- CI runs Node 22, the oldest the packages support; this Mac has 26. A test
+  that compares against Node's own behaviour (`url.test.js`) has to hold on
+  both: Node's `URL` changed between them in a few corners. Run such a test
+  with `~/.local/share/fnm/node-versions/v22*/installation/bin/node` before
+  pushing.
 
 ## Verified vs. not
 
