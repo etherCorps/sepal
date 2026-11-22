@@ -56,7 +56,10 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `app.js`, `head.js`, `bindings.js` and `routes.js` run in Node; the rest
   runs in the engine.
 - `packages/cli/` — the `svelte-blitz` command. `packages/create/` — the
-  starter template and the script that copies it.
+  starter (`template/`), what differs for the SvelteKit one laid over it
+  (`template-sveltekit/`), and the script that copies them and asks which.
+  A change to a page in `template/` reaches both starters;
+  `pnpm run test:template` builds both.
 - `packages/host/` — `@ethercorps/svelte-blitz-host`: `index.js` finds the
   host binary, `bin/<platform>/` holds the binaries
   (`scripts/build-host-package.js` fills it). A stale binary there is used by

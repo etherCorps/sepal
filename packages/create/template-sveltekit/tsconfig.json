@@ -1,0 +1,9 @@
+{
+	// Paths and the `$app` and `$lib` types come from SvelteKit:
+	// `svelte-kit sync` (part of `pnpm check`) writes what this extends.
+	"extends": "$app/tsconfig",
+	"include": ["src", "*"],
+	"compilerOptions": {
+		"strict": true
+	}
+}

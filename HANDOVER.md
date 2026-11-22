@@ -446,13 +446,17 @@ to SvelteKit's client, and it reads `app.config.ts` and opens and reloads the
 dev window like the other preset. `head.js` rewrites `<svelte:head>` for both
 presets. The host resolves `/file` against the app directory.
 
+`create-svelte-blitz` asks which router and has a SvelteKit starter
+(`--router sveltekit`); `pnpm run test:template` creates, checks, builds and
+renders both.
+
 Still to do for SvelteKit:
 
-- A template in `create-svelte-blitz`, and `pnpm run test:template` for it.
 - Tested with SvelteKit 3.4.0 only. The two edits (`patch` in
   `sveltekit.js`) target its internal files; try every new SvelteKit release
   before raising the peer range.
-- `svelte-check` in the example (`./$types` come from `svelte-kit sync`).
+- `svelte-check` in `examples/sveltekit`. (The starter has it: SvelteKit 3
+  wants `"extends": "$app/tsconfig"` and `svelte-kit sync` before the check.)
 - Scroll restoration and `afterNavigate` focus handling were not looked at.
 - `$app/environment`'s `browser` is true, `building` false: fine. `$env`
   modules, service workers and remote functions were not tried.

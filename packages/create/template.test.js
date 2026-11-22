@@ -1,5 +1,6 @@
 // The starter template, the way a user gets it: pack every package, run the
 // packed `create-svelte-blitz`, install from the tarballs, type-check and build.
+// Once for each router it offers.
 //
 // When this platform's host binary has been built (`pnpm run build:host`), the
 // app is also rendered through the CLI with no `SVELTE_BLITZ_HOST`: the whole
@@ -16,7 +17,6 @@ import { bundled_host, platform } from '../host/index.js';
 
 const packages = fileURLToPath(new URL('..', import.meta.url));
 const scratch = mkdtempSync(join(tmpdir(), 'svelte-blitz-template-'));
-const app = join(scratch, 'My App');
 
 // A host from the environment would hide a broken host package.
 const env = { ...process.env };
@@ -47,43 +47,57 @@ try {
 	const create = join(scratch, 'create');
 	mkdirSync(create);
 	run('tar', ['-xzf', tarballs['@ethercorps/create-svelte-blitz'], '-C', create], scratch);
-	run('node', [join(create, 'package/index.js'), app], scratch);
-	assert(existsSync(join(app, '.gitignore')), '.gitignore was not restored');
+	// No terminal here, so nothing is asked: no flag means the built-in router.
+	for (const [router, flags] of /** @type {[string, string[]][]} */ ([
+		['built-in', []],
+		['sveltekit', ['--router', 'sveltekit']]
+	])) {
+		const app = join(scratch, router, 'My App');
+		mkdirSync(join(scratch, router));
+		run('node', [join(create, 'package/index.js'), app, ...flags], scratch);
+		assert(existsSync(join(app, '.gitignore')), '.gitignore was not restored');
 
-	const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'));
-	assert(pkg.name === 'my-app', `package name is ${pkg.name}`);
-	for (const [group, name] of [
-		['dependencies', '@ethercorps/svelte-blitz'],
-		['devDependencies', '@ethercorps/svelte-blitz-vite'],
-		['devDependencies', '@ethercorps/svelte-blitz-cli']
-	]) {
-		assert(/^\^\d/.test(pkg[group][name]), `${name} is not a versioned entry in ${group}`);
-	}
-	assert(readFileSync(join(app, 'app.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
+		const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'));
+		assert(pkg.name === 'my-app', `package name is ${pkg.name}`);
+		assert(('@sveltejs/kit' in pkg.devDependencies) === (router === 'sveltekit'), `wrong starter for the ${router} router`);
+		for (const [group, name] of [
+			['dependencies', '@ethercorps/svelte-blitz'],
+			['devDependencies', '@ethercorps/svelte-blitz-vite'],
+			['devDependencies', '@ethercorps/svelte-blitz-cli']
+		]) {
+			assert(/^\^\d/.test(pkg[group][name]), `${name} is not a versioned entry in ${group}`);
+		}
+		assert(readFileSync(join(app, 'app.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
 
-	// Nothing is published yet: the overrides stand in for the registry. Its own
-	// workspace file also keeps the project out of this repository's workspace.
-	const overrides = Object.entries(tarballs)
-		.filter(([name]) => name !== '@ethercorps/create-svelte-blitz')
-		.map(([name, tarball]) => `  "${name}": "file:${tarball}"\n`);
-	writeFileSync(join(app, 'pnpm-workspace.yaml'), `packages: []\noverrides:\n${overrides.join('')}`);
-	run('pnpm', ['install', '--prefer-offline'], app);
+		// Nothing is published yet: the overrides stand in for the registry. Its own
+		// workspace file also keeps the project out of this repository's workspace.
+		const overrides = Object.entries(tarballs)
+			.filter(([name]) => name !== '@ethercorps/create-svelte-blitz')
+			.map(([name, tarball]) => `  "${name}": "file:${tarball}"\n`);
+		writeFileSync(join(app, 'pnpm-workspace.yaml'), `packages: []\noverrides:\n${overrides.join('')}`);
+		run('pnpm', ['install', '--prefer-offline'], app);
 
-	run('pnpm', ['run', 'check'], app);
-	run('pnpm', ['run', 'build'], app);
-	const manifest = JSON.parse(readFileSync(join(app, 'dist/app.json'), 'utf8'));
-	assert(manifest.name === 'My App' && manifest.id === 'com.example.my-app', 'manifest not written from the template');
-	assert(existsSync(join(app, 'dist/app.js')) && existsSync(join(app, 'dist/icon.png')), 'bundle or icon missing');
-	assert(existsSync(join(app, 'dist/logo.svg')), 'static/ was not copied into the build');
-	// The template is file-routed: the About page only exists in the bundle if src/routes was read.
-	assert(readFileSync(join(app, 'dist/app.js'), 'utf8').includes('back home'), 'routes were not bundled');
+		run('pnpm', ['run', 'check'], app);
+		run('pnpm', ['run', 'build'], app);
+		const manifest = JSON.parse(readFileSync(join(app, 'dist/app.json'), 'utf8'));
+		assert(manifest.name === 'My App' && manifest.id === 'com.example.my-app', 'manifest not written from the template');
+		assert(existsSync(join(app, 'dist/app.js')) && existsSync(join(app, 'dist/icon.png')), 'bundle or icon missing');
+		assert(existsSync(join(app, 'dist/logo.svg')), 'static/ was not copied into the build');
+		// The template is file-routed: the About page only exists in the bundle if src/routes was read.
+		const bundle = readFileSync(join(app, 'dist/app.js'), 'utf8');
+		assert(bundle.includes('back home'), 'routes were not bundled');
+		// SvelteKit's router brings a word of its own that the built-in one never says.
+		assert(bundle.includes('__sveltekit') === (router === 'sveltekit'), `not built with the ${router} router`);
+		assert(readFileSync(join(app, 'dist/app.css'), 'utf8').includes('.bg-indigo-600'), 'Tailwind classes are missing from app.css');
 
-	if (existsSync(bundled_host())) {
-		run('pnpm', ['exec', 'svelte-blitz', 'screenshot', join(scratch, 'shot.png')], app);
-		assert(existsSync(join(scratch, 'shot.png')), 'the CLI did not render a screenshot');
-		console.log(`template: rendered with the packaged ${platform()} host`);
-	} else {
-		console.log(`template: no built host for ${platform()}; skipped the render`);
+		if (existsSync(bundled_host())) {
+			const shot = join(scratch, `${router}.png`);
+			run('pnpm', ['exec', 'svelte-blitz', 'screenshot', shot], app);
+			assert(existsSync(shot), 'the CLI did not render a screenshot');
+			console.log(`template (${router}): rendered with the packaged ${platform()} host`);
+		} else {
+			console.log(`template (${router}): no built host for ${platform()}; skipped the render`);
+		}
 	}
 	console.log('template: ok');
 } finally {
