@@ -75,6 +75,12 @@ impl Dev {
 /// Run an app until its window is closed. With `reload`, also follow stdin:
 /// every line reloads the app, end of input quits.
 pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
+    // The renderer draws each glyph once and reuses it (a patch to the vendored
+    // anyrender_vello_hybrid). If text ever looks wrong on some GPU, this turns
+    // that off and tells us whether the atlas is to blame.
+    if std::env::var_os("SVELTE_BLITZ_GLYPH_CACHE").is_some_and(|value| value == "0") {
+        anyrender_vello_hybrid::set_glyph_cache(false);
+    }
     let doc = SvelteDocument::for_window(&app)?;
     let manifest = app.manifest;
     // Before the event loop exists: winit builds the menu bar from this name.

@@ -713,6 +713,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/updater.rs        updates against a local server, tampering, the JS API
   tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
 crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with eight changes (see PATCH.md)
+crates/anyrender_vello_hybrid/   the window's renderer, 0.11.0, with two (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
@@ -785,6 +786,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SVELTE_BLITZ_TRACE=1` with `--watch` |
 | An attribute change restyles descendants and siblings, with and without sibling selectors in play | `tests/restyle.rs` |
 | `:has()`: follows an attribute, a child that arrives or leaves, and the focus, for a parent, an ancestor, what is under it, and siblings on either side | `tests/restyle.rs` |
+| The window's GPU renderer draws what the CPU screenshots show: the same page differs by at most 2/255 per channel | `drive … gpushot:` against `shot:` (needs a GPU; by hand) |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
@@ -852,10 +854,13 @@ What the time is spent on, from sampling:
   again makes the host lay out each time, as a browser would. Opening the
   Select does that 7 times, 9 ms in all.
 - **A frame.** While anything animates, Blitz paints the whole window every
-  refresh: about 1.3 ms of work per frame here, of which half is drawing text
-  again (the renderer's glyph cache is off in this version). A page with an
-  endless animation, such as a `Skeleton`, therefore never idles and holds
-  10 to 20% of a core.
+  refresh. Half of that used to be rasterising every glyph again; the
+  renderer's glyph atlas is now on (a patch to the vendored
+  `anyrender_vello_hybrid`), which cut the time spent painting by half. A
+  page with an endless animation, such as a `Skeleton`, still never idles.
+- **The engine.** The same 1000-row shuffle that takes 36 ms here takes 6 ms
+  in V8 with its JIT off and 2.5 ms with it on. See `HANDOVER.md` for what a
+  different engine would cost.
 
 ## Limitations
 

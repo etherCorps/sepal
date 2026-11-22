@@ -79,6 +79,8 @@ required-features = ["screenshot"]
 # Eight small changes; see crates/blitz-dom/PATCH.md.
 [patch.crates-io]
 blitz-dom = { path = "../blitz-dom" }
+# Glyph atlas on, and drawing without a window; see its PATCH.md.
+anyrender_vello_hybrid = { path = "../anyrender_vello_hybrid" }
 
 [profile.dev]
 opt-level = 1

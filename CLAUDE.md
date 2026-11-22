@@ -201,6 +201,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `svelte/renderer`) and in `~/.cargo/registry/src/*/blitz-dom-*/src` rather
   than assuming. `anyrender_vello_hybrid 0.11` and `anyrender_vello_cpu 0.18`
   are the releases that match blitz's `anyrender 0.14`.
+- **`crates/anyrender_vello_hybrid` is a patched copy too** (the window's
+  renderer): glyph atlas on, and `render_to_rgba` for drawing without a
+  window. See its `PATCH.md`. Same rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
   It differs from crates.io 0.3.0-beta.4 in eight places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
@@ -235,6 +238,11 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - `cargo run --features screenshot --example drive -- <app dir> click:SEL
   time:0.3 text:SEL shot:out.png` (in `crates/host`) drives a built app
   headless and prints each step. See the top of `examples/drive.rs`.
+  `gpushot:out.png` draws with the window's GPU renderer instead of the CPU
+  one (needs a GPU; the two agree to within 2/255 when the glyph atlas is
+  off, and differ only on glyph edges when it is on).
+- `SVELTE_BLITZ_GLYPH_CACHE=0` turns the glyph atlas off in a window, to
+  find out whether odd-looking text is the atlas's doing.
 - In `--watch` mode stdin also accepts `move <x> <y>` and `click <x> <y>`
   (logical pixels). They enter through the same function OS events do, so a
   script can drive a real window and read the trace. This does not go through

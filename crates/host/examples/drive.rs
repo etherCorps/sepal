@@ -8,7 +8,8 @@
 //! Steps, in order: `click:SELECTOR`, `clickat:X,Y`, `move:X,Y`, `key:NAME`
 //! (as `KeyboardEvent.key`), `type:TEXT`, `time:SECONDS` (timers
 //! and animations move on), `text:SELECTOR`, `count:SELECTOR`,
-//! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `shot:FILE.png`.
+//! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `shot:FILE.png`
+//! (CPU renderer), `gpushot:FILE.png` (the window's renderer; needs a GPU).
 //!
 //! `click:` aims at the middle of the element's box before CSS transforms; for
 //! something moved by `translate`, use `clickat:`.
@@ -71,6 +72,30 @@ fn main() {
                 let png = svelte_blitz_host::screenshot::render_png(&mut doc, width, height, 1.0);
                 std::fs::write(rest, png).unwrap();
                 println!("  shot {rest}")
+            }
+            // Like `shot:`, with the renderer the window uses instead of the
+            // CPU one. Needs a GPU. `gpushot-nocache:` turns the glyph atlas off.
+            #[cfg(feature = "window")]
+            "gpushot" | "gpushot-nocache" => {
+                anyrender_vello_hybrid::set_glyph_cache(verb == "gpushot");
+                doc.resolve();
+                let mut base = doc.base_mut();
+                let pixels = anyrender_vello_hybrid::render_to_rgba(width, height, |scene| {
+                    blitz_paint::paint_scene(scene, &mut base, 1.0, width, height, 0, 0)
+                })
+                .unwrap();
+                drop(base);
+                let mut png = Vec::new();
+                let mut encoder = png::Encoder::new(&mut png, width, height);
+                encoder.set_color(png::ColorType::Rgba);
+                encoder.set_depth(png::BitDepth::Eight);
+                encoder
+                    .write_header()
+                    .unwrap()
+                    .write_image_data(&pixels)
+                    .unwrap();
+                std::fs::write(rest, png).unwrap();
+                println!("  {verb} {rest}")
             }
             "time" => {
                 doc.wait(rest.parse().unwrap());

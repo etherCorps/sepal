@@ -360,15 +360,22 @@ platform binaries into `packages/host/bin` before packing it.
 
 - Performance pass (22 Nov 2026). Fixed: a measurement no longer lays out
   when nothing changed (opening a Select went from 153 layouts to 7), ops that
-  cannot show do not cause a redraw, and Blitz no longer restyles a whole list
-  for one attribute change (patch 7). Looked at and left:
+  cannot show do not cause a redraw, Blitz no longer restyles a whole list
+  for one attribute change (patch 7), and the renderer keeps a glyph atlas
+  (`crates/anyrender_vello_hybrid`, vendored for it). Looked at and left:
   - Turns are bound by JavaScript in QuickJS. Nothing to tune on the Rust
     side; opening a Dialog took the same 8 ms in the release build and in
     the dev build (which optimises dependencies).
-  - Text is rasterised again on every frame. `vello_gpu` has a glyph atlas
-    cache (`.atlas_cache(true)` on the glyph run) that `anyrender_vello_hybrid`
-    0.11 does not turn on. Turning it on means vendoring that crate too, and
-    someone has to look at the text afterwards: not done.
+  - The JavaScript engine. Measured the counter's 1000-row shuffle in the
+    mock host under Node: 2.5 ms in V8, 5.9 ms in V8 with `--jitless`, 36 ms
+    here. Half of QuickJS's time is `Array.prototype.includes` on Svelte's
+    dependency lists (quadratic in the list, a native loop in V8, a call per
+    element in QuickJS). Our own JavaScript (renderer.js, dom.js, shims.js)
+    is about 5% of a turn, so there is nothing to win by rewriting it.
+    Options, for Shivam to choose: V8 through the `v8` crate (JIT; roughly
+    +30 MB on a 25 MB binary, more memory, a JIT entitlement when signed) or
+    JavaScriptCore on macOS (system framework, no size, macOS only). Only
+    `js.rs` knows the engine.
   - Memory of a drawn window was seen at about 110 MB and at about 330 MB in
     different runs of the same page. Not understood; it is on the GPU side.
   - `codegen-units` and `opt-level` (step 4 below) were not measured: with the
