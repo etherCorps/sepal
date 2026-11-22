@@ -20,3 +20,6 @@ execFileSync(
 mkdirSync(dirname(target), { recursive: true });
 copyFileSync(join(root, 'crates/host/target/release', basename(target)), target);
 console.log(`${platform()}: ${target}`);
+
+// The notices of everything in that binary travel with it.
+await import('./third-party-licenses.js');

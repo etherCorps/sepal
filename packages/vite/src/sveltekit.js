@@ -55,7 +55,8 @@ const patch = [
 function files_in(directory) {
 	return readdirSync(directory, { recursive: true, withFileTypes: true })
 		.filter((entry) => entry.isFile())
-		.map((entry) => relative(directory, join(entry.parentPath, entry.name)));
+		// With `/` on Windows too: these are compared with the paths in SvelteKit's page.
+		.map((entry) => relative(directory, join(entry.parentPath, entry.name)).replaceAll('\\', '/'));
 }
 
 /**

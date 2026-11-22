@@ -18,6 +18,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { normalizePath } from 'vite';
 import { dev_window, load_config, manifest } from './app.js';
 import { element_bindings } from './bindings.js';
 import { head } from './head.js';
@@ -182,7 +183,8 @@ export function svelteBlitz(inline = {}) {
 						: // No extension: Vite resolves `src/main.js` or `src/main.ts`, whichever exists.
 							(options.entry ?? 'src/main');
 
-				if (options.dom) dom_entry = resolve(project, entry).replace(/\.[cm]?[jt]s$/, '');
+				// Vite's module ids use `/` on Windows as well.
+				if (options.dom) dom_entry = normalizePath(resolve(project, entry)).replace(/\.[cm]?[jt]s$/, '');
 
 				return {
 					// Files in `static/` are copied to the build as they are, so the app
