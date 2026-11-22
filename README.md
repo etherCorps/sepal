@@ -99,17 +99,42 @@ lost. This is a live reload, not Svelte HMR.
   reloads when you press Enter.
 
 
-An app describes itself through the Vite preset:
+## App config
+
+An app describes itself in `svelte-blitz.config.ts`, next to `vite.config.ts`:
 
 ```ts
-svelteBlitz({
+import { defineConfig } from '@ethercorps/svelte-blitz-vite';
+
+export default defineConfig({
 	app: {
 		name: 'Counter',
-		icon: 'icon.png', // PNG, 1024×1024 recommended, relative to the Vite root
+		id: 'com.example.counter',
+		icon: 'icon.png', // PNG, 1024×1024 recommended, relative to the project root
 		window: { title: 'Svelte on Blitz', width: 800, height: 600 }
+		// version: defaults to the one in package.json
+		// updater: see "Updates"
+	},
+	permissions: {
+		// what the app may do outside its window; see "Desktop APIs"
 	}
-})
+	// router: see "Your own router"
+});
 ```
+
+That leaves `vite.config.ts` as a list of plugins:
+
+```ts
+export default defineConfig({
+	plugins: [tailwindcss(), svelteBlitz()]
+});
+```
+
+The file can also be `.js` or `.mjs`, and can export a function, which gets
+Vite's `{ mode, command }`. Anything passed to `svelteBlitz({ … })` directly
+overrides the file, key by key. In watch mode, edits to `app` and
+`permissions` are picked up on the next build; a change to `router` needs
+Vite restarted.
 
 The build writes `dist/app.json` and copies the icon to `dist/icon.png`. Point
 the host at the directory and it picks them up: `svelte-blitz-host dist`.
@@ -346,10 +371,10 @@ svelte-blitz signer generate ~/.keys/my-app.key
 The file is the private key. Keep it secret and backed up: updates signed
 with any other key are refused by every copy of the app already installed.
 
-**2. Tell the app where updates come from.**
+**2. Tell the app where updates come from**, in `svelte-blitz.config.ts`.
 
 ```ts
-svelteBlitz({
+export default defineConfig({
 	app: {
 		name: 'My App',
 		version: '1.0.0',
@@ -358,7 +383,7 @@ svelteBlitz({
 			pubkey: '…the public key…'
 		}
 	}
-})
+});
 ```
 
 **3. Offer the update in the app.**
@@ -423,8 +448,77 @@ What it does not do yet:
 `scripts/updater-e2e.sh` runs a real update on a Mac: an installed 0.1.0
 finds 0.2.0 on a local server, replaces itself and relaunches.
 
-Updating is the only thing the host uses the network for, and only for the
-feed URL and the archive it names.
+The updater talks to the feed URL and the archive it names, and nothing else.
+
+## Desktop APIs
+
+An app reaches outside its window through the APIs below. All of them are
+**off until `permissions` in `svelte-blitz.config.ts` allows them**, and the
+host enforces that, not JavaScript. A refused call rejects with a message
+naming the entry to add.
+
+```ts
+permissions: {
+	http: ['https://api.example.com'],   // which servers fetch() may talk to
+	fs: ['data', 'downloads'],           // which directories the file APIs may use
+	dialog: true,
+	clipboard: true,
+	open: true,
+	window: true
+}
+```
+
+| API | Import | Permission |
+|---|---|---|
+| `fetch(url, { method, headers, body })` | a global, nothing to import | `http` |
+| `readTextFile`, `writeTextFile`, `readFile`, `writeFile`, `exists`, `mkdir`, `readDir`, `remove`, `dir` | `@ethercorps/svelte-blitz/fs` | `fs` |
+| `open`, `save`, `message`, `confirm` | `@ethercorps/svelte-blitz/dialog` | `dialog` |
+| `readText`, `writeText` | `@ethercorps/svelte-blitz/clipboard` | `clipboard` |
+| `open(linkOrPath)` | `@ethercorps/svelte-blitz/shell` | `open` |
+| `setTitle`, `minimize`, `maximize`, `unmaximize`, `isMaximized`, `setDecorations`, `startDragging`, `close` | `@ethercorps/svelte-blitz/window` | `window` |
+
+```ts
+import { writeTextFile, readTextFile } from '@ethercorps/svelte-blitz/fs';
+import { open } from '@ethercorps/svelte-blitz/dialog';
+
+// The app's own data directory; created on first write.
+await writeTextFile('settings.json', JSON.stringify(settings), { dir: 'data' });
+
+const response = await fetch('https://api.example.com/items');
+const items = await response.json();
+
+// A file the user picks may be read without being listed in permissions.fs.
+const path = await open({ filters: [{ name: 'Text', extensions: ['txt', 'md'] }] });
+if (path) console.log(await readTextFile(path));
+```
+
+How the permissions work:
+
+- **`http`** entries are origins, optionally with a path prefix
+  (`https://example.com/api/`) or a wildcard host (`https://*.example.com`).
+  `true` allows any. Redirects are followed, and every hop is checked.
+- **`fs`** entries are directory names (`data`, `documents`, `downloads`,
+  `desktop`, `home`) or absolute paths; `true` allows any path. `..` and
+  symlinks cannot lead out of an allowed directory. A path is absolute, or
+  relative to a named directory given as `{ dir }`.
+- **`open`** opens `http:`, `https:` and `mailto:` links, and files the app may
+  read. Every other kind of link is refused.
+
+What to know:
+
+- **`fetch` is the everyday part of the Fetch API**: method, headers, a string
+  or byte body, and `text()`, `json()`, `arrayBuffer()`, `bytes()`. No
+  streaming, no `AbortSignal`, no `Request`/`Headers`/`FormData` classes.
+- **Calls made while the app starts** wait until the window exists.
+- **A message or confirm dialog blocks the app** until it is answered.
+- **Not run here:** writing to the real clipboard and opening a link in the
+  browser (both would have acted on this machine while I worked), and reading
+  the clipboard in a real window. `setTitle`, `setDecorations`,
+  `startDragging` and `close` are wired to the window but were not observed.
+- **Missing:** notifications, menus, tray, global shortcuts, multiple windows,
+  window size and position, running other programs, a settings store.
+
+`examples/desktop` has a button for each.
 
 ## TypeScript
 
@@ -454,6 +548,8 @@ packages/core/            @ethercorps/svelte-blitz: the runtime
   src/protocol.js         opcodes shared with the host
   src/host-call.js        asking the host for work that takes time
   src/updater.js          check(), download(), install()
+  src/fetch.js            the global fetch
+  src/fs.js, dialog.js, clipboard.js, shell.js, window.js   desktop APIs
   test/                   a host written in JS, for testing without Rust
 packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
   src/vite.js             Vite preset: one app.js (IIFE) + one app.css
@@ -477,6 +573,7 @@ crates/host/              the `svelte-blitz-host` crate
   src/document.rs         SvelteDocument: implements blitz_dom::Document
   src/net.rs              loads data: URLs and files from the app directory
   src/updater.rs          self-update: feed, download, signature, install; and the build side
+  src/api/                desktop APIs and the permission checks: http, fs, dialog, open
   src/timers.rs           wakes the event loop for JS timers
   src/window.rs           window + GPU renderer (blitz-shell, Vello Hybrid)
   src/screenshot.rs       CPU rendering to PNG, no display needed
@@ -487,6 +584,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/icons.rs          icon and image pixels, resource loading
   tests/routing.rs        file-based routing, by clicking through examples/routing
   tests/updater.rs        updates against a local server, tampering, the JS API
+  tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
 crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with two fixes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
@@ -548,6 +646,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | File-based routing: links, params, load data, groups, rest parameters, redirects, error pages, back/forward, slow and overtaken loads | `tests/routing.rs`, `test/routes.test.js` |
 | Updater: signatures, feed rules, a bundle replaced from a local server, tampered and foreign-signed updates refused, the JS API | `tests/updater.rs` |
 | Updater on a real bundle: 0.1.0 finds 0.2.0, verifies, replaces itself, relaunches; code signature still valid | `scripts/updater-e2e.sh` (macOS) |
+| Desktop APIs from JavaScript: fetch (methods, bodies, redirects, errors), files (text, bytes, directories), URL and path scopes, every call refused without permission, a slow request not blocking the UI | `tests/desktop.rs` |
+| Desktop APIs on a real Mac: HTTPS fetch to api.github.com, a file in the app data directory, confirm and file-open dialogs appearing, maximise, minimise | example run with `VITE_AUTO=<button>` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
 | Timer wake-ups, and silence when no timer is running | `timers_wake_the_event_loop` |
 | Removed nodes are freed on the host after GC | `removed_nodes_are_freed` |
@@ -589,8 +689,8 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 
 - `bind:`, `transition:`, `animate:`, `<svelte:window>`, `<svelte:head>` are
   rejected by Svelte for custom renderers. Use `value={x}` + `oninput`.
-- No `fetch`, storage, or file APIs in JavaScript yet. The updater added the
-  mechanism they would use (`host-call.js`, `HostCall` in `js.rs`).
+- Desktop APIs cover fetch, files, dialogs, clipboard, opening links and basic
+  window control. See "Desktop APIs" for what is missing.
 - Images and other resources load from data: URLs and the app directory only; no network.
 - `requestAnimationFrame` is a 16 ms timer, not tied to the display.
 - Capture-phase listeners are treated as bubble-phase.

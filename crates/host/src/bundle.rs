@@ -48,10 +48,7 @@ pub fn bundle_macos(dist: &Path, out: &Path, host: &Path) -> Result<PathBuf, Str
     if name.is_empty() || name.starts_with('.') || name.contains(['/', ':', '\0']) {
         return Err(format!("{name:?} cannot be used as a bundle name"));
     }
-    let id = match &manifest.id {
-        Some(id) => id.clone(),
-        None => format!("app.svelte-blitz.{}", slug(name)),
-    };
+    let id = manifest.app_id().unwrap_or_default();
     if id.is_empty()
         || !id
             .chars()
@@ -179,7 +176,7 @@ fn xml_escape(text: &str) -> String {
 }
 
 /// Lowercase letters and digits, everything else collapsed to single dashes.
-fn slug(name: &str) -> String {
+pub(crate) fn slug(name: &str) -> String {
     let dashed: String = name
         .chars()
         .map(|c| {

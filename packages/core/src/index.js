@@ -3,6 +3,7 @@ import { run_timers, next_timer } from './shims.js';
 import { mount as svelte_mount, unmount } from 'svelte';
 import renderer, { root, dispatch, take_batch, stats, keep_alive } from './renderer.js';
 import { settle_call } from './host-call.js';
+import { fetch } from './fetch.js';
 
 /**
  * Mount a component into the window.
@@ -20,6 +21,9 @@ export function mount(component, options = {}) {
 }
 
 export { unmount, renderer, root };
+
+// The engine has no `fetch`. This one asks the host, which checks the app's permissions.
+if (typeof (/** @type {any} */ (globalThis).fetch) !== 'function') /** @type {any} */ (globalThis).fetch = fetch;
 
 // The host's entry points into JS. It calls these and nothing else.
 /** @type {any} */ (globalThis).__sb = {

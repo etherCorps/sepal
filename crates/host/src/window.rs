@@ -36,7 +36,7 @@ enum Dev {
 /// Run an app until its window is closed. With `reload`, also follow stdin:
 /// every line reloads the app, end of input quits.
 pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
-    let doc = SvelteDocument::for_app(&app)?;
+    let doc = SvelteDocument::for_window(&app)?;
     let manifest = app.manifest;
     // Before the event loop exists: winit builds the menu bar from this name.
     if let Some(name) = &manifest.name {
@@ -116,7 +116,7 @@ impl Host {
     fn reload(&mut self) {
         let Some(load) = &self.reload else { return };
         let started = Instant::now();
-        let doc = load().and_then(|app| SvelteDocument::for_app(&app));
+        let doc = load().and_then(|app| SvelteDocument::for_window(&app));
         match doc {
             Ok(doc) => {
                 if let Some(view) = self.application.windows.values_mut().next() {

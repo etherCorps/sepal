@@ -2,6 +2,10 @@
 // `app.js` (an IIFE the host can eval) and one `app.css`.
 
 //
+// Settings come from `svelte-blitz.config.ts` (or `.js`/`.mjs`) in the project
+// root, so that `vite.config.ts` stays a list of plugins. Options passed to
+// `svelteBlitz()` directly override the file, key by key.
+//
 // Routing: if the project has `src/routes`, the entry is the built-in router
 // and the route table is generated from that directory (see routes.js).
 // Otherwise the entry is `src/main.js` or `src/main.ts`. The `router` option
@@ -14,6 +18,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadConfigFromFile } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { find_host } from '@ethercorps/svelte-blitz-host';
 import { generate_routes } from './routes.js';
@@ -61,17 +66,85 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  */
 
 /**
- * @param {{
- *   entry?: string,
+ * What the app may do outside its window. Everything is off unless it is
+ * listed here; a call that is not allowed rejects with a message naming the
+ * entry to add.
+ *
+ * - `http`: which URLs `fetch` may reach. Each entry is an origin, optionally
+ *   with a path prefix (`https://api.example.com`, `https://example.com/v1/`),
+ *   or a host with a wildcard (`https://*.example.com`). `true` allows any.
+ * - `fs`: which directories the file APIs may touch: `'data'` (the app's own
+ *   data directory), `'documents'`, `'downloads'`, `'desktop'`, `'home'`, or an
+ *   absolute path. `true` allows any path. A file the user picks in a dialog
+ *   is allowed for as long as the app runs, whatever is listed here.
+ * - `dialog`: open, save and message dialogs.
+ * - `clipboard`: reading and writing the clipboard.
+ * - `open`: opening web and mail links, and allowed files, in their default app.
+ * - `window`: changing the window: title, minimise, maximise, close, drag.
+ *
+ * @typedef {{
+ *   http?: boolean | string[],
+ *   fs?: boolean | string[],
+ *   dialog?: boolean,
+ *   clipboard?: boolean,
+ *   open?: boolean,
+ *   window?: boolean
+ * }} Permissions
+ */
+
+/**
+ * The settings in `svelte-blitz.config.ts`.
+ *
+ * @typedef {{
  *   app?: AppManifest,
+ *   permissions?: Permissions,
  *   router?: RouterOptions,
- *   svelte?: import('@sveltejs/vite-plugin-svelte').Options
- * }} [options]
+ *   entry?: string
+ * }} Config
+ */
+
+/**
+ * For `svelte-blitz.config.ts`: types the settings and returns them unchanged.
+ * A function is called with Vite's `{ mode, command }`.
+ *
+ * @template {Config | ((env: import('vite').ConfigEnv) => Config | Promise<Config>)} T
+ * @param {T} config
+ * @returns {T}
+ */
+export function defineConfig(config) {
+	return config;
+}
+
+const CONFIG_FILES = ['svelte-blitz.config.ts', 'svelte-blitz.config.js', 'svelte-blitz.config.mjs'];
+
+/**
+ * Read the project's config file, if it has one.
+ * @param {string} project
+ * @param {import('vite').ConfigEnv} env
+ * @returns {Promise<{ config: Config, path: string | null }>}
+ */
+async function load_config(project, env) {
+	const path = CONFIG_FILES.map((file) => join(project, file)).find((file) => existsSync(file));
+	if (path === undefined) return { config: {}, path: null };
+	// Vite's own loader: it handles TypeScript, and calls a function export with `env`.
+	const loaded = await loadConfigFromFile(env, path, project, 'silent');
+	return { config: /** @type {Config} */ (loaded?.config ?? {}), path };
+}
+
+/**
+ * @param {Config & { svelte?: import('@sveltejs/vite-plugin-svelte').Options }} [inline]
+ *   Overrides for the config file. `svelte` (options for vite-plugin-svelte) can only be given here.
  * @returns {import('vite').PluginOption[]}
  */
-export function svelteBlitz(options = {}) {
+export function svelteBlitz(inline = {}) {
+	/** The config file with `inline` on top. Filled in by the `config` hook. @type {Config} */
+	let options = inline;
+	/** @type {string | null} */
+	let config_path = null;
+	/** @type {import('vite').ConfigEnv} */
+	let config_env = { mode: 'production', command: 'build' };
 	let routes_dir = '';
-	const user = options.svelte ?? {};
+	const user = inline.svelte ?? {};
 	let root = '';
 	let out_dir = '';
 	let watching = false;
@@ -94,8 +167,13 @@ export function svelteBlitz(options = {}) {
 		}),
 		/** @type {import('vite').Plugin} */ ({
 			name: 'svelte-blitz:config',
-			config(user) {
+			async config(user, env) {
 				const project = resolve(user.root ?? '.');
+				config_env = env;
+				const file = await load_config(project, env);
+				config_path = file.path;
+				options = { ...file.config, ...inline };
+
 				const router = options.router;
 				routes_dir = resolve(project, (router && router.dir) || 'src/routes');
 				const custom_router = router ? router.entry : undefined;
@@ -156,9 +234,24 @@ export function svelteBlitz(options = {}) {
 				out_dir = resolve(root, config.build.outDir);
 				watching = config.build.watch != null;
 			},
+			async buildStart() {
+				// In watch mode, pick up edits to the config file. What it says about
+				// the app and its permissions takes effect on the next build; a
+				// change to `router` or `entry` needs Vite restarted.
+				if (config_path === null) return;
+				this.addWatchFile(config_path);
+				const file = await load_config(root, config_env);
+				options = { ...file.config, ...inline, router: options.router, entry: options.entry };
+			},
 			generateBundle() {
-				if (!options.app) return;
-				const { icon, ...manifest } = options.app;
+				if (!options.app && !options.permissions) return;
+				const { icon, ...app } = options.app ?? {};
+				// The version in package.json is the app's version unless the config says otherwise.
+				if (app.version === undefined) {
+					const pkg = join(root, 'package.json');
+					if (existsSync(pkg)) app.version = JSON.parse(readFileSync(pkg, 'utf8')).version;
+				}
+				const manifest = options.permissions ? { ...app, permissions: options.permissions } : app;
 				if (icon) {
 					// The host decodes PNG only; fail here rather than when the app starts.
 					if (!icon.toLowerCase().endsWith('.png')) this.error(`app.icon must be a PNG file, got ${icon}`);

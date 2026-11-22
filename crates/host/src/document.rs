@@ -14,6 +14,7 @@ use blitz_traits::events::{
     BlitzKeyEvent, BlitzPointerEvent, DomEvent, DomEventData, EventState, UiEvent,
 };
 
+use crate::api::{Api, Work, denied};
 use crate::app::App;
 use crate::js::{EventDetail, JsEngine, Mods};
 use crate::net::AppResources;
@@ -52,15 +53,26 @@ pub struct SvelteDocument {
     timers: TimerWaker,
     last_turn: TurnStats,
     updater: Option<Arc<Updater>>,
+    api: Arc<Api>,
     /// Answers to host calls, sent by the threads doing the work.
     answers: (Sender<Answer>, Receiver<Answer>),
     /// Wakes the event loop when an answer is ready. Set once there is a loop.
     waker: Arc<Mutex<Option<Waker>>>,
+    /// Host calls wait in the queue while this is set: the document is going
+    /// into a window that does not exist yet. See [`SvelteDocument::for_window`].
+    hold_host_calls: bool,
 }
 
 /// The id of a host call and its outcome: JSON, or an error message.
 type Answer = (u32, Result<String, String>);
-type Work = Box<dyn FnOnce() -> Result<String, String> + Send>;
+
+/// How a host call gets done.
+enum Plan {
+    /// Already done, on the UI thread: here is the JSON.
+    Now(String),
+    /// On a thread; the answer arrives on a later turn.
+    Later(Work),
+}
 
 fn html(name: &str) -> QualName {
     QualName::new(None, ns!(html), LocalName::from(name))
@@ -68,8 +80,23 @@ fn html(name: &str) -> QualName {
 
 impl SvelteDocument {
     /// Create the document for an app, able to load the app's own files and
-    /// `data:` URLs. This is what the window and screenshots use.
+    /// `data:` URLs. This is what screenshots and tests use.
     pub fn for_app(app: &App) -> Result<Self, String> {
+        Self::for_app_in(app, false)
+    }
+
+    /// Like [`for_app`](Self::for_app), for a document that is about to be
+    /// shown in a window.
+    ///
+    /// An app may call the host while it starts up (set the title, show a
+    /// dialog). At that point there is no window and the event loop is not
+    /// running, so those calls are kept until the window polls the document
+    /// for the first time, and start then.
+    pub fn for_window(app: &App) -> Result<Self, String> {
+        Self::for_app_in(app, true)
+    }
+
+    fn for_app_in(app: &App, hold_host_calls: bool) -> Result<Self, String> {
         let resources = AppResources::new(app.dir.as_deref());
         let config = DocumentConfig {
             base_url: resources.base_url(),
@@ -80,13 +107,22 @@ impl SvelteDocument {
             let version = app.manifest.version.as_deref().unwrap_or("0.0.0");
             Arc::new(Updater::new(config, version, app.bundle.clone()))
         });
-        Self::create(&app.js, &app.css, config, updater)
+        let api = Api::new(app.manifest.permissions.clone(), app.manifest.app_id());
+        Self::create(&app.js, &app.css, config, updater, api, hold_host_calls)
     }
 
     /// Create the document, load the stylesheet, then evaluate the app bundle,
     /// which mounts the app into `<body>`.
     pub fn new(app_js: &str, app_css: &str, config: DocumentConfig) -> Result<Self, String> {
-        Self::create(app_js, app_css, config, None)
+        // No manifest, so no permissions: every desktop call is refused.
+        Self::create(
+            app_js,
+            app_css,
+            config,
+            None,
+            Api::new(Default::default(), None),
+            false,
+        )
     }
 
     fn create(
@@ -94,6 +130,8 @@ impl SvelteDocument {
         app_css: &str,
         config: DocumentConfig,
         updater: Option<Arc<Updater>>,
+        api: Api,
+        hold_host_calls: bool,
     ) -> Result<Self, String> {
         let mut doc = BaseDocument::new(config);
 
@@ -127,8 +165,10 @@ impl SvelteDocument {
             timers: TimerWaker::default(),
             last_turn: TurnStats::default(),
             updater,
+            api: Arc::new(api),
             answers: mpsc::channel(),
             waker: Arc::default(),
+            hold_host_calls,
         };
 
         this.js.eval(app_js)?;
@@ -199,13 +239,20 @@ impl SvelteDocument {
         turn
     }
 
-    /// Start the work JS asked for through `__sb_host.call`, each on its own
-    /// thread. The thread sends its answer back and wakes the event loop; the
-    /// answer is delivered at the start of the next turn.
+    /// Do, or start, what JS asked for through `__sb_host.call`. Slow work
+    /// goes to a thread, which sends its answer back and wakes the event
+    /// loop; the answer is delivered at the start of the next turn.
     fn start_host_calls(&mut self) {
+        if self.hold_host_calls {
+            return;
+        }
         for call in self.js.take_calls() {
-            let work = match self.host_work(&call.name) {
-                Ok(work) => work,
+            let work = match self.host_work(&call.name, &call.args) {
+                Ok(Plan::Later(work)) => work,
+                Ok(Plan::Now(json)) => {
+                    self.js.resolve_call(call.id, Ok(json));
+                    continue;
+                }
                 Err(refusal) => {
                     self.js.resolve_call(call.id, Err(refusal));
                     continue;
@@ -215,7 +262,10 @@ impl SvelteDocument {
             let spawned = std::thread::Builder::new()
                 .name(format!("svelte-blitz-{}", call.name))
                 .spawn(move || {
-                    let _ = answers.send((call.id, work()));
+                    // Whatever happens in there, the promise has to settle.
+                    let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(work))
+                        .unwrap_or_else(|_| Err("the host failed while handling this call".into()));
+                    let _ = answers.send((call.id, outcome));
                     if let Some(waker) = &*waker.lock().unwrap() {
                         waker.wake_by_ref();
                     }
@@ -227,11 +277,19 @@ impl SvelteDocument {
         }
     }
 
-    /// What a host call does, or why it cannot be done.
-    fn host_work(&self, name: &str) -> Result<Work, String> {
-        let Some(action) = name.strip_prefix("updater.") else {
-            return Err(format!("this host has no call named {name}"));
-        };
+    /// What a host call does, or why it is refused.
+    fn host_work(&self, name: &str, args: &str) -> Result<Plan, String> {
+        let (group, action) = name.split_once('.').unwrap_or((name, ""));
+        match group {
+            "updater" => self.updater_work(name, action).map(Plan::Later),
+            // These need the window and are quick, so they run right here.
+            "window" => self.window_call(name, action, args).map(Plan::Now),
+            "clipboard" => self.clipboard_call(name, action, args).map(Plan::Now),
+            _ => self.api.call(name, args).map(Plan::Later),
+        }
+    }
+
+    fn updater_work(&self, name: &str, action: &str) -> Result<Work, String> {
         let updater = self
             .updater
             .clone()
@@ -259,6 +317,48 @@ impl SvelteDocument {
             }),
             _ => return Err(format!("this host has no call named {name}")),
         })
+    }
+
+    fn window_call(&self, name: &str, action: &str, args: &str) -> Result<String, String> {
+        if !self.api.permissions.window {
+            return Err(denied("changing the window", "window"));
+        }
+        let args: serde_json::Value = serde_json::from_str(args).unwrap_or_default();
+        let shell = &self.doc.shell_provider;
+        match action {
+            "set_title" => shell.set_window_title(args["title"].as_str().unwrap_or("").to_owned()),
+            "minimize" => shell.set_window_minimized(true),
+            "set_maximized" => {
+                shell.set_window_maximized(args["maximized"].as_bool().unwrap_or(true))
+            }
+            "is_maximized" => return Ok(shell.is_window_maximized().to_string()),
+            "set_decorations" => {
+                shell.set_window_decorations(args["decorations"].as_bool().unwrap_or(true))
+            }
+            "start_dragging" => shell.drag_window(),
+            "close" => shell.request_window_close(),
+            _ => return Err(format!("this host has no call named {name}")),
+        }
+        Ok("null".to_owned())
+    }
+
+    fn clipboard_call(&self, name: &str, action: &str, args: &str) -> Result<String, String> {
+        if !self.api.permissions.clipboard {
+            return Err(denied("using the clipboard", "clipboard"));
+        }
+        let args: serde_json::Value = serde_json::from_str(args).unwrap_or_default();
+        let shell = &self.doc.shell_provider;
+        match action {
+            "read_text" => shell
+                .get_clipboard_text()
+                .map(|text| serde_json::json!(text).to_string())
+                .map_err(|_| "the clipboard is not available, or holds no text".to_owned()),
+            "write_text" => shell
+                .set_clipboard_text(args["text"].as_str().unwrap_or("").to_owned())
+                .map(|()| "null".to_owned())
+                .map_err(|_| "the clipboard is not available".to_owned()),
+            _ => Err(format!("this host has no call named {name}")),
+        }
     }
 
     /// Run a garbage collection in JS and free the host nodes it released.
@@ -297,6 +397,8 @@ impl Document for SvelteDocument {
         if let Some(cx) = task_context {
             self.timers.set_waker(cx.waker());
             *self.waker.lock().unwrap() = Some(cx.waker().clone());
+            // There is a window now, and its event loop is running.
+            self.hold_host_calls = false;
         }
         self.settle().changed()
     }

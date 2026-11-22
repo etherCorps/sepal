@@ -38,6 +38,26 @@
     "./updater": {
       "types": "./types/updater.d.ts",
       "default": "./src/updater.js"
+    },
+    "./fs": {
+      "types": "./types/fs.d.ts",
+      "default": "./src/fs.js"
+    },
+    "./dialog": {
+      "types": "./types/dialog.d.ts",
+      "default": "./src/dialog.js"
+    },
+    "./clipboard": {
+      "types": "./types/clipboard.d.ts",
+      "default": "./src/clipboard.js"
+    },
+    "./shell": {
+      "types": "./types/shell.d.ts",
+      "default": "./src/shell.js"
+    },
+    "./window": {
+      "types": "./types/window.d.ts",
+      "default": "./src/window.js"
     }
   },
   "files": [

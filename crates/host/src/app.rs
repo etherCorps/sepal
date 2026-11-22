@@ -27,6 +27,8 @@ pub struct Manifest {
     pub version: Option<String>,
     /// Where updates come from and the key they must be signed with.
     pub updater: Option<crate::updater::Config>,
+    /// What the app may do outside its window. Nothing, unless listed.
+    pub permissions: crate::api::Permissions,
     pub title: Option<String>,
     pub width: Option<u32>,
     pub height: Option<u32>,
@@ -77,6 +79,7 @@ impl Manifest {
             id: text(&value["id"]),
             version: text(&value["version"]),
             updater,
+            permissions: crate::api::Permissions::parse(&value["permissions"])?,
             title: text(&window["title"]),
             width: size(&window["width"]),
             height: size(&window["height"]),
@@ -84,6 +87,16 @@ impl Manifest {
                 .as_str()
                 .map(|path| load_icon(dir, path))
                 .transpose()?,
+        })
+    }
+
+    /// The identifier the app goes by on this machine: its `id`, or one made
+    /// from its name. Names the bundle and the app's data directory.
+    pub fn app_id(&self) -> Option<String> {
+        self.id.clone().or_else(|| {
+            self.name
+                .as_deref()
+                .map(|name| format!("app.svelte-blitz.{}", crate::bundle::slug(name)))
         })
     }
 

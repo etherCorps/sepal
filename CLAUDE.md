@@ -39,7 +39,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - `packages/core/` — `@ethercorps/svelte-blitz`, the runtime. `renderer.js`
   (node mirror, op buffer, event bubbling), `shims.js` (console, timers),
   `index.js` (`mount`, `__sb` entry points), `protocol.js` (opcodes),
-  `host-call.js` (async calls to the host), `updater.js` (the update API). Runs in
+  `host-call.js` (async calls to the host), `updater.js` (the update API),
+  `fetch.js` (global `fetch`), `fs.js`, `dialog.js`, `clipboard.js`,
+  `shell.js`, `window.js` (desktop APIs; public names are camelCase). Runs in
   QuickJS: no Node code belongs here.
 - `packages/vite/` — `@ethercorps/svelte-blitz-vite`. `vite.js` (the preset),
   `routes.js` (build-time scan of `src/routes`), `routing.svelte.js` +
@@ -57,7 +59,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - `crates/host/` — the Rust host. `app.rs` (app directory, `app.json`
   manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
   data: URLs and the app directory only), `updater.rs` (self-update and the
-  build side of it), `js.rs` (QuickJS), `ops.rs` (apply batches),
+  build side of it), `api/` (desktop APIs and their permission checks), `js.rs` (QuickJS), `ops.rs` (apply batches),
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
@@ -129,9 +131,19 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a
   computed colour into a string for another parser has to convert first.
-- **The updater is the only network user.** `updater.rs` fetches the feed and
-  the archive, over HTTPS only (HTTP for loopback). Resources (`net.rs`) never
-  touch the network; keep it that way.
+- **Two things use the network:** the updater (`updater.rs`, HTTPS only) and
+  `fetch` (`api/http.rs`, only to URLs in `permissions.http`, every redirect
+  hop checked). Resources (`net.rs`) never touch the network; keep it that way.
+- **Desktop APIs are default-deny.** A new one needs: a permission in
+  `api::Permissions`, the check in the host (never in JS), a refusal message
+  built with `denied()`, and a line in the "refused without permission" test.
+- **Host calls made during startup are held** until the window polls the
+  document (`SvelteDocument::for_window`). Before that there is no window and
+  no running event loop: window calls would be lost and rfd dialogs panic.
+- **Tests must not open dialogs, write the clipboard or open links.** They
+  would act on the machine of whoever runs them.
+- **App settings live in `svelte-blitz.config.ts`**, loaded by the preset with
+  Vite's `loadConfigFromFile`. `vite.config.ts` only lists plugins.
 - **Never unpack an update before `verify()`.** `install_archive` trusts its
   input; `Updater::download` is what earns that trust.
 - **Blitz CSS gaps** (per its status page): `position: sticky`, container

@@ -330,6 +330,11 @@ platform binaries into `packages/host/bin` before packing it.
   download progress, merging feeds across CI machines.
 - Async host calls (`__sb_host.call` / `__sb.resolve`), which `fetch` and
   other host APIs can now be built on.
+- `svelte-blitz.config.ts` for app settings, so `vite.config.ts` stays small
+  (Shivam's request).
+- Desktop APIs behind a default-deny `permissions` manifest (Shivam's
+  decision): `fetch`, files, dialogs, clipboard, open, window. Not done:
+  notifications, menus, tray, shortcuts, multiple windows, a settings store.
 
 ## Known gaps outside this brief
 

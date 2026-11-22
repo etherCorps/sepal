@@ -28,6 +28,9 @@ semver = "1"
 base64 = "0.23"
 getrandom = "0.4"
 
+# Native dialogs. Already in the tree through blitz-shell, with these features.
+rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
+
 # window
 blitz-shell = { version = "=0.3.0-beta.4", optional = true }
 anyrender_vello_hybrid = { version = "0.11", optional = true }

@@ -59,7 +59,7 @@ try {
 	]) {
 		assert(/^\^\d/.test(pkg[group][name]), `${name} is not a versioned entry in ${group}`);
 	}
-	assert(readFileSync(join(app, 'vite.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
+	assert(readFileSync(join(app, 'svelte-blitz.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
 
 	// Nothing is published yet: the overrides stand in for the registry. Its own
 	// workspace file also keeps the project out of this repository's workspace.
