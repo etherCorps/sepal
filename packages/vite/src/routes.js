@@ -14,7 +14,6 @@
 // parameters (`[[name]]`) and matchers (`[name=matcher]`).
 
 import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 
 /**
  * @typedef {{ component: string | null, module: string | null }} NodeFiles
@@ -58,7 +57,7 @@ export function scan_routes(dir) {
 
 		for (const entry of entries) {
 			if (entry.isDirectory() || !entry.name.startsWith('+')) continue;
-			const path = join(current, entry.name);
+			const path = `${current}/${entry.name}`;
 			const match = /^\+(page|layout|error)\.(svelte|js|ts)$/.exec(entry.name);
 			if (/^\+(page|layout)\.server\.|^\+server\./.test(entry.name)) {
 				fail(`${path} needs a server, and there is none: the app runs entirely in the window. Use +page.js/+page.ts instead.`);
@@ -98,7 +97,7 @@ export function scan_routes(dir) {
 
 		for (const entry of entries) {
 			if (!entry.isDirectory()) continue;
-			const path = join(current, entry.name);
+			const path = `${current}/${entry.name}`;
 			if (/\[\[|\]\]|=/.test(entry.name)) {
 				fail(`${path}: optional parameters ([[name]]) and matchers ([name=matcher]) are not supported.`);
 			}
@@ -106,7 +105,9 @@ export function scan_routes(dir) {
 		}
 	}
 
-	walk(dir, [], [], null, 0);
+	// With `/` on Windows too: the files are imported by these paths, and that
+	// is how Vite writes a module's id.
+	walk(dir.replaceAll('\\', '/'), [], [], null, 0);
 
 	const seen = new Map();
 	for (const route of routes) {
