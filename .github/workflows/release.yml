@@ -1,0 +1,109 @@
+name: Release
+
+# Builds the host on every platform it ships for, collects the binaries into
+# the host package, and packs the five packages.
+#
+# Started by hand (Actions -> Release -> Run workflow) it stops there: the
+# tarballs are attached to the run, to look at or to install from, and nothing
+# is published. Pushing a `v<version>` tag publishes them to npm, which needs
+# the `NPM_TOKEN` secret.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  host:
+    name: host (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest, platform: darwin-arm64 }
+          - { os: macos-15-intel, platform: darwin-x64 }
+          # The oldest Ubuntu there is a runner for: a binary runs on the
+          # glibc it was built against and anything newer.
+          - { os: ubuntu-22.04, platform: linux-x64-gnu }
+          - { os: ubuntu-22.04-arm, platform: linux-arm64-gnu }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          cache-key: release
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:host
+      # The path a user without Rust takes, with the binary just built: both
+      # starters created from the packed packages, built and rendered.
+      - run: pnpm run test:template
+      - name: The binary is where the package looks for it
+        shell: bash
+        run: test -s packages/host/bin/${{ matrix.platform }}/svelte-blitz-host
+      - uses: actions/upload-artifact@v4
+        with:
+          name: host-${{ matrix.platform }}
+          # Both under packages/host, so the artifact unpacks onto it.
+          path: |
+            packages/host/bin
+            packages/host/THIRD-PARTY-LICENSES.txt
+          if-no-files-found: error
+
+  pack:
+    name: pack${{ startsWith(github.ref, 'refs/tags/v') && ' and publish' || '' }}
+    needs: host
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # For npm to record which run built the packages.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: The tag is the packages' version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(node -p "require('./packages/core/package.json').version")
+          [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "::error::tag $GITHUB_REF_NAME, but the packages are at $version"; exit 1; }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      # Also emits each package's types (`prepare`).
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: host-*
+          path: packages/host
+          merge-multiple: true
+      - name: Every platform's binary is there
+        run: |
+          for platform in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu; do
+            test -s packages/host/bin/$platform/svelte-blitz-host || { echo "::error::no host binary for $platform"; exit 1; }
+          done
+          test -s packages/host/THIRD-PARTY-LICENSES.txt
+          # Artifacts do not keep the executable bit.
+          chmod +x packages/host/bin/*/svelte-blitz-host
+          ls -l packages/host/bin/*
+      - name: Pack
+        run: |
+          mkdir packs
+          pnpm -r --filter "./packages/*" exec pnpm pack --pack-destination "$PWD/packs"
+          ls -l packs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: packs
+      # The tarballs that were just packed, not a second build of them.
+      # A prerelease goes out under its own dist-tag (`0.1.0-alpha.0` as
+      # `alpha`), so that `latest` only ever names a full release.
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          tag=$(node -p "('$GITHUB_REF_NAME'.match(/-([a-z]+)/) || [0, 'latest'])[1]")
+          for tarball in packs/*.tgz; do
+            npm publish "$tarball" --access public --provenance --tag "$tag"
+          done
