@@ -21,9 +21,21 @@ fn scratch(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("svelte-blitz-{}-{name}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
+    if cfg!(windows) {
+        // With `/`, which Windows takes as well: these paths are written into
+        // JavaScript strings, where a `\\` would start an escape.
+        return PathBuf::from(dir.to_string_lossy().replace('\\', "/"));
+    }
     // Temp directories are behind a symlink on macOS; tests compare real paths.
     dir.canonicalize().unwrap()
 }
+
+/// A file that is there, and outside anything a test allows.
+const SYSTEM_FILE: &str = if cfg!(windows) {
+    "C:/Windows/win.ini"
+} else {
+    "/etc/hosts"
+};
 
 /// The example app with the permissions a test wants.
 fn app_with(permissions: Permissions) -> SvelteDocument {
@@ -563,7 +575,7 @@ fn what_may_be_opened() {
     }
     // A file outside what the app may read, and something that is neither.
     assert!(
-        open_target(&open, "/etc/hosts")
+        open_target(&open, SYSTEM_FILE)
             .err()
             .unwrap()
             .contains("permissions.fs")
@@ -581,6 +593,7 @@ fn what_may_be_opened() {
 #[test]
 fn everything_is_refused_without_permission() {
     let mut doc = app_with(Permissions::default());
+    let read = format!("__api.fs.readTextFile('{SYSTEM_FILE}')");
     for (call, permission) in [
         ("__api.dialog.open()", "dialog"),
         ("__api.dialog.save()", "dialog"),
@@ -592,7 +605,7 @@ fn everything_is_refused_without_permission() {
         ("__api.window.setTitle('x')", "window"),
         ("__api.window.minimize()", "window"),
         ("__api.window.close()", "window"),
-        ("__api.fs.readTextFile('/etc/hosts')", "fs"),
+        (read.as_str(), "fs"),
         ("fetch('https://example.com')", "http"),
     ] {
         let result = run(&mut doc, call);
@@ -642,6 +655,9 @@ fn a_request_does_not_block_the_ui() {
     let gate = release.clone();
     std::thread::spawn(move || {
         let (mut stream, _) = listener.accept().unwrap();
+        // Take the request in first: Windows resets a connection that is
+        // closed with unread data on it, and the client then sees an error.
+        let _ = stream.read(&mut [0; 4096]);
         gate.wait();
         let _ = stream
             .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\nConnection: close\r\n\r\nslow");

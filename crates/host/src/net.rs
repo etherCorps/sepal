@@ -41,15 +41,28 @@ impl AppResources {
             }
             "file" => {
                 let root = self.root.as_ref().ok_or("the app has no directory")?;
-                let path = url.to_file_path().map_err(|()| "not a file path")?;
+                let base = Url::from_directory_path(root).map_err(|()| "not a file path")?;
+                // Where in the app directory the URL points, worked out on the
+                // URLs: file paths differ too much between systems to compare.
+                //
                 // `/logo.svg` is the app's logo.svg, as it would be on a web
                 // server, not a file at the top of the disk. Bundlers write
-                // asset addresses that way.
-                let path = if path.starts_with(root) {
-                    path
-                } else {
-                    root.join(path.strip_prefix("/").unwrap_or(&path))
-                };
+                // asset addresses that way. On Windows such a URL keeps the
+                // drive of the page it was on (`/D:/logo.svg`).
+                let inside = url.path().strip_prefix(base.path()).unwrap_or_else(|| {
+                    let rest = url.path().trim_start_matches('/');
+                    match rest.as_bytes() {
+                        [drive, b':', b'/', ..] if cfg!(windows) && drive.is_ascii_alphabetic() => {
+                            &rest[3..]
+                        }
+                        _ => rest,
+                    }
+                });
+                let path = base
+                    .join(inside)
+                    .ok()
+                    .and_then(|url| url.to_file_path().ok())
+                    .ok_or("not a file path")?;
                 // Canonical paths on both sides, so neither `..` nor a symlink leads out.
                 let path = path.canonicalize().map_err(|e| e.to_string())?;
                 if !path.starts_with(root) {

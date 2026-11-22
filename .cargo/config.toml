@@ -1,0 +1,4 @@
+[env]
+# Tests run on threads with 2 MB of stack. The host's UI thread has 8 MB, of
+# which the JavaScript engine may use half (crates/host/src/js/quickjs.rs).
+RUST_MIN_STACK = "8388608"

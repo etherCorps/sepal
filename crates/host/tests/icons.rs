@@ -229,7 +229,7 @@ fn only_data_urls_and_the_apps_own_files_load() {
 
     // A path from the root is from the app's root, as on a web server.
     assert_eq!(
-        fetch(&resources, "file:///dot.svg"),
+        fetch(&resources, &relative("/dot.svg")),
         std::fs::read(dist().join("dot.svg")).unwrap()
     );
 
@@ -237,6 +237,7 @@ fn only_data_urls_and_the_apps_own_files_load() {
     assert!(fetch(&resources, &relative("../package.json")).is_empty());
     assert!(fetch(&resources, &relative("../../../crates/host/Cargo.toml")).is_empty());
     assert!(fetch(&resources, "file:///etc/hosts").is_empty());
+    assert!(fetch(&resources, "file:///C:/Windows/win.ini").is_empty());
     // No network, and nothing for a file that is not there.
     assert!(fetch(&resources, "https://example.com/logo.png").is_empty());
     assert!(fetch(&resources, &relative("missing.png")).is_empty());

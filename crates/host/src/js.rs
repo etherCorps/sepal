@@ -96,4 +96,30 @@ mod tests {
         // The engine is still usable, and a later script gets its own time.
         assert_eq!(js.eval_string("String(1 + 1)").unwrap(), "2");
     }
+
+    #[test]
+    fn calls_nest_deeply_and_running_out_of_stack_is_an_error() {
+        let test = || {
+            let js = JsEngine::new().unwrap();
+            let depth: u32 = js
+                .eval_string(
+                    "(() => { let n = 0; const f = () => { n++; f(); }; \
+                     try { f(); } catch { return String(n); } })()",
+                )
+                .unwrap()
+                .parse()
+                .unwrap();
+            println!("calls nest {depth} deep");
+            assert!(depth >= 2000, "calls only nest {depth} deep");
+            assert_eq!(js.eval_string("String(1 + 1)").unwrap(), "2");
+        };
+        // On a thread with the stack the UI thread has, whatever the test
+        // runner gives its own.
+        std::thread::Builder::new()
+            .stack_size(8 << 20)
+            .spawn(test)
+            .unwrap()
+            .join()
+            .unwrap();
+    }
 }

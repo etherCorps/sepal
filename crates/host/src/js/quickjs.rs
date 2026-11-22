@@ -9,6 +9,15 @@ use rquickjs::{CatchResultExt, Context, Ctx, Function, Object, Runtime, TypedArr
 
 use super::{Batch, EventDetail, HostCall, Mods, RUNAWAY_SCRIPT};
 
+/// How much stack a script may use before it is stopped with "Maximum call
+/// stack size exceeded".
+///
+/// QuickJS's own limit is 1 MB, which is about a thousand calls deep, and
+/// fewer on Windows, where its frames are larger: there, the components of a
+/// Bits UI page nest deeper than that. The UI thread has 8 MB (`build.rs`
+/// sees to it on Windows), so this leaves as much again for the host.
+const SCRIPT_STACK: usize = 4 * 1024 * 1024;
+
 pub struct JsEngine {
     runtime: Runtime,
     context: Context,
@@ -29,6 +38,7 @@ impl JsEngine {
 
     pub(super) fn with_limit(limit: Duration) -> Result<Self, String> {
         let runtime = Runtime::new().map_err(|e| e.to_string())?;
+        runtime.set_max_stack_size(SCRIPT_STACK);
         let entered = Rc::new(Cell::new(Instant::now()));
         let since = entered.clone();
         // The engine calls this every few thousand operations while a script
