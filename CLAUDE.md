@@ -46,7 +46,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   resolves it, so a stale binary there is used by anything that does not set
   `SVELTE_BLITZ_HOST`. The root scripts set it or call cargo directly.
 - `crates/host/` — the Rust host. `app.rs` (app directory, `app.json`
-  manifest, icon), `bundle.rs` (macOS `.app`), `js.rs` (QuickJS), `ops.rs` (apply batches),
+  manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
+  data: URLs and the app directory only), `js.rs` (QuickJS), `ops.rs` (apply batches),
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
@@ -102,6 +103,12 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `svelte/renderer`) and in `~/.cargo/registry/src/*/blitz-dom-*/src` rather
   than assuming. `anyrender_vello_hybrid 0.11` and `anyrender_vello_cpu 0.18`
   are the releases that match blitz's `anyrender 0.14`.
+- **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
+  It differs from crates.io 0.3.0-beta.4 in two places, both marked
+  `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
+  edit anything else there, and do not run `cargo fmt` on it.
+- **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a
+  computed colour into a string for another parser has to convert first.
 - **Blitz CSS gaps** (per its status page): `position: sticky`, container
   queries, 3D transforms, `overflow: auto` (use `overflow: scroll`),
   `backdrop-filter` outside the Skia backend.

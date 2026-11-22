@@ -9,6 +9,7 @@ pub mod app;
 pub mod bundle;
 pub mod document;
 pub mod js;
+pub mod net;
 pub mod ops;
 pub mod testing;
 mod timers;

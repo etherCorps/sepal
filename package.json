@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "pnpm --filter counter build",
+    "build": "pnpm -r build",
     "build:host": "node scripts/build-host-package.js",
     "check": "pnpm -r check",
     "test:js": "pnpm run build && node packages/renderer/test/mock-host.test.js",

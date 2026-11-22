@@ -13,9 +13,10 @@ blitz-dom = { version = "=0.3.0-beta.4", features = ["scrollbars"] }
 blitz-traits = "=0.3.0-beta.4"
 rquickjs = { version = "0.14", features = ["array-buffer"] }
 keyboard-types = "0.8"
-# Both are already in the tree through blitz-dom; `image` decodes the app icon.
+# `image` and `data-url` are already in the tree through blitz-dom.
 image = { version = "0.25", default-features = false, features = ["png"] }
 serde_json = "1"
+data-url = "0.3"
 
 # window
 blitz-shell = { version = "=0.3.0-beta.4", optional = true }
@@ -57,6 +58,10 @@ window = [
     "dep:objc2-foundation",
 ]
 screenshot = ["dep:blitz-paint", "dep:anyrender", "dep:anyrender_vello_cpu", "dep:png"]
+
+# One-line fix for inline SVG colours; see crates/blitz-dom/PATCH.md.
+[patch.crates-io]
+blitz-dom = { path = "../blitz-dom" }
 
 [profile.dev]
 opt-level = 1

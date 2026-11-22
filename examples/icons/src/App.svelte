@@ -3,14 +3,19 @@
 
 	  pnpm --filter icons build
 	  cargo run --manifest-path crates/host/Cargo.toml --features screenshot -- \
-	    --screenshot icons.png examples/icons/dist 640x360
+	    --screenshot docs/icons-probe.png examples/icons/dist 640x480
 
-	Rows 1 and 3 render correctly today. Rows 2 and 4 do not: see HANDOVER.md, task 2.
+	`crates/host/tests/icons.rs` asserts on the pixels of every row.
 -->
 <script lang="ts">
 	import { Camera, Heart, Settings } from '@lucide/svelte';
 
+	// Vite inlines an imported asset as a data: URL.
+	import square from './square.svg';
+
 	const circle = 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z';
+
+	let hot = $state(false);
 </script>
 
 <main class="flex flex-col gap-4 bg-white p-6 text-slate-900">
@@ -52,5 +57,25 @@
 			alt=""
 			src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E"
 		/>
+	</section>
+
+	<button
+		id="recolour"
+		class={['flex items-center gap-4 text-left', hot ? 'text-rose-600' : 'text-indigo-600']}
+		onclick={() => (hot = !hot)}
+	>
+		<span class="w-40">6. click to recolour</span>
+		<svg class="fill" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d={circle} /></svg>
+		<Heart size={32} />
+	</button>
+
+	<section id="image-file" class="flex items-center gap-4">
+		<span class="w-40">7. img, file in dist</span>
+		<img width="32" height="32" alt="" src="dot.svg" />
+	</section>
+
+	<section id="image-import" class="flex items-center gap-4">
+		<span class="w-40">8. img, imported</span>
+		<img width="32" height="32" alt="" src={square} />
 	</section>
 </main>

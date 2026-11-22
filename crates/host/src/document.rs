@@ -1,6 +1,7 @@
 //! [`SvelteDocument`]: a Blitz document whose tree is driven by a Svelte app.
 
 use std::collections::HashSet;
+use std::sync::Arc;
 use std::task::Context as TaskContext;
 
 use blitz_dom::{
@@ -11,7 +12,9 @@ use blitz_traits::events::{
     BlitzKeyEvent, BlitzPointerEvent, DomEvent, DomEventData, EventState, UiEvent,
 };
 
+use crate::app::App;
 use crate::js::{EventDetail, JsEngine, Mods};
+use crate::net::AppResources;
 use crate::ops::{self, ApplyStats, NodeMap};
 use crate::timers::TimerWaker;
 
@@ -52,6 +55,18 @@ fn html(name: &str) -> QualName {
 }
 
 impl SvelteDocument {
+    /// Create the document for an app, able to load the app's own files and
+    /// `data:` URLs. This is what the window and screenshots use.
+    pub fn for_app(app: &App) -> Result<Self, String> {
+        let resources = AppResources::new(app.dir.as_deref());
+        let config = DocumentConfig {
+            base_url: resources.base_url(),
+            net_provider: Some(Arc::new(resources)),
+            ..Default::default()
+        };
+        Self::new(&app.js, &app.css, config)
+    }
+
     /// Create the document, load the stylesheet, then evaluate the app bundle,
     /// which mounts the app into `<body>`.
     pub fn new(app_js: &str, app_css: &str, config: DocumentConfig) -> Result<Self, String> {

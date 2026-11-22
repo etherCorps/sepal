@@ -216,6 +216,15 @@ fn load(args: &[String]) -> Result<Option<(App, &[String])>, String> {
             js: read(first)?,
             css,
             manifest: Manifest::default(),
+            // Bare `app.js` resolves to "", which means the current directory.
+            dir: Path::new(first).parent().map(|dir| {
+                if dir.as_os_str().is_empty() {
+                    Path::new(".")
+                } else {
+                    dir
+                }
+                .to_owned()
+            }),
         }
     };
     Ok(Some((app, rest)))
@@ -233,10 +242,9 @@ fn window(_app: App, _reload: Option<Box<dyn Fn() -> Result<App, String>>>) -> R
 
 #[cfg(feature = "screenshot")]
 fn screenshot(out: &str, app: &App, (width, height): (u32, u32)) -> Result<(), String> {
-    use blitz_dom::DocumentConfig;
     use svelte_blitz_host::{SvelteDocument, screenshot::render_png};
 
-    let mut doc = SvelteDocument::new(&app.js, &app.css, DocumentConfig::default())?;
+    let mut doc = SvelteDocument::for_app(app)?;
     let png = render_png(&mut doc, width, height, 1.0);
     fs::write(out, png).map_err(|e| format!("cannot write {out}: {e}"))
 }

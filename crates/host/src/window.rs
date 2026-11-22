@@ -13,7 +13,6 @@ use std::thread;
 use std::time::Instant;
 
 use anyrender_vello_hybrid::VelloHybridWindowRenderer;
-use blitz_dom::DocumentConfig;
 use blitz_shell::{BlitzApplication, BlitzShellProxy, WindowConfig, create_default_event_loop};
 use winit::application::ApplicationHandler;
 use winit::application::macos::ApplicationHandlerExtMacOS;
@@ -37,7 +36,8 @@ enum Dev {
 /// Run an app until its window is closed. With `reload`, also follow stdin:
 /// every line reloads the app, end of input quits.
 pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
-    let App { js, css, manifest } = app;
+    let doc = SvelteDocument::for_app(&app)?;
+    let manifest = app.manifest;
     // Before the event loop exists: winit builds the menu bar from this name.
     if let Some(name) = &manifest.name {
         set_app_name(name);
@@ -64,8 +64,6 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
     }
     let (proxy, receiver) = BlitzShellProxy::new(event_loop.create_proxy());
-
-    let doc = SvelteDocument::new(&js, &css, DocumentConfig::default())?;
 
     let (width, height) = manifest.size();
     let title = manifest
@@ -118,8 +116,7 @@ impl Host {
     fn reload(&mut self) {
         let Some(load) = &self.reload else { return };
         let started = Instant::now();
-        let doc = load()
-            .and_then(|app| SvelteDocument::new(&app.js, &app.css, DocumentConfig::default()));
+        let doc = load().and_then(|app| SvelteDocument::for_app(&app));
         match doc {
             Ok(doc) => {
                 if let Some(view) = self.application.windows.values_mut().next() {

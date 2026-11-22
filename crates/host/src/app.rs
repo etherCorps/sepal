@@ -5,7 +5,7 @@
 
 use std::fs;
 use std::io::ErrorKind;
-use std::path::{Component, Path};
+use std::path::{Component, Path, PathBuf};
 
 use serde_json::Value;
 
@@ -35,6 +35,9 @@ pub struct App {
     pub js: String,
     pub css: String,
     pub manifest: Manifest,
+    /// Where the app was loaded from. Relative URLs (`<img src="logo.png">`)
+    /// resolve against it, and nothing outside it can be loaded.
+    pub dir: Option<PathBuf>,
 }
 
 impl Manifest {
@@ -84,7 +87,12 @@ impl App {
             Some(json) => Manifest::parse(&json, dir)?,
             None => Manifest::default(),
         };
-        Ok(Self { js, css, manifest })
+        Ok(Self {
+            js,
+            css,
+            manifest,
+            dir: Some(dir.to_owned()),
+        })
     }
 }
 

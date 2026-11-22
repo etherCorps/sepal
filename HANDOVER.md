@@ -92,6 +92,18 @@ repo. Expect to fix the Linux system-library list on its first run.
 
 ### 2. UI icons
 
+**Status (22 Nov 2026): done on macOS**, all eight probe rows correct,
+`tests/icons.rs` asserts on pixels.
+- 2a: cause confirmed, with one correction to the text below: the Tailwind
+  colour arrives as `lab(...)`, not `oklch(...)`. Fixed in a vendored copy of
+  blitz-dom (`crates/blitz-dom`, see its `PATCH.md`). Icons do follow a
+  colour change after mount; no damage flag was needed.
+- 2b: `src/net.rs`. Found on the way: upstream blitz-dom panics on a relative
+  or malformed URL; the vendored copy no longer does.
+- 2c: full SVG element list in `ops.rs`, with a test.
+- Open: **upstream PRs to Blitz for the two fixes** (needs Shivam's go-ahead,
+  it is an outward action), and trying CSS `url()` and `@font-face`.
+
 `examples/icons` is a ready-made probe and `docs/icons-probe.png` is what it
 renders today. Rebuild it with the commands at the top of
 `examples/icons/src/App.svelte`.

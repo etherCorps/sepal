@@ -167,6 +167,47 @@ been run here with a real Developer ID and the result launches; Gatekeeper
 then reports "Unnotarized Developer ID" until it is notarised. **`--notarize`
 has not been run**: it uploads to Apple and needs your credentials.
 
+## Icons and images
+
+![The icon probe](docs/icons-probe.png)
+
+Icons are ordinary Svelte: inline `<svg>`, or a component library. They take
+their colour from `currentColor` and their size from props or classes, so
+Tailwind works on them directly.
+
+```svelte
+<script lang="ts">
+	import { Heart, Settings } from '@lucide/svelte';
+</script>
+
+<span class="text-rose-600"><Heart /></span>
+<Settings class="size-8 text-slate-500" strokeWidth={1.5} />
+<svg class="size-6 text-indigo-600" viewBox="0 0 24 24" fill="currentColor">…</svg>
+```
+
+Colours follow later changes too: switch a class on a parent and the icons
+inside repaint.
+
+Images load from two places and nowhere else:
+
+```svelte
+<script lang="ts">
+	import logo from './logo.svg'; // Vite inlines it as a data: URL
+</script>
+
+<img src={logo} alt="" />
+<img src="photo.png" alt="" />   <!-- a file next to app.js: put it in public/ -->
+```
+
+- `data:` URLs, which is what an `import` of an asset becomes.
+- Files inside the app directory (`dist`, or `Resources` in a bundle). A path
+  that leaves it, through `..` or a symlink, is refused.
+- There is no network: `http(s):` URLs do not load. A URL that cannot be
+  loaded is reported on stderr and the image stays empty.
+
+CSS `url()` and `@font-face` go through the same loader but have not been
+tried yet.
+
 ## TypeScript
 
 The examples are TypeScript: `src/main.ts`, `<script lang="ts">` and
@@ -207,6 +248,7 @@ crates/host/              the `svelte-blitz-host` crate
   src/app.rs              app directory, app.json manifest, icon decoding
   src/bundle.rs           macOS .app bundle: Info.plist, .icns
   src/document.rs         SvelteDocument: implements blitz_dom::Document
+  src/net.rs              loads data: URLs and files from the app directory
   src/timers.rs           wakes the event loop for JS timers
   src/window.rs           window + GPU renderer (blitz-shell, Vello Hybrid)
   src/screenshot.rs       CPU rendering to PNG, no display needed
@@ -214,6 +256,8 @@ crates/host/              the `svelte-blitz-host` crate
   tests/counter.rs        end-to-end tests against the example bundle
   tests/manifest.rs       manifest parsing and icon decoding
   tests/bundle.rs         bundle layout, Info.plist, .icns contents
+  tests/icons.rs          icon and image pixels, resource loading
+crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with two fixes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 ```
 
@@ -268,6 +312,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Real bundle → QuickJS → blitz-dom 0.3.0-beta.4 → style and layout | `tests/counter.rs` |
 | Tailwind 4.3 stylesheet (incl. `oklch()` colours, `@layer`) lays out and paints correctly | layout assertions + `screenshot.png` |
 | Clicks through Blitz hit testing, bubbling, `{#if}`, keyed `{#each}` reorder | `counter_app` |
+| Inline SVG and Lucide icons in hex and Tailwind colours, recolouring after a click, `<img>` from a data: URL, a file and an import | `tests/icons.rs` (pixels) + `docs/icons-probe.png` |
+| Resources: only data: URLs and files inside the app directory load; bad URLs do not crash | `tests/icons.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
 | Timer wake-ups, and silence when no timer is running | `timers_wake_the_event_loop` |
 | Removed nodes are freed on the host after GC | `removed_nodes_are_freed` |
@@ -308,10 +354,12 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 
 - `bind:`, `transition:`, `animate:`, `<svelte:window>`, `<svelte:head>` are
   rejected by Svelte for custom renderers. Use `value={x}` + `oninput`.
-- No `fetch`, storage, or file APIs yet. Each needs a host function in `js.rs`.
+- No `fetch`, storage, or file APIs in JavaScript yet. Each needs a host function in `js.rs`.
+- Images and other resources load from data: URLs and the app directory only; no network.
 - `requestAnimationFrame` is a 16 ms timer, not tied to the display.
 - Capture-phase listeners are treated as bubble-phase.
-- Only a short list of SVG elements gets the SVG namespace.
+- An element is put in the SVG namespace by its name alone. `a`, `title`,
+  `style` and `script` are always HTML, also inside an `<svg>`.
 - Blitz itself is beta. Its status page lists `position: sticky`, container
   queries, 3D transforms and `overflow: auto` as missing; `backdrop-filter`
   needs its Skia backend.
