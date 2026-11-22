@@ -137,6 +137,8 @@ fn never_replaces_an_app_it_did_not_build() {
     );
 }
 
+// The name has a `<` in it, which a file on Windows cannot.
+#[cfg(not(windows))]
 #[test]
 fn defaults_and_escaping() {
     let dir = scratch("defaults");

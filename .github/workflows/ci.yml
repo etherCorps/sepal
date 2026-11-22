@@ -54,4 +54,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      # `pnpm test` in pieces, so that one run shows everything that fails.
+      - run: pnpm run check
+      - run: pnpm run test:js
+      - run: cargo test --manifest-path crates/host/Cargo.toml --features screenshot --no-fail-fast
+      - if: success() || failure()
+        run: pnpm run test:template
