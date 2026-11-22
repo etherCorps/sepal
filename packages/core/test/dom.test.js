@@ -126,6 +126,15 @@ host.settle();
 assert.equal(host.focused, null);
 assert.equal(run(`document.activeElement === document.body`), true);
 
+// --- timers are tasks: the host runs them one at a time --------------------------------
+run(`globalThis.ran = []; setTimeout(() => ran.push('a'), 5); setTimeout(() => ran.push('b'), 5); setTimeout(() => { ran.push('c'); setTimeout(() => ran.push('late'), 0); }, 1);`);
+host.time += 10;
+assert.equal(run('__sb.timers()'), true);
+assert.equal(run('ran.join()'), 'c', 'one per call, soonest first');
+assert.equal(run('[__sb.timers(), __sb.timers(), __sb.timers()].join() + " " + ran.join()'), 'true,true,false c,a,b');
+assert.equal(run('__sb.timers() + " " + ran.join()'), 'true c,a,b,late', 'a timer set during a round waits for the next');
+run('__sb.timers()');
+
 // --- a node cannot go inside itself ------------------------------------------------
 // The host would loop forever on a tree with a cycle in it.
 assert.throws(() => run(`document.querySelector('main').firstElementChild.appendChild(document.querySelector('main'))`), /descendant/);

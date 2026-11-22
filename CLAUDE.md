@@ -129,8 +129,13 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   top of the renderer's tree, which is enough for Bits UI's Switch, Checkbox,
   Tabs, Accordion, Dialog, Select and Tooltip. It measures through a forced
   layout (invariant 2), except inside an event handler, where it gets the
-  last reported box. `getComputedStyle()` is still blank and there are no
-  `animationend` events, so Bits UI sees no exit animation and closes at once.
+  last reported box. The same call says for how long the node is still
+  animating, which is all `getAnimations()` knows: enough for Bits UI to wait
+  for an exit animation. `getComputedStyle()` is blank and there are no
+  `animationend` events.
+- **Timers run one per call** (`__sb.timers()` returns whether it ran one) and
+  the host runs microtasks in between, because libraries rely on one
+  `requestAnimationFrame` callback seeing what the previous one caused.
 - **The document lives in `Rc<RefCell<Page>>`** (`document.rs`). Never hold a
   borrow of it while JavaScript runs, or a measurement silently falls back to
   old boxes. `handle_ui_event` holds one on purpose: that is what stops a
@@ -185,7 +190,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   than assuming. `anyrender_vello_hybrid 0.11` and `anyrender_vello_cpu 0.18`
   are the releases that match blitz's `anyrender 0.14`.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in five places, all marked
+  It differs from crates.io 0.3.0-beta.4 in six places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a

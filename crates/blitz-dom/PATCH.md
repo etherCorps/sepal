@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with five changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with six changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -49,11 +49,17 @@ Tailwind `focus-visible:` utility. It now matches elements whose state has
 `FOCUSRING`, which Blitz already sets on keyboard focus (and change 4 leaves
 off for a press). `:focus-within` is still always false.
 
-Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) were not checked. Remove this directory and
+**6. Asking what is animating.** `src/stylo.rs`, `BaseDocument::animations_end`:
+a new public method that says when the last CSS animation or transition
+running on a node ends. The animation sets are private to the crate, and the
+host needs this to answer `element.getAnimations()`, which component libraries
+wait on before they remove an element that is animating out.
+
+Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) were not checked; (6) is an addition, not a fix. Remove this directory and
 the `[patch]` entry once a release contains the fix.
 
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the five changes (search for
+directory with that version's source and reapply the six changes (search for
 `svelte-blitz patch`).

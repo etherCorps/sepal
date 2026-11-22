@@ -31,7 +31,7 @@ if (typeof (/** @type {any} */ (globalThis).fetch) !== 'function') /** @type {an
 	dispatch,
 	/** Take the pending op batch, or null if nothing changed. */
 	take: take_batch,
-	/** Run due timers. */
+	/** Run one due timer; `false` when none is left. Called until it says so. */
 	timers: run_timers,
 	/** The next timer deadline on the host clock, or -1. Read at the end of a turn. */
 	next_timer,

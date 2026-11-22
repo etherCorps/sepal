@@ -170,6 +170,19 @@ fn bits_ui_components_work_on_the_dom_layer() {
         style.contains(&format!("--bits-accordion-content-height: {open}px")),
         "the animation was given the measured height: {style}"
     );
+
+    // And it slides shut. Bits UI hides the content when the animations on
+    // it have finished, which it learns from `getAnimations()`.
+    click(&mut doc, "[data-accordion-trigger]");
+    doc.wait(0.1);
+    let closing = height(&doc);
+    assert!(
+        closing > 0.0 && closing < open,
+        "still closing after half the animation: {closing} of {open}"
+    );
+    doc.wait(0.3);
+    assert_eq!(height(&doc), 0.0, "closed");
+    assert!(attr(&doc, "[data-accordion-content]", "hidden").is_some());
 }
 
 /// A Dialog is mounted into `document.body`, dims the page behind it, and is
@@ -199,6 +212,12 @@ fn a_dialog_opens_over_the_page_and_closes() {
     assert_eq!(pixel(&mut doc, 240, 350), [255, 255, 255]);
 
     doc.click_at(5.0, 690.0);
+    // It fades out before it goes: closed, and still on the page.
+    doc.wait(0.06);
+    assert_eq!(
+        attr(&doc, "[role=dialog]", "data-state").as_deref(),
+        Some("closed")
+    );
     // Past the fade-out, and the timer that unlocks scrolling after it.
     doc.wait(0.4);
     assert!(doc.query("[role=dialog]").is_none(), "closed");

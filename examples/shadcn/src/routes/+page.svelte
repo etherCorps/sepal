@@ -80,7 +80,7 @@
 			</div>
 			<Alert>
 				<AlertTitle>Heads up</AlertTitle>
-				<AlertDescription>Try the keyboard: Tab, Enter, Space, arrows in the select, Escape. Things close without their exit animation.</AlertDescription>
+				<AlertDescription>Try the keyboard: Tab, Enter, Space, arrows in the select, Escape.</AlertDescription>
 			</Alert>
 		</div>
 	</div>

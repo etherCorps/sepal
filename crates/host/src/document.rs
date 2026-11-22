@@ -76,14 +76,28 @@ impl Page {
         ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, batch)
     }
 
-    /// Lay the page out, at the time on the clock the animations run on.
-    fn layout(&mut self) {
-        let time = if self.windowed {
+    /// The time on the clock the animations run on.
+    fn time(&self) -> f64 {
+        if self.windowed {
             animation_clock().elapsed().as_secs_f64()
         } else {
             self.headless_time
-        };
+        }
+    }
+
+    /// Lay the page out, as of now on that clock.
+    fn layout(&mut self) {
+        let time = self.time();
         self.doc.resolve(time);
+    }
+
+    /// For how many more seconds a CSS animation or transition runs on a
+    /// node: 0 when none does, infinite for one that repeats forever.
+    fn animating(&self, js_id: u32) -> f64 {
+        self.nodes
+            .blitz(js_id)
+            .and_then(|node| self.doc.animations_end(node))
+            .map_or(0.0, |end| (end - self.time()).max(0.0))
     }
 
     /// Before the document has been given a size there is nothing to measure,
@@ -278,7 +292,8 @@ impl SvelteDocument {
                 node.mark_ancestors_dirty();
                 page.layout();
             }
-            Some(page.box_of(id))
+            let [x, y, width, height] = page.box_of(id);
+            Some([x, y, width, height, page.animating(id)])
         })?;
 
         let mut this = Self {

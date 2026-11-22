@@ -344,10 +344,6 @@ platform binaries into `packages/host/bin` before packing it.
   for so that the Accordion slides open), and the host also reports boxes
   after each layout. See "Measuring the page" in the README.
   Not done:
-  - Exit animations. Bits UI asks `getComputedStyle(node).animationName`
-    whether to wait, gets nothing, and closes at once; it would also need
-    `animationend` events. Computed styles could be answered the way
-    measurements are now.
   - CSS transforms in reported boxes, `scroll` events, `getComputedStyle`.
   - The other Bits UI components (Popover, DropdownMenu, Combobox, …) were
     not tried. They use the same pieces as Select and Tooltip.

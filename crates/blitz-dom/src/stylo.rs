@@ -1493,6 +1493,48 @@ fn needs_style_image_flush(node: &Node, style: &ComputedValues) -> bool {
     })
 }
 
+// svelte-blitz patch: upstream has no way to ask what is animating. The host
+// needs it to answer `element.getAnimations()`, which component libraries use
+// to wait for an exit animation before they remove an element.
+impl crate::document::BaseDocument {
+    /// When the last CSS animation or transition running on this node ends,
+    /// on the clock passed to `resolve`. `None` when nothing is running on
+    /// it, infinity for an animation that repeats forever. Pseudo-elements
+    /// are not counted.
+    pub fn animations_end(&self, node_id: NodeId) -> Option<f64> {
+        use style::animation::KeyframesIterationState;
+
+        let running = |state: &AnimationState| {
+            matches!(state, AnimationState::Running | AnimationState::Pending)
+        };
+        let sets = self.animations.sets.read();
+        let mut end: Option<f64> = None;
+        for (key, set) in sets.iter() {
+            if key.pseudo_element.is_some() || NodeId::from_u64(key.node.id() as u64) != node_id {
+                continue;
+            }
+            let animations = set.animations.iter().filter(|a| running(&a.state)).map(|a| {
+                match a.iteration_state {
+                    KeyframesIterationState::Infinite(_) => f64::INFINITY,
+                    // `started_at` is the start of the current iteration.
+                    KeyframesIterationState::Finite(current, max) => {
+                        a.started_at + a.duration * (max - current).max(1.0)
+                    }
+                }
+            });
+            let transitions = set
+                .transitions
+                .iter()
+                .filter(|t| running(&t.state))
+                .map(|t| t.start_time + t.property_animation.duration);
+            for time in animations.chain(transitions) {
+                end = Some(end.map_or(time, |end: f64| end.max(time)));
+            }
+        }
+        end
+    }
+}
+
 #[test]
 fn assert_size_of_equals() {
     // use std::mem;

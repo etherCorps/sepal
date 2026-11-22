@@ -227,14 +227,16 @@ impl JsEngine {
     }
 
     /// Install `__sb_host.measure(id)`: a forced layout. JS calls it when it
-    /// needs the box of a node right now; it returns `[x, y, width, height]`,
-    /// or nothing when no layout can be done at this moment.
+    /// needs to know about a node right now; it returns `[x, y, width,
+    /// height, animating]`, the node's box and for how many more seconds an
+    /// animation runs on it, or nothing when no layout can be done at this
+    /// moment.
     ///
     /// `measure` gets the node's id and a way to take what the app has
     /// written so far, which has to be applied before laying out.
     pub fn on_measure(
         &self,
-        measure: impl Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 4]> + 'static,
+        measure: impl Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 5]> + 'static,
     ) -> Result<(), String> {
         self.context
             .with(|ctx| -> rquickjs::Result<()> {
@@ -292,12 +294,21 @@ impl JsEngine {
 
     /// Run the timers that are due.
     pub fn run_timers(&self) {
-        let result = self.enter().with(|ctx| -> rquickjs::Result<()> {
-            let timers: Function = entry(&ctx)?.get("timers")?;
-            timers.call(())
-        });
-        if let Err(error) = result {
-            self.report("running timers", error);
+        // One timer at a time, with the microtasks it queued run before the
+        // next: each is a task of its own, as in a browser.
+        loop {
+            let result = self.enter().with(|ctx| -> rquickjs::Result<bool> {
+                let timers: Function = entry(&ctx)?.get("timers")?;
+                timers.call(())
+            });
+            match result {
+                Ok(true) => self.run_jobs(),
+                Ok(false) => break,
+                Err(error) => {
+                    self.report("running timers", error);
+                    break;
+                }
+            }
         }
     }
 

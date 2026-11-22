@@ -328,7 +328,7 @@ render as on the web.
 
 | Works | Works with `dom: true` | Does not work yet |
 |---|---|---|
-| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip, with mouse and keyboard | Exit animations |
+| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip, with mouse and keyboard, opening and closing animated | Other Bits UI components: not tried |
 
 The first column is markup and classes. Everything else is built on Bits UI,
 which is written for a browser: it reads `window` and `document`, listens on
@@ -381,10 +381,12 @@ Not there:
 - Boxes do not include CSS transforms (a dialog centred with `translate`
   reports where it would be without it).
 - `getComputedStyle()` returns an empty style. Floating UI copes: it treats
-  everything as unclipped and positions against the window. Bits UI reads the
-  animation name from it to decide whether to wait for an exit animation, sees
-  none, and closes things at once: an Accordion slides open but shuts without
-  sliding. There are no `animationend` events either.
+  everything as unclipped and positions against the window.
+- `element.getAnimations()` returns one object for everything animating on
+  the element, finished when the last animation or transition is. That is what
+  Bits UI waits on before it removes something, so an Accordion slides shut
+  and a Dialog fades out. It is not the Web Animations API: nothing can be
+  paused, sped up or read. There are no `animationend` events.
 - Reopening an Accordion within 0.2 s of closing it can measure a height that
   is part-way through the animation Blitz is still running on it.
 - Scrolling is not reported as `scroll` events, so a popup does not follow
@@ -778,6 +780,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Bits UI components on the DOM layer: Switch and Checkbox (bound value reaches the page), Tabs, Accordion, Dialog (opens over the page, closes on a click outside) | `tests/shadcn.rs`, `test/dom.test.js` |
 | Measuring: a script sees what it just changed, an Accordion slides open to its measured height, a Select opens under its trigger in the same turn and picks an item, a Tooltip is centred over what is hovered, `ResizeObserver`, `innerWidth` and `resize` follow the window, an idle turn reports nothing | `tests/shadcn.rs`, `test/dom.test.js` |
 | The same Select and Accordion in a real window on macOS, by scripted clicks and the trace: they open and close, a click takes 2 to 4 ms, then no more redraws | `SVELTE_BLITZ_TRACE=1` with `--watch` |
+| Exit animations: an Accordion slides shut and is hidden after, a Dialog is still on the page while it fades | `tests/shadcn.rs` |
 | Keyboard: Tab, Enter and Space on buttons, typing and editing keys in a bound input, a Select driven by arrows, Enter and Escape, a Dialog that traps Tab and returns the focus, focus ring for keyboard only | `tests/shadcn.rs`, `tests/counter.rs`, `test/dom.test.js` |
 | The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SVELTE_BLITZ_TRACE=1` with `--watch` |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
@@ -847,7 +850,7 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 
 1. Run `pnpm start` on a machine with a display and fix whatever the window turns up.
 2. Type into a real window; then IME.
-3. Exit animations for Bits UI: computed styles and `animationend`.
+3. The SvelteKit spike (see `HANDOVER.md`).
 4. State-preserving HMR, if the full reload turns out not to be enough.
 5. A virtual list component, then packaging per OS.
 6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`

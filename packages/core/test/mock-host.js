@@ -173,7 +173,9 @@ export class MockHost {
 
 	advance(ms) {
 		this.time += ms;
-		vm.runInContext('__sb.timers()', this.context);
+		// The Rust host runs microtasks between timers; here they wait for
+		// `flush_microtasks`, as everything does in this mock.
+		while (vm.runInContext('__sb.timers()', this.context));
 		this.settle();
 	}
 

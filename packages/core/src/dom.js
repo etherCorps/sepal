@@ -458,14 +458,41 @@ function reported_box(node) {
 	return known;
 }
 
+/**
+ * A forced layout: `[x, y, width, height, animating]` as of now, or nothing
+ * when the host cannot lay out at this moment.
+ * @param {any} node
+ * @returns {number[] | null | undefined}
+ */
+const forced_layout = (node) => (node.node_id === 0 ? null : g.__sb_host.measure?.(node.node_id));
+
 /** The box as of now, if the host can lay out now. @param {any} node @returns {number[]} */
 function box(node) {
 	const reported = reported_box(node);
-	/** @type {number[] | null | undefined} */
-	const fresh = node.node_id === 0 ? null : g.__sb_host.measure?.(node.node_id);
+	const fresh = forced_layout(node);
 	if (!fresh) return reported;
 	boxes.set(node, fresh);
 	return fresh;
+}
+
+/**
+ * What `getAnimations()` returns for a node with CSS animations or
+ * transitions running: one object that stands for all of them, finished when
+ * the last one is. Enough to wait on, which is what it is used for.
+ * @param {number} seconds until the last one ends; infinite if one repeats forever
+ */
+function running_animation(seconds) {
+	/** @type {any} */
+	const animation = { playState: 'running', pending: false, cancel() {}, finish() {}, pause() {}, play() {} };
+	animation.finished = new Promise((resolve) => {
+		if (seconds === Infinity) return;
+		g.setTimeout(() => {
+			animation.playState = 'finished';
+			resolve(animation);
+		}, seconds * 1000);
+	});
+	animation.ready = Promise.resolve(animation);
+	return animation;
 }
 
 /** @type {Set<ResizeObserver>} the observers that are watching something */
@@ -801,7 +828,12 @@ Object.assign(proto, /** @type {Record<string, any> & ThisType<any>} */ ({
 	},
 	scrollIntoView() {},
 	scrollTo() {},
-	getAnimations: () => [],
+	// The host knows what is animating. It is asked along with a forced
+	// layout, so an animation that the last change started is counted.
+	getAnimations() {
+		const seconds = forced_layout(this)?.[4] ?? 0;
+		return seconds > 0 ? [running_animation(seconds)] : [];
+	},
 	setPointerCapture() {},
 	releasePointerCapture() {},
 	hasPointerCapture: () => false,

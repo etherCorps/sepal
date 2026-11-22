@@ -122,29 +122,50 @@ function add_timer(fn, delay, every, args) {
 }
 
 /**
- * Run every timer that is due. Timers created by these callbacks (or by the
- * microtasks they queue) are picked up by `next_timer()`.
+ * The timers that were due when the host started this round, soonest first.
+ * @type {[number, Timer][] | null}
+ */
+let round = null;
+
+/**
+ * Run one timer that is due, and say whether there was one. The host calls
+ * this until the answer is no, and runs microtasks after every call. That is
+ * how a browser does it, each timer a task of its own: what one callback
+ * changed, and the effects that follow from it, are in place when the next
+ * callback runs.
+ *
+ * A timer that comes due during a round waits for the next one, so an endless
+ * chain of `setTimeout(fn, 0)` cannot keep a frame from being drawn.
+ *
+ * @returns {boolean}
  */
 export function run_timers() {
-	if (timers.size === 0) return;
-
-	const now = clock();
-	/** @type {[number, Timer][]} */
-	const due = [];
-	for (const [id, timer] of timers) {
-		if (timer.at <= now) due.push([id, timer]);
+	if (round === null) {
+		if (timers.size === 0) return false;
+		const now = clock();
+		round = [];
+		for (const entry of timers) {
+			if (entry[1].at <= now) round.push(entry);
+		}
+		round.sort((a, b) => a[1].at - b[1].at || a[0] - b[0]);
 	}
-	due.sort((a, b) => a[1].at - b[1].at || a[0] - b[0]);
 
-	for (const [id, timer] of due) {
+	for (;;) {
+		const next = round.shift();
+		if (next === undefined) {
+			round = null;
+			return false;
+		}
+		const [id, timer] = next;
 		if (!timers.has(id)) continue; // cleared by an earlier callback
-		if (timer.every > 0) timer.at = now + timer.every;
+		if (timer.every > 0) timer.at = clock() + timer.every;
 		else timers.delete(id);
 		try {
 			timer.fn(...timer.args);
 		} catch (error) {
 			g.console.error('Error in timer callback:', error);
 		}
+		return true;
 	}
 }
 
