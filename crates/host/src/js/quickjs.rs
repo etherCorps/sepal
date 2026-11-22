@@ -15,6 +15,8 @@ pub struct JsEngine {
     calls: Rc<RefCell<Vec<HostCall>>>,
     /// When the host last handed control to JavaScript. Read by the watchdog.
     entered: Rc<Cell<Instant>>,
+    /// A promise was rejected with no handler since the last report.
+    rejected: Rc<Cell<bool>>,
 }
 
 impl JsEngine {
@@ -40,6 +42,22 @@ impl JsEngine {
             );
             true
         })));
+        // Promises rejected with nobody listening. The bookkeeping is in JS
+        // (shims.js); `run_jobs` asks for the report once microtasks are done.
+        let rejected = Rc::new(Cell::new(false));
+        let noted = rejected.clone();
+        runtime.set_host_promise_rejection_tracker(Some(Box::new(
+            move |ctx, promise, reason, handled| {
+                // Before the bundle has set `__sb` up there is nobody to tell.
+                let Ok(track) = entry(&ctx).and_then(|sb| sb.get::<_, Function>("rejection"))
+                else {
+                    return;
+                };
+                if track.call::<_, ()>((promise, reason, handled)).is_ok() && !handled {
+                    noted.set(true);
+                }
+            },
+        )));
         let context = Context::full(&runtime).map_err(|e| e.to_string())?;
         let start = Instant::now();
         let calls = Rc::new(RefCell::new(Vec::new()));
@@ -82,6 +100,7 @@ impl JsEngine {
             context,
             calls,
             entered,
+            rejected,
         })
     }
 
@@ -136,6 +155,15 @@ impl JsEngine {
                     });
                     eprintln!("[js error] uncaught in a promise callback: {message}");
                 }
+            }
+        }
+        if self.rejected.replace(false) {
+            let reported = self.context.with(|ctx| -> rquickjs::Result<()> {
+                let report: Function = entry(&ctx)?.get("rejections")?;
+                report.call(())
+            });
+            if let Err(error) = reported {
+                self.report("reporting unhandled rejections", error);
             }
         }
     }

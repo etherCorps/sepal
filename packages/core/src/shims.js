@@ -121,6 +121,38 @@ function add_timer(fn, delay, every, args) {
 	return id;
 }
 
+// ---------------------------------------------------------------------------
+// Promises rejected with nobody listening
+//
+// The engine tells the host about every such promise, and again if a handler
+// turns up later; the host passes both on. Once the microtasks of a turn have
+// run, whatever is still unhandled is reported, the way a browser's console
+// says "Uncaught (in promise)". Without this an `async` function that throws
+// fails without a word.
+// ---------------------------------------------------------------------------
+
+/** @type {Map<object, unknown>} the promise, and what it was rejected with */
+const unhandled = new Map();
+let rejections_reported = 0;
+
+/** @param {object} promise @param {unknown} reason @param {boolean} handled */
+export function track_rejection(promise, reason, handled) {
+	if (handled) unhandled.delete(promise);
+	else unhandled.set(promise, reason);
+}
+
+/** Called by the host when a turn's microtasks are done. */
+export function report_rejections() {
+	for (const reason of unhandled.values()) {
+		rejections_reported++;
+		g.console.error('Uncaught (in promise):', reason);
+	}
+	unhandled.clear();
+}
+
+/** How many have been reported, for tests. */
+export const rejection_count = () => rejections_reported;
+
 /**
  * The timers that were due when the host started this round, soonest first.
  * @type {[number, Timer][] | null}

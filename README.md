@@ -815,6 +815,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | The window's GPU renderer draws what the CPU screenshots show: the same page differs by at most 2/255 per channel | `drive … gpushot:` against `shot:` (needs a GPU; by hand) |
 | SvelteKit's client router in the host: a link, `goto`, a parameter with `load`, `$app/state`, back twice | `tests/sveltekit.rs` |
 | `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder` agree with Node's on 231 URLs and on text cut at every byte | `test/url.test.js`, `test/text.test.js` |
+| A promise rejected with nobody listening is reported as `Uncaught (in promise)`; one that is handled is not | `tests/counter.rs`, on both engines |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |

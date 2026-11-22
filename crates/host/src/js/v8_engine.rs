@@ -21,6 +21,8 @@ struct Host {
     start: Instant,
     calls: RefCell<Vec<HostCall>>,
     measure: RefCell<Option<Measure>>,
+    /// A promise was rejected with no handler since the last report.
+    rejected: std::cell::Cell<bool>,
 }
 
 pub struct JsEngine {
@@ -116,8 +118,10 @@ impl JsEngine {
             start: Instant::now(),
             calls: RefCell::new(Vec::new()),
             measure: RefCell::new(None),
+            rejected: std::cell::Cell::new(false),
         });
         isolate.set_slot(host.clone());
+        isolate.set_promise_reject_callback(promise_rejected);
 
         let watchdog = Arc::new(Watchdog {
             limit,
@@ -228,6 +232,12 @@ impl JsEngine {
                 );
             }
         });
+        if self.host.rejected.replace(false) {
+            self.enter(|scope| {
+                v8::scope!(let scope, scope);
+                entry(scope, "reporting unhandled rejections", "rejections", &[]);
+            });
+        }
     }
 
     /// Deliver a DOM event to the renderer's dispatcher. Returns `DISPATCH_*` flags.
@@ -518,6 +528,39 @@ fn detail_value<'s>(
     };
     let text = string(scope, &json.to_string());
     v8::json::parse(scope, text).unwrap_or_else(|| v8::null(scope).into())
+}
+
+/// V8 says a promise was rejected with no handler, or that one has been added
+/// since. The bookkeeping is in JS (shims.js); `run_jobs` asks for the report.
+extern "C" fn promise_rejected(message: v8::PromiseRejectMessage) {
+    let handled = match message.get_event() {
+        v8::PromiseRejectEvent::PromiseRejectWithNoHandler => false,
+        v8::PromiseRejectEvent::PromiseHandlerAddedAfterReject => true,
+        _ => return,
+    };
+    v8::callback_scope!(unsafe scope, &message);
+    v8::scope!(let scope, scope);
+    let Some(host) = host_of(scope) else { return };
+    let global = scope.get_current_context().global(scope);
+    let key = string(scope, "__sb");
+    // Before the bundle has set `__sb` up there is nobody to tell.
+    if !global
+        .get(scope, key.into())
+        .is_some_and(|sb| sb.is_object())
+    {
+        return;
+    }
+    let reason = message
+        .get_value()
+        .unwrap_or_else(|| v8::undefined(scope).into());
+    let args = [
+        message.get_promise().into(),
+        reason,
+        v8::Boolean::new(scope, handled).into(),
+    ];
+    if entry(scope, "noting a rejected promise", "rejection", &args).is_some() && !handled {
+        host.rejected.set(true);
+    }
 }
 
 fn host_of(scope: &v8::PinScope) -> Option<Rc<Host>> {

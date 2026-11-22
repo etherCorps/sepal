@@ -444,8 +444,6 @@ To turn it into something supported:
 - `<svelte:head>`: a preprocessor like `bindings.js` could turn
   `<title>` into `document.title = …`; nothing shows a title today anyway
   except the window, which has its own API.
-- Report unhandled promise rejections from the host. Today they vanish, in
-  every app, on both engines.
 - The edits target SvelteKit's internal files. Pin its version and test on
   every update; the build fails loudly if a pattern is gone.
 - Scroll restoration and `afterNavigate` focus handling were not looked at.

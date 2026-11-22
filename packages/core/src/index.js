@@ -1,5 +1,5 @@
 // Shims must be evaluated before Svelte's runtime.
-import { run_timers, next_timer } from './shims.js';
+import { run_timers, next_timer, track_rejection, report_rejections, rejection_count } from './shims.js';
 import { mount as svelte_mount, unmount } from 'svelte';
 import renderer, { root, dispatch, take_batch, stats, keep_alive, host_hooks } from './renderer.js';
 import { settle_call } from './host-call.js';
@@ -43,8 +43,12 @@ if (typeof (/** @type {any} */ (globalThis).fetch) !== 'function') /** @type {an
 	 * @param {number} width @param {number} height @param {number[]} boxes
 	 */
 	layout: (width, height, boxes) => host_hooks.layout?.(width, height, boxes),
+	/** A promise was rejected with no handler, or one was added since. */
+	rejection: track_rejection,
+	/** Report the promises that are still rejected and unhandled. */
+	rejections: report_rejections,
 	/** Node counters, for tests and leak hunting. */
-	stats,
+	stats: () => ({ ...stats(), rejections: rejection_count() }),
 	/** Pins the root node and the finalizer registry for the life of the app. */
 	keep_alive
 };

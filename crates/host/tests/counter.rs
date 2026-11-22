@@ -135,6 +135,46 @@ fn removed_nodes_are_freed() {
     assert!(doc.live_nodes() < 20, "only the root is left");
 }
 
+/// A promise that is rejected with nobody listening is reported, as a
+/// browser's console does. One that is handled, at once or a little later in
+/// the same turn, is not.
+#[test]
+fn unhandled_promise_rejections_are_reported() {
+    let mut doc = load();
+    let reported = |doc: &SvelteDocument| {
+        doc.js()
+            .eval_string("String(__sb.stats().rejections)")
+            .unwrap()
+    };
+    let run = |doc: &mut SvelteDocument, code: &str| {
+        doc.js().eval_string(code).unwrap();
+        doc.settle();
+    };
+    assert_eq!(reported(&doc), "0");
+
+    run(
+        &mut doc,
+        "Promise.reject(new Error('handled at once')).catch(() => {}); ''",
+    );
+    run(
+        &mut doc,
+        "(async () => { try { await Promise.reject(new Error('awaited')) } catch {} })(); ''",
+    );
+    run(
+        &mut doc,
+        "{ const late = Promise.reject(new Error('handled a microtask later')); Promise.resolve().then(() => late.catch(() => {})); ''; }",
+    );
+    assert_eq!(reported(&doc), "0");
+
+    run(&mut doc, "Promise.reject(new Error('nobody listens')); ''");
+    assert_eq!(reported(&doc), "1");
+    run(
+        &mut doc,
+        "(async () => { throw new Error('thrown in an async function') })(); ''",
+    );
+    assert_eq!(reported(&doc), "2");
+}
+
 /// The keyboard needs nothing from the app: Tab moves the focus to the first
 /// button, and Enter and Space press it.
 #[test]
