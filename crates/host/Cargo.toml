@@ -76,7 +76,7 @@ screenshot = ["dep:blitz-paint", "dep:anyrender", "dep:anyrender_vello_cpu", "de
 name = "drive"
 required-features = ["screenshot"]
 
-# Seven small changes; see crates/blitz-dom/PATCH.md.
+# Eight small changes; see crates/blitz-dom/PATCH.md.
 [patch.crates-io]
 blitz-dom = { path = "../blitz-dom" }
 

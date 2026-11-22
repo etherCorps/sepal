@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with seven changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with eight changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -66,14 +66,32 @@ that is set. `crates/host/tests/restyle.rs` checks that descendants and
 siblings still follow an attribute change, in a family that has such a
 selector and in one that does not.
 
-Known and unchanged: an ancestor styled with `:has()` is not restyled when
-what it looks for changes later. That is so upstream too.
+**8. `:has()` works.** Three places.
 
-Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) and (7) were not checked; (6) is an addition, not a fix. Remove this directory and
+- `src/document.rs`, next to the other Stylo preferences:
+  `layout.css.has-selector.enabled` is set. Without it Stylo drops every rule
+  that contains `:has()` while it parses the stylesheet, so upstream styles
+  nothing with it. Tailwind's `has-*` and `group-has-*` utilities are such
+  rules.
+- `src/stylo.rs`, `BaseDocument::restyle_has_anchors`: when an element's
+  attributes, state or children change, the elements whose `:has()` may now
+  match differently are restyled. Those are its ancestors and, for
+  `:has(+ x)` and `:has(~ x)`, the siblings before each of them. Stylo flags
+  every element it has tried a `:has()` selector on, and whether the element
+  is the subject (`a:has(b)`, restyle it alone) or not (`a:has(b) c`, restyle
+  below and after it); two process-wide flags record whether any such
+  selector exists, so a page without `:has()` pays nothing.
+- `src/mutator.rs` and `src/document.rs` (`snapshot_node_and`): the calls to
+  it, from attribute changes, from children being added or removed, and from
+  state changes such as focus and `:checked`.
+
+`crates/host/tests/restyle.rs` has the test.
+
+Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5), (7) and (8) were not checked; (6) is an addition, not a fix. Remove this directory and
 the `[patch]` entry once a release contains the fix.
 
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the seven changes (search for
+directory with that version's source and reapply the eight changes (search for
 `svelte-blitz patch`).

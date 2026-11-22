@@ -142,8 +142,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Where time goes** (measured 22 Nov 2026, see README "Performance"): turns
   are bound by JavaScript in QuickJS, an interpreter, not by Blitz. Do not
   optimise Rust before `SVELTE_BLITZ_TRACE=1` says layouts are the cost.
-- **`:has()` is not re-evaluated** when what it looks for changes after the
-  first render. Upstream Blitz; untouched.
+- **`:has()` only exists because of patch 8.** Upstream drops such rules
+  while parsing. If Tailwind's `has-*` or `group-has-*` stop working after a
+  Blitz update, that patch was lost.
 - **Timers run one per call** (`__sb.timers()` returns whether it ran one) and
   the host runs microtasks in between, because libraries rely on one
   `requestAnimationFrame` callback seeing what the previous one caused.
@@ -201,7 +202,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   than assuming. `anyrender_vello_hybrid 0.11` and `anyrender_vello_cpu 0.18`
   are the releases that match blitz's `anyrender 0.14`.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in seven places, all marked
+  It differs from crates.io 0.3.0-beta.4 in eight places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a

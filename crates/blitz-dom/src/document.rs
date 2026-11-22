@@ -427,6 +427,9 @@ impl BaseDocument {
 
         // Make sure we turn on stylo features *before* creating the Stylist
         style_config::set_pref!("layout.grid.enabled", true);
+        // svelte-blitz patch: without this Stylo drops every rule that uses
+        // `:has()` while parsing the stylesheet.
+        style_config::set_pref!("layout.css.has-selector.enabled", true);
         style_config::set_pref!("layout.flexbox.balance", true);
         style_config::set_pref!("layout.unimplemented", true);
         style_config::set_pref!("layout.columns.enabled", true);
@@ -1575,6 +1578,8 @@ impl BaseDocument {
             self.snapshot_node_state_only(node_id);
         }
         cb(&mut self.nodes[node_id]);
+        // svelte-blitz patch: `:has(:checked)`, `:has(:focus)` and the like.
+        self.restyle_has_anchors(node_id);
     }
 
     // Takes (x, y) co-ordinates (relative to the )

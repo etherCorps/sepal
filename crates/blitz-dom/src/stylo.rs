@@ -59,7 +59,83 @@ use style_dom::ElementState;
 
 use style::values::computed::text::TextAlign as StyloTextAlign;
 
+// svelte-blitz patch: whether any element has been matched against a selector
+// with `:has()`, and whether any such selector looked at siblings
+// (`:has(+ x)`, `:has(~ x)`). Process-wide and never cleared: they only decide
+// how much work a change to the page has to do.
+pub(crate) static HAS_ANCHORS: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+pub(crate) static HAS_SIBLING_ANCHORS: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 impl crate::document::BaseDocument {
+    // svelte-blitz patch: upstream never restyles an element styled with
+    // `:has()` when what it looks for changes (and, without the preference
+    // set in `document.rs`, does not parse `:has()` at all).
+    //
+    /// Restyle the elements whose `:has()` selectors may match differently
+    /// now that `from` changed: its attributes, its state, or its children.
+    /// Those are its ancestors, and, when a selector looks at siblings, the
+    /// siblings before each of them. Stylo marks the elements it has tried
+    /// such a selector on, so only those are restyled.
+    pub(crate) fn restyle_has_anchors(&mut self, from: NodeId) {
+        if !HAS_ANCHORS.load(Ordering::Relaxed) {
+            return;
+        }
+        let siblings_too = HAS_SIBLING_ANCHORS.load(Ordering::Relaxed);
+
+        let mut current = Some(from);
+        while let Some(id) = current {
+            self.restyle_if_has_anchor(id);
+            let parent = self.nodes[id].parent;
+            if siblings_too && let Some(parent_id) = parent {
+                let before: Vec<NodeId> = self.nodes[parent_id]
+                    .children
+                    .iter()
+                    .copied()
+                    .take_while(|sibling| *sibling != id)
+                    .collect();
+                for sibling in before {
+                    self.restyle_if_has_anchor(sibling);
+                }
+            }
+            current = parent;
+        }
+    }
+
+    fn restyle_if_has_anchor(&mut self, id: NodeId) {
+        let flags = |node: &crate::Node| node.element_data().map(|el| el.selector_flags.get());
+        let Some(own) = flags(&self.nodes[id]) else {
+            return;
+        };
+        // The element is the subject of the selector, `a:has(b)`: only its
+        // own style can change. Or it is not, `a:has(b) c`: anything below it
+        // can, and with `a:has(b) ~ c` so can the siblings after it.
+        let subject_only = !own.contains(ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR_NON_SUBJECT);
+        if subject_only && !own.contains(ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR) {
+            return;
+        }
+        let hint_node = |doc: &mut Self, id: NodeId, hint: RestyleHint| {
+            let node = &mut doc.nodes[id];
+            if let Some(mut data) = node.try_stylo_element_data_mut().and_then(|s| s.get_mut()) {
+                data.hint |= hint;
+            }
+            node.mark_ancestors_dirty();
+        };
+        if subject_only {
+            hint_node(self, id, RestyleHint::RESTYLE_SELF);
+            return;
+        }
+        hint_node(self, id, RestyleHint::restyle_subtree());
+        if let Some(parent_id) = self.nodes[id].parent
+            && flags(&self.nodes[parent_id]).is_some_and(|parent| {
+                parent.contains(ElementSelectorFlags::HAS_SLOW_SELECTOR_LATER_SIBLINGS)
+            })
+        {
+            hint_node(self, parent_id, RestyleHint::restyle_subtree());
+        }
+    }
+
     pub fn resolve_stylist(&mut self, now: f64) {
         style::thread_state::enter(ThreadState::LAYOUT);
 
@@ -531,6 +607,19 @@ impl selectors::Element for BlitzNode<'_> {
     }
 
     fn apply_selector_flags(&self, flags: ElementSelectorFlags) {
+        // svelte-blitz patch: note that `:has()` is in use, so that changes
+        // to the page know whether there are anchors to look for. See
+        // `BaseDocument::restyle_has_anchors`.
+        if flags.intersects(
+            ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR
+                | ElementSelectorFlags::ANCHORS_RELATIVE_SELECTOR_NON_SUBJECT,
+        ) {
+            HAS_ANCHORS.store(true, Ordering::Relaxed);
+        }
+        if flags.contains(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING) {
+            HAS_SIBLING_ANCHORS.store(true, Ordering::Relaxed);
+        }
+
         // Handle flags that apply to the element.
         let self_flags = flags.for_self();
         if !self_flags.is_empty() {

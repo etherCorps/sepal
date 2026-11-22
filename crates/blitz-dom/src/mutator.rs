@@ -278,6 +278,7 @@ impl DocumentMutator<'_> {
             node.mark_damaged();
 
             self.restyle_siblings_of(node_id);
+            self.doc.restyle_has_anchors(node_id);
 
             // Mark ancestors dirty so the style traversal visits this subtree.
             // Without this, the traversal may skip nodes with pending RestyleHint/damage
@@ -432,6 +433,7 @@ impl DocumentMutator<'_> {
             }
             node.mark_damaged();
             self.restyle_siblings_of(node_id);
+            self.doc.restyle_has_anchors(node_id);
 
             // Mark ancestors dirty so the style traversal visits this subtree.
             // Without this, the traversal may skip nodes with pending RestyleHint/damage.
@@ -577,6 +579,10 @@ impl DocumentMutator<'_> {
             parent.mark_ancestors_dirty();
             parent.children.retain(|id| *id != node_id);
             self.maybe_record_node(parent_id);
+            // svelte-blitz patch: a `:has()` above may have been looking at it.
+            if node_is_in_document {
+                self.doc.restyle_has_anchors(parent_id);
+            }
         }
     }
 
@@ -617,6 +623,10 @@ impl DocumentMutator<'_> {
 
             parent.children.retain(|id| *id != node_id);
             self.maybe_record_node(parent_id);
+            // svelte-blitz patch
+            if parent_is_in_doc {
+                self.doc.restyle_has_anchors(parent_id);
+            }
         }
 
         node
@@ -722,6 +732,10 @@ impl DocumentMutator<'_> {
 
             old_parent.children.retain(|id| *id != child_id);
             self.maybe_record_node(old_parent_id);
+            // svelte-blitz patch
+            if child_was_in_doc {
+                self.doc.restyle_has_anchors(old_parent_id);
+            }
         }
 
         let new_parent = &mut self.doc.nodes[parent_id];
@@ -740,6 +754,10 @@ impl DocumentMutator<'_> {
         }
 
         insert_children_fn(new_parent, child_ids);
+        // svelte-blitz patch: a `:has()` on or above the parent may match now.
+        if new_parent_is_in_document {
+            self.doc.restyle_has_anchors(parent_id);
+        }
 
         for child_id in child_ids.iter().copied() {
             let child = &mut self.doc.nodes[child_id];

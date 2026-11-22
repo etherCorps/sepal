@@ -712,7 +712,7 @@ crates/host/              the `svelte-blitz-host` crate
   tests/routing.rs        file-based routing, by clicking through examples/routing
   tests/updater.rs        updates against a local server, tampering, the JS API
   tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
-crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with seven changes (see PATCH.md)
+crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with eight changes (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
 examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
@@ -784,6 +784,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Keyboard: Tab, Enter and Space on buttons, typing and editing keys in a bound input, a Select driven by arrows, Enter and Escape, a Dialog that traps Tab and returns the focus, focus ring for keyboard only | `tests/shadcn.rs`, `tests/counter.rs`, `test/dom.test.js` |
 | The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SVELTE_BLITZ_TRACE=1` with `--watch` |
 | An attribute change restyles descendants and siblings, with and without sibling selectors in play | `tests/restyle.rs` |
+| `:has()`: follows an attribute, a child that arrives or leaves, and the focus, for a parent, an ancestor, what is under it, and siblings on either side | `tests/restyle.rs` |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
