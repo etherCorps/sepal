@@ -77,16 +77,23 @@ profile while iterating; it is already tuned in `Cargo.toml`.
    batch per turn with `__sb.take()`.
 2. **Reads never cross the boundary.** `getParent`, `getFirstChild`,
    `getNextSibling` are answered from the JS mirror. Do not add a host call to
-   answer a read. Layout is no exception: the host *reports* the boxes of the
-   nodes JS marked with `MEASURE` (`SvelteDocument::report_layout` ->
-   `__sb.layout`), and JS answers measurements from that copy.
+   answer a read. **One exception, added on 22 Nov 2026 when Shivam asked for the
+   Accordion to slide open, which cannot be done without it:**
+   `__sb_host.measure(id)`, a forced layout as in a browser. It applies the
+   pending batch, lays out and returns the node's box, because component
+   libraries change the page and measure it on the next line. It is refused
+   while Blitz dispatches an event (the `RefCell` around `Page` is borrowed),
+   and JS then answers from the boxes the host last *reported*
+   (`SvelteDocument::report_layout` -> `__sb.layout`). Do not add a second
+   exception.
 3. **Node ids are allocated in JS** and never reused. Fragments have id 0 and
    never exist on the host.
 4. **`protocol.js` and `ops.rs` must stay in sync.** A new opcode needs: the
    constant in both files, the arity in `test/mock-host.js`, a case in
    `apply_batch`, and a test.
 5. **`SvelteDocument::settle()` is the only place the tree is mutated** after
-   startup. Event handlers run synchronously inside Blitz's dispatch and are
+   startup, apart from the forced layout of invariant 2, which goes through
+   the same `apply_batch`. Event handlers run synchronously inside Blitz's dispatch and are
    only safe because they write to the op buffer, not the document.
 6. **Read `next_timer()` last in a turn.** Effects that run during microtasks
    can start or stop timers.
@@ -120,11 +127,17 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Libraries that assume a browser fail at run time, not at compile time.**
   `dom: true` in `app.config.ts` loads `packages/core/src/dom.js`, a DOM on
   top of the renderer's tree, which is enough for Bits UI's Switch, Checkbox,
-  Tabs, Accordion, Dialog, Select and Tooltip. Measurements are the host's
-  last report, so code that changes the page and measures on the next line
-  gets the old answer (Accordion's slide). Do not fix that with a call into
-  the host (invariant 2, and layout is not safe to run inside an event
-  handler).
+  Tabs, Accordion, Dialog, Select and Tooltip. It measures through a forced
+  layout (invariant 2), except inside an event handler, where it gets the
+  last reported box. `getComputedStyle()` is still blank and there are no
+  `animationend` events, so Bits UI sees no exit animation and closes at once.
+- **The document lives in `Rc<RefCell<Page>>`** (`document.rs`). Never hold a
+  borrow of it while JavaScript runs, or a measurement silently falls back to
+  old boxes. `handle_ui_event` holds one on purpose: that is what stops a
+  layout in the middle of Blitz's dispatch.
+- **Blitz keeps styling a node with an animation in the pass that cancels
+  it,** and starts animations on `display: none` elements. The forced layout
+  restyles the measured node once more for that reason.
 - **Never lay out a document that has no size yet.** Blitz works out
   percentage transforms once; at 0 × 0 they stay wrong (`measuring()` in
   `document.rs` guards this).

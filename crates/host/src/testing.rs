@@ -14,15 +14,14 @@ use crate::SvelteDocument;
 impl SvelteDocument {
     /// Set the window size in CSS pixels and lay the document out.
     pub fn layout(&mut self, width: u32, height: u32) {
-        let base = self.base_mut();
-        base.set_viewport(Viewport::new(width, height, 1.0, ColorScheme::Light));
+        self.base_mut()
+            .set_viewport(Viewport::new(width, height, 1.0, ColorScheme::Light));
         self.resolve();
     }
 
     /// Restyle and relayout after a change.
     pub fn resolve(&mut self) {
-        let time = self.headless_time;
-        self.base_mut().resolve(time);
+        self.resolve_layout();
         // As a window does after each frame.
         self.after_layout();
     }
@@ -37,7 +36,7 @@ impl SvelteDocument {
         while left > 0.0 {
             let step = left.min(STEP);
             std::thread::sleep(std::time::Duration::from_secs_f64(step));
-            self.headless_time += step;
+            self.advance_time(step);
             self.settle();
             self.resolve();
             left -= step;
@@ -66,7 +65,8 @@ impl SvelteDocument {
     }
 
     pub fn attr(&self, node: NodeId, name: &str) -> Option<String> {
-        let node = self.base().get_node(node)?;
+        let base = self.base();
+        let node = base.get_node(node)?;
         let element = node.element_data()?;
         element
             .attrs()

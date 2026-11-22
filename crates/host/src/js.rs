@@ -217,34 +217,43 @@ impl JsEngine {
 
     /// Pull the pending op batch, if anything changed since the last call.
     pub fn take_batch(&self) -> Option<Batch> {
-        let result = self.enter().with(|ctx| -> rquickjs::Result<Option<Batch>> {
-            let take: Function = entry(&ctx)?.get("take")?;
-            let value: Value = take.call(())?;
-            let Some(batch) = value.as_object() else {
-                return Ok(None);
-            };
-            let ops: TypedArray<i32> = batch.get("ops")?;
-            let strings: Vec<String> = batch.get("strings")?;
-            // Copy the Int32Array out of the JS heap. Going through bytes keeps this
-            // correct whatever the alignment of the backing buffer.
-            let ops = match ops.as_raw() {
-                // SAFETY: the buffer is alive for this call: `ops` holds a reference
-                // to it and no JS runs while we read.
-                Some(raw) => unsafe { raw.as_ref() }
-                    .chunks_exact(4)
-                    .map(|c| i32::from_ne_bytes([c[0], c[1], c[2], c[3]]))
-                    .collect(),
-                None => Vec::new(),
-            };
-            Ok(Some(Batch { ops, strings }))
-        });
-        match result {
+        match self.enter().with(|ctx| take_batch_in(&ctx)) {
             Ok(batch) => batch,
             Err(error) => {
                 self.report("taking the op batch", error);
                 None
             }
         }
+    }
+
+    /// Install `__sb_host.measure(id)`: a forced layout. JS calls it when it
+    /// needs the box of a node right now; it returns `[x, y, width, height]`,
+    /// or nothing when no layout can be done at this moment.
+    ///
+    /// `measure` gets the node's id and a way to take what the app has
+    /// written so far, which has to be applied before laying out.
+    pub fn on_measure(
+        &self,
+        measure: impl Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 4]> + 'static,
+    ) -> Result<(), String> {
+        self.context
+            .with(|ctx| -> rquickjs::Result<()> {
+                let host: Object = ctx.globals().get("__sb_host")?;
+                host.set(
+                    "measure",
+                    Function::new(ctx.clone(), move |ctx: Ctx<'_>, id: u32| {
+                        let take = || match take_batch_in(&ctx) {
+                            Ok(batch) => batch,
+                            Err(error) => {
+                                eprintln!("[js error] taking the op batch: {error}");
+                                None
+                            }
+                        };
+                        measure(id, &take).map(|rect| rect.to_vec())
+                    })?,
+                )
+            })
+            .map_err(|e| e.to_string())
     }
 
     /// Tell the app the size of the viewport and where the nodes it measures
@@ -350,6 +359,29 @@ impl JsEngine {
 /// The app shares the UI thread with the window: while a script runs, nothing
 /// is drawn and no input is read. Ten seconds of that is not slow, it is stuck.
 const RUNAWAY_SCRIPT: Duration = Duration::from_secs(10);
+
+/// Take the pending op batch from the renderer, if it has written anything.
+fn take_batch_in(ctx: &Ctx<'_>) -> rquickjs::Result<Option<Batch>> {
+    let take: Function = entry(ctx)?.get("take")?;
+    let value: Value = take.call(())?;
+    let Some(batch) = value.as_object() else {
+        return Ok(None);
+    };
+    let ops: TypedArray<i32> = batch.get("ops")?;
+    let strings: Vec<String> = batch.get("strings")?;
+    // Copy the Int32Array out of the JS heap. Going through bytes keeps this
+    // correct whatever the alignment of the backing buffer.
+    let ops = match ops.as_raw() {
+        // SAFETY: the buffer is alive for this call: `ops` holds a reference
+        // to it and no JS runs while we read.
+        Some(raw) => unsafe { raw.as_ref() }
+            .chunks_exact(4)
+            .map(|c| i32::from_ne_bytes([c[0], c[1], c[2], c[3]]))
+            .collect(),
+        None => Vec::new(),
+    };
+    Ok(Some(Batch { ops, strings }))
+}
 
 /// `globalThis.__sb`, installed by the `@ethercorps/svelte-blitz` package.
 fn entry<'js>(ctx: &Ctx<'js>) -> rquickjs::Result<Object<'js>> {

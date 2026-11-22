@@ -328,7 +328,7 @@ render as on the web.
 
 | Works | Works with `dom: true` | Does not work yet |
 |---|---|---|
-| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip | Closing on Escape, focus trapping, Accordion's slide |
+| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip | Closing on Escape, focus trapping, exit animations |
 
 The first column is markup and classes. Everything else is built on Bits UI,
 which is written for a browser: it reads `window` and `document`, listens on
@@ -354,37 +354,39 @@ holds for the layer itself.
 
 ### Measuring the page
 
-Layout happens in the host, and JavaScript never asks the host anything. So
-measurements travel the other way:
+Layout happens in the host. A measurement reaches JavaScript in two ways.
 
-1. The first time a node is measured (`getBoundingClientRect()`,
-   `offsetWidth`, `new ResizeObserver(…).observe(node)`), the DOM layer marks
-   it with one op, `MEASURE`.
-2. After each layout, the host sends the app the window's size and the box of
-   every marked node that moved or changed size.
-3. The app answers measurements from that copy, calls `ResizeObserver`
-   callbacks, and fires `resize` on `window`.
+**Asked.** `getBoundingClientRect()`, `offsetWidth` and the like call
+`__sb_host.measure(id)`, which is a forced layout, as in a browser: the host
+applies what the app has written so far, lays the page out and returns the
+node's box. Code that changes the page and measures it on the next line
+depends on that. An Accordion slides open because Bits UI turns its animation
+off, measures the content's full height, and turns it back on, all in one go.
+This is the one place where JavaScript reads from the host.
 
-This happens at the end of the turn, before the frame is drawn, and repeats
-while the app keeps changing the page in answer (up to 8 times). That is how a
-Select's list ends up under its trigger in the first frame it is visible in:
-Floating UI observes both, hears their sizes, computes a position, and the
-host lays out again.
+**Told.** The first time a node is measured it is also marked with one op,
+`MEASURE`. After each layout the host sends the app the window's size and the
+box of every marked node that moved or changed size. `ResizeObserver` and the
+`resize` event run on that, at the end of the turn, before the frame is
+drawn, and again while the app keeps changing the page in answer (up to 8
+times). That is how a Select's list is under its trigger in the first frame
+it is visible in.
 
-The consequence to know about: **a measurement is as of the last layout.**
-A node that has never been asked about measures as empty, and code that
-changes the page and measures it on the next line gets the old answer.
-Libraries that observe work; code that forces a layout does not. That is why
-the Accordion opens with a jump instead of a slide: Bits UI turns its
-animation off, measures the content's height, and turns it back on, all in one
-go, and gets 0.
+Inside an event handler the host cannot lay out, because Blitz is in the
+middle of the document. A measurement made there is answered from the last
+report: correct unless the handler itself changed the page first.
 
-Also not there:
+Not there:
 
 - Boxes do not include CSS transforms (a dialog centred with `translate`
   reports where it would be without it).
 - `getComputedStyle()` returns an empty style. Floating UI copes: it treats
-  everything as unclipped and positions against the window.
+  everything as unclipped and positions against the window. Bits UI reads the
+  animation name from it to decide whether to wait for an exit animation, sees
+  none, and closes things at once: an Accordion slides open but shuts without
+  sliding. There are no `animationend` events either.
+- Reopening an Accordion within 0.2 s of closing it can measure a height that
+  is part-way through the animation Blitz is still running on it.
 - Scrolling is not reported as `scroll` events, so a popup does not follow
   its anchor while the page scrolls under it.
 - Nothing closes on Escape, and focus is not trapped, since keyboard events
@@ -762,8 +764,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Desktop APIs on a real Mac: HTTPS fetch to api.github.com, a file in the app data directory, confirm and file-open dialogs appearing, maximise, minimise | example run with `VITE_AUTO=<button>` |
 | shadcn-svelte components from its CLI: nine render and react, `bind:this` reaches the element | `tests/shadcn.rs`, `examples/shadcn/probe.mjs` |
 | Bits UI components on the DOM layer: Switch and Checkbox (bound value reaches the page), Tabs, Accordion, Dialog (opens over the page, closes on a click outside) | `tests/shadcn.rs`, `test/dom.test.js` |
-| Measuring: a Select opens under its trigger in the same turn and picks an item, a Tooltip is centred over what is hovered, `innerWidth` and `resize` follow the window, an idle turn reports nothing | `tests/shadcn.rs`, `test/dom.test.js` |
-| The same Select in a real window on macOS, by scripted clicks and the trace: opens, picks, closes on a click outside, then no more redraws | `SVELTE_BLITZ_TRACE=1` with `--watch` |
+| Measuring: a script sees what it just changed, an Accordion slides open to its measured height, a Select opens under its trigger in the same turn and picks an item, a Tooltip is centred over what is hovered, `ResizeObserver`, `innerWidth` and `resize` follow the window, an idle turn reports nothing | `tests/shadcn.rs`, `test/dom.test.js` |
+| The same Select and Accordion in a real window on macOS, by scripted clicks and the trace: they open and close, a click takes 2 to 4 ms, then no more redraws | `SVELTE_BLITZ_TRACE=1` with `--watch` |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
@@ -813,8 +815,8 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
   window control. See "Desktop APIs" for what is missing.
 - Images and other resources load from data: URLs and the app directory only; no network.
 - `requestAnimationFrame` is a 16 ms timer, not tied to the display.
-- Measurements (`dom: true` only) are as of the last layout, and leave out
-  CSS transforms. See "Measuring the page".
+- Measurements (`dom: true` only) leave out CSS transforms, and inside an
+  event handler are as of the last layout. See "Measuring the page".
 - A script that runs for 10 seconds without returning is stopped.
 - An element is put in the SVG namespace by its name alone. `a`, `title`,
   `style` and `script` are always HTML, also inside an `<svg>`.

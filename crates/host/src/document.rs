@@ -1,6 +1,8 @@
 //! [`SvelteDocument`]: a Blitz document whose tree is driven by a Svelte app.
 
+use std::cell::{Ref, RefCell, RefMut};
 use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::task::Context as TaskContext;
@@ -44,17 +46,69 @@ impl TurnStats {
     }
 }
 
-pub struct SvelteDocument {
+/// The Blitz document and what the app has registered in it.
+///
+/// Behind a `RefCell` because two parties change it: the document's own turn
+/// (`SvelteDocument::settle`), and a measurement made by a running script,
+/// which has to apply what the script wrote and lay out before it can answer
+/// (`SvelteDocument::create`, "forced layout"). The cell is what keeps the
+/// second from happening while Blitz is dispatching an event and holds the
+/// document itself.
+struct Page {
     doc: BaseDocument,
-    js: JsEngine,
     nodes: NodeMap,
     /// Event types that have at least one listener. Everything else never enters JS.
     listening: HashSet<String>,
     /// The animation clock, in seconds, when there is no window: tests and
     /// screenshots move it with `wait`. In a window the shell supplies the time.
-    pub(crate) headless_time: f64,
+    headless_time: f64,
     /// Shown in a window, whose shell keeps the animation clock.
     windowed: bool,
+    /// Batches a forced layout applied, not yet counted in a turn's stats.
+    forced: Vec<ApplyStats>,
+}
+
+impl Page {
+    fn apply(&mut self, batch: &crate::js::Batch) -> ApplyStats {
+        ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, batch)
+    }
+
+    /// Lay the page out, at the time on the clock the animations run on.
+    fn layout(&mut self) {
+        let time = if self.windowed {
+            animation_clock().elapsed().as_secs_f64()
+        } else {
+            self.headless_time
+        };
+        self.doc.resolve(time);
+    }
+
+    /// Before the document has been given a size there is nothing to measure,
+    /// and laying it out at 0 × 0 would only leave Blitz with transforms
+    /// worked out for that size.
+    fn has_size(&self) -> bool {
+        self.doc.viewport().window_size != (0, 0)
+    }
+
+    /// Where a node is as of the last layout: `[x, y, width, height]` in
+    /// viewport coordinates.
+    fn box_of(&self, js_id: u32) -> [f64; 4] {
+        self.nodes
+            .blitz(js_id)
+            // A node that is not on the page has no box, whatever its last layout says.
+            .filter(|&node| {
+                self.doc
+                    .get_node(node)
+                    .is_some_and(|node| node.flags.is_in_document())
+            })
+            .and_then(|node| self.doc.get_client_bounding_rect(node))
+            .map_or([0.0; 4], |rect| [rect.x, rect.y, rect.width, rect.height])
+    }
+}
+
+pub struct SvelteDocument {
+    page: Rc<RefCell<Page>>,
+    js: JsEngine,
     /// The viewport size the app was last told, in CSS pixels.
     reported_viewport: (f64, f64),
     /// The box the app was last told for each node it measures.
@@ -183,14 +237,50 @@ impl SvelteDocument {
         let mut nodes = NodeMap::default();
         nodes.insert(ops::ROOT_ID, body);
 
-        let js = JsEngine::new()?;
-        let mut this = Self {
+        let page = Rc::new(RefCell::new(Page {
             doc,
-            js,
             nodes,
             listening: HashSet::new(),
             headless_time: 0.0,
             windowed: hold_host_calls,
+            forced: Vec::new(),
+        }));
+
+        let js = JsEngine::new()?;
+        // A forced layout, as in a browser: a script that measures a node gets
+        // its box as of now, which means applying what the script has written
+        // and laying out first. The one place where a read crosses into the
+        // host, and where the tree changes outside `settle`.
+        let shared = page.clone();
+        js.on_measure(move |id, take| {
+            // Blitz is dispatching an event and holds the document. The script
+            // gets no answer and falls back to the last layout it was told.
+            let mut page = shared.try_borrow_mut().ok()?;
+            if !page.has_size() {
+                return None;
+            }
+            if let Some(batch) = take() {
+                let stats = page.apply(&batch);
+                page.forced.push(stats);
+            }
+            page.layout();
+            // Scripts turn an animation off to measure what is under it. Blitz
+            // stops the animation in that pass but still styles the node with
+            // it, so the node is styled once more.
+            if page.doc.is_animating()
+                && let Some(node) = page.nodes.blitz(id)
+                && let Some(node) = page.doc.get_node_mut(node)
+            {
+                node.set_restyle_hint(blitz_dom::RestyleHint::RESTYLE_SELF);
+                node.mark_ancestors_dirty();
+                page.layout();
+            }
+            Some(page.box_of(id))
+        })?;
+
+        let mut this = Self {
+            page,
+            js,
             reported_viewport: (0.0, 0.0),
             reported_boxes: HashMap::new(),
             timers: TimerWaker::default(),
@@ -207,12 +297,23 @@ impl SvelteDocument {
         Ok(this)
     }
 
-    pub fn base(&self) -> &BaseDocument {
-        &self.doc
+    pub fn base(&self) -> Ref<'_, BaseDocument> {
+        Ref::map(self.page.borrow(), |page| &page.doc)
     }
 
-    pub fn base_mut(&mut self) -> &mut BaseDocument {
-        &mut self.doc
+    pub fn base_mut(&mut self) -> RefMut<'_, BaseDocument> {
+        RefMut::map(self.page.borrow_mut(), |page| &mut page.doc)
+    }
+
+    /// Lay the page out now. A window does this before it paints; tests and
+    /// screenshots have to ask.
+    pub(crate) fn resolve_layout(&mut self) {
+        self.page.borrow_mut().layout();
+    }
+
+    /// Move the animation clock of a document that is not in a window.
+    pub(crate) fn advance_time(&mut self, seconds: f64) {
+        self.page.borrow_mut().headless_time += seconds;
     }
 
     pub fn js(&self) -> &JsEngine {
@@ -221,7 +322,7 @@ impl SvelteDocument {
 
     /// Number of JS-created nodes the host currently holds.
     pub fn live_nodes(&self) -> usize {
-        self.nodes.len()
+        self.page.borrow().nodes.len()
     }
 
     /// Stats for the most recent turn.
@@ -230,7 +331,7 @@ impl SvelteDocument {
     }
 
     pub fn is_listening(&self, event: &str) -> bool {
-        self.listening.contains(event)
+        self.page.borrow().listening.contains(event)
     }
 
     /// Finish a turn: run due timers and queued microtasks, then apply whatever
@@ -264,8 +365,7 @@ impl SvelteDocument {
                 );
                 break;
             }
-            let time = self.animation_time();
-            self.doc.resolve(time);
+            self.page.borrow_mut().layout();
             if !self.report_layout() {
                 break;
             }
@@ -293,30 +393,22 @@ impl SvelteDocument {
             // Before the batch: a call that is refused on the spot rejects its
             // promise right here, and what that renders belongs in this turn.
             self.start_host_calls();
+            // What a script's measurements made the host apply ahead of the turn.
+            let forced = std::mem::take(&mut self.page.borrow_mut().forced);
+            forced.into_iter().for_each(|stats| turn.add(stats));
             let Some(batch) = self.js.take_batch() else {
                 break;
             };
-            let stats =
-                ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, &batch);
+            let stats = self.page.borrow_mut().apply(&batch);
             turn.add(stats);
             self.js.run_jobs();
         }
     }
 
-    /// The app measures the page, and there is a page to measure. Before the
-    /// document has been given a size there is not, and laying it out at
-    /// 0 × 0 would only leave Blitz with transforms worked out for that size.
+    /// The app measures the page, and there is a page to measure.
     fn measuring(&self) -> bool {
-        !self.nodes.measured().is_empty() && self.doc.viewport().window_size != (0, 0)
-    }
-
-    /// The time to lay out at, on the clock the animations run on.
-    fn animation_time(&self) -> f64 {
-        if self.windowed {
-            animation_clock().elapsed().as_secs_f64()
-        } else {
-            self.headless_time
-        }
+        let page = self.page.borrow();
+        !page.nodes.measured().is_empty() && page.has_size()
     }
 
     /// Tell the app the viewport size and the boxes of the nodes it measures
@@ -326,42 +418,36 @@ impl SvelteDocument {
     /// The layout must be up to date. JavaScript never asks the host for a
     /// measurement; this is the only way one reaches it.
     fn report_layout(&mut self) -> bool {
-        if !self.measuring() {
-            return false;
-        }
-        let measured = self.nodes.measured();
-        let viewport = self.doc.viewport();
-        let scale = viewport.scale_f64();
-        let (width, height) = viewport.window_size;
-        let viewport = (width as f64 / scale, height as f64 / scale);
-
-        let mut changed = Vec::new();
-        for &id in measured {
-            let rect = self
-                .nodes
-                .blitz(id)
-                // A node that is not on the page has no box, whatever its last layout says.
-                .filter(|&node| {
-                    self.doc
-                        .get_node(node)
-                        .is_some_and(|node| node.flags.is_in_document())
-                })
-                .and_then(|node| self.doc.get_client_bounding_rect(node))
-                .map_or([0.0; 4], |rect| [rect.x, rect.y, rect.width, rect.height]);
-            if self.reported_boxes.get(&id) != Some(&rect) {
-                self.reported_boxes.insert(id, rect);
-                changed.push(id as f64);
-                changed.extend(rect);
+        let (viewport, changed) = {
+            let page = self.page.borrow();
+            let measured = page.nodes.measured();
+            if measured.is_empty() || !page.has_size() {
+                return false;
             }
-        }
-        if changed.is_empty() && viewport == self.reported_viewport {
-            return false;
-        }
-        self.reported_viewport = viewport;
-        // Nodes that were freed since. Only worth a pass once they add up.
-        if self.reported_boxes.len() > measured.len() * 2 {
-            self.reported_boxes.retain(|id, _| measured.contains(id));
-        }
+            let viewport = page.doc.viewport();
+            let scale = viewport.scale_f64();
+            let (width, height) = viewport.window_size;
+            let viewport = (width as f64 / scale, height as f64 / scale);
+
+            let mut changed = Vec::new();
+            for &id in measured {
+                let rect = page.box_of(id);
+                if self.reported_boxes.get(&id) != Some(&rect) {
+                    self.reported_boxes.insert(id, rect);
+                    changed.push(id as f64);
+                    changed.extend(rect);
+                }
+            }
+            if changed.is_empty() && viewport == self.reported_viewport {
+                return false;
+            }
+            self.reported_viewport = viewport;
+            // Nodes that were freed since. Only worth a pass once they add up.
+            if self.reported_boxes.len() > measured.len() * 2 {
+                self.reported_boxes.retain(|id, _| measured.contains(id));
+            }
+            (viewport, changed)
+        };
         if trace_enabled() {
             eprintln!(
                 "[trace] the app was told the layout: {} boxes changed, window {} x {}",
@@ -467,7 +553,7 @@ impl SvelteDocument {
             return Err(denied("changing the window", "window"));
         }
         let args: serde_json::Value = serde_json::from_str(args).unwrap_or_default();
-        let shell = &self.doc.shell_provider;
+        let shell = self.page.borrow().doc.shell_provider.clone();
         match action {
             "set_title" => shell.set_window_title(args["title"].as_str().unwrap_or("").to_owned()),
             "minimize" => shell.set_window_minimized(true),
@@ -490,7 +576,7 @@ impl SvelteDocument {
             return Err(denied("using the clipboard", "clipboard"));
         }
         let args: serde_json::Value = serde_json::from_str(args).unwrap_or_default();
-        let shell = &self.doc.shell_provider;
+        let shell = self.page.borrow().doc.shell_provider.clone();
         match action {
             "read_text" => shell
                 .get_clipboard_text()
@@ -513,11 +599,11 @@ impl SvelteDocument {
 
 impl Document for SvelteDocument {
     fn inner(&self) -> DocGuard<'_> {
-        DocGuard::Ref(&self.doc)
+        DocGuard::RefCell(self.base())
     }
 
     fn inner_mut(&mut self) -> DocGuardMut<'_> {
-        DocGuardMut::Ref(&mut self.doc)
+        DocGuardMut::RefCell(self.base_mut())
     }
 
     fn handle_ui_event(&mut self, event: UiEvent) {
@@ -525,12 +611,15 @@ impl Document for SvelteDocument {
             // Handlers run synchronously while Blitz dispatches, which is what makes
             // `preventDefault()` work. That is safe because handlers never touch the
             // document: their mutations only land in the JS op buffer.
+            // The document stays borrowed for the whole dispatch, which is
+            // also what refuses a forced layout from inside a handler.
+            let page = &mut *self.page.borrow_mut();
             let handler = JsEventHandler {
                 js: &self.js,
-                nodes: &self.nodes,
-                listening: &self.listening,
+                nodes: &page.nodes,
+                listening: &page.listening,
             };
-            let mut driver = EventDriver::new(&mut self.doc, handler);
+            let mut driver = EventDriver::new(&mut page.doc, handler);
             driver.handle_ui_event(event);
         }
         self.settle();

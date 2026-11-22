@@ -142,20 +142,33 @@ fn bits_ui_components_work_on_the_dom_layer() {
         Some("inactive")
     );
 
-    // Accordion: closed content takes no room; open content does, once the
-    // opening animation is over.
-    let height = |doc: &SvelteDocument| doc.query("#answer").and_then(|n| doc.rect(n)).map(|r| r.3);
-    assert!(height(&doc).is_none_or(|h| h == 0.0), "closed at first");
+    // Accordion: closed content takes no room, and it slides open. For that
+    // Bits UI turns the animation off, measures the content's full height and
+    // turns it back on, in one go: the measurement has to lay the page out.
+    let height = |doc: &SvelteDocument| {
+        doc.query("[data-accordion-content]")
+            .and_then(|n| doc.rect(n))
+            .map_or(0.0, |r| r.3)
+    };
+    assert_eq!(height(&doc), 0.0, "closed at first");
     click(&mut doc, "[data-accordion-trigger]");
     assert_eq!(
         attr(&doc, "[data-accordion-trigger]", "aria-expanded").as_deref(),
         Some("true")
     );
-    doc.wait(0.4);
+    doc.wait(0.1);
+    let halfway = height(&doc);
+    doc.wait(0.3);
+    let open = height(&doc);
+    assert!(open > 10.0, "open: {open}");
     assert!(
-        height(&doc).is_some_and(|h| h > 10.0),
-        "open: {:?}",
-        height(&doc)
+        halfway > 0.0 && halfway < open,
+        "on its way there after half the animation: {halfway} of {open}"
+    );
+    let style = attr(&doc, "[data-accordion-content]", "style").unwrap();
+    assert!(
+        style.contains(&format!("--bits-accordion-content-height: {open}px")),
+        "the animation was given the measured height: {style}"
     );
 }
 
@@ -285,36 +298,79 @@ fn a_tooltip_appears_over_what_the_pointer_is_on() {
     assert!(doc.query("[data-tooltip-content]").is_none(), "gone");
 }
 
-/// What JavaScript knows about layout is what the host last reported.
+/// A script that measures gets the page as it is at that moment, including
+/// what the script itself just changed: the host applies the pending ops and
+/// lays out to answer (a forced layout, as in a browser).
 #[test]
-fn measurements_come_from_the_last_layout() {
+fn a_measurement_sees_what_the_script_just_changed() {
     let mut doc = load();
     let eval = |doc: &SvelteDocument, code: &str| doc.js().eval_string(code).unwrap();
     assert_eq!(eval(&doc, "innerWidth + 'x' + innerHeight"), "900x700");
 
-    // Never measured before: the answer is empty, and asking is what makes
-    // the host report this node from the next layout on.
-    let measure = "(() => { const r = document.getElementById('count').getBoundingClientRect(); return [r.x, r.y, r.width, r.height].join() })()";
-    assert_eq!(eval(&doc, measure), "0,0,0,0");
-    doc.settle();
-    doc.resolve();
     let (x, y, width, height) = doc.rect(doc.query("#count").unwrap()).unwrap();
-    assert_eq!(eval(&doc, measure), format!("{x},{y},{width},{height}"));
+    let measured = eval(
+        &doc,
+        "(() => {
+            const button = document.getElementById('count');
+            const r = button.getBoundingClientRect();
+            button.style.width = '300px';
+            return [r.x, r.y, r.width, r.height, button.getBoundingClientRect().width, button.offsetWidth].join();
+        })()",
+    );
+    assert_eq!(measured, format!("{x},{y},{width},{height},300,300"));
+    // What the measurement applied is still this turn's work, so the window repaints.
+    assert!(doc.settle().changed());
+    assert_eq!(doc.rect(doc.query("#count").unwrap()).unwrap().2, 300.0);
 
-    // A resize reaches the app as new sizes and a `resize` event.
+    // Inside an event handler the host cannot lay out: Blitz is in the middle
+    // of the document. The handler gets the box from the last layout instead.
     eval(
         &doc,
-        "globalThis.resizes = 0; addEventListener('resize', () => resizes++); ''",
+        "(() => {
+            const button = document.getElementById('count');
+            button.addEventListener('click', () => {
+                button.style.width = '200px';
+                globalThis.in_handler = button.getBoundingClientRect().width;
+            });
+            return '';
+        })()",
     );
+    click(&mut doc, "#count");
+    assert_eq!(eval(&doc, "String(in_handler)"), "300");
+    // The change itself arrives with the turn. (The button's width has a transition.)
+    doc.wait(0.3);
+    assert_eq!(doc.rect(doc.query("#count").unwrap()).unwrap().2, 200.0);
+}
+
+/// Sizes also reach the app without it asking: after each layout the host
+/// reports what changed, which is what `ResizeObserver` and `resize` run on.
+#[test]
+fn the_app_is_told_when_the_layout_changes() {
+    let mut doc = load();
+    let eval = |doc: &SvelteDocument, code: &str| doc.js().eval_string(code).unwrap();
+    eval(
+        &doc,
+        "globalThis.resizes = 0; addEventListener('resize', () => resizes++);
+         globalThis.sizes = [];
+         new ResizeObserver((entries) => sizes.push(entries[0].contentRect.width)).observe(document.querySelector('main'));
+         ''",
+    );
+    doc.settle();
+    doc.resolve();
+    assert_eq!(eval(&doc, "sizes.join()"), "900");
+
     doc.layout(600, 500);
     assert_eq!(
-        eval(&doc, "[innerWidth, innerHeight, resizes].join()"),
-        "600,500,1"
+        eval(
+            &doc,
+            "[innerWidth, innerHeight, resizes, sizes.join('|')].join()"
+        ),
+        "600,500,1,900|600"
     );
 
     // Nothing moved, so an idle turn tells the app nothing and changes nothing.
     assert_eq!(doc.settle().ops, 0);
-    assert_eq!(eval(&doc, "String(resizes)"), "1");
+    assert_eq!(eval(&doc, "resizes + ',' + sizes.length"), "1,2");
 }
 
 /// Blitz used to hit-test a box that sits in a line of text as if it were

@@ -270,7 +270,8 @@ fn bad_image_urls_do_not_panic() {
     // No directory: the base URL is Blitz's default, which cannot resolve relative paths.
     let mut doc = SvelteDocument::new("", "", DocumentConfig::default()).unwrap();
     for src in ["logo.png", "http://[", "//", ""] {
-        let mut mutator = doc.base_mut().mutate();
+        let mut base = doc.base_mut();
+        let mut mutator = base.mutate();
         let body = mutator.doc.query_selector("body").unwrap().unwrap();
         let img = mutator.create_element(
             QualName::new(None, ns!(html), LocalName::from("img")),
@@ -285,7 +286,8 @@ fn bad_image_urls_do_not_panic() {
     let app = App::from_dir(dist()).unwrap();
     let mut doc = SvelteDocument::for_app(&app).unwrap();
     for src in ["missing.png", "http://[", "../../package.json"] {
-        let mut mutator = doc.base_mut().mutate();
+        let mut base = doc.base_mut();
+        let mut mutator = base.mutate();
         let body = mutator.doc.query_selector("body").unwrap().unwrap();
         let img = mutator.create_element(
             QualName::new(None, ns!(html), LocalName::from("img")),

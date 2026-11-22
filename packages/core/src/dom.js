@@ -417,15 +417,18 @@ const NODE_TYPES = { element: 1, text: 3, comment: 8, fragment: 11 };
 // ---------------------------------------------------------------------------
 // Layout
 //
-// Layout happens in the host, and JavaScript never asks it anything. Instead,
-// the first time a node is measured it is marked with one op, and from then
-// on the host sends its box after every layout that moved or resized it. A
-// measurement is answered from that copy.
+// Layout happens in the host. A measurement gets there in two ways.
 //
-// So a box is as of the last layout, and empty for a node that has not been
-// through one since it was first asked about. Code that changes the page and
-// measures it in the same breath gets the old answer; code that observes
-// (`ResizeObserver`) gets the new one before the frame is drawn.
+// Asked: `__sb_host.measure(id)` is a forced layout, as in a browser. The host
+// applies what the app has written so far, lays the page out and returns the
+// node's box. Code that changes the page and measures it on the next line
+// depends on this.
+//
+// Told: the first time a node is measured it is also marked with one op, and
+// from then on the host sends its box after every layout that moved or
+// resized it. That is what `ResizeObserver` runs on, and it is the answer
+// when the host cannot lay out: inside an event handler, where Blitz is in
+// the middle of the document, and before the window has a size.
 //
 // Boxes are in viewport coordinates and do not include CSS transforms.
 // ---------------------------------------------------------------------------
@@ -445,14 +448,24 @@ const NO_BOX = [0, 0, 0, 0];
 /** The window's size in CSS pixels. A guess until the host has laid the page out once. */
 const viewport = { width: 1024, height: 768 };
 
-/** @param {any} node @returns {number[]} */
-function box(node) {
+/** The box the host last reported. @param {any} node @returns {number[]} */
+function reported_box(node) {
 	let known = boxes.get(node);
 	if (known === undefined) {
 		boxes.set(node, (known = NO_BOX));
 		request_measure(node);
 	}
 	return known;
+}
+
+/** The box as of now, if the host can lay out now. @param {any} node @returns {number[]} */
+function box(node) {
+	const reported = reported_box(node);
+	/** @type {number[] | null | undefined} */
+	const fresh = node.node_id === 0 ? null : g.__sb_host.measure?.(node.node_id);
+	if (!fresh) return reported;
+	boxes.set(node, fresh);
+	return fresh;
 }
 
 /** @type {Set<ResizeObserver>} the observers that are watching something */
@@ -470,7 +483,7 @@ class ResizeObserver {
 		if (!target || this.targets.has(target)) return;
 		this.targets.set(target, [0, 0]);
 		resize_observers.add(this);
-		box(target);
+		reported_box(target);
 		// A box that is already known is not sent again, so report it from here.
 		g.queueMicrotask(() => this.deliver());
 	}
@@ -487,7 +500,8 @@ class ResizeObserver {
 	deliver() {
 		const entries = [];
 		for (const [target, last] of this.targets) {
-			const [, , width, height] = box(target);
+			// Called right after a layout: what was reported is current.
+			const [, , width, height] = reported_box(target);
 			if (last[0] === width && last[1] === height) continue;
 			this.targets.set(target, [width, height]);
 			const size = [{ inlineSize: width, blockSize: height }];
@@ -918,7 +932,7 @@ host_hooks.outside = document.documentElement;
 // so that their difference, the width of a scrollbar, comes out as zero.
 define(document.documentElement, { clientWidth: { get: () => viewport.width }, clientHeight: { get: () => viewport.height } });
 // Measuring <body> from the start is what makes the host report the viewport.
-box(root);
+reported_box(root);
 
 /** `window` is the global object; these are its listeners. */
 const window_target = { listeners: /** @type {Map<string, Function[]> | null} */ (null) };

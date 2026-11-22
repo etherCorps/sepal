@@ -18,19 +18,19 @@ pub fn render_rgba(
     let physical_width = (width as f32 * scale).round() as u32;
     let physical_height = (height as f32 * scale).round() as u32;
 
-    let time = doc.headless_time;
     doc.base_mut().set_viewport(Viewport::new(
         physical_width,
         physical_height,
         scale,
         ColorScheme::Light,
     ));
-    doc.base_mut().resolve(time);
+    doc.resolve_layout();
     // An app that measures the page may move things once it knows this size.
     if doc.after_layout() {
-        doc.base_mut().resolve(time);
+        doc.resolve_layout();
     }
-    let base = doc.base_mut();
+    let mut base = doc.base_mut();
+    let base = &mut *base;
 
     let pixels = render_to_buffer::<VelloCpuImageRenderer, _>(
         |scene| {

@@ -339,15 +339,17 @@ platform binaries into `packages/host/bin` before packing it.
 - A DOM layer for web component libraries (`dom: true`, Shivam's choice
   after the shadcn probe), then layout measurement for it (also his call):
   Switch, Checkbox, Tabs, Accordion, Dialog, Select and Tooltip from
-  shadcn-svelte work with the mouse. The host reports boxes to JS after each
-  layout; JS never asks. See "Measuring the page" in the README.
+  shadcn-svelte work with the mouse. A measurement is a forced layout
+  (`__sb_host.measure`, the one exception to invariant 2, which Shivam asked
+  for so that the Accordion slides open), and the host also reports boxes
+  after each layout. See "Measuring the page" in the README.
   Not done:
   - Keyboard: Escape, focus trap, arrow keys in a Select. Blocked on
     keyboard events, which have never been run at all.
-  - Synchronous measurement ("change the page, measure it on the next
-    line"). Accordion's slide needs it. It would mean applying the pending
-    batch and laying out in the middle of a script, which invariant 2 rules
-    out. Ask Shivam before going there.
+  - Exit animations. Bits UI asks `getComputedStyle(node).animationName`
+    whether to wait, gets nothing, and closes at once; it would also need
+    `animationend` events. Computed styles could be answered the way
+    measurements are now.
   - CSS transforms in reported boxes, `scroll` events, `getComputedStyle`.
   - The other Bits UI components (Popover, DropdownMenu, Combobox, …) were
     not tried. They use the same pieces as Select and Tooltip.
