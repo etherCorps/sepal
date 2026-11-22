@@ -1,6 +1,6 @@
 //! Applies op batches from the JS renderer to a Blitz document.
 //!
-//! Keep the opcodes in sync with `packages/renderer/src/protocol.js`.
+//! Keep the opcodes in sync with `packages/core/src/protocol.js`.
 
 use std::collections::{HashMap, HashSet};
 

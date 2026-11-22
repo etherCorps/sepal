@@ -12,7 +12,7 @@ use std::time::Instant;
 
 use rquickjs::{CatchResultExt, Context, Ctx, Function, Object, Runtime, TypedArray, Value};
 
-/// One turn's worth of tree mutations. See `packages/renderer/src/protocol.js`.
+/// One turn's worth of tree mutations. See `packages/core/src/protocol.js`.
 pub struct Batch {
     pub ops: Vec<i32>,
     pub strings: Vec<String>,

@@ -1,8 +1,8 @@
 node_modules
 dist
 target
-packages/renderer/types
+packages/*/types
 bundle
 # built by scripts/build-host-package.js
-packages/host-*/svelte-blitz-host*
+packages/host/bin/
 .DS_Store

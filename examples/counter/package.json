@@ -12,6 +12,7 @@
     "@ethercorps/svelte-blitz": "workspace:*"
   },
   "devDependencies": {
+    "@ethercorps/svelte-blitz-vite": "workspace:*",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.5",
     "svelte-check": "^4.7.8",

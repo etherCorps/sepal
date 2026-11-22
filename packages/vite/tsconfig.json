@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"strict": true,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"rootDir": "src",
+		"outDir": "types",
+		"target": "es2022",
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		// No "dom": the router runs in a bare engine, so `window` or `document`
+		// here is a bug, and this makes it a type error.
+		"lib": ["es2023"],
+		"types": [],
+		"customConditions": ["svelte-custom-renderer"],
+		"skipLibCheck": true
+	},
+	"include": ["src"],
+	// The preset and the route scanner run in Node and are checked by tsconfig.node.json.
+	"exclude": ["src/vite.js", "src/routes.js"]
+}

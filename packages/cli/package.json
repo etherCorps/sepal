@@ -1,0 +1,33 @@
+{
+  "name": "@ethercorps/svelte-blitz-cli",
+  "version": "0.1.0",
+  "description": "The svelte-blitz command: run, bundle and screenshot a svelte-blitz app",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etherCorps/svelte-blitz.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/etherCorps/svelte-blitz#readme",
+  "bugs": "https://github.com/etherCorps/svelte-blitz/issues",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "bin": {
+    "svelte-blitz": "./src/cli.js"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "check": "tsc"
+  },
+  "dependencies": {
+    "@ethercorps/svelte-blitz-host": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^6.0.3"
+  }
+}

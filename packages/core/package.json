@@ -1,0 +1,54 @@
+{
+  "name": "@ethercorps/svelte-blitz",
+  "version": "0.1.0",
+  "description": "Svelte apps in a native window, without a webview: a Svelte custom renderer for the Blitz HTML/CSS engine",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etherCorps/svelte-blitz.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/etherCorps/svelte-blitz#readme",
+  "bugs": "https://github.com/etherCorps/svelte-blitz/issues",
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "svelte",
+    "blitz",
+    "desktop",
+    "native",
+    "renderer",
+    "gui"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./renderer": {
+      "types": "./types/renderer.d.ts",
+      "default": "./src/renderer.js"
+    },
+    "./protocol": {
+      "types": "./types/protocol.d.ts",
+      "default": "./src/protocol.js"
+    }
+  },
+  "files": [
+    "src",
+    "types"
+  ],
+  "scripts": {
+    "check": "tsc",
+    "prepare": "tsc"
+  },
+  "peerDependencies": {
+    "svelte": "^5.59.0"
+  },
+  "devDependencies": {
+    "svelte": "^5.59.1",
+    "typescript": "^6.0.3"
+  }
+}

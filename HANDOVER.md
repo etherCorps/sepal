@@ -295,6 +295,26 @@ go-ahead, tag and publish the alpha.
 - Hands-on checks that need eyes: the window, idle CPU, the Dock icon.
 - Say "publish".
 
+## Package layout (decided by Shivam, 22 Nov 2026)
+
+This replaces the "Package shape" in task 4 below and the single
+`packages/renderer` the older notes refer to.
+
+| Package | Directory |
+|---|---|
+| `@ethercorps/svelte-blitz` (runtime) | `packages/core` |
+| `@ethercorps/svelte-blitz-vite` (preset + router, with a `router` option for custom routers) | `packages/vite` |
+| `@ethercorps/svelte-blitz-cli` | `packages/cli` |
+| `@ethercorps/create-svelte-blitz` | `packages/create` |
+| `@ethercorps/svelte-blitz-host` (all platform binaries in one package) | `packages/host` |
+
+One version for all of them. The host package holds every platform's binary
+under `bin/<platform>/`; the per-platform optional-dependency packages are
+gone. Shivam's alternative was "the way Prisma does it" (download the matching
+binary); that needs release hosting, which does not exist yet, and can be
+adopted later inside `packages/host` alone. A release now has to collect all
+platform binaries into `packages/host/bin` before packing it.
+
 ## Added outside the original brief (22 Nov 2026)
 
 - TypeScript in the package and the examples.

@@ -1,0 +1,36 @@
+{
+  "name": "@ethercorps/svelte-blitz-host",
+  "version": "0.1.0",
+  "description": "The svelte-blitz host binaries, and the lookup that picks the one for this machine",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etherCorps/svelte-blitz.git",
+    "directory": "packages/host"
+  },
+  "homepage": "https://github.com/etherCorps/svelte-blitz#readme",
+  "bugs": "https://github.com/etherCorps/svelte-blitz/issues",
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "types",
+    "bin"
+  ],
+  "scripts": {
+    "check": "tsc",
+    "prepare": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^6.0.3"
+  }
+}

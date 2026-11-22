@@ -9,10 +9,10 @@
   "scripts": {
     "build": "pnpm -r build",
     "build:host": "node scripts/build-host-package.js",
-    "check": "pnpm -r check",
-    "test:js": "pnpm run build && node packages/renderer/test/mock-host.test.js && node packages/renderer/test/routes.test.js",
+    "check": "node scripts/check-versions.js && pnpm -r check",
+    "test:js": "pnpm run build && node packages/core/test/mock-host.test.js && node packages/vite/test/routes.test.js && node packages/vite/test/custom-router.test.js",
     "test:host": "pnpm run build && cargo test --manifest-path crates/host/Cargo.toml --features screenshot",
-    "test:template": "node packages/renderer/test/template.test.js",
+    "test:template": "node packages/create/template.test.js",
     "test": "pnpm run check && pnpm run test:js && pnpm run test:host && pnpm run test:template",
     "dev": "cargo build --manifest-path crates/host/Cargo.toml && SVELTE_BLITZ_HOST=$PWD/crates/host/target/debug/svelte-blitz-host pnpm --filter counter watch",
     "start": "pnpm run build && cargo run --release --manifest-path crates/host/Cargo.toml -- examples/counter/dist",

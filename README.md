@@ -31,7 +31,7 @@ pnpm dev               # the same, reloading on every save
 ## Start a project
 
 ```sh
-svelte-blitz create my-app      # TypeScript, Tailwind, file-based routes, icon, manifest, static/
+pnpm create @ethercorps/svelte-blitz my-app   # TypeScript, Tailwind, file-based routes, icon, manifest, static/
 cd my-app
 pnpm install
 pnpm dev                        # opens the app, reloads on save
@@ -40,11 +40,26 @@ pnpm bundle                     # my-app.app
 pnpm check                      # svelte-check
 ```
 
-`create` copies the starter from `packages/renderer/template` and fills in the
-project name. The `svelte-blitz` command comes with the package:
+**Nothing is published yet.** Until it is, create a project from this
+repository with `node packages/create/index.js ../my-app` and install the
+packages from tarballs made with `pnpm pack`; `packages/create/template.test.js`
+does exactly that.
+
+## Packages
+
+| Package | What it is | Directory |
+|---|---|---|
+| `@ethercorps/svelte-blitz` | The runtime: `mount`, the renderer, the op protocol. No Node code. | `packages/core` |
+| `@ethercorps/svelte-blitz-vite` | The Vite preset (build, app manifest, `static/`, dev reload) and the file-based router. | `packages/vite` |
+| `@ethercorps/svelte-blitz-cli` | The `svelte-blitz` command. | `packages/cli` |
+| `@ethercorps/create-svelte-blitz` | The starter template. | `packages/create` |
+| `@ethercorps/svelte-blitz-host` | The host binaries, and the lookup that picks one. | `packages/host` |
+
+They are released together under one version (`pnpm run check` fails if they
+drift). An app depends on the first, and has the Vite preset and the CLI as
+dev dependencies.
 
 ```
-svelte-blitz create <directory>
 svelte-blitz run [dist]
 svelte-blitz bundle [dist] [out-dir] [--sign <identity>] [--notarize <keychain-profile>]
 svelte-blitz screenshot <out.png> [dist] [WIDTHxHEIGHT]
@@ -52,23 +67,17 @@ svelte-blitz screenshot <out.png> [dist] [WIDTHxHEIGHT]
 
 ### Where the host binary comes from
 
-The main package is JavaScript only. The host ships in one small package per
-platform, each holding a single file, and the main package lists them as
-optional dependencies; the package manager installs the one whose `os` and
-`cpu` match. Nobody who installs from npm needs Rust.
+One package, `@ethercorps/svelte-blitz-host`, holds the binary for every
+platform under `bin/<platform>/`, so nobody who installs from npm needs Rust.
+The Vite preset and the CLI ask that package for the path;
+`SVELTE_BLITZ_HOST` overrides it with a host you built yourself.
 
-```
-@ethercorps/svelte-blitz                 renderer, Vite preset, CLI, template (40 kB)
-@ethercorps/svelte-blitz-darwin-arm64    svelte-blitz-host (22.8 MB, 9.9 MB packed)
-```
-
-`SVELTE_BLITZ_HOST` overrides the lookup with a host you built yourself.
-
-Only macOS arm64 exists so far (`pnpm run build:host` builds it into
-`packages/host-darwin-arm64`). Intel macOS, Linux and Windows need a CI build
-each. **Nothing is published yet**, so today `create` is run from this
-repository (`node packages/renderer/src/cli.js create ../my-app`) and the new
-project installs the packages from tarballs made with `pnpm pack`.
+Only macOS arm64 exists so far: 22.8 MB, about 10 MB packed
+(`pnpm run build:host` builds it into `packages/host/bin/darwin-arm64`). Intel
+macOS, Linux and Windows need a CI build each, and every one adds roughly that
+much to what every user downloads. If that grows uncomfortable, the package
+can switch to fetching only the matching binary on first use; nothing outside
+it would change.
 
 ## Dev: reload on save
 
@@ -189,7 +198,7 @@ src/routes/
 
 ```ts
 // src/routes/items/[id]/+page.ts
-import { error } from '@ethercorps/svelte-blitz';
+import { error } from '@ethercorps/svelte-blitz-vite/router';
 import { items } from '$lib/items';
 
 export async function load({ params, parent }) {
@@ -225,7 +234,7 @@ What works as in SvelteKit:
 - `<a href="/path">` navigates. `goto()` from `$app/navigation`, `page` from
   `$app/state`, and the `$lib` alias.
 - `error(status, message)` and `redirect(status, location)` inside `load`,
-  imported from `@ethercorps/svelte-blitz`.
+  imported from `@ethercorps/svelte-blitz-vite/router`.
 
 What is different, because there is no browser and no server:
 
@@ -243,6 +252,35 @@ What is different, because there is no browser and no server:
 - **All pages are in one bundle.** There is no code splitting.
 
 `examples/routing` exercises all of it.
+
+### Your own router
+
+The built-in router is the default, not a requirement. The preset's `router`
+option replaces it or turns it off:
+
+```ts
+svelteBlitz({ router: false })                          // no routing; src/main.ts is the entry
+svelteBlitz({ router: { entry: 'src/my-router.ts' } })  // your router is the entry
+svelteBlitz({ router: { dir: 'src/pages' } })           // built-in router, other directory
+```
+
+A router of your own is a module that mounts the app. It can use the route
+table the preset generates from the routes directory, or ignore it:
+
+```ts
+// src/my-router.ts
+import { mount } from '@ethercorps/svelte-blitz';
+import { routes, fallback } from 'virtual:svelte-blitz/routes';
+import Shell from './Shell.svelte';
+
+// Each route: { id, pattern, names, layouts, page, error, error_depth }.
+// `page` and each layout are { component, load }.
+mount(Shell, { props: { routes, fallback } });
+```
+
+With a custom entry the built-in `$app/navigation` and `$app/state` are not
+set up; your router exports its own API. The `Route` and `RouteNode` types
+come from `@ethercorps/svelte-blitz-vite/router`.
 
 Running SvelteKit itself on this renderer is not practical. Its client
 router (3,800 lines in 3.0.1) is written against `location`, `history`,
@@ -298,9 +336,9 @@ The examples are TypeScript: `src/main.ts`, `<script lang="ts">` and
 `vite.config.ts`, checked with `svelte-check`. The preset picks up `src/main.ts`
 or `src/main.js`, whichever exists. Plain JavaScript apps work unchanged.
 
-The package ships declarations for `mount`, `unmount` and the Vite preset.
-Its source stays JavaScript with JSDoc; `tsc` checks it and generates
-`packages/renderer/types/` on `pnpm install`.
+The packages ship declarations for `mount`, `unmount`, the Vite preset and
+the router. Their source stays JavaScript with JSDoc; `tsc` checks it and
+generates each package's `types/` on `pnpm install`.
 
 - Svelte strips type annotations itself. TypeScript features that emit code
   (`enum`, parameter properties) in a `.svelte` file need `vitePreprocess`,
@@ -313,22 +351,26 @@ Its source stays JavaScript with JSDoc; `tsc` checks it and generates
 ## Layout
 
 ```
-packages/renderer/        the `@ethercorps/svelte-blitz` npm package
-  src/cli.js              the `svelte-blitz` command
-  src/host.js             finds the host binary
-  template/               what `svelte-blitz create` copies
-packages/host-darwin-arm64/   npm package for the host binary (binary not committed)
-scripts/build-host-package.js builds the host and fills this platform's package
+packages/core/            @ethercorps/svelte-blitz: the runtime
   src/renderer.js         createRenderer(): node mirror, op buffer, event bubbling
   src/shims.js            console, timers, queueMicrotask for a bare engine
   src/index.js            mount() and the host's entry points (globalThis.__sb)
   src/protocol.js         opcodes shared with the host
+  test/                   a host written in JS, for testing without Rust
+packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
   src/vite.js             Vite preset: one app.js (IIFE) + one app.css
   src/routes.js           reads src/routes into a route table (build time)
   src/routing.svelte.js   the in-memory router: page, goto, back, load, errors
   src/Router.svelte       renders layouts around the current page
-  types/                  generated .d.ts (not committed)
-  test/                   a host written in JS, for testing without Rust
+  src/router.js           the router's public API
+packages/cli/             @ethercorps/svelte-blitz-cli: the svelte-blitz command
+packages/create/          @ethercorps/create-svelte-blitz
+  template/               the starter it copies
+packages/host/            @ethercorps/svelte-blitz-host
+  index.js                finds the host binary
+  bin/<platform>/         the binaries (built, not committed)
+scripts/build-host-package.js   builds the host into packages/host/bin
+scripts/check-versions.js       all packages must share one version
 crates/host/              the `svelte-blitz-host` crate
   src/js.rs               QuickJS embedding
   src/ops.rs              applies op batches to blitz-dom
@@ -423,7 +465,8 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 | Manifest → host: title, size and icon parsed; bad icons are errors, not panics | `tests/manifest.rs` |
 | The window opens at the size the manifest asks for | window bounds from WindowServer |
 | Bundle: `plutil` and `iconutil` accept the plist and `.icns`, `codesign --verify --strict` passes, the app launches from `open`, macOS reports the name "Counter" and shows the icon for the bundle | `pnpm run bundle`, macOS tools |
-| A fresh project installed from the two tarballs, no `SVELTE_BLITZ_HOST`: type-check, build, render, bundle, dev reload | `pnpm run test:template`, plus bundle and dev by hand |
+| A fresh project made by the packed create script and installed from the package tarballs, no `SVELTE_BLITZ_HOST`: type-check, build, render | `pnpm run test:template` |
+| A router of the app's own as the entry, and routing switched off | `packages/vite/test/custom-router.test.js` |
 | Dev runs from a bundle: macOS reports the name "Counter" and its bundle id | `pnpm dev`, `lsappinfo` |
 | Developer ID signing: `codesign --verify --strict` passes, hardened runtime flag set, the app launches | `--sign` with a real identity |
 | Dev reload: edit → reload in ~130 ms, broken builds keep the old one, Vite and host stop together | `pnpm dev`, read from the host log |

@@ -179,11 +179,14 @@ importers:
     dependencies:
       '@ethercorps/svelte-blitz':
         specifier: workspace:*
-        version: link:../../packages/renderer
+        version: link:../../packages/core
       svelte:
         specifier: ^5.59.1
         version: 5.59.1
     devDependencies:
+      '@ethercorps/svelte-blitz-vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.59.1)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
@@ -207,7 +210,7 @@ importers:
     dependencies:
       '@ethercorps/svelte-blitz':
         specifier: workspace:*
-        version: link:../../packages/renderer
+        version: link:../../packages/core
       '@lucide/svelte':
         specifier: ^1.77.0
         version: 1.77.0(svelte@5.59.1)
@@ -215,6 +218,9 @@ importers:
         specifier: ^5.59.1
         version: 5.59.1
     devDependencies:
+      '@ethercorps/svelte-blitz-vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.59.1)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
@@ -238,11 +244,14 @@ importers:
     dependencies:
       '@ethercorps/svelte-blitz':
         specifier: workspace:*
-        version: link:../../packages/renderer
+        version: link:../../packages/core
       svelte:
         specifier: ^5.59.1
         version: 5.59.1
     devDependencies:
+      '@ethercorps/svelte-blitz-vite':
+        specifier: workspace:*
+        version: link:../../packages/vite
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.59.1)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
@@ -262,10 +271,55 @@ importers:
         specifier: ^8.3.8
         version: 8.3.8(@types/node@26.6.6)(jiti@2.7.0)
 
-  packages/host-darwin-arm64: {}
-
-  packages/renderer:
+  packages/cli:
+    dependencies:
+      '@ethercorps/svelte-blitz-host':
+        specifier: workspace:*
+        version: link:../host
     devDependencies:
+      '@types/node':
+        specifier: ^26.6.6
+        version: 26.6.6
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  packages/core:
+    devDependencies:
+      svelte:
+        specifier: ^5.59.1
+        version: 5.59.1
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  packages/create:
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.6
+        version: 26.6.6
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  packages/host:
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.6
+        version: 26.6.6
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+
+  packages/vite:
+    dependencies:
+      '@ethercorps/svelte-blitz-host':
+        specifier: workspace:*
+        version: link:../host
+    devDependencies:
+      '@ethercorps/svelte-blitz':
+        specifier: workspace:*
+        version: link:../core
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.59.1)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
@@ -281,10 +335,6 @@ importers:
       vite:
         specifier: ^8.3.8
         version: 8.3.8(@types/node@26.6.6)(jiti@2.7.0)
-    optionalDependencies:
-      '@ethercorps/svelte-blitz-darwin-arm64':
-        specifier: workspace:*
-        version: link:../host-darwin-arm64
 
 packages:
 
