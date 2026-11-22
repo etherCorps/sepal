@@ -144,8 +144,31 @@ function create_node(type) {
 	return node;
 }
 
+/**
+ * Ask the host to report where this node is after every layout that moves or
+ * resizes it. The answer arrives through `host_hooks.layout`; see dom.js.
+ * @param {BlitzNode} node
+ */
+export function request_measure(node) {
+	if (node.node_id !== 0) ops.push(OP.MEASURE, node.node_id);
+}
+
+/**
+ * Entry points the host only uses when a module that wants them is loaded.
+ *
+ * `outside` is the node an event belongs to when it hit nothing the app made:
+ * the area around <body>, or a page whose <body> ignores the pointer. dom.js
+ * makes it <html>, as in a browser. Without it such an event is dropped.
+ *
+ * @type {{
+ *   layout: ((width: number, height: number, boxes: number[]) => void) | null,
+ *   outside: BlitzNode | null
+ * }}
+ */
+export const host_hooks = { layout: null, outside: null };
+
 /** @param {number} id */
-function lookup(id) {
+export function lookup(id) {
 	const entry = elements.get(id);
 	if (entry === undefined) return null;
 	if (has_weak_refs) return /** @type {WeakRef<BlitzNode>} */ (entry).deref() ?? null;
@@ -329,14 +352,15 @@ export class BlitzEvent {
  * Called by the host for every DOM event that has at least one listener.
  * Svelte does not delegate or bubble events for custom renderers, so we do it here.
  *
- * @param {number} target_id
+ * @param {number} target_id 0 for an event that hit nothing the app made
  * @param {string} type
  * @param {boolean} bubbles
  * @param {Record<string, any> | null} detail
  * @returns {number} DISPATCH_* flags
  */
 export function dispatch(target_id, type, bubbles, detail) {
-	const target = lookup(target_id);
+	// The host sends id 0 for an event outside everything the app made.
+	const target = target_id === 0 ? host_hooks.outside : lookup(target_id);
 	if (target === null) return 0;
 
 	if (detail !== null && detail !== undefined) {

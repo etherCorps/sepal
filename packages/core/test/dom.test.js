@@ -67,6 +67,43 @@ run(`document.getElementById('made').remove()`);
 host.settle();
 assert.equal(host.by_id('made'), null);
 
+// --- layout: the host reports boxes, nothing asks for them ---------------------------
+const count = host.by_id('count');
+assert.ok(host.measured.has(host.root.id), '<body> is measured from the start, for the viewport size');
+run(`
+	globalThis.sizes = [];
+	globalThis.observer = new ResizeObserver((entries) => {
+		sizes.push(entries.map((entry) => entry.target.id + ' ' + entry.contentRect.width + 'x' + entry.contentRect.height).join());
+	});
+	observer.observe(document.getElementById('count'));
+	globalThis.resizes = 0;
+	window.addEventListener('resize', () => resizes++);
+`);
+assert.equal(run(`document.getElementById('count').getBoundingClientRect().width`), 0, 'not laid out yet');
+await host.flush_microtasks();
+assert.ok(host.measured.has(count.id), 'observing a node asks the host to report it');
+assert.equal(run('sizes.length'), 0, 'nothing to report before the first layout');
+
+host.layout(900, 700, [[count, 32, 90, 84, 36]]);
+assert.equal(run('sizes.join("|")'), 'count 84x36');
+assert.equal(run(`JSON.stringify(document.getElementById('count').getBoundingClientRect())`), '{"x":32,"y":90,"width":84,"height":36,"top":90,"left":32,"right":116,"bottom":126}');
+assert.equal(run(`document.getElementById('count').offsetWidth`), 84);
+assert.equal(run('[innerWidth, innerHeight, document.documentElement.clientWidth, resizes].join()'), '900,700,900,1');
+
+// Moved, same size: the box is new, the observer has nothing to say.
+host.layout(900, 700, [[count, 40, 90, 84, 36]]);
+assert.equal(run(`document.getElementById('count').getBoundingClientRect().left`), 40);
+assert.equal(run('sizes.length + "," + resizes'), '1,1');
+host.layout(800, 600, [[count, 40, 90, 60, 36]]);
+assert.equal(run('sizes.join("|") + "," + resizes'), 'count 84x36|count 60x36,2');
+run('observer.disconnect()');
+
+// --- an event that hit nothing the app made belongs to <html> -------------------------
+run(`globalThis.outside = null; document.addEventListener('pointerdown', (event) => (outside = event.target === document.documentElement));`);
+host.settle();
+host.dispatch({ id: 0 }, 'pointerdown');
+assert.equal(run('outside'), true);
+
 // --- a node cannot go inside itself ------------------------------------------------
 // The host would loop forever on a tree with a cycle in it.
 assert.throws(() => run(`document.querySelector('main').firstElementChild.appendChild(document.querySelector('main'))`), /descendant/);

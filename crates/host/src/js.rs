@@ -247,6 +247,18 @@ impl JsEngine {
         }
     }
 
+    /// Tell the app the size of the viewport and where the nodes it measures
+    /// are now. `boxes` holds the ones that changed: `[id, x, y, width, height, …]`.
+    pub fn layout(&self, width: f64, height: f64, boxes: Vec<f64>) {
+        let result = self.enter().with(|ctx| -> rquickjs::Result<()> {
+            let layout: Function = entry(&ctx)?.get("layout")?;
+            layout.call::<_, ()>((width, height, boxes))
+        });
+        if let Err(error) = result {
+            self.report("reporting the layout", error);
+        }
+    }
+
     /// The host calls JS has made since the last time this was asked.
     pub fn take_calls(&self) -> Vec<HostCall> {
         std::mem::take(&mut *self.calls.borrow_mut())

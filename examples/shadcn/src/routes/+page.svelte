@@ -1,6 +1,6 @@
 <!--
 	The shadcn-svelte components that work in svelte-blitz today. The interactive
-	ones (Switch, Checkbox, Tabs, Accordion, Dialog) need `dom: true` in app.config.ts.
+	ones (Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip) need `dom: true` in app.config.ts.
 	`node probe.mjs` tries every file in src/probes, including the components
 	that do not work yet.
 -->
@@ -15,15 +15,18 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Progress } from '$lib/components/ui/progress/index.js';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs/index.js';
+	import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '$lib/components/ui/tooltip/index.js';
 
 	let clicks = $state(0);
 	let name = $state('Ada');
 	let on = $state(false);
 	let agreed = $state(false);
+	let fruit = $state('apple');
 	// `bind:this` on a component's root element, which shadcn does everywhere.
 	let button = $state<HTMLElement | null>(null);
 </script>
@@ -77,7 +80,7 @@
 			</div>
 			<Alert>
 				<AlertTitle>Heads up</AlertTitle>
-				<AlertDescription>Selects and tooltips need to measure the page and do not work yet.</AlertDescription>
+				<AlertDescription>Nothing here closes on Escape yet: keyboard events have never been run.</AlertDescription>
 			</Alert>
 		</div>
 	</div>
@@ -91,6 +94,23 @@
 			<div class="flex items-center gap-3">
 				<Checkbox id="check" bind:checked={agreed} />
 				<span id="check-state">{agreed ? 'Checked' : 'Not checked'}</span>
+			</div>
+			<!-- Both place themselves next to their trigger, from where the host says it is. -->
+			<div class="flex items-center gap-3">
+				<Select type="single" bind:value={fruit}>
+					<SelectTrigger id="fruit" class="w-40">{fruit}</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="apple">Apple</SelectItem>
+						<SelectItem value="banana">Banana</SelectItem>
+						<SelectItem value="cherry">Cherry</SelectItem>
+					</SelectContent>
+				</Select>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger id="tip" class={buttonVariants({ variant: 'outline' })}>Hover me</TooltipTrigger>
+						<TooltipContent><p>Placed from a measurement</p></TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 			</div>
 			<!-- Not a flex item: the button sits in a line of text inside a padded box. -->
 			<div class="rounded-lg border p-4">

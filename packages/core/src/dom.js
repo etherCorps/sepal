@@ -13,7 +13,7 @@
 // The tree is the renderer's own. An element here is a `BlitzNode`, and every
 // write goes through the renderer into the same op buffer as Svelte's.
 
-import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, outer_targets, remove_listener, root } from './renderer.js';
+import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_measure, root } from './renderer.js';
 
 const g = /** @type {any} */ (globalThis);
 const proto = /** @type {any} */ (BlitzNode.prototype);
@@ -414,7 +414,106 @@ function text_of(node) {
 }
 
 const NODE_TYPES = { element: 1, text: 3, comment: 8, fragment: 11 };
-const EMPTY_RECT = { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, toJSON: () => ({}) };
+// ---------------------------------------------------------------------------
+// Layout
+//
+// Layout happens in the host, and JavaScript never asks it anything. Instead,
+// the first time a node is measured it is marked with one op, and from then
+// on the host sends its box after every layout that moved or resized it. A
+// measurement is answered from that copy.
+//
+// So a box is as of the last layout, and empty for a node that has not been
+// through one since it was first asked about. Code that changes the page and
+// measures it in the same breath gets the old answer; code that observes
+// (`ResizeObserver`) gets the new one before the frame is drawn.
+//
+// Boxes are in viewport coordinates and do not include CSS transforms.
+// ---------------------------------------------------------------------------
+
+class DOMRect {
+	constructor(x = 0, y = 0, width = 0, height = 0) {
+		Object.assign(this, { x, y, width, height, top: y, left: x, right: x + width, bottom: y + height });
+	}
+	toJSON() {
+		return { ...this };
+	}
+}
+
+/** `[x, y, width, height]` per measured node. @type {WeakMap<object, number[]>} */
+const boxes = new WeakMap();
+const NO_BOX = [0, 0, 0, 0];
+/** The window's size in CSS pixels. A guess until the host has laid the page out once. */
+const viewport = { width: 1024, height: 768 };
+
+/** @param {any} node @returns {number[]} */
+function box(node) {
+	let known = boxes.get(node);
+	if (known === undefined) {
+		boxes.set(node, (known = NO_BOX));
+		request_measure(node);
+	}
+	return known;
+}
+
+/** @type {Set<ResizeObserver>} the observers that are watching something */
+const resize_observers = new Set();
+
+class ResizeObserver {
+	/** @param {(entries: any[], observer: ResizeObserver) => void} callback */
+	constructor(callback) {
+		this.callback = callback;
+		/** The size each target had when it was last reported. @type {Map<any, number[]>} */
+		this.targets = new Map();
+	}
+	/** @param {any} target */
+	observe(target) {
+		if (!target || this.targets.has(target)) return;
+		this.targets.set(target, [0, 0]);
+		resize_observers.add(this);
+		box(target);
+		// A box that is already known is not sent again, so report it from here.
+		g.queueMicrotask(() => this.deliver());
+	}
+	/** @param {any} target */
+	unobserve(target) {
+		this.targets.delete(target);
+		if (this.targets.size === 0) resize_observers.delete(this);
+	}
+	disconnect() {
+		this.targets.clear();
+		resize_observers.delete(this);
+	}
+	/** Report the targets whose size is not what was last reported. */
+	deliver() {
+		const entries = [];
+		for (const [target, last] of this.targets) {
+			const [, , width, height] = box(target);
+			if (last[0] === width && last[1] === height) continue;
+			this.targets.set(target, [width, height]);
+			const size = [{ inlineSize: width, blockSize: height }];
+			entries.push({ target, contentRect: new DOMRect(0, 0, width, height), borderBoxSize: size, contentBoxSize: size, devicePixelContentBoxSize: size });
+		}
+		if (entries.length === 0) return;
+		try {
+			this.callback(entries, this);
+		} catch (error) {
+			g.console.error('Error in ResizeObserver callback:', error);
+		}
+	}
+}
+
+// The host's entry point: called after a layout that changed something the app measures.
+host_hooks.layout = (width, height, changed) => {
+	for (let i = 0; i < changed.length; i += 5) {
+		const node = lookup(changed[i]);
+		if (node !== null) boxes.set(node, [changed[i + 1], changed[i + 2], changed[i + 3], changed[i + 4]]);
+	}
+	const resized = width !== viewport.width || height !== viewport.height;
+	viewport.width = width;
+	viewport.height = height;
+	for (const observer of [...resize_observers]) observer.deliver();
+	if (resized) g.dispatchEvent(new Event('resize'));
+};
 
 /** An attribute that is also a property: `el.id`, `el.tabIndex`. @param {string} attribute */
 const reflected = (attribute) => ({
@@ -580,15 +679,28 @@ define(proto, {
 			};
 		}
 	},
-	// Layout lives in the host and is not readable from here.
-	offsetWidth: { value: 0 },
-	offsetHeight: { value: 0 },
-	offsetTop: { value: 0 },
-	offsetLeft: { value: 0 },
-	clientWidth: { value: 0 },
-	clientHeight: { value: 0 },
-	scrollWidth: { value: 0 },
-	scrollHeight: { value: 0 },
+	// From the node's box (see "Layout"). Borders and overflow are not known
+	// here, so the client and scroll sizes are the box's too.
+	...Object.fromEntries(
+		/** @type {const} */ ([
+			['offsetLeft', 0],
+			['offsetTop', 1],
+			['offsetWidth', 2],
+			['offsetHeight', 3],
+			['clientWidth', 2],
+			['clientHeight', 3],
+			['scrollWidth', 2],
+			['scrollHeight', 3]
+		]).map(([name, index]) => [
+			name,
+			{
+				/** @this {any} */
+				get() {
+					return Math.round(box(this)[index]);
+				}
+			}
+		])
+	),
 	scrollTop: { value: 0, writable: true },
 	scrollLeft: { value: 0, writable: true },
 	offsetParent: { value: null }
@@ -667,8 +779,12 @@ Object.assign(proto, /** @type {Record<string, any> & ThisType<any>} */ ({
 	querySelectorAll(selector) {
 		return query_all(this, selector);
 	},
-	getBoundingClientRect: () => ({ ...EMPTY_RECT }),
-	getClientRects: () => [],
+	getBoundingClientRect() {
+		return new DOMRect(...box(this));
+	},
+	getClientRects() {
+		return [new DOMRect(...box(this))];
+	},
 	scrollIntoView() {},
 	scrollTo() {},
 	getAnimations: () => [],
@@ -794,12 +910,15 @@ const document = {
 	}
 };
 document.documentElement.parent = null;
+host_hooks.outside = document.documentElement;
 // <html> is not in the tree (the host's root is <body>), but it is asked
 // whether a node is in the page.
 /** @type {any} */ (document.documentElement).contains = (/** @type {any} */ node) => node === document.documentElement || /** @type {any} */ (root).contains(node);
-// The viewport: the same numbers as `innerWidth` and `innerHeight` below, so
-// that their difference, the width of a scrollbar, comes out as zero.
-define(document.documentElement, { clientWidth: { value: 1024 }, clientHeight: { value: 768 } });
+// <html> is the viewport: the same numbers as `innerWidth` and `innerHeight`,
+// so that their difference, the width of a scrollbar, comes out as zero.
+define(document.documentElement, { clientWidth: { get: () => viewport.width }, clientHeight: { get: () => viewport.height } });
+// Measuring <body> from the start is what makes the host report the viewport.
+box(root);
 
 /** `window` is the global object; these are its listeners. */
 const window_target = { listeners: /** @type {Map<string, Function[]> | null} */ (null) };
@@ -813,7 +932,7 @@ add_listener(document, 'focusout', (/** @type {any} */ event) => {
 	if (active === event.target) active = null;
 });
 
-/** Never calls back: nothing here can observe layout or the tree from outside. */
+/** Never calls back: nothing here watches the tree, or what is on screen. */
 class Observer {
 	observe() {}
 	unobserve() {}
@@ -842,8 +961,6 @@ provide({
 	document,
 	navigator: { userAgent: 'svelte-blitz', platform: '', language: 'en-US', languages: ['en-US'], maxTouchPoints: 0, onLine: true },
 	location: { href: 'app://localhost/', origin: 'app://localhost', protocol: 'app:', host: 'localhost', hostname: 'localhost', pathname: '/', search: '', hash: '' },
-	innerWidth: 1024,
-	innerHeight: 768,
 	devicePixelRatio: 1,
 	scrollX: 0,
 	scrollY: 0,
@@ -895,13 +1012,13 @@ provide({
 	ShadowRoot: class {},
 	DocumentFragment: node_class((node) => node.type === 'fragment'),
 	Text: node_class((node) => node.type === 'text'),
-	ResizeObserver: Observer,
+	ResizeObserver,
 	MutationObserver: Observer,
 	IntersectionObserver: Observer,
-	DOMRect: class {
-		constructor(x = 0, y = 0, width = 0, height = 0) {
-			Object.assign(this, { x, y, width, height, top: y, left: x, right: x + width, bottom: y + height });
-		}
-	},
+	DOMRect,
+	DOMRectReadOnly: DOMRect,
 	CSS: { escape: (/** @type {string} */ text) => String(text).replace(/[^\w-]/g, (c) => '\\' + c), supports: () => false }
 });
+if (g.innerWidth === undefined) {
+	define(g, { innerWidth: { get: () => viewport.width }, innerHeight: { get: () => viewport.height } });
+}

@@ -17,7 +17,8 @@ export const OP = {
 	REMOVE: 8, // node (detach, keep alive)
 	DROP: 9, // node (JS object was garbage collected; free it)
 	LISTEN: 10, // type (first listener for this event type anywhere)
-	UNLISTEN: 11 // type (last listener for this event type removed)
+	UNLISTEN: 11, // type (last listener for this event type removed)
+	MEASURE: 12 // node (report its box after every layout that changes it)
 };
 
 /** Id of the mount target. The host maps it to <body>. */

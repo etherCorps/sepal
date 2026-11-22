@@ -74,6 +74,16 @@ fn shadcn_components_render_and_react() {
         Some("Ada")
     );
     assert_eq!(text(&doc, "#greeting"), "Hello, Ada.");
+
+    // The Progress bar is empty: its indicator is moved out of view with a
+    // percentage transform, which Blitz works out once, at the first layout.
+    // (Laying out before the window had a size left it covering the bar.)
+    let bar = doc
+        .rect(doc.query("[data-slot=progress]").unwrap())
+        .unwrap();
+    let (pixels, width, _) = svelte_blitz_host::screenshot::render_rgba(&mut doc, 900, 700, 1.0);
+    let at = ((bar.1 + bar.3 / 2.0) as usize * width as usize + (bar.0 + bar.2 / 2.0) as usize) * 4;
+    assert!(pixels[at] > 200, "an empty bar is light: {}", pixels[at]);
 }
 
 /// The components built on Bits UI, which is written for a browser. They run
@@ -181,6 +191,130 @@ fn a_dialog_opens_over_the_page_and_closes() {
     assert!(doc.query("[role=dialog]").is_none(), "closed");
     assert_eq!(pixel(&mut doc, 5, 5), [255, 255, 255]);
     assert_eq!(attr(&doc, "body", "style"), None, "scrolling is unlocked");
+}
+
+/// Where a popup was put: the `translate(x, y)` on the box Floating UI
+/// positions. Blitz's own boxes (`doc.rect`) are from before transforms.
+fn placed_at(doc: &SvelteDocument) -> (f64, f64) {
+    let style = attr(doc, "[data-bits-floating-content-wrapper]", "style").unwrap();
+    let inner = style
+        .split_once("translate(")
+        .and_then(|(_, rest)| rest.split_once(')'))
+        .unwrap_or_else(|| panic!("no translate in {style}"))
+        .0;
+    let (x, y) = inner.split_once(',').unwrap();
+    let px = |value: &str| value.trim().trim_end_matches("px").parse::<f64>().unwrap();
+    (px(x), px(y))
+}
+
+/// A Select places its list with Floating UI, which measures the trigger and
+/// the window. JavaScript cannot ask the host for that; the host reports it
+/// after each layout, and the list has moved before the frame is drawn.
+#[test]
+fn a_select_opens_under_its_trigger_and_picks() {
+    let mut doc = load();
+    let (left, top, width, height) = doc.rect(doc.query("#fruit").unwrap()).unwrap();
+    assert_eq!(text(&doc, "#fruit"), "apple");
+
+    click(&mut doc, "#fruit");
+    // No waiting: one turn is enough to measure and to move.
+    let (x, y) = placed_at(&doc);
+    assert!(
+        (0.0..12.0).contains(&(y - (top + height))),
+        "just under the trigger, which ends at {}: {y}",
+        top + height
+    );
+    assert!(
+        (x - left).abs() < width / 2.0,
+        "and lined up with it, at {left}: {x}"
+    );
+
+    // The list is as wide as its trigger: its size came from a measurement too.
+    let list = doc
+        .rect(doc.query("[data-select-content]").unwrap())
+        .unwrap();
+    assert_eq!(list.2, width);
+
+    // Pick the second item. Its own box is relative to the popup.
+    doc.wait(0.2);
+    let item = doc
+        .rect(doc.query("[data-select-item][data-value=banana]").unwrap())
+        .unwrap();
+    doc.click_at(
+        (x + item.0 + item.2 / 2.0) as f32,
+        (y + item.1 + item.3 / 2.0) as f32,
+    );
+    doc.wait(0.4);
+    assert_eq!(text(&doc, "#fruit"), "banana");
+    assert!(doc.query("[data-select-content]").is_none(), "closed");
+
+    // While it is open the page ignores the pointer (`pointer-events: none`
+    // on <body>), so a click outside lands on <html>. It still closes the list.
+    click(&mut doc, "#fruit");
+    doc.wait(0.2);
+    doc.click_at(880.0, 20.0);
+    doc.wait(0.4);
+    assert!(doc.query("[data-select-content]").is_none(), "dismissed");
+    assert_eq!(attr(&doc, "body", "style"), None);
+}
+
+#[test]
+fn a_tooltip_appears_over_what_the_pointer_is_on() {
+    let mut doc = load();
+    let (left, top, width, height) = doc.rect(doc.query("#tip").unwrap()).unwrap();
+    assert!(doc.query("[data-tooltip-content]").is_none());
+
+    doc.move_to(5.0, 5.0);
+    doc.move_to((left + width / 2.0) as f32, (top + height / 2.0) as f32);
+    doc.wait(0.3);
+    let tip = doc
+        .rect(
+            doc.query("[data-tooltip-content]")
+                .expect("the tooltip opened"),
+        )
+        .unwrap();
+    let (x, y) = placed_at(&doc);
+    let gap = top - (y + tip.3);
+    // The gap holds the tooltip's arrow.
+    assert!((0.0..=20.0).contains(&gap), "just above the trigger: {gap}");
+    let off_centre = (x + tip.2 / 2.0) - (left + width / 2.0);
+    assert!(off_centre.abs() < 2.0, "centred on it: {off_centre}");
+
+    doc.move_to(700.0, 650.0);
+    doc.wait(0.4);
+    assert!(doc.query("[data-tooltip-content]").is_none(), "gone");
+}
+
+/// What JavaScript knows about layout is what the host last reported.
+#[test]
+fn measurements_come_from_the_last_layout() {
+    let mut doc = load();
+    let eval = |doc: &SvelteDocument, code: &str| doc.js().eval_string(code).unwrap();
+    assert_eq!(eval(&doc, "innerWidth + 'x' + innerHeight"), "900x700");
+
+    // Never measured before: the answer is empty, and asking is what makes
+    // the host report this node from the next layout on.
+    let measure = "(() => { const r = document.getElementById('count').getBoundingClientRect(); return [r.x, r.y, r.width, r.height].join() })()";
+    assert_eq!(eval(&doc, measure), "0,0,0,0");
+    doc.settle();
+    doc.resolve();
+    let (x, y, width, height) = doc.rect(doc.query("#count").unwrap()).unwrap();
+    assert_eq!(eval(&doc, measure), format!("{x},{y},{width},{height}"));
+
+    // A resize reaches the app as new sizes and a `resize` event.
+    eval(
+        &doc,
+        "globalThis.resizes = 0; addEventListener('resize', () => resizes++); ''",
+    );
+    doc.layout(600, 500);
+    assert_eq!(
+        eval(&doc, "[innerWidth, innerHeight, resizes].join()"),
+        "600,500,1"
+    );
+
+    // Nothing moved, so an idle turn tells the app nothing and changes nothing.
+    assert_eq!(doc.settle().ops, 0);
+    assert_eq!(eval(&doc, "String(resizes)"), "1");
 }
 
 /// Blitz used to hit-test a box that sits in a line of text as if it were

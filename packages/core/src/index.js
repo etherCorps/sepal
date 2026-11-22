@@ -1,7 +1,7 @@
 // Shims must be evaluated before Svelte's runtime.
 import { run_timers, next_timer } from './shims.js';
 import { mount as svelte_mount, unmount } from 'svelte';
-import renderer, { root, dispatch, take_batch, stats, keep_alive } from './renderer.js';
+import renderer, { root, dispatch, take_batch, stats, keep_alive, host_hooks } from './renderer.js';
 import { settle_call } from './host-call.js';
 import { fetch } from './fetch.js';
 
@@ -37,6 +37,12 @@ if (typeof (/** @type {any} */ (globalThis).fetch) !== 'function') /** @type {an
 	next_timer,
 	/** Answer a call the app made to the host (see host-call.js). */
 	resolve: settle_call,
+	/**
+	 * The viewport size and the boxes that changed, `[id, x, y, width, height, …]`,
+	 * for the nodes the app measures. Only called once it has measured one.
+	 * @param {number} width @param {number} height @param {number[]} boxes
+	 */
+	layout: (width, height, boxes) => host_hooks.layout?.(width, height, boxes),
 	/** Node counters, for tests and leak hunting. */
 	stats,
 	/** Pins the root node and the finalizer registry for the life of the app. */

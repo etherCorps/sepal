@@ -203,6 +203,40 @@ impl Host {
         }
     }
 
+    /// Hand a window event to Blitz, timing it when tracing is on.
+    fn forward(
+        &mut self,
+        event_loop: &dyn ActiveEventLoop,
+        window_id: WindowId,
+        event: WindowEvent,
+    ) {
+        let Some(trace) = &mut self.trace else {
+            return self.application.window_event(event_loop, window_id, event);
+        };
+        // The variant's name: "PointerButton", "RedrawRequested", …
+        let name: String = format!("{event:?}")
+            .chars()
+            .take_while(|c| c.is_alphanumeric())
+            .collect();
+        // Input and repaints are always reported: what matters is that one follows the other.
+        let input = matches!(
+            event,
+            WindowEvent::PointerButton { .. }
+                | WindowEvent::KeyboardInput { .. }
+                | WindowEvent::RedrawRequested
+        );
+        let first_frame = matches!(event, WindowEvent::RedrawRequested) && !trace.first_frame;
+        let began = Instant::now();
+        self.application.window_event(event_loop, window_id, event);
+        let trace = self.trace.as_mut().unwrap();
+        if first_frame {
+            trace.first_frame = true;
+            trace.report("first frame", began, true);
+        } else {
+            trace.report(&name, began, input);
+        }
+    }
+
     /// Replace the document with a freshly loaded one. The window, its size and
     /// the viewport scroll position stay; component state starts over.
     fn reload(&mut self) {
@@ -250,31 +284,23 @@ impl ApplicationHandler for Host {
         window_id: WindowId,
         event: WindowEvent,
     ) {
-        let Some(trace) = &mut self.trace else {
-            return self.application.window_event(event_loop, window_id, event);
-        };
-        // The variant's name: "PointerButton", "RedrawRequested", …
-        let name: String = format!("{event:?}")
-            .chars()
-            .take_while(|c| c.is_alphanumeric())
-            .collect();
-        // Input and repaints are always reported: what matters is that one follows the other.
-        let input = matches!(
-            event,
-            WindowEvent::PointerButton { .. }
-                | WindowEvent::KeyboardInput { .. }
-                | WindowEvent::RedrawRequested
-        );
-        let first_frame = matches!(event, WindowEvent::RedrawRequested) && !trace.first_frame;
-        let began = Instant::now();
-        self.application.window_event(event_loop, window_id, event);
-        let trace = self.trace.as_mut().unwrap();
-        if first_frame {
-            trace.first_frame = true;
-            trace.report("first frame", began, true);
-        } else {
-            trace.report(&name, began, input);
+        // One clock for animations, whoever lays the page out: the shell before
+        // it paints, or the document when the app measures (`SvelteDocument::settle`).
+        for view in self.application.windows.values_mut() {
+            view.animation_timer = Some(crate::document::animation_clock());
         }
+        if matches!(event, WindowEvent::RedrawRequested) {
+            self.forward(event_loop, window_id, event);
+            // The frame was laid out to be painted. If that moved something the
+            // app measures (a resize, an animation), it hears about it now.
+            if let Some(view) = self.application.windows.get_mut(&window_id)
+                && view.downcast_doc_mut::<SvelteDocument>().after_layout()
+            {
+                view.request_redraw();
+            }
+            return;
+        }
+        self.forward(event_loop, window_id, event);
     }
 
     fn proxy_wake_up(&mut self, event_loop: &dyn ActiveEventLoop) {

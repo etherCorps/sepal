@@ -1,6 +1,6 @@
 //! [`SvelteDocument`]: a Blitz document whose tree is driven by a Svelte app.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::task::Context as TaskContext;
@@ -53,6 +53,12 @@ pub struct SvelteDocument {
     /// The animation clock, in seconds, when there is no window: tests and
     /// screenshots move it with `wait`. In a window the shell supplies the time.
     pub(crate) headless_time: f64,
+    /// Shown in a window, whose shell keeps the animation clock.
+    windowed: bool,
+    /// The viewport size the app was last told, in CSS pixels.
+    reported_viewport: (f64, f64),
+    /// The box the app was last told for each node it measures.
+    reported_boxes: HashMap<u32, [f64; 4]>,
     timers: TimerWaker,
     last_turn: TurnStats,
     updater: Option<Arc<Updater>>,
@@ -75,6 +81,18 @@ enum Plan {
     Now(String),
     /// On a thread; the answer arrives on a later turn.
     Later(Work),
+}
+
+/// How often one turn may lay the page out, report it, and apply the app's
+/// answer. A popup settles in two or three; an app that answers every layout
+/// with another change must not hold the frame forever.
+const LAYOUT_ROUNDS: usize = 8;
+
+/// The clock animations run on in a window. `window.rs` gives the shell the
+/// same origin, so a layout done here and one done there agree on the time.
+pub fn animation_clock() -> std::time::Instant {
+    static ORIGIN: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    *ORIGIN.get_or_init(std::time::Instant::now)
 }
 
 /// `SVELTE_BLITZ_TRACE` is set: report what the UI thread does (see `window.rs`).
@@ -172,6 +190,9 @@ impl SvelteDocument {
             nodes,
             listening: HashSet::new(),
             headless_time: 0.0,
+            windowed: hold_host_calls,
+            reported_viewport: (0.0, 0.0),
+            reported_boxes: HashMap::new(),
             timers: TimerWaker::default(),
             last_turn: TurnStats::default(),
             updater,
@@ -227,17 +248,31 @@ impl SvelteDocument {
         self.js.run_timers();
         self.js.run_jobs();
 
-        loop {
-            // Before the batch: a call that is refused on the spot rejects its
-            // promise right here, and what that renders belongs in this turn.
-            self.start_host_calls();
-            let Some(batch) = self.js.take_batch() else {
+        self.apply_batches(&mut turn);
+
+        // An app that measures the page is told the new layout now, before
+        // the frame is drawn, and may change the page again in answer: a
+        // popup moves next to its button once it knows where the button is.
+        let mut moved = turn.changed();
+        for round in 0.. {
+            if !moved || !self.measuring() {
                 break;
-            };
-            let stats =
-                ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, &batch);
-            turn.add(stats);
+            }
+            if round == LAYOUT_ROUNDS {
+                eprintln!(
+                    "[host] the page was still changing after {LAYOUT_ROUNDS} layouts in one turn; the rest waits for the next frame"
+                );
+                break;
+            }
+            let time = self.animation_time();
+            self.doc.resolve(time);
+            if !self.report_layout() {
+                break;
+            }
             self.js.run_jobs();
+            let before = turn.ops;
+            self.apply_batches(&mut turn);
+            moved = turn.ops != before;
         }
 
         // Read the deadline last: effects that ran above may have started or stopped timers.
@@ -250,6 +285,101 @@ impl SvelteDocument {
         }
         self.last_turn = turn;
         turn
+    }
+
+    /// Apply what the app wrote, and what it writes in the microtasks that follow.
+    fn apply_batches(&mut self, turn: &mut TurnStats) {
+        loop {
+            // Before the batch: a call that is refused on the spot rejects its
+            // promise right here, and what that renders belongs in this turn.
+            self.start_host_calls();
+            let Some(batch) = self.js.take_batch() else {
+                break;
+            };
+            let stats =
+                ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, &batch);
+            turn.add(stats);
+            self.js.run_jobs();
+        }
+    }
+
+    /// The app measures the page, and there is a page to measure. Before the
+    /// document has been given a size there is not, and laying it out at
+    /// 0 × 0 would only leave Blitz with transforms worked out for that size.
+    fn measuring(&self) -> bool {
+        !self.nodes.measured().is_empty() && self.doc.viewport().window_size != (0, 0)
+    }
+
+    /// The time to lay out at, on the clock the animations run on.
+    fn animation_time(&self) -> f64 {
+        if self.windowed {
+            animation_clock().elapsed().as_secs_f64()
+        } else {
+            self.headless_time
+        }
+    }
+
+    /// Tell the app the viewport size and the boxes of the nodes it measures
+    /// (`MEASURE` in `ops.rs`), if any of that changed since it was last told.
+    /// Returns whether it was told anything.
+    ///
+    /// The layout must be up to date. JavaScript never asks the host for a
+    /// measurement; this is the only way one reaches it.
+    fn report_layout(&mut self) -> bool {
+        if !self.measuring() {
+            return false;
+        }
+        let measured = self.nodes.measured();
+        let viewport = self.doc.viewport();
+        let scale = viewport.scale_f64();
+        let (width, height) = viewport.window_size;
+        let viewport = (width as f64 / scale, height as f64 / scale);
+
+        let mut changed = Vec::new();
+        for &id in measured {
+            let rect = self
+                .nodes
+                .blitz(id)
+                // A node that is not on the page has no box, whatever its last layout says.
+                .filter(|&node| {
+                    self.doc
+                        .get_node(node)
+                        .is_some_and(|node| node.flags.is_in_document())
+                })
+                .and_then(|node| self.doc.get_client_bounding_rect(node))
+                .map_or([0.0; 4], |rect| [rect.x, rect.y, rect.width, rect.height]);
+            if self.reported_boxes.get(&id) != Some(&rect) {
+                self.reported_boxes.insert(id, rect);
+                changed.push(id as f64);
+                changed.extend(rect);
+            }
+        }
+        if changed.is_empty() && viewport == self.reported_viewport {
+            return false;
+        }
+        self.reported_viewport = viewport;
+        // Nodes that were freed since. Only worth a pass once they add up.
+        if self.reported_boxes.len() > measured.len() * 2 {
+            self.reported_boxes.retain(|id, _| measured.contains(id));
+        }
+        if trace_enabled() {
+            eprintln!(
+                "[trace] the app was told the layout: {} boxes changed, window {} x {}",
+                changed.len() / 5,
+                viewport.0,
+                viewport.1
+            );
+        }
+        self.js.layout(viewport.0, viewport.1, changed);
+        true
+    }
+
+    /// Call after the page was laid out for a reason the app did not cause:
+    /// the window was resized, an animation moved on, an image arrived.
+    /// Reports the new layout to an app that measures, and applies what it
+    /// changes in answer. Returns whether it changed anything.
+    pub fn after_layout(&mut self) -> bool {
+        self.report_layout() && self.settle().changed()
     }
 
     /// Do, or start, what JS asked for through `__sb_host.call`. Slow work
@@ -437,13 +567,12 @@ impl EventHandler for JsEventHandler<'_> {
         }
 
         // The target may be a node Blitz created itself (an anonymous box, say).
-        // Start from the nearest node the app knows about.
-        let Some(target) = std::iter::once(&event.target)
+        // Start from the nearest node the app knows about. Outside all of them
+        // (on <html>) it is id 0, which only an app with a `document` listens to.
+        let target = std::iter::once(&event.target)
             .chain(chain.iter())
             .find_map(|id| self.nodes.js(*id))
-        else {
-            return;
-        };
+            .unwrap_or(0);
 
         let detail = event_detail(&event.data);
         let flags = self.js.dispatch(target, name, event.bubbles, &detail);

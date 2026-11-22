@@ -15,7 +15,8 @@ const ARITY = {
 	[OP.REMOVE]: 1,
 	[OP.DROP]: 1,
 	[OP.LISTEN]: 1,
-	[OP.UNLISTEN]: 1
+	[OP.UNLISTEN]: 1,
+	[OP.MEASURE]: 1
 };
 
 export class MockHost {
@@ -23,6 +24,8 @@ export class MockHost {
 		this.nodes = new Map();
 		this.nodes.set(ROOT_ID, { id: ROOT_ID, kind: 'element', name: 'body', attrs: {}, children: [], parent: null });
 		this.listening = new Set();
+		/** Ids of the nodes the app wants boxes for. */
+		this.measured = new Set();
 		this.time = 0;
 		this.wake = -1;
 		this.logs = [];
@@ -119,6 +122,9 @@ export class MockHost {
 				case OP.UNLISTEN:
 					this.listening.delete(strings[a]);
 					break;
+				case OP.MEASURE:
+					this.measured.add(this.node(a).id);
+					break;
 			}
 		}
 	}
@@ -147,6 +153,16 @@ export class MockHost {
 		const flags = vm.runInContext('__sb.dispatch(...__args)', this.context);
 		this.settle();
 		return flags;
+	}
+
+	/**
+	 * What the Rust host does after a layout: tell the app the viewport size
+	 * and the boxes that changed. `boxes` is a list of `[node, x, y, width, height]`.
+	 */
+	layout(width, height, boxes = []) {
+		this.context.__args = [width, height, boxes.flatMap(([node, ...box]) => [node.id, ...box])];
+		vm.runInContext('__sb.layout(...__args)', this.context);
+		this.settle();
 	}
 
 	advance(ms) {

@@ -328,7 +328,7 @@ render as on the web.
 
 | Works | Works with `dom: true` | Does not work yet |
 |---|---|---|
-| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog | Select, Tooltip |
+| Button, Badge, Card, Alert, Skeleton, Separator, Progress, Label, Input (displaying a value) | Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip | Closing on Escape, focus trapping, Accordion's slide |
 
 The first column is markup and classes. Everything else is built on Bits UI,
 which is written for a browser: it reads `window` and `document`, listens on
@@ -352,22 +352,48 @@ host works changes. It is opt-in: an app that does not ask for it gets none of
 it, and the rule that the bundle runs on ECMAScript built-ins alone still
 holds for the layer itself.
 
-What it cannot do is **measure**. `getBoundingClientRect()` returns an empty
-rectangle, `getComputedStyle()` an empty style, and `ResizeObserver` never
-calls back, because layout lives in the host and JavaScript only writes to
-it. So:
+### Measuring the page
 
-- Select opens, but its list is placed at the top left corner instead of
-  under its trigger. Tooltip, Popover and menus would do the same: they all
-  position themselves with Floating UI, from measurements.
-- Accordion opens and closes, but jumps instead of sliding: its animation
-  runs to a measured height, which is 0.
-- Dialog needs no measuring and works fully with the mouse: it opens, dims
-  the page, and closes from its cross or a click outside.
+Layout happens in the host, and JavaScript never asks the host anything. So
+measurements travel the other way:
+
+1. The first time a node is measured (`getBoundingClientRect()`,
+   `offsetWidth`, `new ResizeObserver(…).observe(node)`), the DOM layer marks
+   it with one op, `MEASURE`.
+2. After each layout, the host sends the app the window's size and the box of
+   every marked node that moved or changed size.
+3. The app answers measurements from that copy, calls `ResizeObserver`
+   callbacks, and fires `resize` on `window`.
+
+This happens at the end of the turn, before the frame is drawn, and repeats
+while the app keeps changing the page in answer (up to 8 times). That is how a
+Select's list ends up under its trigger in the first frame it is visible in:
+Floating UI observes both, hears their sizes, computes a position, and the
+host lays out again.
+
+The consequence to know about: **a measurement is as of the last layout.**
+A node that has never been asked about measures as empty, and code that
+changes the page and measures it on the next line gets the old answer.
+Libraries that observe work; code that forces a layout does not. That is why
+the Accordion opens with a jump instead of a slide: Bits UI turns its
+animation off, measures the content's height, and turns it back on, all in one
+go, and gets 0.
+
+Also not there:
+
+- Boxes do not include CSS transforms (a dialog centred with `translate`
+  reports where it would be without it).
+- `getComputedStyle()` returns an empty style. Floating UI copes: it treats
+  everything as unclipped and positions against the window.
+- Scrolling is not reported as `scroll` events, so a popup does not follow
+  its anchor while the page scrolls under it.
 - Nothing closes on Escape, and focus is not trapped, since keyboard events
   have never been run in the host.
 
-Three things had to be fixed underneath to get this far, and they apply to
+A page that shows a `Skeleton` never goes idle: its pulse is an animation
+that does not end, and Blitz redraws while one is running.
+
+Some things had to be fixed underneath to get this far, and they apply to
 any app:
 
 - QuickJS answers `Object.getOwnPropertyDescriptor(proxy, key)` with a data
@@ -379,6 +405,9 @@ any app:
   or grid item) as if it were shifted by its container's padding. Fixed in
   the patched `blitz-dom`.
 - Capture-phase listeners now run in the capture phase.
+- An event that hits nothing the app made (the page around `<body>`, or a
+  `<body>` with `pointer-events: none`) used to be dropped. With the DOM
+  layer it goes to `document` with `<html>` as its target, as in a browser.
 
 Typing into an Input is untested, like all text input.
 
@@ -733,6 +762,8 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Desktop APIs on a real Mac: HTTPS fetch to api.github.com, a file in the app data directory, confirm and file-open dialogs appearing, maximise, minimise | example run with `VITE_AUTO=<button>` |
 | shadcn-svelte components from its CLI: nine render and react, `bind:this` reaches the element | `tests/shadcn.rs`, `examples/shadcn/probe.mjs` |
 | Bits UI components on the DOM layer: Switch and Checkbox (bound value reaches the page), Tabs, Accordion, Dialog (opens over the page, closes on a click outside) | `tests/shadcn.rs`, `test/dom.test.js` |
+| Measuring: a Select opens under its trigger in the same turn and picks an item, a Tooltip is centred over what is hovered, `innerWidth` and `resize` follow the window, an idle turn reports nothing | `tests/shadcn.rs`, `test/dom.test.js` |
+| The same Select in a real window on macOS, by scripted clicks and the trace: opens, picks, closes on a click outside, then no more redraws | `SVELTE_BLITZ_TRACE=1` with `--watch` |
 | A button in a line of text is clicked where it is drawn | `tests/shadcn.rs` |
 | A script that never returns is stopped after 10 s | unit test in `js.rs` |
 | Idle turns do nothing; unused event types never enter JS | `idle_turns_do_no_work` |
@@ -782,9 +813,8 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
   window control. See "Desktop APIs" for what is missing.
 - Images and other resources load from data: URLs and the app directory only; no network.
 - `requestAnimationFrame` is a 16 ms timer, not tied to the display.
-- Nothing in JavaScript can measure the page: no `getBoundingClientRect`
-  with real numbers, no `ResizeObserver`. Libraries that position things from
-  measurements (Floating UI) put them in the wrong place.
+- Measurements (`dom: true` only) are as of the last layout, and leave out
+  CSS transforms. See "Measuring the page".
 - A script that runs for 10 seconds without returning is stopped.
 - An element is put in the SVG namespace by its name alone. `a`, `title`,
   `style` and `script` are always HTML, also inside an `<svg>`.

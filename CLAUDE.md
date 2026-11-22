@@ -77,7 +77,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
    batch per turn with `__sb.take()`.
 2. **Reads never cross the boundary.** `getParent`, `getFirstChild`,
    `getNextSibling` are answered from the JS mirror. Do not add a host call to
-   answer a read.
+   answer a read. Layout is no exception: the host *reports* the boxes of the
+   nodes JS marked with `MEASURE` (`SvelteDocument::report_layout` ->
+   `__sb.layout`), and JS answers measurements from that copy.
 3. **Node ids are allocated in JS** and never reused. Fragments have id 0 and
    never exist on the host.
 4. **`protocol.js` and `ops.rs` must stay in sync.** A new opcode needs: the
@@ -91,7 +93,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 7. **No frame loop, no polling.** The event loop waits in the OS. Anything that
    wakes it on a fixed interval is a regression. `idle_turns_do_no_work` and
    `timers_wake_the_event_loop` guard this. Dev reload obeys it too: the
-   host blocks on stdin, it does not watch files.
+   host blocks on stdin, it does not watch files. Layout is reported at the
+   end of a turn that changed the page and after a frame the shell drew
+   anyway, never on a timer.
 8. **`apply_batch` must never panic.** Batches come from app code. Unknown
    nodes and opcodes are logged and skipped. Blitz indexes node storage
    directly (`doc.nodes[id]`), so check `get_node(id).is_some()` first.
@@ -116,10 +120,19 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Libraries that assume a browser fail at run time, not at compile time.**
   `dom: true` in `app.config.ts` loads `packages/core/src/dom.js`, a DOM on
   top of the renderer's tree, which is enough for Bits UI's Switch, Checkbox,
-  Tabs, Accordion and Dialog. It cannot measure: `getBoundingClientRect()` is
-  empty, so anything positioned by Floating UI (Select, Tooltip) is misplaced.
-  Do not answer a measurement with a call into the host (invariant 2, and
-  layout is not safe to run inside an event handler).
+  Tabs, Accordion, Dialog, Select and Tooltip. Measurements are the host's
+  last report, so code that changes the page and measures on the next line
+  gets the old answer (Accordion's slide). Do not fix that with a call into
+  the host (invariant 2, and layout is not safe to run inside an event
+  handler).
+- **Never lay out a document that has no size yet.** Blitz works out
+  percentage transforms once; at 0 × 0 they stay wrong (`measuring()` in
+  `document.rs` guards this).
+- **Two places lay out in a window:** the shell before painting, and
+  `settle()` when the app measures. They must agree on the animation time;
+  `window.rs` points the shell's clock at `document::animation_clock()`.
+- **Event target id 0** means "outside everything the app made". Only the
+  DOM layer listens to it (`host_hooks.outside`).
 - **`BlitzNode`'s own fields must not take DOM names.** The node id is
   `node_id` because `id` is the HTML attribute; a collision corrupts the op
   stream without an error.

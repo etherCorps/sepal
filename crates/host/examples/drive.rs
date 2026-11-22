@@ -5,7 +5,7 @@
 //! cargo run --features screenshot --example drive -- <app dir> [WIDTHxHEIGHT] <step>...
 //! ```
 //!
-//! Steps, in order: `click:SELECTOR`, `clickat:X,Y`, `time:SECONDS` (timers
+//! Steps, in order: `click:SELECTOR`, `clickat:X,Y`, `move:X,Y`, `time:SECONDS` (timers
 //! and animations move on), `text:SELECTOR`, `count:SELECTOR`,
 //! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `shot:FILE.png`.
 //!
@@ -46,6 +46,12 @@ fn main() {
                 doc.click_at(x.parse().unwrap(), y.parse().unwrap());
                 doc.wait(0.12);
                 println!("  clickat {rest}")
+            }
+            "move" => {
+                let (x, y) = rest.split_once(',').unwrap();
+                doc.move_to(x.parse().unwrap(), y.parse().unwrap());
+                doc.wait(0.12);
+                println!("  move {rest}")
             }
             "eval" => println!("  eval: {:?}", doc.js().eval_string(rest)),
             "shot" => {

@@ -23,6 +23,8 @@ impl SvelteDocument {
     pub fn resolve(&mut self) {
         let time = self.headless_time;
         self.base_mut().resolve(time);
+        // As a window does after each frame.
+        self.after_layout();
     }
 
     /// Let time pass: timers that come due fire, and CSS transitions and
@@ -89,6 +91,12 @@ impl SvelteDocument {
             MouseEventButtons::Primary,
         )));
         self.handle_ui_event(UiEvent::PointerUp(pointer(x, y, MouseEventButtons::None)));
+        self.resolve();
+    }
+
+    /// Move the pointer to a point, with no button held.
+    pub fn move_to(&mut self, x: f32, y: f32) {
+        self.handle_ui_event(UiEvent::PointerMove(pointer(x, y, MouseEventButtons::None)));
         self.resolve();
     }
 

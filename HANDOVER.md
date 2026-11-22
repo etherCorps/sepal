@@ -337,19 +337,25 @@ platform binaries into `packages/host/bin` before packing it.
   notifications, menus, tray, shortcuts, multiple windows, a settings store.
 
 - A DOM layer for web component libraries (`dom: true`, Shivam's choice
-  after the shadcn probe): Switch, Checkbox, Tabs, Accordion and Dialog from
-  shadcn-svelte work. Not done, and the next step if this continues: letting
-  JavaScript measure the page. Select, Tooltip, Popover and menus all position
-  themselves with Floating UI and land in the top left corner without it. A
-  design that keeps the invariants: JS never asks the host; the host sends the
-  rectangles of the elements JS has asked about after each layout, JS answers
-  `getBoundingClientRect()` from that copy and fires `ResizeObserver` when
-  one changes. Keyboard events (Escape, focus trap) are the other half.
+  after the shadcn probe), then layout measurement for it (also his call):
+  Switch, Checkbox, Tabs, Accordion, Dialog, Select and Tooltip from
+  shadcn-svelte work with the mouse. The host reports boxes to JS after each
+  layout; JS never asks. See "Measuring the page" in the README.
+  Not done:
+  - Keyboard: Escape, focus trap, arrow keys in a Select. Blocked on
+    keyboard events, which have never been run at all.
+  - Synchronous measurement ("change the page, measure it on the next
+    line"). Accordion's slide needs it. It would mean applying the pending
+    batch and laying out in the middle of a script, which invariant 2 rules
+    out. Ask Shivam before going there.
+  - CSS transforms in reported boxes, `scroll` events, `getComputedStyle`.
+  - The other Bits UI components (Popover, DropdownMenu, Combobox, …) were
+    not tried. They use the same pieces as Select and Tooltip.
 
 ## Known gaps outside this brief
 
 Text input and IME, keyboard events, state-preserving HMR,
-`requestAnimationFrame` tied to the display, measuring layout from JavaScript, multiple
+`requestAnimationFrame` tied to the display, multiple
 windows, the scriptc experiment. See "Next steps" in `README.md`. Do not pull
 these into the icon or release work unless one turns out to block it.
 

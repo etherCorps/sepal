@@ -19,6 +19,7 @@ pub const REMOVE: i32 = 8; // node
 pub const DROP: i32 = 9; // node
 pub const LISTEN: i32 = 10; // type
 pub const UNLISTEN: i32 = 11; // type
+pub const MEASURE: i32 = 12; // node
 
 /// The JS id of the mount target, mapped to `<body>`.
 pub const ROOT_ID: u32 = 1;
@@ -98,6 +99,9 @@ const SVG_ELEMENTS: &[&str] = &[
 pub struct NodeMap {
     to_blitz: HashMap<u32, NodeId>,
     to_js: HashMap<NodeId, u32>,
+    /// JS ids of the nodes the app measures: it is told where they are after
+    /// every layout. See `SvelteDocument::report_layout`.
+    measured: HashSet<u32>,
 }
 
 impl NodeMap {
@@ -117,7 +121,12 @@ impl NodeMap {
     fn forget_blitz(&mut self, blitz: NodeId) {
         if let Some(js) = self.to_js.remove(&blitz) {
             self.to_blitz.remove(&js);
+            self.measured.remove(&js);
         }
+    }
+
+    pub fn measured(&self) -> &HashSet<u32> {
+        &self.measured
     }
 
     pub fn len(&self) -> usize {
@@ -306,6 +315,11 @@ pub fn apply_batch(
                 let o = operands!(1);
                 listening.remove(string(o[0]));
             }
+            MEASURE => {
+                let o = operands!(1);
+                node!(o[0]);
+                nodes.measured.insert(o[0] as u32);
+            }
             _ => {
                 eprintln!("[host] unknown opcode {code} at {i}; dropping the rest of the batch");
                 break;
@@ -336,6 +350,8 @@ mod tests {
             INSERT, 2, 2, 0,      // div into itself
             SET_ATTR, 99, 0, 0,   // a node that does not exist
             REMOVE, 99,
+            MEASURE, 99,
+            MEASURE, 2,
             77,                   // not an opcode
         ];
         let batch = Batch {
@@ -347,5 +363,6 @@ mod tests {
         let (div, span) = (nodes.blitz(2).unwrap(), nodes.blitz(3).unwrap());
         assert_eq!(doc.get_node(span).unwrap().parent, Some(div));
         assert_eq!(doc.get_node(div).unwrap().parent, None, "no cycle");
+        assert_eq!(nodes.measured().iter().collect::<Vec<_>>(), [&2]);
     }
 }
