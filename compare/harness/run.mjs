@@ -328,16 +328,25 @@ async function quit(app) {
 /** The app's window, once it is on screen; the frontmost check and title bar come with it. */
 async function window_of(app, ms = 20000) {
 	const until = Date.now() + ms;
+	// Stage Manager keeps a new window off screen when its app does not come forward by
+	// itself (Tauri, launched from a background process): after 5 s, bring it forward once.
+	const park_at = Date.now() + 5000;
+	let parked = false;
 	let first = null, last = null, same = 0;
 	while (Date.now() < until) {
 		if (app.exited) throw new Abort(`the app exited (${JSON.stringify(app.exited)}) before showing a window`);
 		const wins = (await drive.cmd('windows', app.pid)).filter((w) => w.onscreen && w.w >= 300 && w.h >= 200);
+		if (!wins.length && !parked && Date.now() > park_at) {
+			parked = true;
+			console.error(`  no window on screen after 5 s: activating pid ${app.pid} (Stage Manager)`);
+			await drive.cmd('activate', app.pid);
+		}
 		if (wins.length) {
 			const w = wins[0];
 			first ??= now();
 			// macOS animates a new window in: its bounds settle over ~200 ms.
 			if (last && ['x', 'y', 'w', 'h'].every((k) => last[k] === w[k])) {
-				if (++same >= 5) return { ...w, t: first, stable_t: now() };
+				if (++same >= 5) return { ...w, t: first, stable_t: now(), parked };
 			} else same = 0;
 			last = w;
 		}
@@ -380,15 +389,23 @@ function top_sampler(pids) {
 }
 
 /** phys_footprint over every pid in one `footprint` call. */
+/** footprint categories that are GPU memory: driver-owned graphics memory and window surfaces. */
+const GPU_CATEGORY = /\(graphics\)|^IOSurface$|^IOAccelerator/;
+
 async function footprint(pids) {
 	const file = path.join(os.tmpdir(), `footprint-${process.pid}.json`);
-	await exec('footprint', ['-j', file, '-f', 'bytes', '--noCategories', ...pids.flatMap((p) => ['-p', String(p)])]).catch((e) => e);
+	await exec('footprint', ['-j', file, '-f', 'bytes', ...pids.flatMap((p) => ['-p', String(p)])], { maxBuffer: 1 << 26 }).catch((e) => e);
 	try {
 		const j = JSON.parse(fs.readFileSync(file, 'utf8'));
+		const gpu = (p) =>
+			Object.entries(p.categories ?? {})
+				.filter(([name]) => GPU_CATEGORY.test(name))
+				.reduce((sum, [, c]) => sum + c.dirty + c.swapped, 0);
 		return {
 			t: now(),
 			total: j['total footprint'],
-			processes: j.processes.map((p) => ({ pid: p.pid, name: p.name, footprint: p.footprint, peak: p.auxiliary?.phys_footprint_peak })),
+			gpu: j.processes.reduce((sum, p) => sum + gpu(p), 0),
+			processes: j.processes.map((p) => ({ pid: p.pid, name: p.name, footprint: p.footprint, gpu: gpu(p), peak: p.auxiliary?.phys_footprint_peak })),
 			errors: j.errors
 		};
 	} catch (e) {
@@ -433,6 +450,24 @@ function categories(file) {
 
 async function usage(pids) {
 	return drive.cmd('usage', ...pids);
+}
+
+/**
+ * GPU time (ns) the GPU spent on these processes' Metal queues so far: the driver's
+ * per-client `accumulatedGPUTime` (what Activity Monitor's GPU column reads), summed over
+ * every client a process opened. A delta of two calls is the GPU time in between.
+ */
+async function gpu_time(pids) {
+	const r = await exec('ioreg', ['-r', '-c', 'AGXDeviceUserClient', '-w', '0', '-d', '1'], { maxBuffer: 1 << 26 });
+	const want = new Set(pids);
+	let ns = 0;
+	// One `+-o AGXDeviceUserClient` entry per client; `AppUsage` comes before its creator.
+	for (const entry of r.stdout.split('+-o ')) {
+		const creator = entry.match(/"IOUserClientCreator" = "pid (\d+),/);
+		if (!creator || !want.has(Number(creator[1]))) continue;
+		for (const m of entry.matchAll(/"accumulatedGPUTime"=(\d+)/g)) ns += Number(m[1]);
+	}
+	return ns;
 }
 function usage_delta(a, b) {
 	const out = {};
@@ -904,11 +939,14 @@ async function run_one(build, size, n, { calib, record_dir, key, log_dir, breakd
 			if (record_dir) capture = await recorder(win, path.join(record_dir, `${key}.frames`), sc.idle ? plan.idle_s + 10 : 600);
 			sampler = top_sampler(pids);
 			const u0 = await usage(pids);
+			const g0 = await gpu_time(pids);
 			const from = now();
 			const index = app.index;
 			result = await sc.run(run, size);
 			const to = now();
 			const u1 = await usage(pids);
+			// Processes started during the scenario (a WebKit helper) count from zero.
+			rec.gpu_ns = (await gpu_time((await owned(app)).map((p) => p.pid))) - g0;
 			rec.measured = { from, to, seconds: (to - from) / 1e9 };
 			rec.usage = usage_delta(u0, u1);
 			rec.extra = result ?? null;

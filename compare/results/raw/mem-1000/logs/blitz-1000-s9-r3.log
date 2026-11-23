@@ -1,0 +1,631 @@
+206516635146062 2 [js error] MARK start 1795445205891.0
+206516653979145 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+206516779615145 2 [trace] +0.093s first frame took 0.0ms
+206516779631062 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+206516829627354 2 [trace] +0.130s poll took 13.5ms
+206516831610520 2 [js error] MARK read 1795445206087.0
+206516832844687 2 [js error] MARK parsed 1795445206088.0
+206516833437062 2 [js error] MARK loaded 1795445206089.0
+206516841246312 2 [js error] MARK mounted 1795445206097.0
+206516845193187 2 [trace] the app changed the page: 2644 ops, 1 layouts in 3.3ms
+206516845203687 2 [trace] +0.145s poll took 14.0ms
+206516860580229 2 [trace] +0.159s RedrawRequested took 14.6ms
+206521955128229 2 [trace] +5.260s RedrawRequested took 8.8ms
+206521976866062 2 [trace] the app changed the page: 1922 ops, 1 layouts in 2.6ms
+206521976869187 2 [trace] +5.281s MouseWheel took 9.0ms
+206521982203937 2 [trace] +5.290s RedrawRequested took 5.2ms
+206521994096729 2 [trace] the app changed the page: 2267 ops, 1 layouts in 2.4ms
+206521994098937 2 [trace] +5.296s MouseWheel took 11.8ms
+206522008776604 2 [trace] +5.308s RedrawRequested took 14.5ms
+206522022850270 2 [trace] the app changed the page: 3274 ops, 1 layouts in 3.7ms
+206522022853562 2 [trace] +5.322s MouseWheel took 14.0ms
+206522035851395 2 [trace] +5.336s RedrawRequested took 12.9ms
+206522045328354 2 [trace] the app changed the page: 1982 ops, 1 layouts in 2.3ms
+206522045337479 2 [trace] +5.349s MouseWheel took 9.4ms
+206522050412854 2 [trace] +5.359s RedrawRequested took 5.0ms
+206522059736104 2 [trace] the app changed the page: 1901 ops, 1 layouts in 2.4ms
+206522059737437 2 [trace] +5.364s MouseWheel took 9.2ms
+206522065521895 2 [trace] +5.373s RedrawRequested took 5.7ms
+206522073768937 2 [trace] the app changed the page: 1948 ops, 1 layouts in 2.4ms
+206522073776645 2 [trace] +5.379s MouseWheel took 8.2ms
+206522078490312 2 [trace] +5.387s RedrawRequested took 4.6ms
+206522090408937 2 [trace] +5.392s RedrawRequested took 11.9ms
+206522097551937 2 [trace] the app changed the page: 1565 ops, 1 layouts in 2.0ms
+206522103642770 2 [trace] +5.411s RedrawRequested took 6.0ms
+206522104149270 2 [trace] the app changed the page: 7 ops, 1 layouts in 0.1ms
+206522116967687 2 [trace] +5.418s RedrawRequested took 12.7ms
+206522130832520 2 [trace] +5.431s RedrawRequested took 13.7ms
+206522143848812 2 [trace] +5.444s RedrawRequested took 12.8ms
+206522157235895 2 [trace] +5.457s RedrawRequested took 13.3ms
+206522170275395 2 [trace] +5.471s RedrawRequested took 12.8ms
+206522183890687 2 [trace] +5.484s RedrawRequested took 13.4ms
+206522197406312 2 [trace] +5.497s RedrawRequested took 13.4ms
+206522210536645 2 [trace] +5.511s RedrawRequested took 13.0ms
+206522223795395 2 [trace] +5.524s RedrawRequested took 13.2ms
+206522236880187 2 [trace] +5.537s RedrawRequested took 13.0ms
+206522250450645 2 [trace] +5.550s RedrawRequested took 13.4ms
+206522264043895 2 [trace] +5.564s RedrawRequested took 13.4ms
+206522277407062 2 [trace] +5.578s RedrawRequested took 13.1ms
+206522290528729 2 [trace] +5.591s RedrawRequested took 13.1ms
+206522303634937 2 [trace] +5.604s RedrawRequested took 12.9ms
+206522317394854 2 [trace] +5.617s RedrawRequested took 13.6ms
+206522330484520 2 [trace] +5.631s RedrawRequested took 12.9ms
+206522344000187 2 [trace] +5.644s RedrawRequested took 13.4ms
+206522357053895 2 [trace] +5.657s RedrawRequested took 13.0ms
+206522370489895 2 [trace] +5.671s RedrawRequested took 13.3ms
+206522384265479 2 [trace] +5.684s RedrawRequested took 13.8ms
+206522397229229 2 [trace] +5.698s RedrawRequested took 12.9ms
+206522411045062 2 [trace] +5.711s RedrawRequested took 13.8ms
+206522423982354 2 [trace] +5.724s RedrawRequested took 12.9ms
+206522437385979 2 [trace] +5.737s RedrawRequested took 13.4ms
+206522451152229 2 [trace] +5.751s RedrawRequested took 13.7ms
+206522464076895 2 [trace] +5.765s RedrawRequested took 12.9ms
+206522477630270 2 [trace] +5.777s RedrawRequested took 13.5ms
+206522490716979 2 [trace] +5.791s RedrawRequested took 13.0ms
+206522504286520 2 [trace] +5.804s RedrawRequested took 13.5ms
+206522517751854 2 [trace] +5.818s RedrawRequested took 13.4ms
+206522530848229 2 [trace] +5.831s RedrawRequested took 13.1ms
+206522544350979 2 [trace] +5.844s RedrawRequested took 13.5ms
+206522557426770 2 [trace] +5.858s RedrawRequested took 13.0ms
+206522570647895 2 [trace] +5.871s RedrawRequested took 13.2ms
+206522584446270 2 [trace] +5.884s RedrawRequested took 13.8ms
+206522597443979 2 [trace] +5.898s RedrawRequested took 13.0ms
+206522610969187 2 [trace] +5.911s RedrawRequested took 13.5ms
+206522624014812 2 [trace] +5.924s RedrawRequested took 13.0ms
+206522637601062 2 [trace] +5.937s RedrawRequested took 13.6ms
+206522651337645 2 [trace] +5.951s RedrawRequested took 13.7ms
+206522664277645 2 [trace] +5.965s RedrawRequested took 12.9ms
+206522677868520 2 [trace] +5.978s RedrawRequested took 13.5ms
+206522690788020 2 [trace] +5.991s RedrawRequested took 12.9ms
+206522704178729 2 [trace] +6.004s RedrawRequested took 13.3ms
+206522721042562 2 [trace] +6.027s RedrawRequested took 7.2ms
+206522730778479 2 [trace] +6.034s RedrawRequested took 9.7ms
+206522744509270 2 [trace] +6.044s RedrawRequested took 13.7ms
+206522757382937 2 [trace] +6.058s RedrawRequested took 12.8ms
+206522771081729 2 [trace] +6.071s RedrawRequested took 13.7ms
+206522784885312 2 [trace] +6.084s RedrawRequested took 13.8ms
+206522797677145 2 [trace] +6.098s RedrawRequested took 12.8ms
+206522811287604 2 [trace] +6.111s RedrawRequested took 13.6ms
+206522824147229 2 [trace] +6.125s RedrawRequested took 12.8ms
+206523170488979 2 [trace] +6.466s RedrawRequested took 17.7ms
+206523191356020 2 [trace] +6.484s RedrawRequested took 20.8ms
+206523191972937 2 [trace] +6.505s PointerButton took 0.1ms
+206523208311812 2 [trace] +6.505s RedrawRequested took 16.2ms
+206523213074812 2 [js error] MARK shown:all 1795445212469.0
+206523215706479 2 [trace] the app changed the page: 837 ops, 1 layouts in 2.2ms
+206523215714729 2 [trace] +6.522s PointerButton took 7.3ms
+206523221623645 2 [trace] +6.529s RedrawRequested took 5.8ms
+206523237597562 2 [trace] +6.543s RedrawRequested took 7.5ms
+206523265835562 2 [trace] the app changed the page: 2022 ops, 1 layouts in 3.1ms
+206523265856145 2 [trace] +6.568s MouseWheel took 11.6ms
+206523276016104 2 [trace] the app changed the page: 1920 ops, 1 layouts in 2.5ms
+206523276023437 2 [trace] +6.579s MouseWheel took 10.0ms
+206523286489812 2 [trace] +6.589s RedrawRequested took 10.4ms
+206523291566645 2 [trace] +6.600s RedrawRequested took 5.0ms
+206523301120270 2 [trace] the app changed the page: 1882 ops, 1 layouts in 2.5ms
+206523301121979 2 [trace] +6.605s MouseWheel took 9.4ms
+206523311273062 2 [trace] +6.615s RedrawRequested took 10.1ms
+206523329933604 2 [trace] the app changed the page: 6669 ops, 1 layouts in 2.6ms
+206523329946979 2 [trace] +6.625s MouseWheel took 18.5ms
+206523337874937 2 [trace] the app changed the page: 2036 ops, 1 layouts in 2.3ms
+206523343108979 2 [trace] +6.651s RedrawRequested took 5.1ms
+206523350548729 2 [trace] the app changed the page: 1939 ops, 1 layouts in 2.3ms
+206523357720645 2 [trace] +6.664s RedrawRequested took 7.1ms
+206523365157312 2 [trace] the app changed the page: 1937 ops, 1 layouts in 2.3ms
+206523371266604 2 [trace] +6.679s RedrawRequested took 6.0ms
+206523378033312 2 [trace] the app changed the page: 1724 ops, 1 layouts in 2.0ms
+206523384974354 2 [trace] +6.691s RedrawRequested took 6.9ms
+206523385396354 2 [trace] the app changed the page: 6 ops, 1 layouts in 0.1ms
+206523397769270 2 [trace] +6.699s RedrawRequested took 12.3ms
+206523411004020 2 [trace] +6.711s RedrawRequested took 13.2ms
+206523424298145 2 [trace] +6.725s RedrawRequested took 13.1ms
+206523437900270 2 [trace] +6.738s RedrawRequested took 13.4ms
+206523451016562 2 [trace] +6.751s RedrawRequested took 12.9ms
+206523464470687 2 [trace] +6.765s RedrawRequested took 13.3ms
+206523478368604 2 [trace] +6.778s RedrawRequested took 13.9ms
+206523490984187 2 [trace] +6.792s RedrawRequested took 12.4ms
+206523504728020 2 [trace] +6.805s RedrawRequested took 13.6ms
+206523517841687 2 [trace] +6.818s RedrawRequested took 13.0ms
+206523531131562 2 [trace] +6.831s RedrawRequested took 13.1ms
+206523545027729 2 [trace] +6.845s RedrawRequested took 13.9ms
+206523557877229 2 [trace] +6.859s RedrawRequested took 12.6ms
+206523571026312 2 [trace] +6.871s RedrawRequested took 12.9ms
+206523584588770 2 [trace] +6.885s RedrawRequested took 13.4ms
+206523597987937 2 [trace] +6.898s RedrawRequested took 13.2ms
+206523611808604 2 [trace] +6.911s RedrawRequested took 13.8ms
+206523624477854 2 [trace] +6.925s RedrawRequested took 12.5ms
+206523638173729 2 [trace] +6.938s RedrawRequested took 13.5ms
+206523651358312 2 [trace] +6.952s RedrawRequested took 13.1ms
+206523664579895 2 [trace] +6.965s RedrawRequested took 13.1ms
+206523678220354 2 [trace] +6.978s RedrawRequested took 13.6ms
+206523691141270 2 [trace] +6.992s RedrawRequested took 12.8ms
+206523704871770 2 [trace] +7.005s RedrawRequested took 13.6ms
+206523719744437 2 [trace] +7.023s RedrawRequested took 10.3ms
+206523731170812 2 [trace] +7.033s RedrawRequested took 11.2ms
+206523744908520 2 [trace] +7.045s RedrawRequested took 13.7ms
+206523757769812 2 [trace] +7.058s RedrawRequested took 12.7ms
+206523771313104 2 [trace] +7.071s RedrawRequested took 13.4ms
+206523784947770 2 [trace] +7.085s RedrawRequested took 13.5ms
+206523797819395 2 [trace] +7.098s RedrawRequested took 12.7ms
+206523811201312 2 [trace] +7.111s RedrawRequested took 13.3ms
+206523824534104 2 [trace] +7.125s RedrawRequested took 13.1ms
+206523837940062 2 [trace] +7.138s RedrawRequested took 13.4ms
+206523851799520 2 [trace] +7.151s RedrawRequested took 13.8ms
+206523864676812 2 [trace] +7.165s RedrawRequested took 12.8ms
+206523877744354 2 [trace] +7.178s RedrawRequested took 13.0ms
+206523891240604 2 [trace] +7.191s RedrawRequested took 13.4ms
+206523904649437 2 [trace] +7.205s RedrawRequested took 13.4ms
+206523918155604 2 [trace] +7.218s RedrawRequested took 13.5ms
+206523931403229 2 [trace] +7.232s RedrawRequested took 13.2ms
+206523944919229 2 [trace] +7.245s RedrawRequested took 13.5ms
+206523958009770 2 [trace] +7.258s RedrawRequested took 13.1ms
+206523971481937 2 [trace] +7.271s RedrawRequested took 13.4ms
+206523985339520 2 [trace] +7.285s RedrawRequested took 13.8ms
+206523998060812 2 [trace] +7.299s RedrawRequested took 12.7ms
+206524011842937 2 [trace] +7.311s RedrawRequested took 13.8ms
+206524024626312 2 [trace] +7.325s RedrawRequested took 12.8ms
+206524038164104 2 [trace] +7.338s RedrawRequested took 13.5ms
+206524051630562 2 [trace] +7.352s RedrawRequested took 13.4ms
+206524065507812 2 [trace] +7.365s RedrawRequested took 13.8ms
+206524078372104 2 [trace] +7.379s RedrawRequested took 12.8ms
+206524091364729 2 [trace] +7.392s RedrawRequested took 13.0ms
+206524104680604 2 [trace] +7.405s RedrawRequested took 13.3ms
+206524825514604 2 [trace] the app changed the page: 440 ops, 1 layouts in 2.0ms
+206524842569270 2 [trace] +8.139s RedrawRequested took 16.9ms
+206524847850979 2 [trace] the app changed the page: 538 ops, 1 layouts in 1.9ms
+206524855320895 2 [trace] +8.161s RedrawRequested took 7.3ms
+206524866746437 2 [trace] +8.169s RedrawRequested took 11.3ms
+206524870288937 2 [trace] the app changed the page: 406 ops, 1 layouts in 1.2ms
+206524879300104 2 [trace] +8.184s RedrawRequested took 8.9ms
+206524883086895 2 [trace] the app changed the page: 542 ops, 1 layouts in 1.2ms
+206524892291437 2 [trace] +8.197s RedrawRequested took 9.1ms
+206524895570520 2 [trace] the app changed the page: 464 ops, 1 layouts in 1.0ms
+206524904848187 2 [trace] +8.209s RedrawRequested took 9.2ms
+206524918864729 2 [trace] +8.218s RedrawRequested took 14.0ms
+206524922035270 2 [trace] the app changed the page: 522 ops, 1 layouts in 1.1ms
+206524931658687 2 [trace] +8.235s RedrawRequested took 9.5ms
+206524934555937 2 [trace] the app changed the page: 436 ops, 1 layouts in 0.9ms
+206524945328395 2 [trace] +8.248s RedrawRequested took 10.7ms
+206524948116604 2 [trace] the app changed the page: 531 ops, 1 layouts in 0.8ms
+206524958190104 2 [trace] +8.262s RedrawRequested took 10.0ms
+206524961565354 2 [trace] the app changed the page: 523 ops, 1 layouts in 1.1ms
+206524971537479 2 [trace] +8.275s RedrawRequested took 9.9ms
+206524985438729 2 [trace] +8.285s RedrawRequested took 13.9ms
+206524988361312 2 [trace] the app changed the page: 456 ops, 1 layouts in 1.0ms
+206524998423520 2 [trace] +8.302s RedrawRequested took 10.0ms
+206525001660520 2 [trace] the app changed the page: 520 ops, 1 layouts in 1.1ms
+206525012196187 2 [trace] +8.315s RedrawRequested took 10.4ms
+206525014637145 2 [trace] the app changed the page: 446 ops, 1 layouts in 0.8ms
+206525025265770 2 [trace] +8.328s RedrawRequested took 10.5ms
+206525028852979 2 [trace] the app changed the page: 530 ops, 1 layouts in 1.2ms
+206525038366187 2 [trace] +8.342s RedrawRequested took 9.4ms
+206525052106062 2 [trace] +8.352s RedrawRequested took 13.7ms
+206525055192395 2 [trace] the app changed the page: 446 ops, 1 layouts in 1.0ms
+206525064931270 2 [trace] +8.369s RedrawRequested took 9.6ms
+206525068488270 2 [trace] the app changed the page: 540 ops, 1 layouts in 1.1ms
+206525078658437 2 [trace] +8.382s RedrawRequested took 10.1ms
+206525081410604 2 [trace] the app changed the page: 435 ops, 1 layouts in 0.9ms
+206525091632062 2 [trace] +8.395s RedrawRequested took 10.1ms
+206525094852979 2 [trace] the app changed the page: 501 ops, 1 layouts in 1.0ms
+206525105012395 2 [trace] +8.408s RedrawRequested took 10.1ms
+206525118784145 2 [trace] +8.418s RedrawRequested took 13.7ms
+206525121990854 2 [trace] the app changed the page: 511 ops, 1 layouts in 1.1ms
+206525131729354 2 [trace] +8.435s RedrawRequested took 9.6ms
+206525134887229 2 [trace] the app changed the page: 465 ops, 1 layouts in 1.0ms
+206525145419395 2 [trace] +8.448s RedrawRequested took 10.4ms
+206525148253770 2 [trace] the app changed the page: 511 ops, 1 layouts in 0.9ms
+206525158261645 2 [trace] +8.462s RedrawRequested took 9.9ms
+206525161072937 2 [trace] the app changed the page: 417 ops, 1 layouts in 0.9ms
+206525171746354 2 [trace] +8.475s RedrawRequested took 10.6ms
+206525185478437 2 [trace] +8.485s RedrawRequested took 13.7ms
+206525188857270 2 [trace] the app changed the page: 522 ops, 1 layouts in 1.1ms
+206525198466354 2 [trace] +8.502s RedrawRequested took 9.5ms
+206525201650895 2 [trace] the app changed the page: 443 ops, 1 layouts in 1.0ms
+206525211825895 2 [trace] +8.515s RedrawRequested took 10.1ms
+206525215507312 2 [trace] the app changed the page: 525 ops, 1 layouts in 1.1ms
+206525225105770 2 [trace] +8.529s RedrawRequested took 9.5ms
+206525228531895 2 [trace] the app changed the page: 536 ops, 1 layouts in 1.1ms
+206525238734062 2 [trace] +8.542s RedrawRequested took 10.1ms
+206525251906479 2 [trace] +8.552s RedrawRequested took 13.1ms
+206525254802187 2 [trace] the app changed the page: 450 ops, 1 layouts in 0.9ms
+206525265245562 2 [trace] +8.568s RedrawRequested took 10.4ms
+206525268431729 2 [trace] the app changed the page: 526 ops, 1 layouts in 1.0ms
+206525278549812 2 [trace] +8.582s RedrawRequested took 10.0ms
+206525281325229 2 [trace] the app changed the page: 442 ops, 1 layouts in 0.9ms
+206525291812770 2 [trace] +8.595s RedrawRequested took 10.4ms
+206525294879937 2 [trace] the app changed the page: 535 ops, 1 layouts in 1.0ms
+206525305209479 2 [trace] +8.608s RedrawRequested took 10.2ms
+206525318871437 2 [trace] +8.619s RedrawRequested took 13.6ms
+206525321856104 2 [trace] the app changed the page: 438 ops, 1 layouts in 1.0ms
+206525331735187 2 [trace] +8.635s RedrawRequested took 9.8ms
+206525335233229 2 [trace] the app changed the page: 506 ops, 1 layouts in 1.0ms
+206525345482104 2 [trace] +8.649s RedrawRequested took 10.2ms
+206525348094770 2 [trace] the app changed the page: 429 ops, 1 layouts in 0.8ms
+206525358961104 2 [trace] +8.662s RedrawRequested took 10.8ms
+206525362017270 2 [trace] the app changed the page: 506 ops, 1 layouts in 1.0ms
+206525371874479 2 [trace] +8.675s RedrawRequested took 9.8ms
+206525385630854 2 [trace] +8.685s RedrawRequested took 13.7ms
+206525389149770 2 [trace] the app changed the page: 534 ops, 1 layouts in 1.1ms
+206525398502687 2 [trace] +8.703s RedrawRequested took 9.2ms
+206525401694270 2 [trace] the app changed the page: 432 ops, 1 layouts in 0.9ms
+206525411715895 2 [trace] +8.715s RedrawRequested took 9.9ms
+206525414683479 2 [trace] the app changed the page: 505 ops, 1 layouts in 0.8ms
+206525425230562 2 [trace] +8.728s RedrawRequested took 10.5ms
+206525427867937 2 [trace] the app changed the page: 431 ops, 1 layouts in 0.9ms
+206525438389187 2 [trace] +8.741s RedrawRequested took 10.4ms
+206525455998020 2 [trace] +8.752s RedrawRequested took 17.6ms
+206525461111895 2 [trace] the app changed the page: 965 ops, 1 layouts in 1.5ms
+206525467254854 2 [trace] +8.775s RedrawRequested took 6.0ms
+206525478306937 2 [trace] +8.781s RedrawRequested took 11.0ms
+206525481383104 2 [trace] the app changed the page: 504 ops, 1 layouts in 0.9ms
+206525491921937 2 [trace] +8.795s RedrawRequested took 10.4ms
+206525494759687 2 [trace] the app changed the page: 439 ops, 1 layouts in 0.9ms
+206525505324312 2 [trace] +8.808s RedrawRequested took 10.5ms
+206525519046437 2 [trace] +8.819s RedrawRequested took 13.7ms
+206525522292104 2 [trace] the app changed the page: 525 ops, 1 layouts in 1.1ms
+206525531758854 2 [trace] +8.836s RedrawRequested took 9.4ms
+206525547726270 2 [trace] the app changed the page: 7817 ops, 1 layouts in 1.2ms
+206525547740020 2 [trace] +8.845s MouseWheel took 15.9ms
+206525550015270 2 [trace] the app changed the page: 450 ops, 1 layouts in 0.7ms
+206525554476229 2 [trace] +8.863s RedrawRequested took 4.4ms
+206525558602895 2 [trace] +8.868s RedrawRequested took 4.1ms
+206525561029062 2 [trace] the app changed the page: 535 ops, 1 layouts in 0.8ms
+206525571912437 2 [trace] +8.874s RedrawRequested took 10.8ms
+206525585703395 2 [trace] +8.885s RedrawRequested took 13.8ms
+206525588050395 2 [trace] the app changed the page: 420 ops, 1 layouts in 0.8ms
+206525598477604 2 [trace] +8.902s RedrawRequested took 10.3ms
+206525601137729 2 [trace] the app changed the page: 525 ops, 1 layouts in 0.9ms
+206525611894312 2 [trace] +8.915s RedrawRequested took 10.7ms
+206525613968062 2 [trace] the app changed the page: 439 ops, 1 layouts in 0.7ms
+206525625476312 2 [trace] +8.927s RedrawRequested took 11.5ms
+206525628182895 2 [trace] the app changed the page: 536 ops, 1 layouts in 1.0ms
+206525639205687 2 [trace] +8.942s RedrawRequested took 10.9ms
+206525652377104 2 [trace] +8.953s RedrawRequested took 13.1ms
+206525655022437 2 [trace] the app changed the page: 449 ops, 1 layouts in 0.9ms
+206525665173187 2 [trace] +8.968s RedrawRequested took 10.1ms
+206525668288770 2 [trace] the app changed the page: 516 ops, 1 layouts in 1.0ms
+206525678367312 2 [trace] +8.982s RedrawRequested took 10.0ms
+206525680962229 2 [trace] the app changed the page: 515 ops, 1 layouts in 0.8ms
+206525692135854 2 [trace] +8.994s RedrawRequested took 11.1ms
+206525694544937 2 [trace] the app changed the page: 452 ops, 1 layouts in 0.8ms
+206525714063854 2 [trace] +9.008s RedrawRequested took 19.4ms
+206525719190562 2 [trace] +9.028s RedrawRequested took 4.7ms
+206525722547812 2 [trace] the app changed the page: 544 ops, 1 layouts in 1.2ms
+206525731998520 2 [trace] +9.036s RedrawRequested took 9.3ms
+206525734836270 2 [trace] the app changed the page: 442 ops, 1 layouts in 1.0ms
+206525745212270 2 [trace] +9.048s RedrawRequested took 10.3ms
+206525748357437 2 [trace] the app changed the page: 556 ops, 1 layouts in 1.1ms
+206525759215937 2 [trace] +9.062s RedrawRequested took 10.8ms
+206525761846645 2 [trace] the app changed the page: 439 ops, 1 layouts in 0.9ms
+206525772028395 2 [trace] +9.075s RedrawRequested took 10.1ms
+206525785720187 2 [trace] +9.085s RedrawRequested took 13.7ms
+206525789133437 2 [trace] the app changed the page: 546 ops, 1 layouts in 1.2ms
+206525798585812 2 [trace] +9.103s RedrawRequested took 9.4ms
+206525801395979 2 [trace] the app changed the page: 449 ops, 1 layouts in 1.0ms
+206525812090937 2 [trace] +9.115s RedrawRequested took 10.6ms
+206525815431604 2 [trace] the app changed the page: 521 ops, 1 layouts in 1.0ms
+206525825758437 2 [trace] +9.129s RedrawRequested took 10.3ms
+206525828423520 2 [trace] the app changed the page: 473 ops, 1 layouts in 0.9ms
+206525838698729 2 [trace] +9.142s RedrawRequested took 10.2ms
+206525852416895 2 [trace] +9.152s RedrawRequested took 13.7ms
+206525855170395 2 [trace] the app changed the page: 410 ops, 1 layouts in 0.9ms
+206525865334604 2 [trace] +9.169s RedrawRequested took 10.1ms
+206525868527145 2 [trace] the app changed the page: 523 ops, 1 layouts in 1.1ms
+206525878730770 2 [trace] +9.182s RedrawRequested took 10.1ms
+206525881108854 2 [trace] the app changed the page: 422 ops, 1 layouts in 0.7ms
+206525892425312 2 [trace] +9.195s RedrawRequested took 11.3ms
+206525895221520 2 [trace] the app changed the page: 535 ops, 1 layouts in 0.9ms
+206525905390187 2 [trace] +9.209s RedrawRequested took 10.1ms
+206525918998937 2 [trace] +9.219s RedrawRequested took 13.6ms
+206525921881395 2 [trace] the app changed the page: 447 ops, 1 layouts in 1.0ms
+206525932032437 2 [trace] +9.235s RedrawRequested took 10.1ms
+206525935188854 2 [trace] the app changed the page: 534 ops, 1 layouts in 1.1ms
+206525945401604 2 [trace] +9.249s RedrawRequested took 10.1ms
+206525947977020 2 [trace] the app changed the page: 505 ops, 1 layouts in 0.8ms
+206525959192312 2 [trace] +9.261s RedrawRequested took 11.2ms
+206525961811437 2 [trace] the app changed the page: 450 ops, 1 layouts in 0.8ms
+206525972113062 2 [trace] +9.275s RedrawRequested took 10.2ms
+206525985776979 2 [trace] +9.286s RedrawRequested took 13.6ms
+206525988952979 2 [trace] the app changed the page: 546 ops, 1 layouts in 1.1ms
+206525998647645 2 [trace] +9.302s RedrawRequested took 9.6ms
+206526001446395 2 [trace] the app changed the page: 442 ops, 1 layouts in 0.9ms
+206526012135312 2 [trace] +9.315s RedrawRequested took 10.6ms
+206526014999937 2 [trace] the app changed the page: 514 ops, 1 layouts in 0.9ms
+206526025882520 2 [trace] +9.328s RedrawRequested took 10.8ms
+206526028315520 2 [trace] the app changed the page: 420 ops, 1 layouts in 0.8ms
+206526038845270 2 [trace] +9.342s RedrawRequested took 10.5ms
+206526052479104 2 [trace] +9.352s RedrawRequested took 13.6ms
+206526055750854 2 [trace] the app changed the page: 527 ops, 1 layouts in 1.1ms
+206526065423812 2 [trace] +9.369s RedrawRequested took 9.6ms
+206526068062520 2 [trace] the app changed the page: 411 ops, 1 layouts in 0.9ms
+206526078819854 2 [trace] +9.382s RedrawRequested took 10.7ms
+206526081784229 2 [trace] the app changed the page: 506 ops, 1 layouts in 1.0ms
+206526092380812 2 [trace] +9.395s RedrawRequested took 10.5ms
+206526095336354 2 [trace] the app changed the page: 527 ops, 1 layouts in 1.0ms
+206526105547062 2 [trace] +9.409s RedrawRequested took 10.1ms
+206526119263937 2 [trace] +9.419s RedrawRequested took 13.7ms
+206526122295104 2 [trace] the app changed the page: 442 ops, 1 layouts in 1.0ms
+206526132015979 2 [trace] +9.436s RedrawRequested took 9.6ms
+206526135256562 2 [trace] the app changed the page: 524 ops, 1 layouts in 1.0ms
+206526145669479 2 [trace] +9.449s RedrawRequested took 10.3ms
+206526148805562 2 [trace] the app changed the page: 447 ops, 1 layouts in 0.9ms
+206526159096187 2 [trace] +9.462s RedrawRequested took 10.2ms
+206526162067479 2 [trace] the app changed the page: 517 ops, 1 layouts in 0.9ms
+206526172159229 2 [trace] +9.476s RedrawRequested took 10.0ms
+206526185878020 2 [trace] +9.486s RedrawRequested took 13.7ms
+206526188861020 2 [trace] the app changed the page: 430 ops, 1 layouts in 1.0ms
+206526198591479 2 [trace] +9.502s RedrawRequested took 9.6ms
+206526210449520 2 [trace] collected garbage after 17117 detached nodes: 8.7ms, 1571 nodes left
+206526210460770 2 [trace] the app changed the page: 5392 ops, 1 layouts in 1.0ms
+206526210461937 2 [trace] +9.512s MouseWheel took 11.8ms
+206526213512854 2 [trace] the app changed the page: 533 ops, 1 layouts in 1.2ms
+206526218422437 2 [trace] +9.527s RedrawRequested took 4.8ms
+206526225627062 2 [trace] +9.532s RedrawRequested took 7.2ms
+206526227988770 2 [trace] the app changed the page: 460 ops, 1 layouts in 0.8ms
+206526238703604 2 [trace] +9.541s RedrawRequested took 10.6ms
+206526252393395 2 [trace] +9.552s RedrawRequested took 13.7ms
+206526255426479 2 [trace] the app changed the page: 513 ops, 1 layouts in 1.1ms
+206526265399104 2 [trace] +9.569s RedrawRequested took 9.9ms
+206526267932520 2 [trace] the app changed the page: 428 ops, 1 layouts in 0.9ms
+206526278840979 2 [trace] +9.581s RedrawRequested took 10.8ms
+206526281411562 2 [trace] the app changed the page: 497 ops, 1 layouts in 0.8ms
+206526292428520 2 [trace] +9.595s RedrawRequested took 10.9ms
+206526294860187 2 [trace] the app changed the page: 439 ops, 1 layouts in 0.9ms
+206526305530812 2 [trace] +9.608s RedrawRequested took 10.6ms
+206526319333145 2 [trace] +9.619s RedrawRequested took 13.8ms
+206526322231937 2 [trace] the app changed the page: 526 ops, 1 layouts in 1.0ms
+206526332107729 2 [trace] +9.636s RedrawRequested took 9.8ms
+206526334889520 2 [trace] the app changed the page: 462 ops, 1 layouts in 1.0ms
+206526345808312 2 [trace] +9.648s RedrawRequested took 10.8ms
+206526348587812 2 [trace] the app changed the page: 534 ops, 1 layouts in 0.9ms
+206526359270854 2 [trace] +9.662s RedrawRequested took 10.6ms
+206526361996312 2 [trace] the app changed the page: 514 ops, 1 layouts in 0.9ms
+206526372244145 2 [trace] +9.675s RedrawRequested took 10.2ms
+206526385690187 2 [trace] +9.686s RedrawRequested took 13.4ms
+206526388540104 2 [trace] the app changed the page: 460 ops, 1 layouts in 1.0ms
+206526398832395 2 [trace] +9.702s RedrawRequested took 10.2ms
+206526401938895 2 [trace] the app changed the page: 544 ops, 1 layouts in 1.0ms
+206526412251979 2 [trace] +9.715s RedrawRequested took 10.2ms
+206526414689937 2 [trace] the app changed the page: 463 ops, 1 layouts in 0.8ms
+206526425772479 2 [trace] +9.728s RedrawRequested took 11.0ms
+206526428882520 2 [trace] the app changed the page: 551 ops, 1 layouts in 0.9ms
+206526438930812 2 [trace] +9.742s RedrawRequested took 10.0ms
+206526452695020 2 [trace] +9.752s RedrawRequested took 13.7ms
+206526455400270 2 [trace] the app changed the page: 428 ops, 1 layouts in 0.9ms
+206526465422062 2 [trace] +9.769s RedrawRequested took 9.9ms
+206526468367229 2 [trace] the app changed the page: 516 ops, 1 layouts in 1.0ms
+206526478926229 2 [trace] +9.782s RedrawRequested took 10.5ms
+206526481592812 2 [trace] the app changed the page: 494 ops, 1 layouts in 0.8ms
+206526492881437 2 [trace] +9.795s RedrawRequested took 11.2ms
+206526495431770 2 [trace] the app changed the page: 442 ops, 1 layouts in 0.8ms
+206526505549645 2 [trace] +9.809s RedrawRequested took 10.0ms
+206526518913770 2 [trace] +9.819s RedrawRequested took 13.3ms
+206526521892062 2 [trace] the app changed the page: 525 ops, 1 layouts in 1.0ms
+206526532227479 2 [trace] +9.835s RedrawRequested took 10.2ms
+206526534818687 2 [trace] the app changed the page: 429 ops, 1 layouts in 0.9ms
+206526545317145 2 [trace] +9.848s RedrawRequested took 10.4ms
+206526547985270 2 [trace] the app changed the page: 524 ops, 1 layouts in 0.9ms
+206526558893062 2 [trace] +9.861s RedrawRequested took 10.8ms
+206526561086062 2 [trace] the app changed the page: 418 ops, 1 layouts in 0.7ms
+206526572314312 2 [trace] +9.875s RedrawRequested took 11.1ms
+206526585935062 2 [trace] +9.886s RedrawRequested took 13.6ms
+206526588672437 2 [trace] the app changed the page: 516 ops, 1 layouts in 0.9ms
+206526598926979 2 [trace] +9.902s RedrawRequested took 10.2ms
+206526601391937 2 [trace] the app changed the page: 440 ops, 1 layouts in 0.8ms
+206526612259604 2 [trace] +9.915s RedrawRequested took 10.8ms
+206526614783354 2 [trace] the app changed the page: 516 ops, 1 layouts in 0.8ms
+206526625863437 2 [trace] +9.928s RedrawRequested took 11.0ms
+206526628300437 2 [trace] the app changed the page: 525 ops, 1 layouts in 0.8ms
+206526638972229 2 [trace] +9.942s RedrawRequested took 10.6ms
+206526652467895 2 [trace] +9.952s RedrawRequested took 13.5ms
+206526655441187 2 [trace] the app changed the page: 470 ops, 1 layouts in 1.1ms
+206526665617020 2 [trace] +9.969s RedrawRequested took 10.1ms
+206526668472895 2 [trace] the app changed the page: 523 ops, 1 layouts in 1.0ms
+206526678935520 2 [trace] +9.982s RedrawRequested took 10.4ms
+206526681296062 2 [trace] the app changed the page: 450 ops, 1 layouts in 0.7ms
+206526692689729 2 [trace] +9.995s RedrawRequested took 11.3ms
+206526695287395 2 [trace] the app changed the page: 504 ops, 1 layouts in 0.9ms
+206526705624229 2 [trace] +10.009s RedrawRequested took 10.3ms
+206526712176520 2 [trace] the app changed the page: 430 ops, 1 layouts in 0.9ms
+206526723130062 2 [trace] +10.026s RedrawRequested took 10.8ms
+206526726165354 2 [trace] the app changed the page: 544 ops, 1 layouts in 1.0ms
+206526732223354 2 [trace] +10.040s RedrawRequested took 6.0ms
+206526745608395 2 [trace] +10.046s RedrawRequested took 13.4ms
+206526748176937 2 [trace] the app changed the page: 409 ops, 1 layouts in 0.8ms
+206526759241604 2 [trace] +10.062s RedrawRequested took 11.0ms
+206526761888270 2 [trace] the app changed the page: 494 ops, 1 layouts in 0.8ms
+206526772352437 2 [trace] +10.075s RedrawRequested took 10.4ms
+206526785991520 2 [trace] +10.086s RedrawRequested took 13.6ms
+206526789111187 2 [trace] the app changed the page: 513 ops, 1 layouts in 1.0ms
+206526798964854 2 [trace] +10.103s RedrawRequested took 9.8ms
+206526801836312 2 [trace] the app changed the page: 459 ops, 1 layouts in 1.0ms
+206526812570854 2 [trace] +10.115s RedrawRequested took 10.7ms
+206526815435854 2 [trace] the app changed the page: 504 ops, 1 layouts in 0.9ms
+206526826015729 2 [trace] +10.129s RedrawRequested took 10.5ms
+206526828414895 2 [trace] the app changed the page: 433 ops, 1 layouts in 0.8ms
+206526839094145 2 [trace] +10.142s RedrawRequested took 10.6ms
+206526852788895 2 [trace] +10.152s RedrawRequested took 13.7ms
+206526856065770 2 [trace] the app changed the page: 536 ops, 1 layouts in 1.0ms
+206526865640437 2 [trace] +10.170s RedrawRequested took 9.5ms
+206526868302645 2 [trace] the app changed the page: 421 ops, 1 layouts in 0.9ms
+206526879346312 2 [trace] +10.182s RedrawRequested took 11.0ms
+206526881998437 2 [trace] the app changed the page: 494 ops, 1 layouts in 0.8ms
+206526892643687 2 [trace] +10.195s RedrawRequested took 10.6ms
+206526895130937 2 [trace] the app changed the page: 441 ops, 1 layouts in 0.8ms
+206526905728520 2 [trace] +10.209s RedrawRequested took 10.5ms
+206526919486270 2 [trace] +10.219s RedrawRequested took 13.7ms
+206526922896270 2 [trace] the app changed the page: 544 ops, 1 layouts in 1.1ms
+206526932329562 2 [trace] +10.236s RedrawRequested took 9.3ms
+206526935565895 2 [trace] the app changed the page: 525 ops, 1 layouts in 1.1ms
+206526945947104 2 [trace] +10.249s RedrawRequested took 10.3ms
+206526948379729 2 [trace] the app changed the page: 431 ops, 1 layouts in 0.7ms
+206526959417937 2 [trace] +10.262s RedrawRequested took 11.0ms
+206526962221520 2 [trace] the app changed the page: 505 ops, 1 layouts in 0.9ms
+206526972477604 2 [trace] +10.276s RedrawRequested took 10.2ms
+206526986430729 2 [trace] +10.286s RedrawRequested took 13.9ms
+206526989225770 2 [trace] the app changed the page: 419 ops, 1 layouts in 0.9ms
+206526999031354 2 [trace] +10.303s RedrawRequested took 9.7ms
+206527002364145 2 [trace] the app changed the page: 526 ops, 1 layouts in 1.1ms
+206527012683729 2 [trace] +10.316s RedrawRequested took 10.2ms
+206527015316229 2 [trace] the app changed the page: 419 ops, 1 layouts in 0.8ms
+206527025979395 2 [trace] +10.329s RedrawRequested took 10.6ms
+206527028884687 2 [trace] the app changed the page: 548 ops, 1 layouts in 0.9ms
+206527039117895 2 [trace] +10.342s RedrawRequested took 10.2ms
+206527052782562 2 [trace] +10.353s RedrawRequested took 13.6ms
+206527055698729 2 [trace] the app changed the page: 441 ops, 1 layouts in 0.9ms
+206527065780104 2 [trace] +10.369s RedrawRequested took 10.0ms
+206527069024562 2 [trace] the app changed the page: 536 ops, 1 layouts in 1.0ms
+206527079532020 2 [trace] +10.382s RedrawRequested took 10.4ms
+206527082496104 2 [trace] the app changed the page: 515 ops, 1 layouts in 0.9ms
+206527092937187 2 [trace] +10.396s RedrawRequested took 10.4ms
+206527095585604 2 [trace] the app changed the page: 452 ops, 1 layouts in 0.8ms
+206527105825687 2 [trace] +10.409s RedrawRequested took 10.2ms
+206527119484145 2 [trace] +10.419s RedrawRequested took 13.6ms
+206527122889895 2 [trace] the app changed the page: 545 ops, 1 layouts in 1.0ms
+206527132495062 2 [trace] +10.436s RedrawRequested took 9.5ms
+206527135387229 2 [trace] the app changed the page: 430 ops, 1 layouts in 0.9ms
+206527145952312 2 [trace] +10.449s RedrawRequested took 10.5ms
+206527160456437 2 [trace] the app changed the page: 7196 ops, 1 layouts in 1.3ms
+206527160467562 2 [trace] +10.459s MouseWheel took 14.4ms
+206527162825729 2 [trace] the app changed the page: 440 ops, 1 layouts in 0.7ms
+206527167394312 2 [trace] +10.476s RedrawRequested took 4.5ms
+206527172475937 2 [trace] +10.481s RedrawRequested took 5.0ms
+206527186239104 2 [trace] +10.486s RedrawRequested took 13.7ms
+206527189072229 2 [trace] the app changed the page: 535 ops, 1 layouts in 1.0ms
+206527199145395 2 [trace] +10.503s RedrawRequested took 10.0ms
+206527201610687 2 [trace] the app changed the page: 408 ops, 1 layouts in 0.9ms
+206527212369437 2 [trace] +10.515s RedrawRequested took 10.7ms
+206527215078520 2 [trace] the app changed the page: 547 ops, 1 layouts in 0.9ms
+206527226326229 2 [trace] +10.529s RedrawRequested took 11.2ms
+206527229047520 2 [trace] the app changed the page: 544 ops, 1 layouts in 0.9ms
+206527239234854 2 [trace] +10.543s RedrawRequested took 10.1ms
+206527252924812 2 [trace] +10.553s RedrawRequested took 13.7ms
+206527256116229 2 [trace] the app changed the page: 472 ops, 1 layouts in 1.0ms
+206527265859812 2 [trace] +10.570s RedrawRequested took 9.7ms
+206527268725770 2 [trace] the app changed the page: 526 ops, 1 layouts in 1.0ms
+206527279219604 2 [trace] +10.582s RedrawRequested took 10.4ms
+206527281437562 2 [trace] the app changed the page: 423 ops, 1 layouts in 0.7ms
+206527292900812 2 [trace] +10.595s RedrawRequested took 11.4ms
+206527295433729 2 [trace] the app changed the page: 525 ops, 1 layouts in 0.8ms
+206527305996979 2 [trace] +10.609s RedrawRequested took 10.5ms
+206527319738062 2 [trace] +10.619s RedrawRequested took 13.7ms
+206527322398937 2 [trace] the app changed the page: 441 ops, 1 layouts in 0.9ms
+206527332565854 2 [trace] +10.636s RedrawRequested took 10.1ms
+206527335429187 2 [trace] the app changed the page: 504 ops, 1 layouts in 1.0ms
+206527346531979 2 [trace] +10.649s RedrawRequested took 11.0ms
+206527348972979 2 [trace] the app changed the page: 440 ops, 1 layouts in 0.8ms
+206527359781020 2 [trace] +10.662s RedrawRequested took 10.7ms
+206527362666854 2 [trace] the app changed the page: 535 ops, 1 layouts in 1.0ms
+206527372660645 2 [trace] +10.676s RedrawRequested took 9.9ms
+206527386568687 2 [trace] +10.686s RedrawRequested took 13.9ms
+206527389687770 2 [trace] the app changed the page: 546 ops, 1 layouts in 1.0ms
+206527399195770 2 [trace] +10.703s RedrawRequested took 9.4ms
+206527402042604 2 [trace] the app changed the page: 441 ops, 1 layouts in 1.0ms
+206527412720354 2 [trace] +10.716s RedrawRequested took 10.6ms
+206527415360937 2 [trace] the app changed the page: 505 ops, 1 layouts in 0.8ms
+206527426296520 2 [trace] +10.729s RedrawRequested took 10.9ms
+206527428839395 2 [trace] the app changed the page: 433 ops, 1 layouts in 0.8ms
+206527439083562 2 [trace] +10.742s RedrawRequested took 10.2ms
+206527453092020 2 [trace] +10.752s RedrawRequested took 14.0ms
+206527456216937 2 [trace] the app changed the page: 536 ops, 1 layouts in 1.0ms
+206527465884354 2 [trace] +10.770s RedrawRequested took 9.6ms
+206527468632062 2 [trace] the app changed the page: 461 ops, 1 layouts in 0.9ms
+206527479288312 2 [trace] +10.782s RedrawRequested took 10.6ms
+206527482002604 2 [trace] the app changed the page: 525 ops, 1 layouts in 0.9ms
+206527492887020 2 [trace] +10.795s RedrawRequested took 10.8ms
+206527495132479 2 [trace] the app changed the page: 420 ops, 1 layouts in 0.7ms
+206527505972229 2 [trace] +10.809s RedrawRequested took 10.8ms
+206527509287937 2 [trace] the app changed the page: 532 ops, 1 layouts in 1.0ms
+206527519774020 2 [trace] +10.823s RedrawRequested took 10.4ms
+206527532563937 2 [trace] +10.833s RedrawRequested took 12.8ms
+206527535487687 2 [trace] the app changed the page: 493 ops, 1 layouts in 0.9ms
+206527546272604 2 [trace] +10.849s RedrawRequested took 10.7ms
+206527549168187 2 [trace] the app changed the page: 472 ops, 1 layouts in 1.0ms
+206527559389104 2 [trace] +10.863s RedrawRequested took 10.2ms
+206527562251937 2 [trace] the app changed the page: 532 ops, 1 layouts in 0.9ms
+206527572696937 2 [trace] +10.876s RedrawRequested took 10.4ms
+206527586059979 2 [trace] +10.886s RedrawRequested took 13.3ms
+206527588856145 2 [trace] the app changed the page: 441 ops, 1 layouts in 1.0ms
+206527599297687 2 [trace] +10.902s RedrawRequested took 10.3ms
+206527602415562 2 [trace] the app changed the page: 527 ops, 1 layouts in 1.0ms
+206527612398479 2 [trace] +10.916s RedrawRequested took 9.9ms
+206527614894229 2 [trace] the app changed the page: 446 ops, 1 layouts in 0.8ms
+206527625971687 2 [trace] +10.928s RedrawRequested took 11.0ms
+206527628864979 2 [trace] the app changed the page: 556 ops, 1 layouts in 0.9ms
+206527639364312 2 [trace] +10.942s RedrawRequested took 10.4ms
+206527652966812 2 [trace] +10.953s RedrawRequested took 13.6ms
+206527655776312 2 [trace] the app changed the page: 534 ops, 1 layouts in 0.9ms
+206527666027020 2 [trace] +10.969s RedrawRequested took 10.2ms
+206527668608645 2 [trace] the app changed the page: 452 ops, 1 layouts in 0.9ms
+206527679366104 2 [trace] +10.982s RedrawRequested took 10.7ms
+206527681883187 2 [trace] the app changed the page: 536 ops, 1 layouts in 0.8ms
+206527693210437 2 [trace] +10.995s RedrawRequested took 11.2ms
+206527696034687 2 [trace] the app changed the page: 461 ops, 1 layouts in 1.0ms
+206527710739395 2 [trace] +11.010s RedrawRequested took 14.6ms
+206527713975895 2 [trace] the app changed the page: 523 ops, 1 layouts in 1.0ms
+206527719863729 2 [trace] +11.027s RedrawRequested took 5.8ms
+206527732636437 2 [trace] +11.033s RedrawRequested took 12.7ms
+206527735452854 2 [trace] the app changed the page: 409 ops, 1 layouts in 1.0ms
+206527746149479 2 [trace] +11.049s RedrawRequested took 10.6ms
+206527748733645 2 [trace] the app changed the page: 462 ops, 1 layouts in 0.8ms
+206527759705187 2 [trace] +11.062s RedrawRequested took 10.9ms
+206527760154770 2 [trace] the app changed the page: 6 ops, 1 layouts in 0.1ms
+206527772717979 2 [trace] +11.074s RedrawRequested took 12.5ms
+206527786402145 2 [trace] +11.086s RedrawRequested took 13.7ms
+206527786988062 2 [trace] the app changed the page: 4 ops, 1 layouts in 0.1ms
+206527799396145 2 [trace] +11.100s RedrawRequested took 12.3ms
+206527812918104 2 [trace] +11.113s RedrawRequested took 13.3ms
+206527826608145 2 [trace] +11.126s RedrawRequested took 13.5ms
+206527839476229 2 [trace] +11.140s RedrawRequested took 12.7ms
+206527853376312 2 [trace] +11.153s RedrawRequested took 13.9ms
+206527866052062 2 [trace] +11.167s RedrawRequested took 12.5ms
+206527879681354 2 [trace] +11.180s RedrawRequested took 13.5ms
+206527893177520 2 [trace] +11.193s RedrawRequested took 13.4ms
+206527906152729 2 [trace] +11.207s RedrawRequested took 12.8ms
+206527919785979 2 [trace] +11.220s RedrawRequested took 13.6ms
+206527932821062 2 [trace] +11.233s RedrawRequested took 12.8ms
+206527946259020 2 [trace] +11.246s RedrawRequested took 13.3ms
+206527959815979 2 [trace] +11.260s RedrawRequested took 13.4ms
+206527972803437 2 [trace] +11.273s RedrawRequested took 12.9ms
+206527987356937 2 [trace] +11.286s RedrawRequested took 14.5ms
+206527999496020 2 [trace] +11.301s RedrawRequested took 12.0ms
+206528013160687 2 [trace] +11.313s RedrawRequested took 13.5ms
+206528026622020 2 [trace] +11.327s RedrawRequested took 13.3ms
+206528039487937 2 [trace] +11.340s RedrawRequested took 12.7ms
+206528052930645 2 [trace] +11.353s RedrawRequested took 13.4ms
+206528066185104 2 [trace] +11.366s RedrawRequested took 13.1ms
+206528079786895 2 [trace] +11.380s RedrawRequested took 13.5ms
+206528093264520 2 [trace] +11.393s RedrawRequested took 13.3ms
+206528106245187 2 [trace] +11.407s RedrawRequested took 12.9ms
+206528120034854 2 [trace] +11.420s RedrawRequested took 13.8ms
+206528132832104 2 [trace] +11.434s RedrawRequested took 12.6ms
+206528146609562 2 [trace] +11.446s RedrawRequested took 13.6ms
+206528160226020 2 [trace] +11.460s RedrawRequested took 13.5ms
+206528172892562 2 [trace] +11.474s RedrawRequested took 12.6ms
+206528187602562 2 [trace] +11.486s RedrawRequested took 14.7ms
+206528199905104 2 [trace] +11.501s RedrawRequested took 12.1ms
+206528213155062 2 [trace] +11.513s RedrawRequested took 13.1ms
+206528227994895 2 [trace] +11.527s RedrawRequested took 14.7ms
+206528239547187 2 [trace] +11.542s RedrawRequested took 11.4ms
+206528253436812 2 [trace] +11.553s RedrawRequested took 13.9ms
+206528266244062 2 [trace] +11.567s RedrawRequested took 12.6ms
+206528279883145 2 [trace] +11.580s RedrawRequested took 13.5ms
+206528293443104 2 [trace] +11.593s RedrawRequested took 13.4ms
+206528306307312 2 [trace] +11.607s RedrawRequested took 12.8ms
+206528319940145 2 [trace] +11.620s RedrawRequested took 13.6ms
+206528332988312 2 [trace] +11.633s RedrawRequested took 12.9ms
+206528346915229 2 [trace] +11.647s RedrawRequested took 13.8ms
+206528360170770 2 [trace] +11.660s RedrawRequested took 13.1ms
+206528373018520 2 [trace] +11.674s RedrawRequested took 12.7ms
+206528386915104 2 [trace] +11.686s RedrawRequested took 13.9ms
+206528399657479 2 [trace] +11.700s RedrawRequested took 12.6ms
+206528413073562 2 [trace] +11.713s RedrawRequested took 13.3ms
+206528426803604 2 [trace] +11.727s RedrawRequested took 13.6ms
+206528439705270 2 [trace] +11.740s RedrawRequested took 12.8ms
+206528453646937 2 [trace] +11.753s RedrawRequested took 13.9ms
+206528466311104 2 [trace] +11.767s RedrawRequested took 12.5ms
+206528479654729 2 [trace] +11.780s RedrawRequested took 13.2ms
+206528493532687 2 [trace] +11.793s RedrawRequested took 13.7ms
+206528506444187 2 [trace] +11.807s RedrawRequested took 12.7ms
+206528603555645 2 [trace] collected garbage after 11427 detached nodes: 14.2ms, 1393 nodes left
+206528603592395 2 [trace] +11.903s poll took 14.3ms
