@@ -633,3 +633,23 @@ fn the_wheel_reaches_show_more_and_the_next_page() {
         "the list scrolls past the first page"
     );
 }
+
+#[test]
+fn the_toolbar_stays_out_of_the_pane_at_the_1200px_window() {
+    let mut doc = load();
+    doc.layout(1200, 800);
+    // A project filter set before the pane opens stays visible beside it.
+    pick(&mut doc, "[data-testid=filter-project]", "WEB");
+    click(&mut doc, "[data-testid=row]");
+    doc.wait(0.1);
+    doc.layout(1200, 800);
+    let pane = doc.rect(doc.query("[data-testid=pane]").unwrap()).unwrap();
+    for id in ["search", "filter-status", "filter-priority", "filter-project"] {
+        let node = doc
+            .query(&format!("[data-testid={id}]"))
+            .unwrap_or_else(|| panic!("{id} is missing"));
+        let (x, _, w, _) = doc.rect(node).unwrap();
+        assert!(x + w <= pane.0, "{id} ends at {} under the pane at {}", x + w, pane.0);
+    }
+    assert!(doc.query("[data-testid=filter-assignee]").is_none(), "Assignee hides beside the pane");
+}
