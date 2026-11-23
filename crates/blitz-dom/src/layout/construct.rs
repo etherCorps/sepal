@@ -466,8 +466,25 @@ fn collect_layout_children_with_wrap(
                 doc.nodes[id].remove_damage(CONSTRUCT_BOX | CONSTRUCT_DESCENDENT | CONSTRUCT_FC);
             });
 
+            // svelte-blitz patch: upstream parses the drawing again whenever
+            // anything in the subtree was restyled. `pointer-events: none` on
+            // `<body>` (a modal opening) restyles every element, and a page
+            // of 10,000 icons spent 60 ms parsing them. The drawing comes from
+            // this source alone, so an unchanged source keeps the old one.
+            let unchanged = match &doc.nodes[container_node_id].element_data().unwrap().special_data {
+                SpecialElementData::Image(image) => matches!(
+                    &**image,
+                    crate::node::ImageData::Svg(svg) if svg.inline_source.as_deref() == Some(outer_html.as_str())
+                ),
+                _ => false,
+            };
+            if unchanged {
+                return;
+            }
+
             match crate::util::parse_svg_image(outer_html.as_bytes()) {
-                Ok(svg) => {
+                Ok(mut svg) => {
+                    svg.inline_source = Some(outer_html);
                     doc.get_node_mut(container_node_id)
                         .unwrap()
                         .element_data_mut()
