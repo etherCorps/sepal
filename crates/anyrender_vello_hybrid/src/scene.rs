@@ -25,17 +25,13 @@ fn anyrender_paint_to_vello_hybrid_paint<'a>(
         Paint::Solid(alpha_color) => PaintType::Solid(alpha_color),
         Paint::Gradient(gradient) => PaintType::Gradient(gradient.clone()),
 
-        Paint::Image(image_brush) => {
-            let image_id = image_manager.upload_image(image_brush.image);
-            PaintType::Image(ImageBrush {
-                image: ImageSource::OpaqueId {
-                    id: image_id,
-                    // TODO: optimize opaque case
-                    may_have_transparency: true,
-                },
+        Paint::Image(image_brush) => match image_manager.image_source(image_brush.image) {
+            Some(image) => PaintType::Image(ImageBrush {
+                image,
                 sampler: image_brush.sampler,
-            })
-        }
+            }),
+            None => PaintType::Solid(peniko::color::palette::css::TRANSPARENT),
+        },
 
         Paint::Resource(brush) => match texture_bindings.get(&brush.image) {
             Some(texture_view) => {
@@ -69,7 +65,23 @@ pub struct ImageManager<'a> {
     pub(crate) queue: &'a Queue,
     pub(crate) encoder: &'a mut CommandEncoder,
     pub(crate) cache: &'a mut FxHashMap<u64, ImageId>,
+    /// svelte-blitz patch: images larger than an atlas page, each in a texture of its own.
+    pub(crate) own_textures: &'a mut FxHashMap<u64, OwnTexture>,
+    /// svelte-blitz patch: the atlas page size, `(width, height)`.
+    pub(crate) atlas_page: (u16, u16),
 }
+
+/// svelte-blitz patch: an image too large for an atlas page. vello_gpu's
+/// `upload_image` panics on those (`TextureTooLarge`), so they are drawn as
+/// external textures instead, which also lets the atlas pages stay small.
+pub struct OwnTexture {
+    pub(crate) id: TextureId,
+    pub(crate) view: TextureView,
+    region: RectU16,
+}
+
+/// Ids of [`OwnTexture`]s: apart from anyrender's `ResourceId`s, which count up from 0.
+const OWN_TEXTURE_ID: u64 = 1 << 63;
 
 impl<'a> ImageManager<'a> {
     pub fn new(
@@ -79,6 +91,8 @@ impl<'a> ImageManager<'a> {
         queue: &'a Queue,
         encoder: &'a mut CommandEncoder,
         cache: &'a mut FxHashMap<u64, ImageId>,
+        own_textures: &'a mut FxHashMap<u64, OwnTexture>,
+        atlas_page: (u16, u16),
     ) -> Self {
         Self {
             renderer,
@@ -87,7 +101,78 @@ impl<'a> ImageManager<'a> {
             queue,
             encoder,
             cache,
+            own_textures,
+            atlas_page,
         }
+    }
+
+    /// svelte-blitz patch: where an image is drawn from, uploading it on first use.
+    /// `None` for an image larger than the GPU can hold, which is not drawn.
+    pub(crate) fn image_source(&mut self, image: &ImageData) -> Option<ImageSource> {
+        let peniko_id = image.data.id();
+        if let Some(own) = self.own_textures.get(&peniko_id) {
+            return Some(ImageSource::external_texture(own.id, own.region, true));
+        }
+        let fits = image.width <= u32::from(self.atlas_page.0)
+            && image.height <= u32::from(self.atlas_page.1);
+        if fits {
+            return Some(ImageSource::OpaqueId {
+                id: self.upload_image(image),
+                // TODO: optimize opaque case
+                may_have_transparency: true,
+            });
+        }
+        let limit = self.device.limits().max_texture_dimension_2d;
+        if image.width > limit || image.height > limit || image.width == 0 || image.height == 0 {
+            return None;
+        }
+        let ImageSource::Pixmap(pixmap) = ImageSource::from_peniko_image_data(image) else {
+            unreachable!(); // ImageSource::from_peniko_image_data always return a Pixmap
+        };
+        let size = wgpu::Extent3d {
+            width: u32::from(pixmap.width()),
+            height: u32::from(pixmap.height()),
+            depth_or_array_layers: 1,
+        };
+        let texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("Image"),
+            size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            // As vello_gpu's atlas pages: premultiplied RGBA8.
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+        self.queue.write_texture(
+            wgpu::TexelCopyTextureInfo {
+                texture: &texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            pixmap.data_as_u8_slice(),
+            wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(4 * size.width),
+                rows_per_image: None,
+            },
+            size,
+        );
+        let own = OwnTexture {
+            id: TextureId(OWN_TEXTURE_ID | self.own_textures.len() as u64),
+            view: texture.create_view(&TextureViewDescriptor::default()),
+            region: RectU16 {
+                x0: 0,
+                y0: 0,
+                x1: pixmap.width(),
+                y1: pixmap.height(),
+            },
+        };
+        let source = ImageSource::external_texture(own.id, own.region, true);
+        self.own_textures.insert(peniko_id, own);
+        Some(source)
     }
 
     pub(crate) fn upload_image(&mut self, image: &ImageData) -> ImageId {

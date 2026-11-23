@@ -182,6 +182,18 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Where time goes** (measured 22 Nov 2026, see README "Performance"): turns
   are bound by JavaScript in QuickJS, an interpreter, not by Blitz. Do not
   optimise Rust before `SVELTE_BLITZ_TRACE=1` says layouts are the cost.
+- **Where memory goes in a window** (measured 23 Nov 2026 with `footprint`):
+  while frames are drawn, ~120 MB of "graphics" is Apple's GPU driver, paid
+  by any Metal process on its first render pass; its first blit or compute
+  work would add ~80 MB more, which the `wgpu-hal` patch avoids. macOS
+  reclaims it 1-2 s after the last frame, so a memory figure means nothing
+  without how long ago the last frame was. What is ours: the atlas pages,
+  layer textures, a depth buffer (15 MB; without it a full repaint is ~2.5 ms
+  slower) and two window surfaces (~15 MB each at 1200x800 on a 2x display).
+  On the CPU side ~36 MB of live malloc (`MallocStackLogging=1` and
+  `malloc_history -allBySize` on the debug build): 12 MB QuickJS's heap, the
+  rest spread thin. An unbundled host also holds its Dock icon decoded (16 MB
+  "CG Image"); a bundle does not.
 - **`:has()` only exists because of patch 8.** Upstream drops such rules
   while parsing. If Tailwind's `has-*` or `group-has-*` stop working after a
   Blitz update, that patch was lost.
@@ -260,9 +272,19 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   are the releases that match blitz's `anyrender 0.14`.
 - **`crates/anyrender_vello_hybrid` is a patched copy too** (the window's
   renderer): glyph atlas on, `render_to_rgba` for drawing without a
-  window, and layer textures up to the device's limit (a full-window layer on
-  a 5K display is over vello_gpu's default 4096). See its `PATCH.md`. Same
-  rules as below.
+  window, layer textures up to the device's limit (a full-window layer on
+  a 5K display is over vello_gpu's default 4096), atlas pages of 1024 instead
+  of 4096 (64 MB each), and images larger than a page in textures of their own
+  (vello_gpu panics on them). See its `PATCH.md`. Same rules as below.
+- **`crates/vello_gpu` is a patched copy as well**: its layer textures shrink
+  again once a large layer (a Dialog's backdrop) is gone. See its `PATCH.md`.
+  Same rules as below.
+- **`crates/wgpu-hal` is a patched copy as well**: on Apple GPUs, buffer
+  clears and uploads run in render passes instead of blit encoders, because the
+  first blit or compute work in a process costs ~80 MB of driver memory. A new
+  use of blits (a copy kind `render_copy.rs` does not cover, a compute pass)
+  brings it back; check with `footprint` while frames are drawn. See its
+  `PATCH.md`. Same rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
   It differs from crates.io 0.3.0-beta.4 in thirteen places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not

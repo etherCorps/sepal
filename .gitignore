@@ -11,3 +11,5 @@ packages/host/THIRD-PARTY-LICENSES.txt
 # cargo writes this when a tool is run inside the vendored crate; the host has the real one
 crates/blitz-dom/Cargo.lock
 crates/anyrender_vello_hybrid/Cargo.lock
+crates/vello_gpu/Cargo.lock
+crates/wgpu-hal/Cargo.lock

@@ -76,6 +76,7 @@ pub fn render_to_rgba(
     });
 
     let mut cached_images = FxHashMap::default();
+    let mut own_textures = FxHashMap::default();
     let mut bindings = FxHashMap::default();
     {
         let mut painter = VelloHybridScenePainter {
@@ -88,6 +89,8 @@ pub fn render_to_rgba(
                 queue,
                 encoder: &mut encoder,
                 cache: &mut cached_images,
+                own_textures: &mut own_textures,
+                atlas_page: options.render_settings.memory_settings.image_atlas_config.atlas_size,
             },
             texture_bindings: &mut bindings,
             device_handle: &device_handle,
@@ -102,6 +105,10 @@ pub fn render_to_rgba(
         draw(&mut painter);
     }
 
+    let mut texture_bindings = TextureBindings::new();
+    for own in own_textures.values() {
+        texture_bindings.insert(own.id, own.view.clone());
+    }
     renderer
         .render(
             &scene,
@@ -112,7 +119,7 @@ pub fn render_to_rgba(
             &size,
             &view,
             Some(&depth),
-            &TextureBindings::new(),
+            &texture_bindings,
             TargetInit::Clear(ClearSettings::default()),
         )
         .map_err(|error| format!("rendering failed: {error:?}"))?;
