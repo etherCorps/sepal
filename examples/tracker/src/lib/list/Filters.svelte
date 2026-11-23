@@ -12,7 +12,9 @@
 	import Pick from './Pick.svelte';
 	import { people_items, priority_items, project_items, status_items } from './edit';
 
-	let { scope = {} }: { scope?: { assignee?: string; project?: string } } = $props();
+	// compact: the list beside the detail pane (480px at the 1200px window) has no room
+	// for four filters; Assignee and Project stay only while they filter something.
+	let { scope = {}, compact = false }: { scope?: { assignee?: string; project?: string }; compact?: boolean } = $props();
 
 	// Bits UI treats '' as "nothing chosen"; the store uses '' for "all".
 	const ALL = 'all';
@@ -64,7 +66,7 @@
 	dot={view.priority !== ''}
 	onpick={(v) => (view.priority = unset(v) as PriorityId | '')}
 />
-{#if !scope.assignee}
+{#if !scope.assignee && (!compact || view.assignee !== '')}
 	<Pick
 		testid="filter-assignee"
 		kind="assignee"
@@ -75,7 +77,7 @@
 		onpick={(v) => (view.assignee = unset(v))}
 	/>
 {/if}
-{#if !scope.project}
+{#if !scope.project && (!compact || view.project !== '')}
 	<Pick
 		testid="filter-project"
 		kind="project"

@@ -246,7 +246,7 @@
 		Above the list for hit testing, as PageHeader is: scrolled-away rows sit under it.
 	-->
 	<div class="relative z-10 flex h-11 shrink-0 flex-nowrap items-center gap-2 border-b px-4">
-		<Filters {scope} />
+		<Filters {scope} compact={pane_open} />
 		{#if view.week !== null}
 			{@const [from] = week_range(view.week)}
 			<button
