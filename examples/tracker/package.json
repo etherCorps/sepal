@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "watch": "vite build --watch",
+    "dev": "vite build --watch",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "node --experimental-strip-types test/seed.test.ts && node --experimental-strip-types test/order.test.ts"
   },
