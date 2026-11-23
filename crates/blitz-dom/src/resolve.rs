@@ -260,6 +260,21 @@ impl BaseDocument {
             let mut damage = doc.nodes[node_id].damage().unwrap_or(ALL_DAMAGE);
             let _flags = doc.nodes[node_id].flags;
 
+            // svelte-blitz patch: upstream walks the whole tree here on every
+            // resolve, 1.5 ms on a page of 195,000 nodes when nothing changed.
+            // A subtree nothing damaged has nothing to rebuild; the test is
+            // the one `propagate_damage_flags` skips such subtrees by.
+            {
+                let node = &doc.nodes[node_id];
+                if damage.is_empty()
+                    && !node.has_damaged_descendants()
+                    && !node.is_anonymous()
+                    && node.layout_children.borrow().is_some()
+                {
+                    return;
+                }
+            }
+
             if damage.intersects(CONSTRUCT_FC | CONSTRUCT_BOX) {
                 //} || flags.contains(NodeFlags::IS_INLINE_ROOT) {
 
@@ -439,6 +454,18 @@ impl BaseDocument {
         };
 
         let root_element_id = crate::taffy_node_id(self.root_element().id);
+
+        // svelte-blitz patch: upstream lays out and rounds the whole tree on
+        // every resolve. Taffy answers from the root's cache when nothing
+        // changed, but rounding still visits every node: 4 ms on a page of
+        // 195,000. Anything that changes a box clears the caches from it up
+        // to the root (`propagate_damage_flags`), so a root that still has
+        // its cache, in the same space as last time, has nothing to redo.
+        let root_cached = !self.nodes[self.root_element().id].cache().is_empty();
+        if root_cached && self.laid_out_in == Some(available_space) {
+            return;
+        }
+        self.laid_out_in = Some(available_space);
 
         // println!("\n\nRESOLVE LAYOUT\n===========\n");
 

@@ -411,3 +411,54 @@ fn bench() {
     std::fs::write(&out, table.rows.join("\n") + "\n").unwrap();
     println!("written to {}", out.display());
 }
+
+/// For a profiler (`sample <pid>`, `SVELTE_BLITZ_TRACE=1`, or
+/// `--features blitz-dom/log-phase-times` for Blitz's own phases): every row
+/// shown, then `j` and the Status filter in a loop, then the styles Bits UI
+/// puts on `<body>` while a Select is open, one at a time.
+/// `TRACKER_PROFILE=5000,40,3` sets the issues, the presses and the Selects.
+///
+/// ```sh
+/// cargo test --release --features screenshot --test tracker -- --ignored --nocapture profile_every_row_shown
+/// ```
+#[test]
+#[ignore]
+fn profile_every_row_shown() {
+    let spec = std::env::var("TRACKER_PROFILE").unwrap_or_else(|_| "5000,40,3".into());
+    let spec: Vec<usize> = spec.split(',').map(|n| n.trim().parse().unwrap()).collect();
+    let (n, presses, selects) = (spec[0], spec[1], spec[2]);
+    let mut doc = load();
+    js(&doc, &format!("globalThis.__tracker.reseed({n}); ''"));
+    doc.settle();
+    doc.resolve();
+    click(&mut doc, "[data-testid=show-all]");
+    println!(
+        "{} rows, {} nodes",
+        count(&doc, "[data-testid=row]"),
+        doc.live_nodes()
+    );
+    let mut j: Vec<f64> = (0..presses)
+        .map(|_| measure(&mut doc, |doc| doc.press("j")).ms)
+        .collect();
+    j.sort_by(f64::total_cmp);
+    if let Some(median) = j.get(j.len() / 2) {
+        println!("j: median {median:.1} ms");
+    }
+    for _ in 0..selects {
+        let s = measure(&mut doc, |doc| click(doc, "[data-testid=filter-status]"));
+        println!("open the Status filter: {:.1} ms", s.ms);
+        doc.press("Escape");
+        doc.wait(0.4);
+    }
+    for code in [
+        "document.body.style.setProperty('overflow', 'hidden')",
+        "document.body.style.setProperty('pointer-events', 'none')",
+        "document.body.style.removeProperty('pointer-events')",
+        "document.body.style.removeProperty('overflow')",
+    ] {
+        let s = measure(&mut doc, |doc| {
+            js(doc, &format!("{code}; ''"));
+        });
+        println!("{code}: {:.1} ms", s.ms);
+    }
+}

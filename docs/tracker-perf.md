@@ -81,10 +81,18 @@ cargo test --release --features "screenshot engine-v8" --test tracker -- --ignor
 1. **Scroll events and `scrollTop` in the DOM layer** (done since: see
    "Scrolling" in the README), so an app can render only the rows in view. That removes the cliffs
    outright: "Show all" would mount ~25 rows, not 5,000.
-2. **Blitz: restyle and relayout only what a change touches.** Profile `j` on
-   the 195k-node page and a Select's forced layouts (`SVELTE_BLITZ_TRACE=1`,
-   then a sampler) before changing anything; candidates are style invalidation
-   of the class change and Taffy re-laying out unchanged siblings.
+2. **Blitz: restyle and relayout only what a change touches.** Done in
+   blitz-dom patches 11 to 13 (crates/blitz-dom/PATCH.md). The profile said:
+   any attribute change restyled the element's subtree and relaid out the
+   page (so `overflow: hidden` on `<body>` restyled all 195k nodes), every
+   resolve rounded every box and walked the box tree even when nothing
+   changed (5.5 ms), and every inline SVG was parsed again when restyled.
+   With 5,000 rows shown, QuickJS: j 64 → 33 ms (the rest is the app's
+   JavaScript, item 4), a Select 521 → 268 ms; on 200 rows a Select 32 → 23.
+   What a Select still costs on the big page is one restyle of every element
+   for the inherited `pointer-events: none` Bits UI sets on `<body>` (~240
+   ms, sequential Stylo; `StyleThreading::Parallel` halved it in a trial but
+   is not safe with several documents in one process, as in the tests).
 3. **Fewer nodes per row in the app.** The two glyphs are SVGs of several
    shapes each, and Svelte adds a comment anchor per `{#if}`/`{#each}`/component.
    Halving the nodes halves render time, memory and the GC pause.
