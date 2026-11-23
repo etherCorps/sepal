@@ -80,6 +80,7 @@ pub fn render_to_rgba(
     let mut bindings = FxHashMap::default();
     {
         let mut painter = VelloHybridScenePainter {
+            recorder: None,
             scene: &mut scene,
             layer_stack: Vec::new(),
             image_manager: ImageManager {

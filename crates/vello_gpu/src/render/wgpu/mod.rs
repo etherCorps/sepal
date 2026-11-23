@@ -157,6 +157,14 @@ pub struct Renderer {
 }
 
 impl Renderer {
+    /// svelte-blitz patch: draw the scene with its (0, 0) at `offset` in the target, so a
+    /// scene the size of a region can be drawn into that region of a larger target
+    /// (with `TargetInit::SrcOver`, the rest of the target is kept). `render`'s
+    /// `render_size` stays the target's size. Applies to the next `render`.
+    pub fn set_root_offset(&mut self, offset: [i32; 2]) {
+        self.programs.root_offset = offset;
+    }
+
     /// Creates a new renderer and its persistent resources.
     pub fn new(device: &Device, render_target_config: &RenderTargetConfig) -> (Self, Resources) {
         Self::new_with(device, render_target_config, RenderSettings::default())
@@ -419,6 +427,12 @@ impl Renderer {
         root_output_target: RootTarget,
         texture_bindings: &TextureBindings,
     ) -> Result<(), RenderError> {
+        // svelte-blitz patch: the root offset only moves the user's surface; glyphs
+        // drawn into an atlas page (`RootTarget::AtlasLayer`) go where their slot is.
+        self.programs.target_offset = match root_output_target {
+            RootTarget::UserSurface => self.programs.root_offset,
+            _ => [0, 0],
+        };
         self.programs.depth_cleared_this_frame = false;
         self.prepare_gpu_encoded_paints(
             encoded_paints,
@@ -951,6 +965,13 @@ struct Programs {
     strips_arena: StripBufferArena,
     /// Dimensions of the rendering target
     render_size: RenderSize,
+    /// svelte-blitz patch: where the root scene's (0, 0) lands in the target
+    /// (`Renderer::set_root_offset`), the offset of the render in progress (the root
+    /// offset for the user's surface, 0 for glyphs drawn into an atlas page), and the
+    /// offset the config buffer holds.
+    root_offset: [i32; 2],
+    target_offset: [i32; 2],
+    config_offset: [i32; 2],
     /// Scratch buffer for staging encoded paints texture data.
     encoded_paints_data: Vec<u8>,
     /// Scratch buffer for staging filter data texture data.
@@ -1765,6 +1786,9 @@ impl Programs {
                 width: render_target_config.width,
                 height: render_target_config.height,
             },
+            root_offset: [0, 0],
+            target_offset: [0, 0],
+            config_offset: [0, 0],
             clear_pipeline,
             root_clear_pipeline,
             atlas_clear_pipeline,
@@ -2338,15 +2362,17 @@ impl Programs {
         resource_texture_dimension_2d: u32,
         new_render_size: &RenderSize,
     ) {
-        if self.render_size != *new_render_size {
+        // svelte-blitz patch: the offset is part of the config too.
+        if self.render_size != *new_render_size || self.config_offset != self.target_offset {
+            self.config_offset = self.target_offset;
             let config = Config {
                 width: u32::from(new_render_size.width),
                 height: u32::from(new_render_size.height),
                 strip_height: Tile::HEIGHT.into(),
                 alphas_tex_width_bits: resource_texture_dimension_2d.trailing_zeros(),
                 encoded_paints_tex_width_bits: resource_texture_dimension_2d.trailing_zeros(),
-                strip_offset_x: 0,
-                strip_offset_y: 0,
+                strip_offset_x: self.target_offset[0],
+                strip_offset_y: self.target_offset[1],
                 negate_ndc: 0,
             };
             let mut buffer = queue

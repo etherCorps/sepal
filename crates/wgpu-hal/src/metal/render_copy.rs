@@ -27,14 +27,17 @@ const SOURCE: &str = r#"
 #include <metal_stdlib>
 using namespace metal;
 
-struct Words { uint src; uint dst; };
+struct Words { uint src; uint dst; uint count; uint per; };
+// Each vertex copies (or zeroes) `per` consecutive words.
 vertex void copy_words(uint i [[vertex_id]], const device uint* src [[buffer(0)]],
                        device uint* dst [[buffer(1)]], constant Words& w [[buffer(2)]]) {
-    dst[w.dst + i] = src[w.src + i];
+    uint end = min((i + 1) * w.per, w.count);
+    for (uint k = i * w.per; k < end; k++) dst[w.dst + k] = src[w.src + k];
 }
 vertex void zero_words(uint i [[vertex_id]], device uint* dst [[buffer(1)]],
                        constant Words& w [[buffer(2)]]) {
-    dst[w.dst + i] = 0;
+    uint end = min((i + 1) * w.per, w.count);
+    for (uint k = i * w.per; k < end; k++) dst[w.dst + k] = 0;
 }
 
 struct Cover { float4 position [[position]]; };
@@ -60,7 +63,13 @@ fragment float4 to_rgba8unorm(Cover c [[stage_in]], const device uint* src [[buf
 struct Words {
     src: u32,
     dst: u32,
+    count: u32,
+    per: u32,
 }
+
+/// Words each vertex copies or zeroes. 1 to 128 measured within noise of each other on
+/// the Tracker; 512 was slower.
+const WORDS_PER_VERTEX: u32 = 32;
 
 #[repr(C)]
 struct Texels {
@@ -167,9 +176,13 @@ impl RenderCopy {
         size: u64,
     ) {
         // Copy and clear offsets and sizes are multiples of 4 (COPY_BUFFER_ALIGNMENT).
+        let count = (size / 4) as u32;
+        let per = WORDS_PER_VERTEX;
         let words = Words {
             src: (src_offset / 4) as u32,
             dst: (dst_offset / 4) as u32,
+            count,
+            per,
         };
         unsafe {
             if let Some(src) = src {
@@ -184,7 +197,7 @@ impl RenderCopy {
             encoder.drawPrimitives_vertexStart_vertexCount(
                 MTLPrimitiveType::Point,
                 0,
-                (size / 4) as usize,
+                count.div_ceil(per) as usize,
             );
         }
     }

@@ -25,7 +25,8 @@ never needs a blit paid for one.
 
 The same work done in render encoders does not trigger it (also measured):
 buffer words are written by a vertex function with rasterization off
-(`copy_words`, `zero_words`), and texels by a fragment function that reads the
+(`copy_words`, `zero_words`, 32 words per vertex: one per vertex cost
+measurably more, 1 to 128 measured the same), and texels by a fragment function that reads the
 source buffer, drawn over the region (`to_rgba8unorm`, `to_rgba32uint`, the two
 formats vello_gpu uploads to). It stays on the GPU timeline, in order with
 everything else in the command buffer; doing the copies on the CPU instead

@@ -180,6 +180,13 @@ pub struct VelloHybridWindowRenderer {
     scene: VelloHybridScene,
     config: VelloHybridRendererOptions,
     cached_images: FxHashMap<u64, ImageId>,
+    /// svelte-blitz patch (damage): the window's size (the scene's is the damaged
+    /// region's), the last frame's commands, and the recording reused each frame.
+    size: (u32, u32),
+    damage: Option<crate::damage::DamageTracker>,
+    recording: anyrender::Scene,
+    #[cfg(not(target_arch = "wasm32"))]
+    last_frame: Option<std::time::Instant>,
 }
 impl VelloHybridWindowRenderer {
     #[allow(clippy::new_without_default)]
@@ -198,6 +205,11 @@ impl VelloHybridWindowRenderer {
             window_handle: None,
             scene: VelloHybridScene::new_with(0, 0, render_settings.level),
             cached_images: FxHashMap::default(),
+            size: (0, 0),
+            damage: crate::damage::enabled().then(Default::default),
+            recording: anyrender::Scene::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            last_frame: None,
         }
     }
 
@@ -310,6 +322,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         // query scene size (e.g. `set_size`) see consistent state.
         let render_settings = self.config.render_settings;
         self.scene = VelloHybridScene::new_with(width as u16, height as u16, render_settings.level);
+        self.size = (width, height); // svelte-blitz patch (damage)
 
         let surface = self
             .wgpu_context
@@ -405,6 +418,18 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             #[cfg(target_vendor = "apple")]
             let intermediate_texture = None;
 
+            // svelte-blitz patch (damage): frames are drawn into an intermediate
+            // texture, which keeps the last frame for the next one to draw over
+            // (`damage.rs`), and copied to the surface.
+            let intermediate_texture = intermediate_texture.or_else(|| {
+                crate::damage::enabled().then(|| wgpu_context::TextureConfiguration {
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                        | wgpu::TextureUsages::TEXTURE_BINDING,
+                    format: DEFAULT_TEXTURE_FORMAT,
+                    alpha_conversion: None,
+                })
+            });
+
             let render_surface = SurfaceRenderer::new(
                 surface,
                 SurfaceRendererConfiguration {
@@ -461,6 +486,11 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 Ok(Some(InitOutput { active })) => {
                     let device_handle = active.render_surface.device_handle.clone();
                     self.wgpu_context.device_pool.push(device_handle);
+                    // svelte-blitz patch (damage): a new surface, nothing kept.
+                    self.size = (active.render_surface.config.width, active.render_surface.config.height);
+                    if let Some(damage) = &mut self.damage {
+                        damage.invalidate();
+                    }
                     self.render_state = RenderState::Active(active);
                     true
                 }
@@ -471,10 +501,19 @@ impl WindowRenderer for VelloHybridWindowRenderer {
 
     fn suspend(&mut self) {
         self.render_state = RenderState::Suspended;
+        if let Some(damage) = &mut self.damage {
+            damage.invalidate();
+        }
     }
 
     fn set_size(&mut self, width: u32, height: u32) {
-        if width as u16 != self.scene.width() || height as u16 != self.scene.height() {
+        // svelte-blitz patch (damage): compared with the window's size, as the
+        // scene is resized to the damaged region every frame.
+        if (width, height) != self.size {
+            self.size = (width, height);
+            if let Some(damage) = &mut self.damage {
+                damage.invalidate();
+            }
             self.scene = VelloHybridScene::new_with(
                 width as u16,
                 height as u16,
@@ -499,6 +538,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         };
 
         let render_surface = &mut state.render_surface;
+        let (width, height) = (render_surface.config.width, render_surface.config.height);
 
         debug_timer!(timer, feature = "log_frame_times");
 
@@ -509,46 +549,114 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                     label: Some("Render scene"),
                 });
 
-        let image_manager = ImageManager {
-            renderer: &mut state.renderer,
-            resources: &mut state.resources,
-            device: render_surface.device(),
-            queue: render_surface.queue(),
-            encoder: &mut encoder,
-            cache: &mut self.cached_images,
-            own_textures: &mut state.own_textures,
-            atlas_page: self.config.render_settings.memory_settings.image_atlas_config.atlas_size,
-        };
+        // svelte-blitz patch (damage): with damage tracking on, the frame is recorded
+        // here, compared with the last one, and only what changed is drawn below.
+        let mut recording = self
+            .damage
+            .is_some()
+            .then(|| std::mem::take(&mut self.recording));
+        {
+            let image_manager = ImageManager {
+                renderer: &mut state.renderer,
+                resources: &mut state.resources,
+                device: render_surface.device(),
+                queue: render_surface.queue(),
+                encoder: &mut encoder,
+                cache: &mut self.cached_images,
+                own_textures: &mut state.own_textures,
+                atlas_page: self.config.render_settings.memory_settings.image_atlas_config.atlas_size,
+            };
 
-        let mut scene_painter = VelloHybridScenePainter {
-            scene: &mut self.scene,
-            layer_stack: Vec::new(),
-            image_manager,
-            texture_bindings: &mut state.texture_bindings,
-            device_handle: &render_surface.device_handle,
-        };
-        if self.config.base_color != Color::TRANSPARENT {
-            scene_painter.fill(
-                peniko::Fill::NonZero,
-                kurbo::Affine::IDENTITY,
-                self.config.base_color,
-                None,
-                &kurbo::Rect::new(
-                    0.,
-                    0.,
-                    render_surface.config.width as f64,
-                    render_surface.config.height as f64,
-                ),
-            );
+            let mut scene_painter = VelloHybridScenePainter {
+                recorder: recording.as_mut(),
+                scene: &mut self.scene,
+                layer_stack: Vec::new(),
+                image_manager,
+                texture_bindings: &mut state.texture_bindings,
+                device_handle: &render_surface.device_handle,
+            };
+            if self.config.base_color != Color::TRANSPARENT {
+                scene_painter.fill(
+                    peniko::Fill::NonZero,
+                    kurbo::Affine::IDENTITY,
+                    self.config.base_color,
+                    None,
+                    &kurbo::Rect::new(0., 0., width as f64, height as f64),
+                );
+            }
+            // Regenerate the vello scene
+            draw_fn(&mut scene_painter);
         }
-        // Regenerate the vello scene
-        draw_fn(&mut scene_painter);
         timer.record_time("cmd");
+
+        let mut root_offset = [0, 0];
+        let mut target_init = TargetInit::Clear(ClearSettings::default());
+        if let (Some(tracker), Some(mut recording)) = (self.damage.as_mut(), recording) {
+            let commands = std::mem::take(&mut recording.commands);
+            self.recording = recording;
+            let damage = tracker.update(commands, (width, height));
+            if crate::damage::trace() {
+                eprintln!("[trace] damage: {damage:?}");
+            }
+            let region = match damage {
+                // Nothing on screen changed: the window keeps the last frame. Presenting
+                // is what paced the redraw loop to the display (waiting for a drawable),
+                // and something animating without changing pixels asks for a redraw
+                // after every frame, so a skipped frame waits out a 60 Hz frame instead.
+                crate::damage::Damage::None => {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        const FRAME: std::time::Duration = std::time::Duration::from_micros(16_667);
+                        if let Some(last) = self.last_frame {
+                            std::thread::sleep(FRAME.saturating_sub(last.elapsed()));
+                        }
+                        self.last_frame = Some(std::time::Instant::now());
+                    }
+                    return;
+                }
+                crate::damage::Damage::Full => kurbo::Rect::new(0., 0., width as f64, height as f64),
+                crate::damage::Damage::Rect(region) => {
+                    target_init = TargetInit::SrcOver;
+                    region
+                }
+            };
+            root_offset = [region.x0 as i32, region.y0 as i32];
+            self.scene
+                .reset_and_resize(region.width() as u16, region.height() as u16);
+            let image_manager = ImageManager {
+                renderer: &mut state.renderer,
+                resources: &mut state.resources,
+                device: render_surface.device(),
+                queue: render_surface.queue(),
+                encoder: &mut encoder,
+                cache: &mut self.cached_images,
+                own_textures: &mut state.own_textures,
+                atlas_page: self.config.render_settings.memory_settings.image_atlas_config.atlas_size,
+            };
+            let mut scene_painter = VelloHybridScenePainter {
+                recorder: None,
+                scene: &mut self.scene,
+                layer_stack: Vec::new(),
+                image_manager,
+                texture_bindings: &mut state.texture_bindings,
+                device_handle: &render_surface.device_handle,
+            };
+            let (commands, bounds) = tracker.current();
+            crate::damage::replay(&mut scene_painter, commands, bounds, region);
+        }
+        state.renderer.set_root_offset(root_offset);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            self.last_frame = Some(std::time::Instant::now());
+        }
 
         let Ok(texture_view) = render_surface.target_texture_view() else {
             // Skip frame in case of error getting surface texture
             render_surface.clear_surface_texture();
             self.scene.reset();
+            if let Some(damage) = &mut self.damage {
+                damage.invalidate();
+            }
             return;
         };
 
@@ -574,9 +682,12 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                     height: render_surface.config.height as u16,
                 },
                 &texture_view,
-                Some(&state.depth_texture_view),
+                // svelte-blitz patch (damage): a damaged region is small enough that the
+                // depth buffer's saving (less overdraw) is worth less than clearing and
+                // storing a window-sized depth texture.
+                matches!(target_init, TargetInit::Clear(_)).then_some(&state.depth_texture_view),
                 &texture_bindings,
-                TargetInit::Clear(ClearSettings::default()),
+                target_init,
             )
             .expect("failed to render to texture");
         render_surface.queue().submit([encoder.finish()]);

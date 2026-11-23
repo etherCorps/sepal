@@ -182,6 +182,12 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Where time goes** (measured 22 Nov 2026, see README "Performance"): turns
   are bound by JavaScript in QuickJS, an interpreter, not by Blitz. Do not
   optimise Rust before `SVELTE_BLITZ_TRACE=1` says layouts are the cost.
+- **What GPU time costs** (measured 23 Nov 2026, driver's `accumulatedGPUTime`
+  per process, the number Activity Monitor shows): at the clocks an idle app
+  runs at, mostly a fixed cost per command buffer (~0.15 ms), little per pass
+  and almost nothing per pixel; a 64x64 and a 2400x1600 render pass cost the
+  same. wgpu submits about five command buffers a frame. Fewer frames and
+  fewer submissions are what lower it, not smaller draws.
 - **Where memory goes in a window** (measured 23 Nov 2026 with `footprint`):
   while frames are drawn, ~120 MB of "graphics" is Apple's GPU driver, paid
   by any Metal process on its first render pass; its first blit or compute
@@ -275,10 +281,15 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   window, layer textures up to the device's limit (a full-window layer on
   a 5K display is over vello_gpu's default 4096), atlas pages of 1024 instead
   of 4096 (64 MB each), and images larger than a page in textures of their own
-  (vello_gpu panics on them). See its `PATCH.md`. Same rules as below.
+  (vello_gpu panics on them), and damage tracking: each frame's drawing
+  commands are diffed with the last frame's and only the changed region is
+  repainted, over the last frame kept in an intermediate texture
+  (`SVELTE_BLITZ_DAMAGE=0` turns it off, `SVELTE_BLITZ_TRACE=1` prints each
+  frame's damage). See its `PATCH.md`. Same rules as below.
 - **`crates/vello_gpu` is a patched copy as well**: its layer textures shrink
-  again once a large layer (a Dialog's backdrop) is gone. See its `PATCH.md`.
-  Same rules as below.
+  again once a large layer (a Dialog's backdrop) is gone, and a scene can be
+  drawn at an offset (`set_root_offset`, for damage tracking). See its
+  `PATCH.md`. Same rules as below.
 - **`crates/wgpu-hal` is a patched copy as well**: on Apple GPUs, buffer
   clears and uploads run in render passes instead of blit encoders, because the
   first blit or compute work in a process costs ~80 MB of driver memory. A new
