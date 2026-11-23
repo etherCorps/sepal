@@ -80,7 +80,8 @@ cargo test --release --features "screenshot engine-v8" --test tracker -- --ignor
 
 1. **Scroll events and `scrollTop` in the DOM layer** (done since: see
    "Scrolling" in the README), so an app can render only the rows in view. That removes the cliffs
-   outright: "Show all" would mount ~25 rows, not 5,000.
+   outright: "Show all" would mount ~25 rows, not 5,000. Done: see "The
+   cliffs, with the list virtualised" below.
 2. **Blitz: restyle and relayout only what a change touches.** Profile `j` on
    the 195k-node page and a Select's forced layouts (`SVELTE_BLITZ_TRACE=1`,
    then a sampler) before changing anything; candidates are style invalidation
@@ -93,6 +94,30 @@ cargo test --release --features "screenshot engine-v8" --test tracker -- --ignor
    finding left open), which makes j on a long list O(1) in JavaScript.
 5. **V8 as an option for heavy apps:** 2.5–4x on render-bound turns, no
    help on layout-bound ones, 62 MB binary instead of 24 (HANDOVER "V8 spike").
+
+## The cliffs, with the list virtualised
+
+The list now mounts only the rows in view plus 300px either side (28 rows in
+an 800px window), whatever is paged in. QuickJS, release, same machine, before
+and after in one sitting (absolute numbers were noisier than the tables above):
+
+| | 5,000 before | 5,000 after | 20,000 before | 20,000 after |
+|---|---|---|---|---|
+| Show all | 1,625 ms | 0.6 ms | 6,950 ms | 1.1 ms |
+| Scroll the Show-all list one screen (wheel, median) | — | 6.2 ms | — | 6.1 ms |
+| j with every row shown (median) | 25 ms | 0.4 ms | 165 ms | 0.4 ms |
+| Open the Status filter, every row shown (median) | 493 ms | 14 ms | 1,910 ms | 14 ms |
+| Leave Show all (to Board) | 182 ms | 85 ms | 1,215 ms | 83 ms |
+| The deferred GC, 1 s later | 224 ms | 1.1 ms | 905 ms | 1.1 ms |
+| Live nodes with every row shown | 108,932 | ~7,000 | 430,724 | ~7,000 |
+| Footprint after Show all | 599 MB | 73 MB | 2,015 MB | 82 MB |
+
+The first j after scrolling away jumps the list back to the highlight and
+mounts a screen of rows (~9 ms). Blitz issues found on the way, worked around
+in the app: hit testing does not clip to a scrolled box (a click on the
+toolbar landed on a row scrolled up under it; the header and toolbar are
+`relative z-10`), and a box keeps its scroll offset when its content shrinks
+(the list writes `scrollTop` back to its end).
 
 ## Not measured here
 

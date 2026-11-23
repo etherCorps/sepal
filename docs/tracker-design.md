@@ -254,6 +254,10 @@ Headings are roman, never italic. No eyebrow tags above page titles.
   (the checkbox is plain, `accent-color: var(--primary)`, 14px). Instant, no transition.
 - After every 200 rows: a 36px row with "Show 200 more" (`show-more`) and
   "Show all 4,612" (`show-all`) as ghost buttons, plus the hidden count in mono.
+- Only the rows in view are mounted, plus 300px either side; two spacers stand
+  in for the rest, so Show all at 20,000 mounts ~28 rows. Heights are fixed
+  for this (rows 36px or 28px compact, headers 32px). j/k scroll the
+  highlighted row into view (nearest edge).
 - Empty: centred block 120px from the top: "No issues match ‘deploy’." 14/500 and
   a ghost "Clear filters" button. Not an illustration.
 - Bulk bar (`bulk-bar`), when any row is checked: absolute, bottom 16px, centred
