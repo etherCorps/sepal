@@ -2,7 +2,7 @@
 
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
-windows with, with five changes. `crates/host/Cargo.toml` swaps it in through
+windows with, with six changes. `crates/host/Cargo.toml` swaps it in through
 `[patch.crates-io]`. All are marked `svelte-blitz patch`.
 
 ## The changes
@@ -65,8 +65,42 @@ device's texture limit is not drawn. Images up to a page still go to the
 atlas. Checked with a 4500 x 300 PNG as a CSS background: `gpushot:` matches
 `shot:` except on glyph edges, and 1024 and 1025 px images both draw.
 
+**6. Repaint only what changed.** `src/damage.rs` (new), the recording mode of
+`VelloHybridScenePainter` (`recorder`, `src/scene.rs`) and `render` in
+`src/window_renderer.rs`. Each frame's drawing commands are recorded (anyrender's
+`recording::Scene`), compared in order with the last frame's (Myers' diff), and
+only the commands that touch the region whose commands changed are drawn, moved
+so the region's corner is the scene's origin and placed with vello_gpu's root
+offset (its PATCH.md, change 2), over the last frame kept in the surface's
+intermediate texture (`TargetInit::SrcOver`). A frame that changes nothing on
+screen draws nothing; it waits out a 60 Hz frame instead, as presenting is what
+paced the redraw loop and something animating without changing pixels asks for
+a redraw after every frame. Full repaints: first frame, resize, new surface,
+over 500 changed commands, or a region over half the window. Commands drawn
+from an app-registered texture count as changed every frame. Commands with an
+empty box are left out (blitz-paint emits border paths whose points are all
+NaN; they draw nothing and never compare equal). Partial frames draw without
+the depth buffer (clearing and storing a window-sized one costs more than the
+overdraw it saves there). `SVELTE_BLITZ_DAMAGE=0` turns it off;
+`SVELTE_BLITZ_TRACE=1` prints each frame's damage.
+
+Measured on the Tracker (release, 1200x800 at 2x, GPU time from the driver's
+per-client `accumulatedGPUTime`): a clock repainting once a second 29 -> 18 ms
+over 20 s, the New issue dialog 103 -> 68 ms, switching four views 97 -> 69 ms,
+Show all and scrolling 583 -> 269 ms GPU and 2.5 -> 1.9 s CPU. Cost: the
+intermediate texture, ~15-20 MB. Window captures of seven states (list, hover,
+dialog open and closed, Board, Insights, list again) match a full repaint
+exactly or within 1/255 on a few dozen antialiased edge pixels of what changed
+(vello reaches them through a different path in a small scene); a partial frame
+starts from the opaque background fill, so that does not accumulate.
+
+On this GPU the cost of a frame is mostly per command buffer (~0.15 ms each at
+the clocks an idle app runs at), not per pixel or per pass; wgpu submits about
+five a frame (pending writes, two for the passes, the copy to the surface,
+transitions). That, not drawing, is most of what a partial frame still costs.
+
 ## Updating
 
 Do not edit anything else here. To move to a new version, replace the
-directory with that version's source and reapply the five changes (search for
+directory with that version's source and reapply the six changes (search for
 `svelte-blitz patch`; `offscreen.rs` is new as a whole).

@@ -1,6 +1,7 @@
 //! A [`vello_gpu`] backend for the [`anyrender`] 2D drawing abstraction
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+mod damage; // svelte-blitz patch
 mod filters;
 // svelte-blitz patch
 #[cfg(not(target_arch = "wasm32"))]

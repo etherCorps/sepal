@@ -211,6 +211,9 @@ pub(crate) enum LayerKind {
 }
 
 pub struct VelloHybridScenePainter<'s> {
+    /// svelte-blitz patch: when set, drawing commands are recorded here instead of
+    /// drawn, to be compared with the last frame's (`damage.rs`).
+    pub(crate) recorder: Option<&'s mut anyrender::Scene>,
     pub(crate) scene: &'s mut vello_gpu::Scene,
     pub(crate) layer_stack: Vec<LayerKind>,
     pub(crate) image_manager: ImageManager<'s>,
@@ -226,6 +229,7 @@ impl VelloHybridScenePainter<'_> {
         device_handle: &'s DeviceHandle,
     ) -> VelloHybridScenePainter<'s> {
         VelloHybridScenePainter {
+            recorder: None,
             scene,
             layer_stack: Vec::with_capacity(16),
             image_manager,
@@ -278,6 +282,9 @@ impl RenderContext for VelloHybridScenePainter<'_> {
 
 impl PaintScene for VelloHybridScenePainter<'_> {
     fn reset(&mut self) {
+        if let Some(r) = self.recorder.as_deref_mut() {
+            return r.reset();
+        }
         self.scene.reset();
     }
 
@@ -291,6 +298,9 @@ impl PaintScene for VelloHybridScenePainter<'_> {
         filter: Option<Arc<Filter>>,
         _backdrop_filter: Option<Arc<Filter>>,
     ) {
+        if let Some(r) = self.recorder.as_deref_mut() {
+            return r.push_layer(fill, blend, alpha, transform, clip, filter, _backdrop_filter);
+        }
         let filter = filter.and_then(crate::filters::convert_filter);
         self.scene.set_transform(transform);
         self.scene.set_fill_rule(fill);
@@ -302,6 +312,9 @@ impl PaintScene for VelloHybridScenePainter<'_> {
     }
 
     fn push_clip_layer(&mut self, fill: Fill, transform: Affine, clip: &impl Shape) {
+        if let Some(r) = self.recorder.as_deref_mut() {
+            return r.push_clip_layer(fill, transform, clip);
+        }
         self.scene.set_transform(transform);
         self.scene.set_fill_rule(fill);
         self.layer_stack.push(LayerKind::Clip);
@@ -310,6 +323,9 @@ impl PaintScene for VelloHybridScenePainter<'_> {
     }
 
     fn pop_layer(&mut self) {
+        if let Some(r) = self.recorder.as_deref_mut() {
+            return r.pop_layer();
+        }
         if let Some(kind) = self.layer_stack.pop() {
             match kind {
                 LayerKind::Layer => {
@@ -329,6 +345,9 @@ impl PaintScene for VelloHybridScenePainter<'_> {
         brush_transform: Option<Affine>,
         shape: &impl Shape,
     ) {
+        if let Some(r) = self.recorder.as_deref_mut() {
+            return r.stroke(style, transform, paint, brush_transform, shape);
+        }
         self.scene.set_transform(transform);
         self.scene.set_stroke(style.clone());
         let paint = self.convert_paint(paint.into());
@@ -346,6 +365,9 @@ impl PaintScene for VelloHybridScenePainter<'_> {
         brush_transform: Option<Affine>,
         shape: &impl Shape,
     ) {
+        if let Some(r) = self.recorder.as_deref_mut() {
+            return r.fill(style, transform, paint, brush_transform, shape);
+        }
         self.scene.set_transform(transform);
         self.scene.set_fill_rule(style);
         let paint = self.convert_paint(paint.into());
@@ -369,6 +391,24 @@ impl PaintScene for VelloHybridScenePainter<'_> {
         glyph_transform: Option<Affine>,
         glyphs: impl Iterator<Item = anyrender::Glyph> + Clone,
     ) {
+        // Borrowed inside the branch: a borrow for `'a` taken in the condition
+        // would outlive the rest of the function.
+        if self.recorder.is_some() {
+            let r = self.recorder.as_deref_mut().expect("checked above");
+            return r.draw_glyphs(
+                font,
+                font_size,
+                hint,
+                normalized_coords,
+                embolden,
+                style,
+                paint,
+                _brush_alpha,
+                transform,
+                glyph_transform,
+                glyphs,
+            );
+        }
         let paint = self.convert_paint(paint.into());
         self.scene.set_paint(paint);
         self.scene.reset_paint_transform();
@@ -421,6 +461,9 @@ impl PaintScene for VelloHybridScenePainter<'_> {
         radius: f64,
         std_dev: f64,
     ) {
+        if let Some(r) = self.recorder.as_deref_mut() {
+            return r.draw_box_shadow(transform, rect, color, radius, std_dev);
+        }
         self.scene.set_transform(transform);
         self.scene.set_paint(PaintType::Solid(color));
         self.scene.reset_paint_transform();
