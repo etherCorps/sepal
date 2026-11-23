@@ -248,7 +248,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   a 5K display is over vello_gpu's default 4096). See its `PATCH.md`. Same
   rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in ten places, all marked
+  It differs from crates.io 0.3.0-beta.4 in thirteen places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a

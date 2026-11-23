@@ -81,7 +81,7 @@ engine-v8 = ["dep:v8"]
 name = "drive"
 required-features = ["screenshot"]
 
-# Ten small changes; see crates/blitz-dom/PATCH.md.
+# Thirteen small changes; see crates/blitz-dom/PATCH.md.
 [patch.crates-io]
 blitz-dom = { path = "../blitz-dom" }
 # Glyph atlas on, and drawing without a window; see its PATCH.md.
