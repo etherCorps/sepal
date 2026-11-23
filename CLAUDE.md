@@ -21,6 +21,9 @@ pnpm test                   # check + all test suites
 pnpm run screenshot         # CPU-render examples/counter to screenshot.png
 pnpm start                  # open examples/counter in a window (needs a display)
 pnpm dev                    # same, with reload on save (debug host + vite build --watch)
+pnpm dev:tracker            # the same for examples/tracker. A plain `vite build --watch` in
+                            # an example runs packages/host/bin's binary, which is stale
+                            # until `pnpm run build:host`: new host features are missing
 pnpm run bundle             # examples/counter/bundle/Counter.app (release host)
 
 pnpm --filter icons build # build another example by workspace name
