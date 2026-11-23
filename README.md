@@ -53,10 +53,10 @@ The starter comes with one of two routers. Both have pages as files in
 In a terminal you are asked which. To say so ahead of time:
 `pnpm create @ethercorps/svelte-blitz my-app --router sveltekit`.
 
-**Nothing is published yet.** Until it is, create a project from this
-repository with `node packages/create/index.js ../my-app` and install the
-packages from tarballs made with `pnpm pack`; `packages/create/template.test.js`
-does exactly that.
+The packages are on npm as `0.1.0-alpha.0`, an alpha: expect rough edges and
+changes between versions. Prebuilt hosts exist for macOS (arm64, x64) and
+Linux (x64, arm64, glibc 2.35 or newer); on anything else, build the host
+from `crates/host` and point `SVELTE_BLITZ_HOST` at it.
 
 ## Packages
 
@@ -964,7 +964,7 @@ What the time is spent on, from sampling:
 
 1. Run `pnpm start` on a machine with a display and fix whatever the window turns up.
 2. Type into a real window; then IME.
-3. Release work: Windows, and publishing (the release workflow has only been run as far as packing).
+3. Windows (on hold; see HANDOVER.md).
 4. State-preserving HMR, if the full reload turns out not to be enough.
 5. A virtual list component, then packaging per OS.
 6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`

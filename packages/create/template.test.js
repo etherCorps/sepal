@@ -77,7 +77,7 @@ try {
 		}
 		assert(readFileSync(join(app, 'app.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
 
-		// Nothing is published yet: the overrides stand in for the registry. Its own
+		// What is tested is this checkout, not what is published: the overrides stand in for the registry. Its own
 		// workspace file also keeps the project out of this repository's workspace.
 		const overrides = Object.entries(tarballs)
 			.filter(([name]) => name !== '@ethercorps/create-svelte-blitz')

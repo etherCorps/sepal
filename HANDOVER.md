@@ -334,9 +334,25 @@ secret in the repository, and the tag has to equal the packages' version. A
 prerelease version publishes under its own dist-tag (`0.1.0-alpha.0` as
 `alpha`).
 
-Still to do before a first release: decide the version, set `NPM_TOKEN`,
-Windows (not in the release matrix), and take "Nothing is published yet" out
-of the README once it is not true.
+**First release: 0.1.0-alpha.0 (23 Nov 2026).** All five packages are on
+npm. The tarballs were built by the release workflow run by hand
+(run 45102868820, commit `9937a1a`), downloaded, checked, and published by
+Shivam from his terminal with `pnpm publish <tarball> --access public --tag
+alpha`: the account asks for a second factor, which only an interactive
+terminal can answer. The registry's checksums match the tarballs. Being the
+first version of each package it is `latest` as well as `alpha`. Checked from
+the registry afterwards on macOS arm64: both starters created with
+`pnpm create @ethercorps/svelte-blitz@alpha`, installed, type-checked, built
+and rendered by the host that came with them.
+
+No git tag was pushed. A `v*` tag makes the workflow publish, which needs an
+`NPM_TOKEN` secret that does not exist, and that half of the workflow has
+still never run. For the next release either set the secret up and tag, or
+repeat what was done here: bump the five versions, push, `gh workflow run
+release.yml`, download the `packages` artifact, publish host first.
+
+The registry took about four minutes to show the new packages; a 404 right
+after publishing a new name means nothing.
 
 ## What only Shivam can do
 
