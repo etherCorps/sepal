@@ -139,6 +139,12 @@ fn open_select(doc: &mut SvelteDocument, trigger: &str) -> Vec<Sample> {
         .collect()
 }
 
+/// Where to turn the wheel over the list.
+fn list_centre(doc: &SvelteDocument) -> (f32, f32) {
+    let (x, y, width, height) = doc.rect(doc.query("[data-testid=list]").unwrap()).unwrap();
+    ((x + width / 2.0) as f32, (y + height / 2.0) as f32)
+}
+
 fn nav(doc: &mut SvelteDocument, to: &str) -> Sample {
     let sample = measure(doc, |doc| click(doc, &format!("[data-testid=nav-{to}]")));
     doc.wait(0.1);
@@ -169,10 +175,7 @@ fn bench() {
 
     // P1: start to first layout, at the default size (5000; the app seeds before it mounts).
     {
-        let dist = PathBuf::from(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../examples/tracker/dist"
-        ));
+        let dist = dist();
         let id = new_id();
         let started = Instant::now();
         let mut app = App::from_dir(&dist).unwrap();
@@ -275,9 +278,20 @@ fn bench() {
         let create = measure(&mut doc, |doc| doc.press_with("Enter", Modifiers::META));
         table.add(&doc, "P9 Cmd+Enter: create the issue", n, &[create]);
         doc.wait(0.6);
-        let rows = keys(&doc);
+        // Row 51 is two screens down: tick row 2, wheel down, Shift+click it.
+        // (j in P3 scrolled the list: back to the top first.)
+        js(
+            &doc,
+            "document.querySelector('[data-testid=list]').scrollTop = 0, ''",
+        );
+        doc.settle();
+        let rows = order(&doc);
         click(&mut doc, &format!("{} input", row(&rows[2])));
-        let to = doc.query(&format!("{} input", row(&rows[51]))).unwrap();
+        let (cx, cy) = list_centre(&doc);
+        doc.wheel(cx, cy, 0.0, 40.0 * 36.0);
+        let to = doc
+            .query(&format!("{} input", row(&rows[51])))
+            .expect("row 51 in view");
         let range = measure(&mut doc, |doc| doc.click_with(to, Modifiers::SHIFT));
         table.add(&doc, "P9 Shift+click: check 50 rows", n, &[range]);
         let bulk = choose(&mut doc, "[data-testid=bulk-status]", "done");
@@ -374,13 +388,33 @@ fn bench() {
         let more = measure(&mut doc, |doc| click(doc, "[data-testid=show-more]"));
         table.add(&doc, "P6 Show 200 more", n, &[more]);
         let all = measure(&mut doc, |doc| click(doc, "[data-testid=show-all]"));
-        let shown = count(&doc, "[data-testid=row]");
-        table.add(&doc, &format!("P6 Show all ({shown} rows)"), n, &[all]);
+        let shown = paged(&doc);
+        let mounted = count(&doc, "[data-testid=row]");
+        table.add(
+            &doc,
+            &format!("P6 Show all ({shown} rows, {mounted} mounted)"),
+            n,
+            &[all],
+        );
         if shown < n {
             // The 10 s watchdog stopped the render; the app is not usable now.
             println!("    Show all stopped by the watchdog at {shown} of {n} rows");
             continue;
         }
+        let (cx, cy) = list_centre(&doc);
+        let height = doc
+            .rect(doc.query("[data-testid=list]").unwrap())
+            .unwrap()
+            .3;
+        let screens: Vec<_> = (0..10)
+            .map(|_| measure(&mut doc, |doc| doc.wheel(cx, cy, 0.0, height)))
+            .collect();
+        table.add(
+            &doc,
+            "P6 scroll the Show-all list by one screen (wheel)",
+            n,
+            &screens,
+        );
         let moves: Vec<_> = (0..10)
             .map(|_| measure(&mut doc, |doc| doc.press("j")))
             .collect();
