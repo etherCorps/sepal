@@ -12,6 +12,7 @@
 //! its own. Build the bundle first: `pnpm run build` in the repository root.
 
 use svelte_blitz_host::SvelteDocument;
+use svelte_blitz_host::screenshot::render_rgba;
 
 const CSS: &str = "
     div { height: 10px; width: 10px }
@@ -345,4 +346,114 @@ fn children_that_come_and_go_are_styled_along_with_what_depends_on_them() {
         "document.getElementById('to').appendChild(document.getElementById('m')); ''",
     );
     assert_eq!(width(&doc, "m"), 90.0);
+}
+
+const STYLE_CSS: &str = "
+    body { margin: 0 }
+    .box { width: 100px; font-size: 10px; line-height: 10px }
+    .box.wide { width: 300px }
+    .box.big { font-size: 40px; line-height: 50px }
+    .gone { height: 10px }
+    .box.hide .gone { display: none }
+    .icon { width: 20px; height: 20px; color: rgb(255, 0, 0) }
+    .icon.blue { color: rgb(0, 0, 255) }
+";
+
+/// `class`, `style` and `data-*` only restyle the element itself; what that
+/// does to its children (inherited values, boxes that move or disappear)
+/// has to follow anyway, and so does a drawing whose `currentColor` changed.
+/// Upstream restyles and rebuilds the whole subtree for any attribute; the
+/// patched copy leaves that to Stylo.
+#[test]
+fn class_and_style_changes_reach_children_layout_and_drawings() {
+    let js = std::fs::read_to_string(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../examples/shadcn/dist/app.js"
+    ))
+    .expect("run `pnpm run build` in the repository root first");
+    let mut doc = SvelteDocument::new(&js, STYLE_CSS, Default::default()).unwrap();
+    doc.layout(400, 300);
+    let eval = |doc: &mut SvelteDocument, code: &str| {
+        doc.js().eval_string(code).unwrap();
+        doc.settle();
+        doc.resolve();
+    };
+    let kid = |doc: &SvelteDocument| doc.rect(doc.query("#kid").unwrap()).unwrap();
+    eval(
+        &mut doc,
+        "(() => {
+            document.body.textContent = '';
+            const box = document.createElement('div');
+            box.className = 'box';
+            box.id = 'box';
+            const gone = document.createElement('div');
+            gone.className = 'gone';
+            const kid = document.createElement('div');
+            kid.id = 'kid';
+            kid.textContent = 'x';
+            box.append(gone, kid);
+            const icon = document.createElement('div');
+            icon.className = 'icon';
+            icon.id = 'icon';
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '20');
+            svg.setAttribute('height', '20');
+            svg.setAttribute('viewBox', '0 0 20 20');
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('width', '20');
+            rect.setAttribute('height', '20');
+            rect.setAttribute('fill', 'currentColor');
+            svg.append(rect);
+            icon.append(svg);
+            document.body.append(box, icon);
+            globalThis.box = box;
+            return '';
+        })()",
+    );
+    assert_eq!(kid(&doc), (0.0, 10.0, 100.0, 10.0));
+
+    // A class that changes a box, an inherited value, and a descendant.
+    eval(&mut doc, "box.classList.add('wide'); ''");
+    assert_eq!(kid(&doc).2, 300.0, "the child fills the wider box");
+    eval(&mut doc, "box.classList.add('big'); ''");
+    assert_eq!(kid(&doc).3, 50.0, "the child inherits the line height");
+    eval(&mut doc, "box.classList.add('hide'); ''");
+    assert_eq!(kid(&doc).1, 0.0, "the hidden sibling no longer takes room");
+    eval(&mut doc, "box.className = 'box'; ''");
+    assert_eq!(kid(&doc), (0.0, 10.0, 100.0, 10.0));
+
+    // The style attribute, set and removed.
+    eval(&mut doc, "box.style.setProperty('line-height', '30px'); ''");
+    assert_eq!(kid(&doc).3, 30.0);
+    eval(&mut doc, "box.style.setProperty('width', '200px'); ''");
+    assert_eq!(kid(&doc).2, 200.0);
+    eval(&mut doc, "box.removeAttribute('style'); ''");
+    assert_eq!(kid(&doc), (0.0, 10.0, 100.0, 10.0));
+
+    // A drawing in `currentColor` follows a class on its parent, and stays
+    // drawn through a restyle of everything (as a modal's `pointer-events:
+    // none` on <body> does) that leaves its colour alone.
+    let colour = |doc: &mut SvelteDocument| {
+        let (x, y, width, height) = doc.rect(doc.query("#icon").unwrap()).unwrap();
+        let (pixels, frame_width, _) = render_rgba(doc, 400, 300, 1.0);
+        let (x, y) = ((x + width / 2.0) as u32, (y + height / 2.0) as u32);
+        let at = ((y * frame_width + x) * 4) as usize;
+        (pixels[at], pixels[at + 1], pixels[at + 2])
+    };
+    assert_eq!(colour(&mut doc), (255, 0, 0));
+    eval(
+        &mut doc,
+        "document.getElementById('icon').classList.add('blue'); ''",
+    );
+    assert_eq!(colour(&mut doc), (0, 0, 255));
+    eval(
+        &mut doc,
+        "document.body.style.setProperty('pointer-events', 'none'); ''",
+    );
+    assert_eq!(colour(&mut doc), (0, 0, 255));
+    eval(
+        &mut doc,
+        "document.getElementById('icon').classList.remove('blue'); ''",
+    );
+    assert_eq!(colour(&mut doc), (255, 0, 0));
 }

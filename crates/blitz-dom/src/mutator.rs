@@ -271,9 +271,15 @@ impl DocumentMutator<'_> {
             self.doc.snapshot_node(node_id);
 
             let node = &mut self.doc.nodes[node_id];
+            let only_styles = Self::acts_through_styles_only(node, &name);
             if let Some(mut data) = node.try_stylo_element_data_mut().and_then(|s| s.get_mut()) {
-                data.hint |= RestyleHint::restyle_subtree();
-                data.damage.insert(ALL_DAMAGE);
+                // svelte-blitz patch: see `acts_through_styles_only`.
+                if only_styles {
+                    data.hint |= RestyleHint::RESTYLE_SELF;
+                } else {
+                    data.hint |= RestyleHint::restyle_subtree();
+                    data.damage.insert(ALL_DAMAGE);
+                }
             }
             node.mark_damaged();
 
@@ -409,6 +415,26 @@ impl DocumentMutator<'_> {
         })
     }
 
+    // svelte-blitz patch: upstream restyles the element's whole subtree, and
+    // damages it as if rebuilt, for any attribute that is set or removed.
+    // `class`, `style`, `data-*` and `aria-*` on an HTML element change
+    // nothing but styles (layout never reads them), and Stylo already follows
+    // those: the snapshot taken before the change finds the descendants and
+    // siblings whose selectors it affects, the cascade reaches the children
+    // whose inherited values change, and the restyle works out what the new
+    // styles damage. So the element itself is restyled and the rest follows.
+    // Upstream, moving a highlight down a list of 5,000 rows (a class and a
+    // `data-` attribute) relaid out the whole page, and `overflow: hidden` on
+    // `<body>` restyled all of it. Inside an `<svg>` an attribute is also part
+    // of the source the drawing is rebuilt from, so there it stays as upstream.
+    fn acts_through_styles_only(node: &Node, name: &QualName) -> bool {
+        let local: &str = &name.local;
+        (local == "class" || local == "style" || local.starts_with("data-") || local.starts_with("aria-"))
+            && node
+                .element_data()
+                .is_some_and(|element| element.name.ns == markup5ever::ns!(html))
+    }
+
     // svelte-blitz patch: upstream restyles the whole subtree of the parent on
     // every attribute that is set (and none of it when one is removed). That
     // is there for selectors that reach from one sibling to another, `a + b`
@@ -446,9 +472,15 @@ impl DocumentMutator<'_> {
 
             let node = &mut self.doc.nodes[node_id];
 
+            let only_styles = Self::acts_through_styles_only(node, &name);
             if let Some(mut data) = node.try_stylo_element_data_mut().and_then(|s| s.get_mut()) {
-                data.hint |= RestyleHint::restyle_subtree();
-                data.damage.insert(ALL_DAMAGE);
+                // svelte-blitz patch: see `acts_through_styles_only`.
+                if only_styles {
+                    data.hint |= RestyleHint::RESTYLE_SELF;
+                } else {
+                    data.hint |= RestyleHint::restyle_subtree();
+                    data.damage.insert(ALL_DAMAGE);
+                }
             }
             node.mark_damaged();
             self.restyle_siblings_of(node_id);

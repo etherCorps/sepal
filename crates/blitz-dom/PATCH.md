@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with ten changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with thirteen changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -115,8 +115,54 @@ the `[patch]` entry once a release contains the fix.
 the box stayed unticked. The empty string now means checked. `"true"` and
 `"false"` work as before.
 
+Changes 11 to 13 make a small change to a large page cost what it changes.
+Measured on the tracker example with 5,000 rows shown (195,000 nodes),
+QuickJS, release: `j` (a class and a `data-` attribute on two rows) went
+from 64 to 33 ms, the rest being the app's own JavaScript; the page's layouts
+in that turn from 21 ms to under 1. Opening a Select went from 521 to 268 ms;
+what is left is restyling every element once for the `pointer-events: none`
+Bits UI puts on `<body>`, which is inherited, so every element's style does
+change. On a page of 200 rows a Select went from 32 to 23 ms.
+`profile_every_row_shown` in `crates/host/tests/tracker/bench.rs` measures it.
+
+**11. An attribute that only styles restyles only its element.**
+`src/mutator.rs`, `set_attribute`, `clear_attribute` and
+`acts_through_styles_only`: upstream restyles the element's whole subtree and
+marks it all for rebuilding and relayout whenever any attribute is set or
+removed. For `class`, `style`, `data-*` and `aria-*` on an HTML element the
+element is now only restyled, and Stylo takes it from there: the snapshot
+taken before the change restyles the descendants and siblings whose
+selectors depend on it, children are restyled when an inherited value
+changes, and the damage comes from comparing the old and new styles, as it
+already does for `:hover`. So a background change repaints instead of
+relaying out the page, and `overflow: hidden` on `<body>` no longer restyles
+every element. Other attributes, and anything inside an `<svg>` (whose
+attributes are the source of the drawing), work as upstream.
+`crates/host/tests/restyle.rs` has the test.
+
+**12. An unchanged inline SVG is not parsed again.** `src/layout/construct.rs`,
+in `collect_layout_children`, and `src/node/svg.rs` (`inline_source`): an
+inline `<svg>` is drawn from a source serialised from its subtree, and
+upstream parses it again whenever anything in the subtree was restyled. The
+source is now kept, and a drawing whose source did not change is kept too.
+`pointer-events` on `<body>` used to re-parse all 10,000 icons of the
+tracker: 60 ms.
+
+**13. A resolve that changed nothing lays nothing out.** `src/resolve.rs`
+and `src/document.rs` (`laid_out_in`):
+
+- `resolve_layout`: upstream runs Taffy from the root and rounds every
+  node's box on every resolve, 4 ms on a page of 195,000 nodes when nothing
+  changed (Taffy's caches make the layout itself cheap; the rounding is
+  not). Any change to a box clears the layout caches from it up to the root,
+  so when the root still has its cache and the viewport is the same, the
+  pass is skipped.
+- `resolve_layout_children`: upstream visits every node to rebuild the box
+  tree; subtrees without damage are now skipped, by the same test
+  `propagate_damage_flags` uses (1.5 ms on that page).
+
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the ten changes (search for
+directory with that version's source and reapply the thirteen changes (search for
 `svelte-blitz patch`).
