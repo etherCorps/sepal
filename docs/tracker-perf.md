@@ -17,7 +17,56 @@ cargo test --release --features "screenshot engine-v8" --test tracker -- --ignor
 # TRACKER_BENCH_SIZES=5000 for one size
 ```
 
-## At a glance (5,000 issues, median ms)
+## Where it stands now (after the four fixes, 23 Nov 2026)
+
+The sections after this one are the first measurement and how each item was
+fixed. Since then: blitz-dom patches 11–13 (restyle and lay out only what
+changed), scroll support (`scroll` events, `scrollTop`, `scrollIntoView`),
+~21 nodes per row instead of ~38 with per-row highlight state and
+incremental ordering, and a virtual list. Same machine, release, quiet.
+
+| What the user does | 5,000: first → now (QuickJS) | now V8 | 20,000 now (QuickJS / V8) |
+|---|---|---|---|
+| j/k through the list | 1.5 → **0.2** | 0.1 | 0.2 / 0.1 |
+| A search keystroke | 37 → **10** | 3.1 | 28 / 6.2 |
+| Open an issue (Enter) | 33 → **25** | 14 | 20 / 10 |
+| Open a Select (filter) | 28 → **11** | 5.4 | 11 / 5.2 |
+| Cmd+K | 18 → **10** | 6.5 | 11 / 6.4 |
+| Navigate to Issues | 107 → **27** | 9.1 | 40 / 19 |
+| Regroup | 107 → **16** | 8.2 | 20 / 8.4 |
+| Bulk-set status of 50 | 40 → **22** | 9.4 | 43 / 16 |
+| A teammate's edit | 6.8 → **0.8** | 0.1 | 2.4 / 0.1 |
+| Move a card (Shift+L) | 9.9 → **3.4** | 1.3 | 5.2 / 1.5 |
+| Open Board (~300 cards) | 118 → **87** | 29 | 86 / 39 |
+| Start: load, seed, mount | 240 → **145** | — | — |
+| Show all | 2,892 → **0.6** (28 rows mounted) | 0.4 | 1.1 / 1.0 |
+| Scroll the Show-all list a screen (wheel) | — → **6.1** | 2.9 | 6.1 / 2.9 |
+| j with every row shown | 58 → **0.2** | 0.1 | 0.2 / 0.1 |
+| A Select with every row shown | 494 → **11** | 6.1 | 11 / 5.0 |
+| Leave Show all, then the deferred GC | 325 + 390 → **87 + 0** | 28 + 0 | 84 + 0 / 30 + 0 |
+| Footprint with every row shown | 767 MB → **86 MB** | — | 87 MB |
+| Idle turn | 0.1 → **0.0** | 0.0 | 0.0 / 0.0 |
+
+Everything a user does at 5,000 or 20,000 issues is now under a 16 ms frame on
+V8 except opening the Board and the first visit to a screen. On QuickJS
+j/k, search, Selects, the palette, scrolling and edits are (search at 20,000
+and bulk edits are not); opening an issue and navigating take 20–90 ms. The cliffs are gone:
+"Show all" no longer depends on N.
+
+Left, in order of payoff:
+
+1. **Board mount: 87 ms QuickJS / 29 V8** for ~300 cards. Virtualise its
+   columns too, or show fewer cards per column.
+2. **Blitz bugs the list works around in the app** (see the virtual list in
+   docs/tracker-design.md): hit testing ignores `overflow: scroll` clipping
+   (also seen with Select lists), and a scroll box keeps its offset, with no
+   `scroll` event, when its content shrinks. Both want blitz-dom patches.
+3. **A Select over a page Bits UI dims:** one restyle of every element for the
+   inherited `pointer-events: none` on `<body>`. Small now that pages are
+   small; `StyleThreading::Parallel` halves it if Blitz issue #430 is solved.
+4. **Search at 20,000: 28 ms QuickJS**, mostly the filter pass over every issue.
+
+## At a glance, first measurement (5,000 issues, median ms)
 
 | What the user does | QuickJS | V8 | Notes |
 |---|---|---|---|
@@ -134,7 +183,7 @@ toolbar landed on a row scrolled up under it; the header and toolbar are
   and `top -stats cpu,idlew`).
 - Compact rows (P12): the switch is on Settings, where no rows are mounted.
 
-## Full results
+## Full results, first measurement
 
 | scenario | N | QuickJS first | QuickJS median | V8 first | V8 median | ops (QuickJS) | live nodes after | footprint MB (QuickJS) |
 |---|---|---|---|---|---|---|---|---|
@@ -252,3 +301,126 @@ toolbar landed on a row scrolled up under it; the header and toolbar are
 | P6 leave Show all (to Board) | 20000 | — | — | 740.7 |  | — | 9777 | — |
 | P6 the deferred GC, 1 s later | 20000 | — | — | 37.8 |  | — | 9777 | — |
 | idle turn | 20000 | — | — | 0.1 |  | — | 9777 | — |
+
+## Full results, now
+
+| scenario | N | QuickJS first | QuickJS median | V8 first | V8 median | ops (QuickJS) | live nodes after | footprint MB (QuickJS) |
+|---|---|---|---|---|---|---|---|---|
+| P1 start: load, seed and mount (then first layout at 171 ms) | 5000 | 144.6 |  | — | — |  | 1573 | 73 |
+| P1 reseed: generate and render | 1000 | 16.0 |  | 6.7 |  | 2002 | 2063 | 52 |
+| P2 search: a keystroke (typing 'deploy') | 1000 | 5.6 | 5.7 | 2.8 | 2.3 | 980 | 3096 | 53 |
+| P2 search: Backspace | 1000 | 1.0 | 5.5 | 0.3 | 2.2 | 0 | 4156 | 55 |
+| P3 j: move the highlight | 1000 | 0.2 | 0.2 | 0.3 | 0.1 | 2 | 4174 | 55 |
+| P3 Enter: open the issue pane | 1000 | 19.2 |  | 9.7 |  | 2443 | 4993 | 55 |
+| P3 j with the pane open (route + load) | 1000 | 4.2 | 4.2 | 2.3 | 1.3 | 231 | 2758 | 57 |
+| P4 open the pane's status Select | 1000 | 12.0 | 10.6 | 12.7 | 6.7 | 571 | 3313 | 57 |
+| P3 Escape: close the pane | 1000 | 8.5 |  | 3.4 |  | 845 | 3554 | 57 |
+| P4 open the Status filter (200 rows) | 1000 | 11.1 | 10.9 | 5.8 | 5.5 | 599 | 4148 | 58 |
+| P5 group by (assignee, priority, none, status) | 1000 | 15.3 | 15.7 | 7.1 | 7.1 | 3230 | 4585 | 58 |
+| P5 sort by (priority, title, updated) | 1000 | 12.2 | 13.7 | 7.1 | 6.8 | 1788 | 3881 | 58 |
+| P5 filter status = Done | 1000 | 16.0 |  | 7.4 |  | 3228 | 4863 | 58 |
+| P8 Cmd+K: open the palette | 1000 | 9.9 |  | 6.2 |  | 1115 | 6273 | 60 |
+| P8 palette: a keystroke ('eng-12') | 1000 | 3.3 | 2.1 | 1.6 | 1.0 | 416 | 6555 | 61 |
+| P8 palette: Enter (open ENG-12) | 1000 | 31.4 |  | 7.3 |  | 7011 | 2561 | 61 |
+| P9 c: open New issue | 1000 | 20.6 |  | 9.9 |  | 1794 | 3452 | 61 |
+| P9 Cmd+Enter: create the issue | 1000 | 3.6 |  | 2.5 |  | 184 | 3498 | 61 |
+| P9 Shift+click: check 50 rows | 1000 | 1.4 |  | 0.7 |  | 67 | 4756 | 61 |
+| P9 bulk: set status of 50 | 1000 | 16.9 |  | 8.1 |  | 3450 | 5775 | 61 |
+| P10 save edits.json (the turn with the write) | 1000 | 0.0 |  | 0.0 |  | 0 | 5775 | 61 |
+| P14 a teammate's edit, on /issues | 1000 | 1.1 | 0.4 | 0.7 | 0.1 | 96 | 5886 | 61 |
+| P7 open Board | 1000 | 89.4 |  | 28.3 |  | 22339 | 8114 | 65 |
+| P7 Shift+L: move a card | 1000 | 2.9 | 2.9 | 1.3 | 1.3 | 213 | 8339 | 65 |
+| P14 a teammate's edit, on /board | 1000 | 1.5 | 1.5 | 0.8 | 0.7 | 64 | 8893 | 66 |
+| P11 open Insights | 1000 | 22.5 |  | 11.4 |  | 3073 | 7299 | 66 |
+| P11 change the range (26w, 4w, 12w) | 1000 | 7.5 | 4.8 | 3.5 | 2.3 | 627 | 7403 | 66 |
+| open Settings | 1000 | 12.1 |  | 5.4 |  | 1039 | 7721 | 66 |
+| P13 back to Issues | 1000 | 24.1 |  | 8.9 |  | 4485 | 8979 | 66 |
+| P13 cycle 4 screens x10 (each nav) | 1000 | 71.9 | 23.3 | 34.0 | 7.5 | 19318 | 9878 | 99 |
+| P13 open and close an issue x25 | 1000 | 16.3 | 15.3 | 5.0 | 3.7 | 2123 | 6853 | 100 |
+| P13 after the churn and a GC (live nodes) | 1000 | 0.0 |  | 0.0 |  | 0 | 2341 | 100 |
+| P6 Show 200 more | 1000 | 1.0 |  | 0.9 |  | 2 | 2341 | 100 |
+| P6 Show all (1001 rows, 37 mounted) | 1000 | 0.4 |  | 0.3 |  | 2 | 2341 | 100 |
+| P6 scroll the Show-all list by one screen (wheel) | 1000 | 0.1 | 0.0 | 0.1 | 0.0 | 0 | 2341 | 100 |
+| P6 j with every row shown | 1000 | 1.0 | 0.8 | 0.6 | 0.4 | 92 | 2557 | 100 |
+| P4 open the Status filter (every row shown) | 1000 | 12.7 | 10.9 | 6.7 | 6.0 | 599 | 3151 | 67 |
+| P6 leave Show all (to Board) | 1000 | 77.3 |  | 30.7 |  | 19941 | 7767 | 67 |
+| P6 the deferred GC, 1 s later | 1000 | 0.0 |  | 0.0 |  | 0 | 7767 | 67 |
+| idle turn | 1000 | 0.0 |  | 0.0 |  | 0 | 7767 | 67 |
+| P1 reseed: generate and render | 5000 | 33.4 |  | 9.1 |  | 0 | 1573 | 68 |
+| P2 search: a keystroke (typing 'deploy') | 5000 | 11.3 | 10.3 | 4.3 | 3.1 | 727 | 2543 | 68 |
+| P2 search: Backspace | 5000 | 5.1 | 8.3 | 0.8 | 2.0 | 0 | 3520 | 69 |
+| P3 j: move the highlight | 5000 | 0.2 | 0.2 | 0.3 | 0.1 | 2 | 3544 | 69 |
+| P3 Enter: open the issue pane | 5000 | 24.8 |  | 13.5 |  | 4333 | 2030 | 69 |
+| P3 j with the pane open (route + load) | 5000 | 5.4 | 4.6 | 2.2 | 1.4 | 784 | 4491 | 69 |
+| P4 open the pane's status Select | 5000 | 11.8 | 11.1 | 11.4 | 7.2 | 571 | 5046 | 69 |
+| P3 Escape: close the pane | 5000 | 8.4 |  | 3.2 |  | 845 | 5287 | 69 |
+| P4 open the Status filter (200 rows) | 5000 | 11.1 | 11.1 | 6.2 | 5.4 | 599 | 5881 | 69 |
+| P5 group by (assignee, priority, none, status) | 5000 | 16.1 | 16.4 | 8.2 | 8.2 | 3353 | 5587 | 69 |
+| P5 sort by (priority, title, updated) | 5000 | 23.3 | 22.2 | 8.3 | 8.4 | 2893 | 3621 | 69 |
+| P5 filter status = Done | 5000 | 18.4 |  | 7.6 |  | 3276 | 4618 | 69 |
+| P8 Cmd+K: open the palette | 5000 | 10.3 |  | 6.5 |  | 1115 | 6028 | 69 |
+| P8 palette: a keystroke ('eng-12') | 5000 | 7.6 | 4.0 | 2.3 | 1.7 | 417 | 6271 | 69 |
+| P8 palette: Enter (open ENG-12) | 5000 | 30.6 |  | 7.6 |  | 6723 | 2561 | 69 |
+| P9 c: open New issue | 5000 | 20.8 |  | 10.5 |  | 1794 | 3452 | 69 |
+| P9 Cmd+Enter: create the issue | 5000 | 5.1 |  | 3.3 |  | 193 | 3501 | 69 |
+| P9 Shift+click: check 50 rows | 5000 | 1.5 |  | 0.7 |  | 67 | 4762 | 69 |
+| P9 bulk: set status of 50 | 5000 | 22.4 |  | 9.4 |  | 3440 | 5778 | 69 |
+| P10 save edits.json (the turn with the write) | 5000 | 0.0 |  | 0.0 |  | 0 | 5778 | 69 |
+| P14 a teammate's edit, on /issues | 5000 | 1.4 | 0.8 | 0.7 | 0.1 | 87 | 5886 | 69 |
+| P7 open Board | 5000 | 86.7 |  | 29.4 |  | 22307 | 8105 | 71 |
+| P7 Shift+L: move a card | 5000 | 3.3 | 3.4 | 1.8 | 1.3 | 207 | 8328 | 71 |
+| P14 a teammate's edit, on /board | 5000 | 2.0 | 1.9 | 0.8 | 0.7 | 66 | 8789 | 71 |
+| P11 open Insights | 5000 | 24.6 |  | 12.0 |  | 3042 | 7277 | 71 |
+| P11 change the range (26w, 4w, 12w) | 5000 | 10.0 | 7.6 | 4.4 | 2.8 | 627 | 7383 | 71 |
+| open Settings | 5000 | 12.4 |  | 5.6 |  | 1039 | 7701 | 71 |
+| P13 back to Issues | 5000 | 27.1 |  | 9.1 |  | 4449 | 8950 | 71 |
+| P13 cycle 4 screens x10 (each nav) | 5000 | 95.5 | 25.9 | 34.8 | 7.8 | 26051 | 9835 | 86 |
+| P13 open and close an issue x25 | 5000 | 20.1 | 18.0 | 5.9 | 3.5 | 2999 | 5613 | 86 |
+| P13 after the churn and a GC (live nodes) | 5000 | 0.0 |  | 0.0 |  | 0 | 2151 | 86 |
+| P6 Show 200 more | 5000 | 0.9 |  | 1.0 |  | 2 | 2151 | 86 |
+| P6 Show all (5001 rows, 28 mounted) | 5000 | 0.6 |  | 0.4 |  | 2 | 2151 | 86 |
+| P6 scroll the Show-all list by one screen (wheel) | 5000 | 6.2 | 6.1 | 3.4 | 2.9 | 1689 | 6351 | 86 |
+| P6 j with every row shown | 5000 | 9.3 | 0.2 | 4.8 | 0.1 | 2615 | 6987 | 87 |
+| P4 open the Status filter (every row shown) | 5000 | 10.8 | 10.5 | 6.1 | 6.1 | 599 | 7581 | 87 |
+| P6 leave Show all (to Board) | 5000 | 86.8 |  | 28.3 |  | 24489 | 7570 | 89 |
+| P6 the deferred GC, 1 s later | 5000 | 0.0 |  | 0.0 |  | 0 | 7570 | 89 |
+| idle turn | 5000 | 0.0 |  | 0.0 |  | 0 | 7570 | 89 |
+| P1 reseed: generate and render | 20000 | 149.6 |  | 35.1 |  | 2129 | 1871 | 37 |
+| P2 search: a keystroke (typing 'deploy') | 20000 | 47.7 | 28.3 | 10.9 | 6.2 | 362 | 2789 | 37 |
+| P2 search: Backspace | 20000 | 23.7 | 28.0 | 2.8 | 4.8 | 0 | 3721 | 37 |
+| P3 j: move the highlight | 20000 | 0.2 | 0.2 | 0.3 | 0.1 | 2 | 3742 | 37 |
+| P3 Enter: open the issue pane | 20000 | 19.7 |  | 9.8 |  | 2362 | 4539 | 37 |
+| P3 j with the pane open (route + load) | 20000 | 4.8 | 4.2 | 2.0 | 1.3 | 551 | 6708 | 37 |
+| P4 open the pane's status Select | 20000 | 12.1 | 11.2 | 11.8 | 6.4 | 571 | 7263 | 38 |
+| P3 Escape: close the pane | 20000 | 8.8 |  | 3.3 |  | 875 | 7513 | 38 |
+| P4 open the Status filter (200 rows) | 20000 | 11.4 | 11.4 | 5.9 | 5.2 | 599 | 2171 | 38 |
+| P5 group by (assignee, priority, none, status) | 20000 | 19.7 | 19.8 | 8.3 | 8.4 | 3264 | 5953 | 38 |
+| P5 sort by (priority, title, updated) | 20000 | 57.5 | 54.5 | 16.0 | 16.0 | 3327 | 3750 | 38 |
+| P5 filter status = Done | 20000 | 29.8 |  | 16.6 |  | 3325 | 4762 | 38 |
+| P8 Cmd+K: open the palette | 20000 | 10.5 |  | 6.4 |  | 1115 | 6181 | 38 |
+| P8 palette: a keystroke ('eng-12') | 20000 | 35.2 | 14.8 | 9.8 | 3.8 | 418 | 6463 | 38 |
+| P8 palette: Enter (open ENG-12) | 20000 | 18.9 |  | 6.3 |  | 2257 | 7222 | 38 |
+| P9 c: open New issue | 20000 | 21.5 |  | 9.5 |  | 1794 | 8122 | 39 |
+| P9 Cmd+Enter: create the issue | 20000 | 12.0 |  | 5.3 |  | 194 | 8171 | 39 |
+| P9 Shift+click: check 50 rows | 20000 | 1.5 |  | 0.8 |  | 67 | 3369 | 41 |
+| P9 bulk: set status of 50 | 20000 | 43.1 |  | 15.8 |  | 3391 | 4370 | 41 |
+| P10 save edits.json (the turn with the write) | 20000 | 0.0 |  | 0.0 |  | 0 | 4370 | 41 |
+| P14 a teammate's edit, on /issues | 20000 | 2.8 | 2.4 | 0.8 | 0.1 | 76 | 4409 | 42 |
+| P7 open Board | 20000 | 85.8 |  | 39.3 |  | 19309 | 9618 | 47 |
+| P7 Shift+L: move a card | 20000 | 5.4 | 5.2 | 1.5 | 1.5 | 206 | 9839 | 47 |
+| P14 a teammate's edit, on /board | 20000 | 4.1 | 3.8 | 1.1 | 0.7 | 70 | 10330 | 47 |
+| P11 open Insights | 20000 | 36.3 |  | 15.0 |  | 3005 | 7268 | 47 |
+| P11 change the range (26w, 4w, 12w) | 20000 | 21.0 | 19.7 | 7.1 | 5.8 | 621 | 7372 | 47 |
+| open Settings | 20000 | 12.4 |  | 5.4 |  | 1039 | 7690 | 47 |
+| P13 back to Issues | 20000 | 39.6 |  | 18.5 |  | 4572 | 8975 | 47 |
+| P13 cycle 4 screens x10 (each nav) | 20000 | 87.0 | 38.8 | 31.0 | 10.2 | 19263 | 25329 | 85 |
+| P13 open and close an issue x25 | 20000 | 64.9 | 15.7 | 5.1 | 4.0 | 25620 | 4107 | 87 |
+| P13 after the churn and a GC (live nodes) | 20000 | 0.0 |  | 0.0 |  | 0 | 2196 | 87 |
+| P6 Show 200 more | 20000 | 0.9 |  | 1.0 |  | 2 | 2196 | 87 |
+| P6 Show all (20001 rows, 28 mounted) | 20000 | 1.1 |  | 1.0 |  | 2 | 2196 | 87 |
+| P6 scroll the Show-all list by one screen (wheel) | 20000 | 6.1 | 6.1 | 3.2 | 2.9 | 1649 | 6372 | 87 |
+| P6 j with every row shown | 20000 | 10.0 | 0.2 | 13.3 | 0.1 | 2764 | 7053 | 87 |
+| P4 open the Status filter (every row shown) | 20000 | 11.0 | 10.6 | 6.7 | 5.0 | 599 | 7647 | 87 |
+| P6 leave Show all (to Board) | 20000 | 84.0 |  | 29.5 |  | 19263 | 12876 | 87 |
+| P6 the deferred GC, 1 s later | 20000 | 0.0 |  | 0.0 |  | 0 | 12876 | 87 |
+| idle turn | 20000 | 0.0 |  | 0.0 |  | 0 | 12876 | 87 |
