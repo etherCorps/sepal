@@ -16,7 +16,7 @@
 	import { count, short_date } from '$lib/format';
 	import { Avatar, PriorityIcon, ProjectSquare, StatusIcon } from '$lib/glyphs';
 	import type { PriorityId, StatusId } from '$lib/seed';
-	import { PAGE_SIZE, clear_filters, data, neighbor, set_scope, show_all, show_more, toggle_group, view, week_range, type GroupBy, type SortBy } from '$lib/store.svelte';
+	import { PAGE_SIZE, clear_filters, data, neighbor, set_scope, settings, show_all, show_more, toggle_group, view, week_range, type GroupBy, type PagedGroup, type SortBy } from '$lib/store.svelte';
 	import { checked, ui, use_keys } from '$lib/ui.svelte';
 	import BulkBar from './BulkBar.svelte';
 	import Filters from './Filters.svelte';
@@ -63,6 +63,87 @@
 		{ value: 'title', label: 'Title' }
 	];
 
+	// --- the window ----------------------------------------------------------
+	// Only the rows in view are mounted, plus OVERSCAN px either side; spacers
+	// stand in for the rest. Rows and headers have fixed heights, so where
+	// anything is follows from counts, and there are at most a dozen groups.
+
+	const HEADER = 32;
+	const OVERSCAN = 300;
+	const row_height = $derived(settings.compact ? 28 : 36);
+	const header_height = $derived(view.groupBy === 'none' ? 0 : HEADER);
+	let list: HTMLElement | undefined;
+	let scroll_top = $state(0);
+	// A guess until the ResizeObserver has the list's height.
+	let viewport = $state(1000);
+
+	function track(node: HTMLElement) {
+		list = node;
+		const observer = new ResizeObserver(([entry]) => (viewport = entry.contentRect.height));
+		observer.observe(node);
+		return () => {
+			observer.disconnect();
+			list = undefined;
+		};
+	}
+
+	const windowed = $derived.by(() => {
+		const header = header_height;
+		const row = row_height;
+		let height = 0;
+		for (const group of paged.groups) height += header + group.issues.length * row;
+		const top = Math.min(scroll_top, Math.max(0, height - viewport));
+		const from = top - OVERSCAN;
+		const to = top + viewport + OVERSCAN;
+		const groups: (PagedGroup & { header: boolean })[] = [];
+		let y = 0;
+		let start = -1;
+		let end = 0;
+		for (const group of paged.groups) {
+			const head = y;
+			const rows = head + header;
+			y = rows + group.issues.length * row;
+			if (y <= from || head >= to) continue;
+			const with_header = header > 0 && rows > from;
+			const first = Math.max(0, Math.floor((from - rows) / row));
+			const last = Math.min(group.issues.length, Math.ceil((to - rows) / row));
+			const issues = first < last ? group.issues.slice(first, last) : [];
+			if (!with_header && issues.length === 0) continue;
+			if (start === -1) start = with_header ? head : rows + first * row;
+			end = issues.length > 0 ? rows + last * row : rows;
+			groups.push({ ...group, header: with_header, issues });
+		}
+		return { groups, above: Math.max(0, start), below: height - end, height };
+	});
+
+	// Blitz keeps a scroll offset past the end when the content shrinks (a
+	// filter, a collapsed group), and the list would show nothing. Pull it
+	// back, as a browser does.
+	$effect(() => {
+		const end = Math.max(0, windowed.height - viewport);
+		if (list !== undefined && scroll_top > end) list.scrollTop = end;
+	});
+
+	/** Scroll the list so the row of `key` is in view, as `scrollIntoView({ block: 'nearest' })`; it may not be mounted. */
+	function reveal(key: string) {
+		if (list === undefined) return;
+		let y = 0;
+		for (const group of paged.groups) {
+			y += header_height;
+			const at = group.issues.findIndex((issue) => issue.key === key);
+			if (at !== -1) {
+				y += at * row_height;
+				// The first row of a group brings its header along.
+				const top = at === 0 ? y - header_height : y;
+				if (top < scroll_top) list.scrollTop = top;
+				else if (y + row_height > scroll_top + viewport) list.scrollTop = y + row_height - viewport;
+				scroll_top = list.scrollTop;
+				return;
+			}
+			y += group.issues.length * row_height;
+		}
+	}
+
 	function clear() {
 		const had_week = view.week !== null;
 		clear_filters();
@@ -71,7 +152,7 @@
 
 	// --- selection ----------------------------------------------------------
 
-	/** Check every mounted row from the anchor to `key`, inclusive. */
+	/** Check every paged-in row from the anchor to `key`, inclusive, mounted or not. */
 	function check_range(key: string) {
 		const rows = paged.rows;
 		const from = rows.findIndex((issue) => issue.key === ui.anchor);
@@ -116,6 +197,7 @@
 		const next = neighbor(ui.highlighted, delta);
 		if (next === null) return;
 		ui.highlighted = next;
+		reveal(next);
 		if (pane_open) void goto(`/issues/${next}`);
 	}
 	function open() {
@@ -155,8 +237,11 @@
 <div class="relative flex min-h-0 min-w-0 flex-1 flex-col">
 	<PageHeader {title} count={shown === total ? count(total) : `${count(shown)} of ${count(total)}`} />
 
-	<!-- One 44px line. With the pane open the list is 560px: Group and Sort step aside, the search shrinks. -->
-	<div class="flex h-11 shrink-0 flex-nowrap items-center gap-2 border-b px-4">
+	<!--
+		One 44px line. With the pane open the list is 560px: Group and Sort step aside, the search shrinks.
+		Above the list for hit testing, as PageHeader is: scrolled-away rows sit under it.
+	-->
+	<div class="relative z-10 flex h-11 shrink-0 flex-nowrap items-center gap-2 border-b px-4">
 		<Filters {scope} />
 		{#if view.week !== null}
 			{@const [from] = week_range(view.week)}
@@ -187,7 +272,7 @@
 		{/if}
 	</div>
 
-	<div data-testid="list" class="min-h-0 flex-1 overflow-y-scroll">
+	<div data-testid="list" class="min-h-0 flex-1 overflow-y-scroll" {@attach track} onscroll={() => (scroll_top = list?.scrollTop ?? 0)}>
 		{#if shown === 0}
 			<div data-testid="empty" class="flex flex-col items-center gap-3 pt-[120px]">
 				<p class="text-foreground text-[14px] font-medium">
@@ -198,8 +283,9 @@
 				{/if}
 			</div>
 		{:else}
-			{#each paged.groups as group (group.id)}
-				{#if view.groupBy !== 'none'}
+			<div style="height: {windowed.above}px"></div>
+			{#each windowed.groups as group (group.id)}
+				{#if group.header}
 					<button
 						data-testid="group-header"
 						data-group={group.id}
@@ -226,6 +312,7 @@
 					/>
 				{/each}
 			{/each}
+			<div style="height: {windowed.below}px"></div>
 			{#if paged.hidden > 0}
 				<div class="flex h-9 items-center gap-1 border-b px-3">
 					<Button data-testid="show-more" variant="ghost" size="sm" class="h-7" onclick={show_more}>

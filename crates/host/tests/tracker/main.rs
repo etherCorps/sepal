@@ -80,17 +80,22 @@ fn load() -> Tracker {
     load_as(new_id())
 }
 
-/// The app under a given id: a second load with the same id sees the first one's files.
-fn load_as(id: String) -> Tracker {
-    let dist = std::env::var_os("TRACKER_DIST")
+/// The built app: `TRACKER_DIST`, or examples/tracker/dist.
+fn dist() -> PathBuf {
+    std::env::var_os("TRACKER_DIST")
         .map(PathBuf::from)
         .unwrap_or_else(|| {
             PathBuf::from(concat!(
                 env!("CARGO_MANIFEST_DIR"),
                 "/../../examples/tracker/dist"
             ))
-        });
-    let mut app = App::from_dir(&dist).expect("run `pnpm run build` in the repository root first");
+        })
+}
+
+/// The app under a given id: a second load with the same id sees the first one's files.
+fn load_as(id: String) -> Tracker {
+    let mut app =
+        App::from_dir(&dist()).expect("run `pnpm run build` in the repository root first");
     let data_dir = data_dir(&id);
     app.manifest.id = Some(id);
     let mut doc = SvelteDocument::for_app(&app).unwrap();
@@ -174,6 +179,31 @@ fn keys(doc: &SvelteDocument) -> Vec<String> {
         .into_iter()
         .map(|node| doc.attr(node, "data-key").unwrap())
         .collect()
+}
+
+/// The keys of every row the list has paged in (`Show more`, `Show all`), in
+/// screen order. The list mounts only those in view: [`keys`].
+fn order(doc: &SvelteDocument) -> Vec<String> {
+    js(doc, "globalThis.__tracker.order().join()")
+        .split(',')
+        .filter(|key| !key.is_empty())
+        .map(String::from)
+        .collect()
+}
+
+/// How many rows the list has paged in.
+fn paged(doc: &SvelteDocument) -> usize {
+    number(&js(doc, "String(globalThis.__tracker.stats().paged)"))
+}
+
+/// Where the list is scrolled to.
+fn scroll_top(doc: &SvelteDocument) -> f64 {
+    js(
+        doc,
+        "String(document.querySelector('[data-testid=list]').scrollTop)",
+    )
+    .parse()
+    .unwrap()
 }
 
 fn row(key: &str) -> String {
@@ -443,8 +473,8 @@ fn a_status_change_reaches_the_row_and_the_board() {
     let mut doc = load();
     // Ungrouped, newest update first: the edited row comes to the top.
     pick(&mut doc, "[data-testid=group-by]", "none");
-    let rows = keys(&doc);
-    let key = rows[rows.len() - 1].clone();
+    // A row further down, still on screen.
+    let key = keys(&doc)[10].clone();
     let was = issue_field(&doc, &key, "status");
     let (to, name) = if was == "progress" {
         ("review", "In Review")
@@ -502,7 +532,8 @@ fn unknown_keys_and_routes_are_404s() {
         doc.query("[data-testid=pane] [data-testid=error-message]")
             .is_some()
     );
-    assert_eq!(count(&doc, "[data-testid=row]"), 200, "the list stays");
+    assert_eq!(paged(&doc), 200, "the list stays");
+    assert!(doc.query("[data-testid=row]").is_some());
     assert_eq!(text(&doc, "[data-testid=page-title]"), "Issues");
     click(&mut doc, "[data-testid=pane] a[href='/issues']");
     doc.wait(0.1);
@@ -722,33 +753,36 @@ fn each_toast_undoes_its_own_edit() {
 
 /// Leaving a page frees what it showed without waiting for a GC that an idle
 /// app never triggers. The rows of "Show all" detach as one large tree; the
-/// host collects garbage once, about a second later, and the nodes go.
+/// host collects garbage once, about a second later, and the nodes go. The
+/// list mounts only the rows in view, so the window is made 40,000px tall for
+/// it to mount a thousand.
 #[test]
 fn a_long_list_is_freed_after_leaving_it() {
     let mut doc = load();
+    doc.layout(1280, 40_000);
     click(&mut doc, "[data-testid=show-all]");
     doc.resolve();
-    assert!(count(&doc, "[data-testid=row]") > 4000);
+    assert!(count(&doc, "[data-testid=row]") > 1000);
     click(&mut doc, "[data-testid=nav-board]");
     doc.resolve();
     assert!(
-        doc.live_nodes() > 100_000,
+        doc.live_nodes() > 20_000,
         "the rows are detached but not yet collected"
     );
 
     doc.wait(0.5);
     doc.resolve();
     assert!(
-        doc.live_nodes() > 100_000,
+        doc.live_nodes() > 20_000,
         "no collection inside the navigation's second"
     );
 
     doc.wait(0.6);
     doc.resolve();
     assert!(
-        doc.live_nodes() < 30_000,
+        doc.live_nodes() < 10_000,
         "still holding {} nodes after leaving the list",
         doc.live_nodes()
     );
-    assert!(doc.base().tree().len() < 40_000);
+    assert!(doc.base().tree().len() < 12_000);
 }
