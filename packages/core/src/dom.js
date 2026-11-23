@@ -16,7 +16,7 @@
 import { host_call } from './host-call.js';
 import { TextDecoder, TextEncoder } from './text.js';
 import { URL, URLSearchParams } from './url.js';
-import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_focus, request_measure, root } from './renderer.js';
+import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_focus, request_measure, root, scroll_state } from './renderer.js';
 
 const g = /** @type {any} */ (globalThis);
 const proto = /** @type {any} */ (BlitzNode.prototype);
@@ -462,19 +462,24 @@ function reported_box(node) {
 }
 
 /**
- * A forced layout: `[x, y, width, height, animating]` as of now, or nothing
- * when the host cannot lay out at this moment.
+ * A forced layout: `[x, y, width, height, animating, clientWidth,
+ * clientHeight, scrollWidth, scrollHeight]` as of now, or nothing when the
+ * host cannot lay out at this moment.
  * @param {any} node
  * @returns {number[] | null | undefined}
  */
 const forced_layout = (node) => (node.node_id === 0 ? null : g.__sb_host.measure?.(node.node_id));
 
-/** The box as of now, if the host can lay out now. @param {any} node @returns {number[]} */
+/**
+ * The box as of now if the host can lay out now, with what follows it in a
+ * forced layout; otherwise the last box reported.
+ * @param {any} node @returns {number[]}
+ */
 function box(node) {
 	const reported = reported_box(node);
 	const fresh = forced_layout(node);
 	if (!fresh) return reported;
-	boxes.set(node, fresh);
+	boxes.set(node, fresh.slice(0, 4));
 	return fresh;
 }
 
@@ -737,30 +742,30 @@ define(proto, {
 			};
 		}
 	},
-	// From the node's box (see "Layout"). Borders and overflow are not known
-	// here, so the client and scroll sizes are the box's too.
+	// From the node's box (see "Layout"). The client and scroll sizes come
+	// with a forced layout; when there can be none, from the last `scroll`
+	// event, or the box. `scrollTop` and the scroll methods are the renderer's.
 	...Object.fromEntries(
 		/** @type {const} */ ([
 			['offsetLeft', 0],
 			['offsetTop', 1],
 			['offsetWidth', 2],
 			['offsetHeight', 3],
-			['clientWidth', 2],
-			['clientHeight', 3],
-			['scrollWidth', 2],
-			['scrollHeight', 3]
-		]).map(([name, index]) => [
+			['clientWidth', 5, 2],
+			['clientHeight', 6, 3],
+			['scrollWidth', 7, 2],
+			['scrollHeight', 8, 3]
+		]).map(([name, index, fallback]) => [
 			name,
 			{
 				/** @this {any} */
 				get() {
-					return Math.round(box(this)[index]);
+					const known = box(this);
+					return Math.round(known[index] ?? scroll_state(this)?.[name] ?? known[fallback ?? index]);
 				}
 			}
 		])
 	),
-	scrollTop: { value: 0, writable: true },
-	scrollLeft: { value: 0, writable: true },
 	offsetParent: { value: null }
 });
 
@@ -843,8 +848,6 @@ Object.assign(proto, /** @type {Record<string, any> & ThisType<any>} */ ({
 	getClientRects() {
 		return [new DOMRect(...box(this))];
 	},
-	scrollIntoView() {},
-	scrollTo() {},
 	// The host knows what is animating. It is asked along with a forced
 	// layout, so an animation that the last change started is counted.
 	getAnimations() {

@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 
 use rquickjs::{CatchResultExt, Context, Ctx, Function, Object, Runtime, TypedArray, Value};
 
-use super::{Batch, EventDetail, HostCall, Mods, RUNAWAY_SCRIPT};
+use super::{Batch, EventDetail, HostCall, Mods, RUNAWAY_SCRIPT, SCROLL_FIELDS};
 
 /// How much stack a script may use before it is stopped with "Maximum call
 /// stack size exceeded".
@@ -214,15 +214,16 @@ impl JsEngine {
 
     /// Install `__sb_host.measure(id)`: a forced layout. JS calls it when it
     /// needs to know about a node right now; it returns `[x, y, width,
-    /// height, animating]`, the node's box and for how many more seconds an
-    /// animation runs on it, or nothing when no layout can be done at this
-    /// moment.
+    /// height, animating, clientWidth, clientHeight, scrollWidth,
+    /// scrollHeight]`: the node's box, for how many more seconds an animation
+    /// runs on it, and what it scrolls over; or nothing when no layout can be
+    /// done at this moment.
     ///
     /// `measure` gets the node's id and a way to take what the app has
     /// written so far, which has to be applied before laying out.
     pub fn on_measure(
         &self,
-        measure: impl Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 5]> + 'static,
+        measure: impl Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 9]> + 'static,
     ) -> Result<(), String> {
         self.context
             .with(|ctx| -> rquickjs::Result<()> {
@@ -439,6 +440,13 @@ fn detail_object<'js>(ctx: &Ctx<'js>, detail: &EventDetail) -> rquickjs::Result<
         EventDetail::Input { value } => {
             let object = Object::new(ctx.clone())?;
             object.set("value", value.as_str())?;
+            Ok(object.into_value())
+        }
+        EventDetail::Scroll(metrics) => {
+            let object = Object::new(ctx.clone())?;
+            for (name, value) in SCROLL_FIELDS.iter().zip(metrics) {
+                object.set(*name, *value)?;
+            }
             Ok(object.into_value())
         }
     }

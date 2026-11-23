@@ -9,6 +9,8 @@
 	);
 	let selected = $state(0);
 
+	let scrolled = $state(0);
+
 	let seconds = $state(0);
 	let ticking = $state(false);
 
@@ -61,9 +63,14 @@
 		>
 			shuffle rows
 		</button>
+		<span id="scrolled" class="tabular-nums text-slate-600">scrolled {scrolled}px</span>
 	</section>
 
-	<ul id="rows" class="min-h-0 flex-1 overflow-y-scroll rounded-lg border border-slate-200 bg-white">
+	<ul
+		id="rows"
+		class="min-h-0 flex-1 overflow-y-scroll rounded-lg border border-slate-200 bg-white"
+		onscroll={(event) => (scrolled = event.currentTarget.scrollTop)}
+	>
 		{#each rows as row (row.id)}
 			<Row {row} selected={selected === row.id} onselect={() => { selected = row.id; row.hits++; }} />
 		{/each}

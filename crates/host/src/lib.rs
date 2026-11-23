@@ -12,6 +12,7 @@ pub mod document;
 pub mod js;
 pub mod net;
 pub mod ops;
+pub mod scroll;
 pub mod testing;
 mod timers;
 pub mod updater;

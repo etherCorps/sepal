@@ -17,7 +17,9 @@ const ARITY = {
 	[OP.LISTEN]: 1,
 	[OP.UNLISTEN]: 1,
 	[OP.MEASURE]: 1,
-	[OP.FOCUS]: 1
+	[OP.FOCUS]: 1,
+	[OP.SCROLL]: 3,
+	[OP.SCROLL_INTO_VIEW]: 3
 };
 
 export class MockHost {
@@ -29,6 +31,8 @@ export class MockHost {
 		this.measured = new Set();
 		/** The node with the keyboard focus, when the app moved it. */
 		this.focused = null;
+		/** `[node, left, top]` for every SCROLL, `[node, 'into view', block, inline]` for SCROLL_INTO_VIEW. */
+		this.scrolls = [];
 		this.time = 0;
 		this.wake = -1;
 		this.logs = [];
@@ -131,6 +135,12 @@ export class MockHost {
 				case OP.FOCUS:
 					this.focused = a === 0 ? null : this.node(a);
 					break;
+				case OP.SCROLL:
+					this.scrolls.push([this.node(a), b, c]);
+					break;
+				case OP.SCROLL_INTO_VIEW:
+					this.scrolls.push([this.node(a), 'into view', b, c]);
+					break;
 			}
 		}
 	}
@@ -159,6 +169,19 @@ export class MockHost {
 		const flags = vm.runInContext('__sb.dispatch(...__args)', this.context);
 		this.settle();
 		return flags;
+	}
+
+	/**
+	 * What the Rust host does at the end of a turn in which a box scrolled:
+	 * a `scroll` event that does not bubble, sent whether anyone listens or
+	 * not, with where the box is now. `metrics` is `[scrollLeft, scrollTop,
+	 * scrollWidth, scrollHeight, clientWidth, clientHeight]`.
+	 */
+	scroll(node, metrics) {
+		const names = ['scrollLeft', 'scrollTop', 'scrollWidth', 'scrollHeight', 'clientWidth', 'clientHeight'];
+		this.context.__args = [node.id, 'scroll', false, Object.fromEntries(names.map((name, i) => [name, metrics[i]]))];
+		vm.runInContext('__sb.dispatch(...__args)', this.context);
+		this.settle();
 	}
 
 	/**

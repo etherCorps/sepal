@@ -453,8 +453,10 @@ Not there:
   paused, sped up or read. There are no `animationend` events.
 - Reopening an Accordion within 0.2 s of closing it can measure a height that
   is part-way through the animation Blitz is still running on it.
-- Scrolling is not reported as `scroll` events, so a popup does not follow
-  its anchor while the page scrolls under it.
+- A popup does not follow its anchor while a box scrolls under it, as far as
+  is known: Floating UI finds the boxes that scroll through
+  `getComputedStyle()`. Not tried since `scroll` events exist.
+
 A page that shows a `Skeleton` never goes idle: its pulse is an animation
 that does not end, and Blitz redraws while one is running.
 
@@ -473,6 +475,31 @@ any app:
 - An event that hits nothing the app made (the page around `<body>`, or a
   `<body>` with `pointer-events: none`) used to be dropped. With the DOM
   layer it goes to `document` with `<html>` as its target, as in a browser.
+
+### Scrolling
+
+Works with or without `dom: true`, so a list can render only the rows in
+view. Blitz scrolls a box when the wheel, trackpad or scrollbar moves it; at
+the end of that turn the host tells the app with a `scroll` event on the box
+(it does not bubble, as in a browser), so Svelte's own `onscroll` works.
+`scrollTop` and `scrollLeft` read where the host last said the box is.
+Writing them, `scrollTo()`, `scrollBy()` and `scrollIntoView()` (`block` and
+`inline`: `start`, `center`, `end`, `nearest`) are ops, done at the end of the
+turn after the page is laid out, so a list can grow and scroll to its new end
+in one go. The host clamps to what the box can scroll and reports where it
+ended up with a `scroll` event, as a browser does for a script's scroll too. A
+write reads back at once, clamped to the range last reported.
+
+With `dom: true`, `clientWidth`, `clientHeight`, `scrollWidth` and
+`scrollHeight` come with the forced layout (see "Measuring the page"), or,
+inside an event handler, from the last `scroll` event.
+
+Not there: the window's own scroll (`window.scrollY`, `window.scrollTo`), for
+an app whose `<body>` is taller than the window; smooth scrolling
+(`behavior: 'smooth'`, `scroll-behavior`) jumps; keyboard scrolling (Page
+Down, arrows), which Blitz does not do. `scrollIntoView()` moves the boxes
+around the node, not the window, and `scrollTop` after it reads the old
+position until the end of the turn.
 
 ### Keyboard
 
@@ -763,6 +790,7 @@ scripts/check-versions.js       all packages must share one version
 crates/host/              the `svelte-blitz-host` crate
   src/js.rs               QuickJS embedding
   src/ops.rs              applies op batches to blitz-dom
+  src/scroll.rs           scrolls the app asks for, and what it is told when one happens
   src/app.rs              app directory, app.json manifest, icon decoding
   src/bundle.rs           macOS .app bundle: Info.plist, .icns
   src/document.rs         SvelteDocument: implements blitz_dom::Document
@@ -966,7 +994,7 @@ What the time is spent on, from sampling:
 2. Type into a real window; then IME.
 3. Windows (on hold; see HANDOVER.md).
 4. State-preserving HMR, if the full reload turns out not to be enough.
-5. A virtual list component, then packaging per OS.
+5. A virtual list component (scroll events and `scrollTop` are there), then packaging per OS.
 6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`
    should need to change; the protocol is engine-agnostic.
 

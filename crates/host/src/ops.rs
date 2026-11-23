@@ -7,6 +7,7 @@ use std::collections::{HashMap, HashSet};
 use blitz_dom::{BaseDocument, LocalName, NodeId, QualName, ns};
 
 use crate::js::Batch;
+use crate::scroll;
 
 pub const CREATE_ELEMENT: i32 = 1; // id, name
 pub const CREATE_TEXT: i32 = 2; // id, text
@@ -21,6 +22,8 @@ pub const LISTEN: i32 = 10; // type
 pub const UNLISTEN: i32 = 11; // type
 pub const MEASURE: i32 = 12; // node
 pub const FOCUS: i32 = 13; // node (0 = none)
+pub const SCROLL: i32 = 14; // node, left, top
+pub const SCROLL_INTO_VIEW: i32 = 15; // node, block, inline (0 start, 1 center, 2 end, 3 nearest)
 
 /// The JS id of the mount target, mapped to `<body>`.
 pub const ROOT_ID: u32 = 1;
@@ -103,6 +106,9 @@ pub struct NodeMap {
     /// JS ids of the nodes the app measures: it is told where they are after
     /// every layout. See `SvelteDocument::report_layout`.
     measured: HashSet<u32>,
+    /// Scrolls the app asked for in this batch, applied after it, once the
+    /// page is laid out (`Page::apply` in `document.rs`).
+    pub scrolls: Vec<scroll::Request>,
 }
 
 impl NodeMap {
@@ -358,6 +364,20 @@ pub fn apply_batch(
                 node!(o[0]);
                 nodes.measured.insert(o[0] as u32);
             }
+            SCROLL => {
+                let o = operands!(3);
+                let id = node!(o[0]);
+                let request = scroll::Request::To(id, o[1] as f64, o[2] as f64);
+                nodes.scrolls.push(request);
+            }
+            SCROLL_INTO_VIEW => {
+                let o = operands!(3);
+                let id = node!(o[0]);
+                let (block, inline) = (scroll::Align::from_op(o[1]), scroll::Align::from_op(o[2]));
+                nodes
+                    .scrolls
+                    .push(scroll::Request::IntoView(id, block, inline));
+            }
             _ => {
                 eprintln!("[host] unknown opcode {code} at {i}; dropping the rest of the batch");
                 break;
@@ -392,6 +412,9 @@ mod tests {
             MEASURE, 2,
             FOCUS, 99,
             FOCUS, 3,
+            SCROLL, 99, 0, 10,
+            SCROLL_INTO_VIEW, 99, 0, 3,
+            SCROLL, 2, 0, 10,
             77,                   // not an opcode
         ];
         let batch = Batch {
@@ -405,5 +428,10 @@ mod tests {
         assert_eq!(doc.get_node(div).unwrap().parent, None, "no cycle");
         assert_eq!(nodes.measured().iter().collect::<Vec<_>>(), [&2]);
         assert_eq!(doc.get_focussed_node_id(), Some(span));
+        assert_eq!(
+            nodes.scrolls.len(),
+            1,
+            "only the scroll of a node that exists"
+        );
     }
 }

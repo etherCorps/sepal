@@ -412,7 +412,8 @@ platform binaries into `packages/host/bin` before packing it.
   for so that the Accordion slides open), and the host also reports boxes
   after each layout. See "Measuring the page" in the README.
   Not done:
-  - CSS transforms in reported boxes, `scroll` events, `getComputedStyle`.
+  - CSS transforms in reported boxes, `getComputedStyle`. (`scroll` events
+    and `scrollTop` came later; see "Scrolling" in the README.)
   - The other Bits UI components (Popover, DropdownMenu, Combobox, …) were
     not tried. They use the same pieces as Select and Tooltip.
 

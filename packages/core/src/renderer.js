@@ -117,6 +117,87 @@ export class BlitzNode {
 	removeEventListener(type, handler) {
 		remove_listener(this, type, handler);
 	}
+
+	// Scrolling. The host says where a box is scrolled to with a `scroll`
+	// event, at the end of the turn that moved it; a write goes to the host
+	// as an op, and reads back at once, as in a browser.
+	get scrollTop() {
+		return scroll_positions.get(this)?.scrollTop ?? 0;
+	}
+	set scrollTop(value) {
+		scroll_to(this, this.scrollLeft, value);
+	}
+	get scrollLeft() {
+		return scroll_positions.get(this)?.scrollLeft ?? 0;
+	}
+	set scrollLeft(value) {
+		scroll_to(this, value, this.scrollTop);
+	}
+	/** @param {number | { left?: number, top?: number }} [x] @param {number} [y] */
+	scrollTo(x, y) {
+		const [left, top] = scroll_arguments(x, y);
+		scroll_to(this, left ?? this.scrollLeft, top ?? this.scrollTop);
+	}
+	/** @param {number | { left?: number, top?: number }} [x] @param {number} [y] */
+	scrollBy(x, y) {
+		const [left, top] = scroll_arguments(x, y);
+		scroll_to(this, this.scrollLeft + (Number(left) || 0), this.scrollTop + (Number(top) || 0));
+	}
+	/**
+	 * Scroll the boxes around this node until it is in view. Where they end up
+	 * is known once the host has done it, at the end of the turn.
+	 * @param {boolean | { block?: string, inline?: string }} [options]
+	 */
+	scrollIntoView(options) {
+		const { block = 'start', inline = 'nearest' } =
+			typeof options === 'object' && options !== null ? options : { block: options === false ? 'end' : 'start' };
+		if (this.node_id !== 0) ops.push(OP.SCROLL_INTO_VIEW, this.node_id, ALIGN[block] ?? 0, ALIGN[inline] ?? 3);
+	}
+}
+
+/** `block` and `inline` of `scrollIntoView()`, as the host numbers them. @type {Record<string, number>} */
+const ALIGN = { start: 0, center: 1, end: 2, nearest: 3 };
+
+/**
+ * Where each box that has scrolled is, as the host last reported it (the
+ * detail of its `scroll` event) or the app last wrote it.
+ * `{ scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth, clientHeight }`;
+ * only the first two until the host has reported.
+ * @type {WeakMap<BlitzNode, Record<string, number>>}
+ */
+const scroll_positions = new WeakMap();
+
+/**
+ * What the host last said about how a box scrolls, if it has.
+ * @param {BlitzNode} node
+ */
+export const scroll_state = (node) => scroll_positions.get(node);
+
+/** `scrollTo(x, y)` or `scrollTo({ left, top })`. @param {any} x @param {any} y @returns {any[]} */
+const scroll_arguments = (x, y) => (typeof x === 'object' && x !== null ? [x.left, x.top] : [x, y]);
+
+/**
+ * @param {BlitzNode} node
+ * @param {any} left
+ * @param {any} top
+ */
+function scroll_to(node, left, top) {
+	if (node.node_id === 0) return;
+	let state = scroll_positions.get(node);
+	if (state === undefined) scroll_positions.set(node, (state = { scrollLeft: 0, scrollTop: 0 }));
+	// Ops are 32-bit integers.
+	/** @param {any} value */
+	const integer = (value) => Math.min(2 ** 31 - 1, Math.max(0, Math.round(Number(value) || 0)));
+	left = integer(left);
+	top = integer(top);
+	// What reads back is clamped to the range the host last reported. The host
+	// gets the value asked for: what the same turn adds to the box may make
+	// room for it. It clamps to the range there is then, and reports that.
+	/** @param {number} value @param {number | undefined} size @param {number | undefined} client */
+	const clamp = (value, size, client) => (size === undefined || client === undefined ? value : Math.min(value, Math.max(0, size - client)));
+	state.scrollLeft = clamp(left, state.scrollWidth, state.clientWidth);
+	state.scrollTop = clamp(top, state.scrollHeight, state.clientHeight);
+	ops.push(OP.SCROLL, node.node_id, left, top);
 }
 
 const has_weak_refs =
@@ -377,6 +458,8 @@ export function dispatch(target_id, type, bubbles, detail) {
 	if (detail !== null && detail !== undefined) {
 		if ('value' in detail) target.value = detail.value;
 		if ('checked' in detail) target.checked = detail.checked;
+		// The host reports every scroll this way, whether anyone listens or not.
+		if (type === 'scroll') scroll_positions.set(target, detail);
 	}
 
 	return deliver(target, new BlitzEvent(type, target, bubbles, detail ?? null));

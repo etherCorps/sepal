@@ -70,7 +70,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
   data: URLs and the app directory only), `updater.rs` (self-update and the
   build side of it), `api/` (desktop APIs and their permission checks), `js.rs` (the engine: `js/quickjs.rs`,
-  or `js/v8_engine.rs` with `--features engine-v8`), `ops.rs` (apply batches),
+  or `js/v8_engine.rs` with `--features engine-v8`), `ops.rs` (apply batches), `scroll.rs` (scroll ops and reports),
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
@@ -92,7 +92,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
    answer a read. **One exception, added on 22 Nov 2026 when Shivam asked for the
    Accordion to slide open, which cannot be done without it:**
    `__sb_host.measure(id)`, a forced layout as in a browser. It applies the
-   pending batch, lays out and returns the node's box, because component
+   pending batch, lays out and returns the node's box (and its client and
+   scroll sizes), because component
    libraries change the page and measure it on the next line. It is refused
    while Blitz dispatches an event (the `RefCell` around `Page` is borrowed),
    and JS then answers from the boxes the host last *reported*
@@ -114,7 +115,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
    `timers_wake_the_event_loop` guard this. Dev reload obeys it too: the
    host blocks on stdin, it does not watch files. Layout is reported at the
    end of a turn that changed the page and after a frame the shell drew
-   anyway, never on a timer.
+   anyway, never on a timer. Scroll positions likewise: at the end of the
+   turn that moved them.
 8. **`apply_batch` must never panic.** Batches come from app code. Unknown
    nodes and opcodes are logged and skipped. Blitz indexes node storage
    directly (`doc.nodes[id]`), so check `get_node(id).is_some()` first.
@@ -134,8 +136,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **`bind:` on elements is rewritten by the preset** (`packages/vite/src/bindings.js`)
   because Svelte refuses it for custom renderers: `bind:this` and `bind:value`
   become attachments, anything else compiles and warns. Attachments and
-  actions get a `BlitzNode`, which has `addEventListener`/`removeEventListener`
-  and little else of the DOM.
+  actions get a `BlitzNode`, which has `addEventListener`/`removeEventListener`,
+  `scrollTop`/`scrollLeft`, `scrollTo`/`scrollBy`/`scrollIntoView` and little
+  else of the DOM.
 - **Libraries that assume a browser fail at run time, not at compile time.**
   `dom: true` in `app.config.ts` loads `packages/core/src/dom.js`, a DOM on
   top of the renderer's tree, which is enough for Bits UI's Switch, Checkbox,
@@ -189,6 +192,15 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Two places lay out in a window:** the shell before painting, and
   `settle()` when the app measures. They must agree on the animation time;
   `window.rs` points the shell's clock at `document::animation_clock()`.
+- **Scrolling is reported, not read.** Blitz scrolls boxes itself (wheel,
+  scrollbar). `JsEventHandler` notes which, without entering JS, and
+  `report_scrolls` sends one `scroll` event per box at the end of the turn,
+  whether or not anyone listens: its detail is where the renderer keeps
+  `scrollTop`. Writes are `SCROLL`/`SCROLL_INTO_VIEW` ops, applied after the
+  batch once the page is laid out (the range depends on what the batch
+  added). Blitz's `get_client_bounding_rect` moves a scroll box by its own
+  offset; `scroll::client_rect` undoes that for boxes the app sees. The
+  viewport's scroll is not reported, and smooth scrolling is not done.
 - **Event target id 0** means "outside everything the app made". Only the
   DOM layer listens to it (`host_hooks.outside`). Key presses arrive there
   when nothing has the focus.
