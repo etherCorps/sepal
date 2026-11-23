@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with nine changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with ten changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -108,8 +108,15 @@ and measured seven times): best of 8 runs, 39.7 ms before, 20.1 ms after.
 Upstream `main` has the same code for (1) as of 22 Nov 2026; (2) to (5) and (7) to (9) were not checked; (6) is an addition, not a fix. Remove this directory and
 the `[patch]` entry once a release contains the fix.
 
+**10. A bare `checked` ticks the box.** `src/mutator.rs`,
+`set_input_checked_state`: upstream parses the value as a bool, so `checked=""`
+(what Svelte sends for `checked={true}`, and what HTML means by a bare
+`checked`) failed to parse and was ignored on an input that already existed:
+the box stayed unticked. The empty string now means checked. `"true"` and
+`"false"` work as before.
+
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the nine changes (search for
+directory with that version's source and reapply the ten changes (search for
 `svelte-blitz patch`).

@@ -73,12 +73,24 @@ pub struct VelloHybridRendererOptions {
     pub desired_maximum_frame_latency: u32,
 }
 
+// svelte-blitz patch: vello_gpu caps the textures it draws layers into at
+// 4096 px, and a layer as large as the window (a Dialog's dimmed backdrop, any
+// clip or opacity over the whole page) is wider than that on a 5K display at
+// 2x: the frame fails and `render` below panics. `u16::MAX` lets vello_gpu clamp
+// the cap to the device's own limit instead (`MemorySettings::normalize`).
+fn render_settings() -> RenderSettings {
+    let mut settings = RenderSettings::default();
+    settings.memory_settings.layers_config.max_texture_size =
+        vello_common::geometry::SizeU16::new(u16::MAX);
+    settings
+}
+
 impl Default for VelloHybridRendererOptions {
     fn default() -> Self {
         Self {
             features: None,
             limits: None,
-            render_settings: RenderSettings::default(),
+            render_settings: render_settings(),
             base_color: Color::WHITE,
             composite_alpha_mode: anyrender::CompositeAlphaMode::Auto,
             desired_maximum_frame_latency: 1,
