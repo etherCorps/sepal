@@ -39,6 +39,9 @@ struct ActiveRenderState {
     resources: Resources,
     depth_texture_view: TextureView,
     texture_bindings: FxHashMap<ResourceId, TextureView>,
+    /// svelte-blitz patch: images too large for an atlas page (`scene.rs`). Per
+    /// device, so they go with it.
+    own_textures: FxHashMap<u64, crate::scene::OwnTexture>,
     render_surface: SurfaceRenderer<'static>,
 }
 
@@ -73,15 +76,25 @@ pub struct VelloHybridRendererOptions {
     pub desired_maximum_frame_latency: u32,
 }
 
-// svelte-blitz patch: vello_gpu caps the textures it draws layers into at
+// svelte-blitz patch (layers): vello_gpu caps the textures it draws layers into at
 // 4096 px, and a layer as large as the window (a Dialog's dimmed backdrop, any
 // clip or opacity over the whole page) is wider than that on a 5K display at
 // 2x: the frame fails and `render` below panics. `u16::MAX` lets vello_gpu clamp
 // the cap to the device's own limit instead (`MemorySettings::normalize`).
+//
+// svelte-blitz patch (atlas): the atlas holding glyphs and images defaults to
+// pages of 4096 x 4096, 64 MB each, the first one allocated with the first
+// cached glyph: most of it empty, as a page of text needs a few hundred glyphs.
+// Pages of 1024 x 1024 (4 MB) are added as they fill; 128 of them hold as much
+// as the default's 8. Images larger than a page get a texture of their own
+// (`ImageManager::image_source` in `scene.rs`).
 fn render_settings() -> RenderSettings {
     let mut settings = RenderSettings::default();
     settings.memory_settings.layers_config.max_texture_size =
         vello_common::geometry::SizeU16::new(u16::MAX);
+    let atlas = &mut settings.memory_settings.image_atlas_config;
+    atlas.atlas_size = (1024, 1024);
+    atlas.max_atlases = 128;
     settings
 }
 
@@ -433,6 +446,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                     depth_texture_view,
                     render_surface,
                     texture_bindings: FxHashMap::default(),
+                    own_textures: FxHashMap::default(),
                 },
             });
             on_ready();
@@ -502,6 +516,8 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             queue: render_surface.queue(),
             encoder: &mut encoder,
             cache: &mut self.cached_images,
+            own_textures: &mut state.own_textures,
+            atlas_page: self.config.render_settings.memory_settings.image_atlas_config.atlas_size,
         };
 
         let mut scene_painter = VelloHybridScenePainter {
@@ -540,6 +556,9 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         let mut texture_bindings = TextureBindings::new();
         for (resource_id, texture_view) in state.texture_bindings.iter() {
             texture_bindings.insert(TextureId(resource_id.into_ffi()), texture_view.clone());
+        }
+        for own in state.own_textures.values() {
+            texture_bindings.insert(own.id, own.view.clone()); // svelte-blitz patch
         }
 
         state

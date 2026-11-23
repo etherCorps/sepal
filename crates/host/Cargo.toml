@@ -92,8 +92,12 @@ required-features = ["screenshot"]
 # Thirteen small changes; see crates/blitz-dom/PATCH.md.
 [patch.crates-io]
 blitz-dom = { path = "../blitz-dom" }
-# Glyph atlas on, and drawing without a window; see its PATCH.md.
+# Glyph atlas on with small pages, large images, drawing without a window; see its PATCH.md.
 anyrender_vello_hybrid = { path = "../anyrender_vello_hybrid" }
+# Layer textures that shrink again; see its PATCH.md.
+vello_gpu = { path = "../vello_gpu" }
+# Clears and uploads in render passes, not blits; see its PATCH.md.
+wgpu-hal = { path = "../wgpu-hal" }
 
 [profile.dev]
 opt-level = 1
