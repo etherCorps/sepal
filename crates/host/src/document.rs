@@ -36,6 +36,7 @@ pub struct TurnStats {
     pub visible: usize,
     pub created: usize,
     pub dropped: usize,
+    pub detached: usize,
 }
 
 impl TurnStats {
@@ -45,6 +46,7 @@ impl TurnStats {
         self.visible += stats.visible;
         self.created += stats.created;
         self.dropped += stats.dropped;
+        self.detached += stats.detached;
     }
 
     /// The page may look different now: the window has to be redrawn.
@@ -166,6 +168,8 @@ pub struct SvelteDocument {
     reported_boxes: HashMap<u32, [f64; 4]>,
     timers: TimerWaker,
     last_turn: TurnStats,
+    /// Every turn so far, added up. For benchmarks that span several turns.
+    totals: TurnStats,
     updater: Option<Arc<Updater>>,
     api: Arc<Api>,
     /// Answers to host calls, sent by the threads doing the work.
@@ -175,7 +179,21 @@ pub struct SvelteDocument {
     /// Host calls wait in the queue while this is set: the document is going
     /// into a window that does not exist yet. See [`SvelteDocument::for_window`].
     hold_host_calls: bool,
+    /// Nodes detached since the last collection the host asked for.
+    detached_since_gc: usize,
+    /// When to collect garbage (JS clock, ms). See [`GC_AFTER_DETACHED`].
+    gc_at: Option<f64>,
 }
+
+/// Detached nodes are freed when JavaScript collects their objects, and an
+/// app that has gone idle allocates nothing, so the engine's own collector
+/// may never run: leaving a page of 5000 rows kept 200k nodes (about 900 MB)
+/// for good. Past this many detached nodes the host collects once itself.
+const GC_AFTER_DETACHED: usize = 10_000;
+/// ... this long after, so the pause (about 200 ms for those 200k nodes in
+/// QuickJS) does not land between a click and the page it shows. A one-shot
+/// deadline, not a poll: nothing wakes the loop again until more is detached.
+const GC_DELAY_MS: f64 = 1000.0;
 
 /// The id of a host call and its outcome: JSON, or an error message.
 type Answer = (u32, Result<String, String>);
@@ -350,11 +368,14 @@ impl SvelteDocument {
             reported_boxes: HashMap::new(),
             timers: TimerWaker::default(),
             last_turn: TurnStats::default(),
+            totals: TurnStats::default(),
             updater,
             api: Arc::new(api),
             answers: mpsc::channel(),
             waker: Arc::default(),
             hold_host_calls,
+            detached_since_gc: 0,
+            gc_at: None,
         };
 
         this.js.eval(app_js)?;
@@ -394,6 +415,11 @@ impl SvelteDocument {
     /// Number of JS-created nodes the host currently holds.
     pub fn live_nodes(&self) -> usize {
         self.page.borrow().nodes.len()
+    }
+
+    /// Stats for every turn so far, added up.
+    pub fn totals(&self) -> TurnStats {
+        self.totals
     }
 
     /// Stats for the most recent turn.
@@ -448,10 +474,15 @@ impl SvelteDocument {
             moved = turn.ops != before;
         }
 
+        self.collect_detached(&mut turn);
+
         // Read the deadline last: effects that ran above may have started or stopped timers.
         let now = self.js.now();
-        self.timers
-            .set_deadline(self.js.next_timer().map(|at| at - now));
+        let next = match (self.js.next_timer(), self.gc_at) {
+            (Some(timer), Some(gc)) => Some(timer.min(gc)),
+            (timer, gc) => timer.or(gc),
+        };
+        self.timers.set_deadline(next.map(|at| at - now));
 
         if turn.changed() && trace_enabled() {
             let (layouts, took) = std::mem::take(&mut self.page.borrow_mut().layouts);
@@ -462,7 +493,38 @@ impl SvelteDocument {
             );
         }
         self.last_turn = turn;
+        self.totals.batches += turn.batches;
+        self.totals.ops += turn.ops;
+        self.totals.visible += turn.visible;
+        self.totals.created += turn.created;
+        self.totals.dropped += turn.dropped;
+        self.totals.detached += turn.detached;
         turn
+    }
+
+    /// Schedule a collection once many nodes were detached, and run it when due.
+    fn collect_detached(&mut self, turn: &mut TurnStats) {
+        let now = self.js.now();
+        if self.gc_at.is_some_and(|at| now >= at) {
+            self.gc_at = None;
+            let detached = std::mem::take(&mut self.detached_since_gc);
+            let started = std::time::Instant::now();
+            self.js.collect_garbage();
+            // Finalizers queue DROPs; apply them now.
+            self.js.run_jobs();
+            self.apply_batches(turn);
+            if trace_enabled() {
+                eprintln!(
+                    "[trace] collected garbage after {detached} detached nodes: {:.1}ms, {} nodes left",
+                    started.elapsed().as_secs_f64() * 1000.0,
+                    self.live_nodes()
+                );
+            }
+        }
+        self.detached_since_gc += turn.detached;
+        if self.detached_since_gc >= GC_AFTER_DETACHED && self.gc_at.is_none() {
+            self.gc_at = Some(now + GC_DELAY_MS);
+        }
     }
 
     /// Apply what the app wrote, and what it writes in the microtasks that follow.

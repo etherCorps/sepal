@@ -166,6 +166,13 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **`:has()` only exists because of patch 8.** Upstream drops such rules
   while parsing. If Tailwind's `has-*` or `group-has-*` stop working after a
   Blitz update, that patch was lost.
+- **Detached nodes are freed only when JavaScript collects their objects**
+  (the `FinalizationRegistry` sends `DROP`). Svelte's nodes form cycles, so
+  that takes a cycle collection, which an idle app never triggers: leaving a
+  page of 5000 rows once kept 200k nodes and ~900 MB. The host counts what
+  `REMOVE` detaches and, past `GC_AFTER_DETACHED`, collects once, a second
+  later (`collect_detached` in `document.rs`). The pause is real (~250 ms
+  for 200k nodes in QuickJS); fewer nodes per row is the cheaper cure.
 - **Timers run one per call** (`__sb.timers()` returns whether it ran one) and
   the host runs microtasks in between, because libraries rely on one
   `requestAnimationFrame` callback seeing what the previous one caused.
@@ -224,10 +231,12 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   than assuming. `anyrender_vello_hybrid 0.11` and `anyrender_vello_cpu 0.18`
   are the releases that match blitz's `anyrender 0.14`.
 - **`crates/anyrender_vello_hybrid` is a patched copy too** (the window's
-  renderer): glyph atlas on, and `render_to_rgba` for drawing without a
-  window. See its `PATCH.md`. Same rules as below.
+  renderer): glyph atlas on, `render_to_rgba` for drawing without a
+  window, and layer textures up to the device's limit (a full-window layer on
+  a 5K display is over vello_gpu's default 4096). See its `PATCH.md`. Same
+  rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in nine places, all marked
+  It differs from crates.io 0.3.0-beta.4 in ten places, all marked
   `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a

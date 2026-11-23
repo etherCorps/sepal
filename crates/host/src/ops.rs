@@ -148,6 +148,22 @@ pub struct ApplyStats {
     pub visible: usize,
     pub created: usize,
     pub dropped: usize,
+    /// Nodes taken out of the page with their ancestors. They stay in Blitz
+    /// until JavaScript collects their objects (`DROP`).
+    pub detached: usize,
+}
+
+/// A node and everything under it.
+fn subtree_size(doc: &BaseDocument, id: NodeId) -> usize {
+    let mut stack = vec![id];
+    let mut count = 0;
+    while let Some(id) = stack.pop() {
+        if let Some(node) = doc.get_node(id) {
+            count += 1;
+            stack.extend(node.children.iter().copied());
+        }
+    }
+    count
 }
 
 fn attr_name(name: &str) -> QualName {
@@ -292,6 +308,7 @@ pub fn apply_batch(
             REMOVE => {
                 let o = operands!(1);
                 let id = node!(o[0]);
+                stats.detached += subtree_size(mutator.doc, id);
                 mutator.remove_node(id);
             }
             DROP => {

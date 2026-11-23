@@ -1385,7 +1385,9 @@ impl<'doc> DocumentMutator<'doc> {
 
 /// Set 'checked' state on an input based on given attributevalue
 fn set_input_checked_state(element: &mut ElementData, value: String) {
-    let Ok(checked) = value.parse() else {
+    // svelte-blitz patch: a bare `checked` (the value "") means checked, as in
+    // HTML; upstream only accepted "true"/"false" and ignored it.
+    let Ok(checked) = (if value.is_empty() { Ok(true) } else { value.parse() }) else {
         return;
     };
     match element.special_data {

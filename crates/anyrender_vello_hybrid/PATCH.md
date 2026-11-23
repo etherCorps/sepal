@@ -2,7 +2,7 @@
 
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
-windows with, with two changes. `crates/host/Cargo.toml` swaps it in through
+windows with, with three changes. `crates/host/Cargo.toml` swaps it in through
 `[patch.crates-io]`. Both are marked `svelte-blitz patch`.
 
 ## The changes
@@ -33,8 +33,20 @@ in `crates/host`. It needs a GPU, so no test depends on it.
 With the atlas off, its output matches the CPU renderer used for screenshots
 and tests to within 2/255 per channel.
 
+**3. Layers as large as the window.** `src/window_renderer.rs`,
+`render_settings()`, used by `VelloHybridRendererOptions::default()` and so by
+the window and by `render_to_rgba`: vello_gpu caps the textures it draws
+layers into at 4096 px (`LayersConfig::max_texture_size`). A layer the size of
+the window, such as a Dialog's dimmed backdrop, is 5132 px wide in a
+full-screen window on a 5K display at 2x, so the frame failed and `render`
+panicked with `IntermediateTexture(TooLarge { .. })`. The patch asks for
+`u16::MAX`, which vello_gpu clamps to the device's own limit (16384 on an M4).
+A window larger than the device allows still fails. Reproduce with
+`drive -- ../../examples/router-dom-probe/dist 5200x2800 click:#open-dialog
+time:0.5 gpushot:out.png` in `crates/host`.
+
 ## Updating
 
 Do not edit anything else here. To move to a new version, replace the
-directory with that version's source and reapply the two changes (search for
+directory with that version's source and reapply the three changes (search for
 `svelte-blitz patch`; `offscreen.rs` is new as a whole).
