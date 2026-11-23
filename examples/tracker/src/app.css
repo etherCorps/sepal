@@ -1,0 +1,178 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Index-First (app) · theme: Cobalt · enrichment: none · nav: N3+N4 · footer: none */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn-svelte/tailwind.css';
+@import '@fontsource/space-grotesk/latin-500.css';
+@import '@fontsource/space-grotesk/latin-600.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '@fontsource/jetbrains-mono/latin-500.css';
+
+/* Inter, latin subset only: every subset is inlined as a data URL and parsed at start. */
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+:root {
+	/* paper and ink: cool, never #fff / #000 */
+	--background: oklch(0.985 0.004 250);
+	--foreground: oklch(0.24 0.02 258);
+	--ink-2: oklch(0.34 0.018 257);          /* body text a notch lighter */
+	--card: oklch(0.995 0.003 250);
+	--card-foreground: var(--foreground);
+	--popover: oklch(0.995 0.003 250);
+	--popover-foreground: var(--foreground);
+
+	/* the one signal */
+	--primary: oklch(0.58 0.2 256);           /* cobalt */
+	--primary-foreground: oklch(0.985 0.004 250);
+	--ring: oklch(0.58 0.2 256);
+
+	--secondary: oklch(0.955 0.006 252);
+	--secondary-foreground: var(--foreground);
+	--muted: oklch(0.965 0.005 252);
+	--muted-foreground: oklch(0.48 0.018 257);
+	--accent: oklch(0.945 0.01 255);          /* hover surface */
+	--accent-foreground: var(--foreground);
+	--destructive: oklch(0.56 0.2 25);
+	--border: oklch(0.9 0.008 255);           /* hairlines do the work */
+	--input: oklch(0.87 0.01 255);
+	--radius: 0.375rem;                       /* 6px: drawn with a ruler */
+
+	--sidebar: oklch(0.97 0.005 252);
+	--sidebar-foreground: var(--ink-2);
+	--sidebar-primary: oklch(0.58 0.2 256);
+	--sidebar-primary-foreground: oklch(0.985 0.004 250);
+	--sidebar-accent: oklch(0.93 0.01 255);
+	--sidebar-accent-foreground: var(--foreground);
+	--sidebar-border: var(--border);
+	--sidebar-ring: var(--ring);
+
+	/* the dark beat: command palette and bulk bar only */
+	--graphite: oklch(0.22 0.016 260);
+	--graphite-2: oklch(0.29 0.018 260);      /* active item, inner hairline */
+	--graphite-foreground: oklch(0.94 0.006 255);
+	--graphite-muted: oklch(0.68 0.015 257);
+
+	/* list states */
+	--row-hover: oklch(0.955 0.008 255);
+	--row-active: oklch(0.94 0.03 256);       /* j/k highlight */
+	--row-checked: oklch(0.96 0.02 256);
+
+	/* data encodings: small glyphs only, never fills of large areas */
+	--status-backlog: var(--muted-foreground);
+	--status-todo: var(--ink-2);
+	--status-progress: oklch(0.58 0.2 256);
+	--status-review: oklch(0.58 0.15 300);
+	--status-done: oklch(0.58 0.13 155);
+	--status-canceled: var(--muted-foreground);
+	--priority-urgent: var(--destructive);
+	--chart-1: oklch(0.58 0.2 256);           /* created */
+	--chart-2: oklch(0.8 0.07 256);           /* closed */
+	--chart-3: oklch(0.6 0.015 257);
+	--chart-4: oklch(0.45 0.018 257);
+	--chart-5: oklch(0.32 0.018 257);
+	/* projects and labels: one lightness and chroma, hue varies */
+	--hue-1: oklch(0.62 0.13 256);
+	--hue-2: oklch(0.62 0.13 155);
+	--hue-3: oklch(0.62 0.13 60);
+	--hue-4: oklch(0.62 0.13 300);
+	--hue-5: oklch(0.62 0.13 20);
+	--hue-6: oklch(0.62 0.13 200);
+	--hue-7: oklch(0.62 0.13 100);
+	--hue-8: oklch(0.62 0.13 340);
+	--hue-9: oklch(0.62 0.13 230);
+	--hue-10: oklch(0.62 0.13 130);
+	--hue-11: oklch(0.62 0.13 30);
+	--hue-12: oklch(0.62 0.13 280);
+}
+
+@theme inline {
+	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Space Grotesk', var(--font-sans);
+	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
+	--color-ink-2: var(--ink-2);
+	--color-graphite: var(--graphite);
+	--color-graphite-2: var(--graphite-2);
+	--color-graphite-foreground: var(--graphite-foreground);
+	--color-graphite-muted: var(--graphite-muted);
+	--color-row-hover: var(--row-hover);
+	--color-row-active: var(--row-active);
+	--color-row-checked: var(--row-checked);
+	--color-status-backlog: var(--status-backlog);
+	--color-status-todo: var(--status-todo);
+	--color-status-progress: var(--status-progress);
+	--color-status-review: var(--status-review);
+	--color-status-done: var(--status-done);
+	--color-status-canceled: var(--status-canceled);
+	--color-priority-urgent: var(--priority-urgent);
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar: var(--sidebar);
+	--color-chart-5: var(--chart-5);
+	--color-chart-4: var(--chart-4);
+	--color-chart-3: var(--chart-3);
+	--color-chart-2: var(--chart-2);
+	--color-chart-1: var(--chart-1);
+	--color-ring: var(--ring);
+	--color-input: var(--input);
+	--color-border: var(--border);
+	--color-destructive: var(--destructive);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: var(--muted);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: var(--secondary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: var(--primary);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: var(--popover);
+	--color-card-foreground: var(--card-foreground);
+	--color-card: var(--card);
+	--color-foreground: var(--foreground);
+	--color-background: var(--background);
+	--radius-sm: calc(var(--radius) * 0.6);
+	--radius-md: var(--radius);
+	--radius-lg: calc(var(--radius) + 2px);
+	--radius-xl: calc(var(--radius) * 1.4);
+	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-3xl: calc(var(--radius) * 2.2);
+	--radius-4xl: calc(var(--radius) * 2.6);
+	--color-hue-1: var(--hue-1);
+	--color-hue-2: var(--hue-2);
+	--color-hue-3: var(--hue-3);
+	--color-hue-4: var(--hue-4);
+	--color-hue-5: var(--hue-5);
+	--color-hue-6: var(--hue-6);
+	--color-hue-7: var(--hue-7);
+	--color-hue-8: var(--hue-8);
+	--color-hue-9: var(--hue-9);
+	--color-hue-10: var(--hue-10);
+	--color-hue-11: var(--hue-11);
+	--color-hue-12: var(--hue-12);
+}
+
+@layer base {
+	* { @apply border-border outline-ring/50; }
+	html { @apply font-sans; font-size: 16px; }
+	body { @apply bg-background text-ink-2; font-size: 13px; line-height: 1.45; }
+    button:not(:disabled), [role="button"]:not(:disabled) {
+        cursor: pointer;
+    }
+}
+
+/*
+ * Bits UI copies a Select list's z-index onto its floating wrapper from
+ * getComputedStyle(), which is blank under the DOM layer. Without this a
+ * Select opened inside a Dialog (z-50) draws behind it.
+ */
+[data-bits-floating-content-wrapper] { z-index: 50; }
