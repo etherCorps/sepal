@@ -69,6 +69,8 @@
 	// anything is follows from counts, and there are at most a dozen groups.
 
 	const HEADER = 32;
+	/** The "Show 200 more" row under the list (h-9), when there is more to page in. */
+	const MORE = 36;
 	const OVERSCAN = 300;
 	const row_height = $derived(settings.compact ? 28 : 36);
 	const header_height = $derived(view.groupBy === 'none' ? 0 : HEADER);
@@ -92,7 +94,9 @@
 		const row = row_height;
 		let height = 0;
 		for (const group of paged.groups) height += header + group.issues.length * row;
-		const top = Math.min(scroll_top, Math.max(0, height - viewport));
+		// What the box scrolls over ends below the "Show more" row, not the last row.
+		const end_of_list = height + (paged.hidden > 0 ? MORE : 0);
+		const top = Math.min(scroll_top, Math.max(0, end_of_list - viewport));
 		const from = top - OVERSCAN;
 		const to = top + viewport + OVERSCAN;
 		const groups: (PagedGroup & { header: boolean })[] = [];
@@ -113,14 +117,14 @@
 			end = issues.length > 0 ? rows + last * row : rows;
 			groups.push({ ...group, header: with_header, issues });
 		}
-		return { groups, above: Math.max(0, start), below: height - end, height };
+		return { groups, above: Math.max(0, start), below: height - end, end_of_list };
 	});
 
 	// Blitz keeps a scroll offset past the end when the content shrinks (a
 	// filter, a collapsed group), and the list would show nothing. Pull it
 	// back, as a browser does.
 	$effect(() => {
-		const end = Math.max(0, windowed.height - viewport);
+		const end = Math.max(0, windowed.end_of_list - viewport);
 		if (list !== undefined && scroll_top > end) list.scrollTop = end;
 	});
 

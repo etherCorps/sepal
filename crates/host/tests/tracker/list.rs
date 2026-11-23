@@ -594,3 +594,42 @@ fn a_week_from_insights_filters_the_list() {
     doc.wait(0.1);
     assert_eq!(text(&doc, "[data-testid=page-count]"), "5,000");
 }
+
+/// The wheel reaches "Show 200 more" under the first page, and pressing it
+/// lets the list go on into the next group. The list once stopped one row
+/// short: its end left that row out, so the first page (all Backlog) was all
+/// there was.
+#[test]
+fn the_wheel_reaches_show_more_and_the_next_page() {
+    let mut doc = load();
+    let list = doc.query("[data-testid=list]").unwrap();
+    let (x, top, width, height) = doc.rect(list).unwrap();
+    let (cx, cy) = ((x + width / 2.0) as f32, (top + height / 2.0) as f32);
+    for _ in 0..50 {
+        doc.wheel(cx, cy, 0.0, 400.0);
+    }
+    doc.resolve();
+    let more = doc
+        .query("[data-testid=show-more]")
+        .expect("Show more is mounted");
+    let (_, y, _, h) = doc.rect(more).unwrap();
+    assert!(
+        y + h <= top + height,
+        "Show more is inside the list: {} > {}",
+        y + h,
+        top + height
+    );
+    let before = paged(&doc);
+    doc.click(more);
+    doc.settle();
+    doc.resolve();
+    assert_eq!(paged(&doc), before + 200);
+    for _ in 0..50 {
+        doc.wheel(cx, cy, 0.0, 400.0);
+    }
+    doc.resolve();
+    assert!(
+        scroll_top(&doc) > 7000.0,
+        "the list scrolls past the first page"
+    );
+}
