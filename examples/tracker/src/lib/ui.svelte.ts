@@ -8,20 +8,69 @@
 
 import { SvelteSet } from 'svelte/reactivity';
 
-export const ui = $state({
-	palette: false,
-	new_issue: false,
-	shortcuts: false,
-	/** the issue j/k moves; kept when the pane closes */
-	highlighted: null as string | null,
-	/** where Shift+click starts a range: the last row clicked or checked */
-	anchor: null as string | null,
-	/** the bulk bar is up: toasts stack above it */
-	bulk_bar: false
-});
+/**
+ * One row's highlight and checkbox. Rows read these instead of comparing
+ * `ui.highlighted` or asking `checked.has()`, so j/k and a click wake the rows
+ * that changed, not every mounted one (5,000 after Show all).
+ */
+class Mark {
+	active = $state(false);
+	checked = $state(false);
+}
+// ponytail: one Mark per key ever shown, never dropped; fine at 20,000 issues.
+const marks = new Map<string, Mark>();
 
-/** Checked rows' keys, for the bulk bar. */
-export const checked = new SvelteSet<string>();
+/**
+ * The row state for `key`. Read it through a `$derived` (Row does): Svelte
+ * does not track state created by the effect that reads it, and the first
+ * read creates it.
+ */
+export function mark(key: string): Mark {
+	let m = marks.get(key);
+	if (m === undefined) marks.set(key, (m = new Mark()));
+	return m;
+}
+
+class Ui {
+	palette = $state(false);
+	new_issue = $state(false);
+	shortcuts = $state(false);
+	#highlighted = $state<string | null>(null);
+	/** where Shift+click starts a range: the last row clicked or checked */
+	anchor = $state<string | null>(null);
+	/** the bulk bar is up: toasts stack above it */
+	bulk_bar = $state(false);
+
+	/** the issue j/k moves; kept when the pane closes */
+	get highlighted(): string | null {
+		return this.#highlighted;
+	}
+	set highlighted(key: string | null) {
+		if (key === this.#highlighted) return;
+		if (this.#highlighted !== null) mark(this.#highlighted).active = false;
+		if (key !== null) mark(key).active = true;
+		this.#highlighted = key;
+	}
+}
+
+export const ui = new Ui();
+
+/** Checked rows' keys, for the bulk bar. Keeps each row's `mark(key).checked` in step. */
+class Checked extends SvelteSet<string> {
+	add(key: string) {
+		mark(key).checked = true;
+		return super.add(key);
+	}
+	delete(key: string) {
+		if (this.has(key)) mark(key).checked = false;
+		return super.delete(key);
+	}
+	clear() {
+		for (const key of this) mark(key).checked = false;
+		super.clear();
+	}
+}
+export const checked = new Checked();
 
 // ---------------------------------------------------------------------------
 // Toasts
