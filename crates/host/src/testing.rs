@@ -4,8 +4,8 @@
 
 use blitz_dom::{Document, NodeId};
 use blitz_traits::events::{
-    BlitzKeyEvent, BlitzPointerEvent, BlitzPointerId, KeyState, MouseEventButton,
-    MouseEventButtons, PointerCoords, PointerDetails, UiEvent,
+    BlitzKeyEvent, BlitzPointerEvent, BlitzPointerId, BlitzWheelDelta, BlitzWheelEvent, KeyState,
+    MouseEventButton, MouseEventButtons, PointerCoords, PointerDetails, UiEvent,
 };
 use blitz_traits::shell::{ColorScheme, Viewport};
 use keyboard_types::{Code, Key, Location, Modifiers, NamedKey};
@@ -104,6 +104,24 @@ impl SvelteDocument {
             MouseEventButtons::None,
             Modifiers::empty(),
         )));
+        self.resolve();
+    }
+
+    /// Turn the wheel with the pointer at a point, by `dx`, `dy` CSS pixels.
+    /// Positive `dy` scrolls the content down, as `scrollBy` does. Blitz
+    /// scrolls the box under the pointer, or the nearest one around it that
+    /// can still move.
+    pub fn wheel(&mut self, x: f32, y: f32, dx: f64, dy: f64) {
+        self.move_to(x, y);
+        let at = pointer(x, y, MouseEventButtons::None, Modifiers::empty());
+        self.handle_ui_event(UiEvent::Wheel(BlitzWheelEvent {
+            // A wheel event says which way the content moves.
+            delta: BlitzWheelDelta::Pixels(-dx, -dy),
+            coords: at.coords,
+            buttons: at.buttons,
+            mods: at.mods,
+            element: Default::default(),
+        }));
         self.resolve();
     }
 

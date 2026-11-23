@@ -53,7 +53,20 @@ pub enum EventDetail {
     Input {
         value: String,
     },
+    /// `[scrollLeft, scrollTop, scrollWidth, scrollHeight, clientWidth,
+    /// clientHeight]` of the box that scrolled. The renderer keeps them.
+    Scroll([f64; 6]),
 }
+
+/// The property names of [`EventDetail::Scroll`], in order.
+pub(crate) const SCROLL_FIELDS: [&str; 6] = [
+    "scrollLeft",
+    "scrollTop",
+    "scrollWidth",
+    "scrollHeight",
+    "clientWidth",
+    "clientHeight",
+];
 
 #[derive(Clone, Copy, Default)]
 pub struct Mods {

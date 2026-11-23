@@ -78,8 +78,8 @@ cargo test --release --features "screenshot engine-v8" --test tracker -- --ignor
 
 ## What would move them, in order of payoff
 
-1. **Scroll events and `scrollTop` in the DOM layer** (dom.js fixes them at 0
-   today), so an app can render only the rows in view. That removes the cliffs
+1. **Scroll events and `scrollTop` in the DOM layer** (done since: see
+   "Scrolling" in the README), so an app can render only the rows in view. That removes the cliffs
    outright: "Show all" would mount ~25 rows, not 5,000.
 2. **Blitz: restyle and relayout only what a change touches.** Profile `j` on
    the 195k-node page and a Select's forced layouts (`SVELTE_BLITZ_TRACE=1`,

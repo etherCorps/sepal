@@ -78,5 +78,13 @@ host.advance(5000);
 assert.equal(host.wake, -1, 'stopping the timer leaves nothing to wake up for');
 assert.equal(squash(host.text(host.by_id('seconds'))), '2s');
 
+// --- scrolling: the host reports it, onscroll hears it ---------------------------
+assert.ok(host.listening.has('scroll'), 'onscroll registers like any other event');
+assert.equal(squash(host.text(host.by_id('scrolled'))), 'scrolled 0px');
+host.scroll(rows, [0, 120, 400, 37000, 400, 300]);
+await host.flush_microtasks();
+assert.equal(squash(host.text(host.by_id('scrolled'))), 'scrolled 120px', 'the handler read scrollTop from the node');
+assert.equal(host.scrolls.length, 0, 'being told about a scroll writes nothing back');
+
 assert.deepEqual(errors(), [], 'no errors logged');
 console.log('ok');

@@ -37,6 +37,8 @@ pub struct TurnStats {
     pub created: usize,
     pub dropped: usize,
     pub detached: usize,
+    /// Boxes whose scroll position changed, and that the app was told about.
+    pub scrolled: usize,
 }
 
 impl TurnStats {
@@ -81,6 +83,8 @@ struct Page {
     /// nothing has touched the document since. A script measures many nodes
     /// in a row; only the first of them should pay for a layout.
     laid_out_at: Option<f64>,
+    /// Boxes that scrolled since the app was last told (`report_scrolls`).
+    scrolled: Vec<NodeId>,
 }
 
 impl Page {
@@ -88,6 +92,15 @@ impl Page {
         let stats = ops::apply_batch(&mut self.doc, &mut self.nodes, &mut self.listening, batch);
         if stats.visible > 0 {
             self.laid_out_at = None;
+        }
+        if !self.nodes.scrolls.is_empty() {
+            // How far a box can scroll depends on what the batch put in it.
+            if self.has_size() {
+                self.layout_if_stale();
+            }
+            for request in std::mem::take(&mut self.nodes.scrolls) {
+                crate::scroll::apply(&mut self.doc, request, &mut self.scrolled);
+            }
         }
         stats
     }
@@ -154,8 +167,8 @@ impl Page {
                     .get_node(node)
                     .is_some_and(|node| node.flags.is_in_document())
             })
-            .and_then(|node| self.doc.get_client_bounding_rect(node))
-            .map_or([0.0; 4], |rect| [rect.x, rect.y, rect.width, rect.height])
+            .and_then(|node| crate::scroll::client_rect(&self.doc, node))
+            .map_or([0.0; 4], |(x, y, width, height)| [x, y, width, height])
     }
 }
 
@@ -315,6 +328,7 @@ impl SvelteDocument {
             forced: Vec::new(),
             layouts: Default::default(),
             laid_out_at: None,
+            scrolled: Vec::new(),
         }));
 
         let js = JsEngine::new()?;
@@ -358,7 +372,22 @@ impl SvelteDocument {
                 page.layout();
             }
             let [x, y, width, height] = page.box_of(id);
-            Some([x, y, width, height, page.animating(id)])
+            let [.., scroll_width, scroll_height, client_width, client_height] = page
+                .nodes
+                .blitz(id)
+                .and_then(|node| crate::scroll::metrics(&page.doc, node))
+                .unwrap_or_default();
+            Some([
+                x,
+                y,
+                width,
+                height,
+                page.animating(id),
+                client_width,
+                client_height,
+                scroll_width,
+                scroll_height,
+            ])
         })?;
 
         let mut this = Self {
@@ -453,7 +482,7 @@ impl SvelteDocument {
         // popup moves next to its button once it knows where the button is.
         // Any op counts here, not only visible ones: a node that was just
         // marked for measuring is owed its first report.
-        let mut moved = turn.ops > 0;
+        let mut moved = turn.ops > 0 || turn.scrolled > 0;
         for round in 0.. {
             if !moved || !self.measuring() {
                 break;
@@ -499,6 +528,7 @@ impl SvelteDocument {
         self.totals.created += turn.created;
         self.totals.dropped += turn.dropped;
         self.totals.detached += turn.detached;
+        self.totals.scrolled += turn.scrolled;
         turn
     }
 
@@ -527,8 +557,10 @@ impl SvelteDocument {
         }
     }
 
-    /// Apply what the app wrote, and what it writes in the microtasks that follow.
+    /// Apply what the app wrote, and what it writes in the microtasks that
+    /// follow, and in answer to being told what scrolled.
     fn apply_batches(&mut self, turn: &mut TurnStats) {
+        let mut scroll_rounds = 0;
         loop {
             // Before the batch: a call that is refused on the spot rejects its
             // promise right here, and what that renders belongs in this turn.
@@ -537,12 +569,49 @@ impl SvelteDocument {
             let forced = std::mem::take(&mut self.page.borrow_mut().forced);
             forced.into_iter().for_each(|stats| turn.add(stats));
             let Some(batch) = self.js.take_batch() else {
+                if scroll_rounds < LAYOUT_ROUNDS && self.report_scrolls(turn) {
+                    scroll_rounds += 1;
+                    continue;
+                }
+                if !self.page.borrow().scrolled.is_empty() {
+                    eprintln!(
+                        "[host] the app was still scrolling after {LAYOUT_ROUNDS} scroll events in one turn; the rest waits for the next"
+                    );
+                }
                 break;
             };
             let stats = self.page.borrow_mut().apply(&batch);
             turn.add(stats);
             self.js.run_jobs();
         }
+    }
+
+    /// Tell the app which boxes scrolled since it was last told, with a
+    /// `scroll` event on each, as a browser does once per frame. The event
+    /// carries the new position, which the renderer keeps for `scrollTop`,
+    /// so it is sent whether or not anyone listens. Returns whether any was.
+    fn report_scrolls(&mut self, turn: &mut TurnStats) -> bool {
+        let events: Vec<(u32, [f64; 6])> = {
+            let mut page = self.page.borrow_mut();
+            let scrolled = std::mem::take(&mut page.scrolled);
+            scrolled
+                .into_iter()
+                // The viewport (<html>) scrolls too, but it is not the app's.
+                .filter_map(|node| {
+                    Some((
+                        page.nodes.js(node)?,
+                        crate::scroll::metrics(&page.doc, node)?,
+                    ))
+                })
+                .collect()
+        };
+        for &(id, metrics) in &events {
+            self.js
+                .dispatch(id, "scroll", false, &EventDetail::Scroll(metrics));
+        }
+        turn.scrolled += events.len();
+        self.js.run_jobs();
+        !events.is_empty()
     }
 
     /// The app measures the page, and there is a page to measure.
@@ -763,6 +832,7 @@ impl Document for SvelteDocument {
                 nodes: &page.nodes,
                 listening: &page.listening,
                 cancelled: &cancelled,
+                scrolled: &mut page.scrolled,
             };
             let mut driver = EventDriver::new(&mut page.doc, handler);
             driver.handle_ui_event(event);
@@ -794,6 +864,8 @@ struct JsEventHandler<'a> {
     listening: &'a HashSet<String>,
     /// Set when a handler cancelled a `keydown`.
     cancelled: &'a Cell<bool>,
+    /// Boxes Blitz scrolled. The app hears of them at the end of the turn.
+    scrolled: &'a mut Vec<NodeId>,
 }
 
 /// The click a key press stands for, if it is Enter or Space on a focused
@@ -863,6 +935,12 @@ impl EventHandler for JsEventHandler<'_> {
         _doc: &mut dyn Document,
         event_state: &mut EventState,
     ) {
+        if let DomEventData::Scroll(_) = event.data {
+            if !self.scrolled.contains(&event.target) {
+                self.scrolled.push(event.target);
+            }
+            return;
+        }
         let name = event.name();
         if !self.listening.contains(name) {
             return;

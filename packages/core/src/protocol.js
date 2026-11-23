@@ -19,7 +19,9 @@ export const OP = {
 	LISTEN: 10, // type (first listener for this event type anywhere)
 	UNLISTEN: 11, // type (last listener for this event type removed)
 	MEASURE: 12, // node (report its box after every layout that changes it)
-	FOCUS: 13 // node (move the keyboard focus to it; 0 = to nothing)
+	FOCUS: 13, // node (move the keyboard focus to it; 0 = to nothing)
+	SCROLL: 14, // node, left, top (scroll it to that offset; the host clamps it)
+	SCROLL_INTO_VIEW: 15 // node, block, inline (scroll its ancestors; 0 start, 1 center, 2 end, 3 nearest)
 };
 
 /** Id of the mount target. The host maps it to <body>. */

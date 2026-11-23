@@ -11,9 +11,9 @@ use std::rc::Rc;
 use std::sync::{Arc, Condvar, Mutex, Once};
 use std::time::{Duration, Instant};
 
-use super::{Batch, EventDetail, HostCall, Mods, RUNAWAY_SCRIPT};
+use super::{Batch, EventDetail, HostCall, Mods, RUNAWAY_SCRIPT, SCROLL_FIELDS};
 
-type Measure = Box<dyn Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 5]>>;
+type Measure = Box<dyn Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 9]>>;
 
 /// What the functions on `__sb_host` work with. Lives in a slot on the
 /// isolate, where a native callback can find it.
@@ -275,10 +275,11 @@ impl JsEngine {
 
     /// Install `__sb_host.measure(id)`: a forced layout. JS calls it when it
     /// needs to know about a node right now; it returns `[x, y, width,
-    /// height, animating]`, or nothing when no layout can be done now.
+    /// height, animating, clientWidth, clientHeight, scrollWidth,
+    /// scrollHeight]`, or nothing when no layout can be done now.
     pub fn on_measure(
         &self,
-        measure: impl Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 5]> + 'static,
+        measure: impl Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 9]> + 'static,
     ) -> Result<(), String> {
         *self.host.measure.borrow_mut() = Some(Box::new(measure));
         Ok(())
@@ -542,6 +543,12 @@ fn detail_value<'s>(
             mods,
         ),
         EventDetail::Input { value } => serde_json::json!({ "value": value }),
+        EventDetail::Scroll(metrics) => SCROLL_FIELDS
+            .iter()
+            .zip(metrics)
+            .map(|(name, value)| (name.to_string(), serde_json::json!(value)))
+            .collect::<serde_json::Map<_, _>>()
+            .into(),
     };
     let text = string(scope, &json.to_string());
     v8::json::parse(scope, text).unwrap_or_else(|| v8::null(scope).into())

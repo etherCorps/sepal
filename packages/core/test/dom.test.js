@@ -98,6 +98,37 @@ host.layout(800, 600, [[count, 40, 90, 60, 36]]);
 assert.equal(run('sizes.join("|") + "," + resizes'), 'count 84x36|count 60x36,2');
 run('observer.disconnect()');
 
+// --- scrolling: positions are reported, writes are ops -----------------------------------
+run(`
+	globalThis.list = document.createElement('div');
+	list.id = 'list';
+	document.body.appendChild(list);
+	globalThis.heard = [];
+	list.addEventListener('scroll', (event) => heard.push(event.target.id + ' ' + event.target.scrollTop + ' ' + event.bubbles));
+	document.addEventListener('scroll', () => heard.push('document'));
+`);
+host.settle();
+const list = host.by_id('list');
+assert.equal(run('list.scrollTop + list.scrollLeft'), 0, 'nothing has scrolled yet');
+// The mock host lays nothing out, so sizes come from the box until a scroll says more.
+assert.equal(run('list.clientHeight'), 0);
+host.scroll(list, [0, 40, 300, 1000, 300, 100]);
+assert.equal(run('heard.join()'), 'list 40 false', 'heard on the box itself, and it does not bubble');
+assert.equal(run('[list.scrollTop, list.scrollHeight, list.clientHeight, list.clientWidth].join()'), '40,1000,100,300');
+// A write reads back at once, clamped to what the host last said the box can scroll.
+assert.equal(run('list.scrollTop = 250, list.scrollTop'), 250);
+assert.equal(run('list.scrollTop = 5000, list.scrollTop'), 900, 'the host is asked for 5000: the turn may make room for it');
+assert.equal(run('list.scrollTop = -10, list.scrollTop'), 0);
+assert.equal(run('list.scrollTo({ top: 300 }), list.scrollBy(7, 20), [list.scrollLeft, list.scrollTop].join()'), '0,320', 'nothing to scroll sideways');
+run(`list.scrollIntoView({ block: 'nearest' }); list.scrollIntoView(false); list.scrollIntoView()`);
+host.settle();
+assert.deepEqual(
+	host.scrolls.map(([node, ...rest]) => [node.id, ...rest]),
+	[[list.id, 0, 250], [list.id, 0, 5000], [list.id, 0, 0], [list.id, 0, 300], [list.id, 7, 320], [list.id, 'into view', 3, 3], [list.id, 'into view', 2, 3], [list.id, 'into view', 0, 3]]
+);
+run('list.remove()');
+host.settle();
+
 // --- an event that hit nothing the app made belongs to <html> -------------------------
 run(`globalThis.outside = null; document.addEventListener('pointerdown', (event) => (outside = event.target === document.documentElement));`);
 host.settle();
