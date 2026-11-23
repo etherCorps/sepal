@@ -6,7 +6,9 @@
 // mounted. The newest registration is asked first, so the detail pane's j/k
 // win over the list's while it is open.
 
+import { tick } from 'svelte';
 import { SvelteSet } from 'svelte/reactivity';
+import { mark as bench_mark } from './bench';
 
 /**
  * One row's highlight and checkbox. Rows read these instead of comparing
@@ -50,6 +52,9 @@ class Ui {
 		if (this.#highlighted !== null) mark(this.#highlighted).active = false;
 		if (key !== null) mark(key).active = true;
 		this.#highlighted = key;
+		// Bench only (bench.ts drops marks otherwise): the first input a fresh
+		// window accepts is a `j` (compare/shared/PROTOCOL.md, scenarios 1-2).
+		if (key !== null) tick().then(() => bench_mark(`highlight:${key}`));
 	}
 }
 

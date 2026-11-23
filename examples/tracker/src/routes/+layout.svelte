@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
 	import '../app.css';
-	import type { Snippet } from 'svelte';
+	import { tick, type Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { setTitle } from '@ethercorps/svelte-blitz/window';
@@ -19,7 +19,8 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Avatar, ProjectSquare } from '$lib/glyphs';
 	import { PROJECTS, ME, project_by_key } from '$lib/seed';
-	import { data, person } from '$lib/store.svelte';
+	import { data, person, view } from '$lib/store.svelte';
+	import { bench, bench_ready, mark, rects } from '$lib/bench';
 	import { count } from '$lib/format';
 	import { cn } from '$lib/utils';
 	import { handle_key, ui, use_keys } from '$lib/ui.svelte';
@@ -81,6 +82,32 @@
 		'g s': () => void goto('/settings')
 	});
 
+	// Bench mode (compare/shared/PROTOCOL.md). `bench` is null until bench.json
+	// was read, so the first navigation and the empty search make no marks.
+	$effect(() => {
+		const at = path;
+		if (bench) tick().then(() => (mark(`nav:${at}`), rects()));
+	});
+	$effect(() => {
+		const query = view.search;
+		if (bench) tick().then(() => mark(`search:${query}`));
+	});
+	let clock = $state('');
+	bench_ready.then((found) => {
+		if (!found) return;
+		window.addEventListener('resize', () => {
+			const size = `${Math.round(innerWidth)}x${Math.round(innerHeight)}`;
+			tick().then(() => mark(`resize:${size}`));
+		});
+		if (!found.clock) return;
+		const show = () => (clock = new Date().toTimeString().slice(0, 8));
+		show();
+		setInterval(() => {
+			show();
+			tick().then(() => mark('clock'));
+		}, 1000);
+	});
+
 	const me = $derived(person(ME)!);
 	const item = 'text-sidebar-foreground hover:bg-sidebar-accent focus-visible:ring-ring flex h-[30px] items-center gap-2.5 rounded-md px-2 outline-none transition-colors focus-visible:ring-2';
 	const item_active = 'bg-sidebar-accent text-foreground font-medium';
@@ -90,6 +117,7 @@
 	<aside class="bg-sidebar flex min-h-0 flex-col gap-1 border-r p-3">
 		<div class="mb-2 flex h-7 items-center justify-between pl-2">
 			<span class="font-display text-foreground text-[15px] font-semibold">Tracker</span>
+			{#if clock}<span data-testid="bench-clock" class="text-muted-foreground font-mono text-[11px]">{clock}</span>{/if}
 			<button
 				data-testid="nav-palette"
 				class="text-muted-foreground hover:bg-sidebar-accent flex h-7 items-center rounded-md border px-2 font-mono text-[11px] transition-colors"
