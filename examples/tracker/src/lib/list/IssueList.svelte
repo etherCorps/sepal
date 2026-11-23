@@ -220,8 +220,6 @@
 				{#each group.issues as issue (issue.key)}
 					<Row
 						{issue}
-						active={ui.highlighted === issue.key}
-						selected={checked.has(issue.key)}
 						narrow={pane_open}
 						oncheck={(event) => on_check(event, issue.key)}
 						onopen={(event) => on_open(event, issue.key)}
