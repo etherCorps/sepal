@@ -5,6 +5,9 @@
 // keystroke would cost more than the filter itself, and a keyed {#each}
 // still updates exactly the rows whose object changed.
 
+// First import: bench.ts makes the `start` mark when it is evaluated.
+import { BENCH_BUILD, bench, bench_ready, mark, rects } from './bench';
+import { tick } from 'svelte';
 import {
 	DEFAULT_N,
 	EPOCH,
@@ -61,7 +64,8 @@ export const BOARD_LIMIT = 50;
 
 let n = DEFAULT_N;
 /** The seed as generated: what the overlay is a difference from. */
-let base: Issue[] = seed(n);
+// A bench build waits for fixture.json instead of seeding (bench.ts, BENCH_BUILD).
+let base: Issue[] = BENCH_BUILD ? [] : seed(n);
 let base_by_key = new Map(base.map((issue) => [issue.key, issue]));
 let overlay: Overlay = empty_overlay();
 
@@ -163,6 +167,7 @@ export function show_more(): void {
 }
 export function show_all(): void {
 	view.visible = Infinity;
+	tick().then(() => mark('shown:all'));
 }
 export function toggle_group(id: string): void {
 	view.collapsed[id] = !view.collapsed[id];
@@ -714,6 +719,7 @@ export function bulk_update(keys: string[], patch: Patch, author: string = ME): 
 	const done = after.map((issue) => issue.key);
 	const added = add_activity(done, patch, author, at);
 	replace(after);
+	if (bench && patch.status !== undefined) tick().then(() => done.forEach((key) => mark(`status:${key}:${patch.status}`)));
 	const label = done.length === 1 ? `Updated ${done[0]}` : `Updated ${done.length} issues`;
 	if (author === ME) {
 		const fields = Object.keys(patch) as (keyof Patch)[];
@@ -783,6 +789,8 @@ export function create(fields: NewIssue): Issue {
 	set_issues([issue, ...issues], { removed: [], added: [issue] });
 	overlay.created.unshift(issue);
 	save();
+	// NewIssue closes the dialog right after this returns, in the same handler.
+	if (bench) tick().then(() => mark(`created:${issue.key}`));
 	push_undo(`Created ${issue.key}`, () => {
 		set_issues(
 			issues.filter((i) => i.key !== issue.key),
@@ -935,15 +943,19 @@ export function set_simulate(on: boolean): void {
 
 /** Replace the seed with N issues and apply the overlay again. For the bench. */
 function reseed(count: number) {
-	n = count;
-	base = seed(n);
+	use_base(seed(count));
+	return stats();
+}
+
+function use_base(list: Issue[]) {
+	n = list.length;
+	base = list;
 	base_by_key = new Map(base.map((issue) => [issue.key, issue]));
 	set_issues(apply(overlay));
 	undo_stack.length = 0;
 	history.size = 0;
 	view.visible = PAGE_SIZE;
 	rev++;
-	return stats();
 }
 
 /** The keys of the rows the list has paged in, in screen order: more than it mounts. */
@@ -973,7 +985,20 @@ function stats() {
 // `goto` reaches URLs nothing links to (a 404) and navigates from a timer.
 (globalThis as any).__tracker = { reseed, stats, simulate_once, update, bulk_update, create, undo, thread, save_now: flush, issue: get_issue, delete: delete_issues, goto, order };
 
-load().then(({ overlay: saved, settings: loaded }) => {
+Promise.all([load(), bench_ready]).then(([{ overlay: saved, settings: loaded }, found]) => {
+	if (found) {
+		// Bench mode: the fixture, and no saved edits or settings. A bench
+		// build started empty; without VITE_BENCH the seed was made and shown
+		// first (fs is async) and this replaces it.
+		use_base(found.issues);
+		boot.loaded = true;
+		mark('loaded');
+		tick().then(() => {
+			mark('mounted');
+			rects();
+		});
+		return;
+	}
 	Object.assign(settings, loaded);
 	view.groupBy = loaded.defaultGroupBy;
 	if (saved.created.length || saved.deleted.length || Object.keys(saved.changed).length || Object.keys(saved.comments).length) {
