@@ -1,0 +1,1924 @@
+{
+  "key": "blitzv8diag-1000-s4",
+  "build": "blitzv8diag",
+  "size": 1000,
+  "scenario": 4,
+  "scenario_name": "idle 60 s, clock",
+  "wall_start": "2026-11-23T10:48:23.001Z",
+  "pid": 69634,
+  "t_exec": 192213817339145,
+  "wall_exec": 1795430903010,
+  "clock_offset": {
+    "ns": -1938,
+    "err_ns": 16354
+  },
+  "procs": [
+    {
+      "pid": 69634,
+      "path": "<repo>/compare/builds/Tracker-blitzv8-diag.app/Contents/MacOS/Tracker",
+      "responsible": 69634,
+      "ppid": 69472
+    },
+    {
+      "pid": 69642,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 69634,
+      "ppid": 1
+    },
+    {
+      "pid": 69644,
+      "path": "/System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService",
+      "responsible": 69634,
+      "ppid": 1
+    },
+    {
+      "pid": 69653,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "responsible": 69634,
+      "ppid": 1
+    }
+  ],
+  "footprint_mounted5": {
+    "t": 192220721133687,
+    "total": 538760688,
+    "processes": [
+      {
+        "pid": 69634,
+        "name": "Tracker",
+        "footprint": 464736312,
+        "peak": 467537928
+      },
+      {
+        "pid": 69644,
+        "name": "MTLCompilerService",
+        "footprint": 60047960,
+        "peak": 60293792
+      },
+      {
+        "pid": 69653,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12272120,
+        "peak": 12304888
+      },
+      {
+        "pid": 69642,
+        "name": "SetStoreUpdateService",
+        "footprint": 2556264,
+        "peak": 4604144
+      }
+    ],
+    "errors": [],
+    "ms_after_mounted": 5063.9605
+  },
+  "measured": {
+    "from": 192220727631062,
+    "to": 192280728157812,
+    "seconds": 60.00052675
+  },
+  "usage": {
+    "user_ns": 345299791,
+    "system_ns": 105035459,
+    "pkg_idle_wkups": 0,
+    "interrupt_wkups": 196,
+    "energy_nj": 760613527,
+    "penergy_nj": 759689284,
+    "billed_energy": 15929564,
+    "serviced_energy": 0,
+    "instructions": 3693611873,
+    "cycles": 1143303045,
+    "cpu_ns": 450335250
+  },
+  "extra": {
+    "clock_marks": 59
+  },
+  "procs_after": [
+    {
+      "pid": 69634,
+      "path": "<repo>/compare/builds/Tracker-blitzv8-diag.app/Contents/MacOS/Tracker",
+      "responsible": 69634,
+      "ppid": 69472
+    },
+    {
+      "pid": 69642,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 69634,
+      "ppid": 1
+    },
+    {
+      "pid": 69644,
+      "path": "/System/Library/Frameworks/Metal.framework/Versions/A/XPCServices/MTLCompilerService.xpc/Contents/MacOS/MTLCompilerService",
+      "responsible": 69634,
+      "ppid": 1
+    },
+    {
+      "pid": 69653,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "responsible": 69634,
+      "ppid": 1
+    }
+  ],
+  "footprint": {
+    "t": 192280809189437,
+    "total": 527455512,
+    "processes": [
+      {
+        "pid": 69634,
+        "name": "Tracker",
+        "footprint": 454545248,
+        "peak": 467537928
+      },
+      {
+        "pid": 69644,
+        "name": "MTLCompilerService",
+        "footprint": 59130456,
+        "peak": 60293792
+      },
+      {
+        "pid": 69653,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12141048,
+        "peak": 12304888
+      },
+      {
+        "pid": 69642,
+        "name": "SetStoreUpdateService",
+        "footprint": 2490728,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "trace_redraws": 59,
+  "steps": [],
+  "inputs": [],
+  "top": [
+    {
+      "t": 192222171444812,
+      "block": 1,
+      "pid": 69634,
+      "cpu": 0.4,
+      "idlew": 0,
+      "power": 0.4
+    },
+    {
+      "t": 192222171476145,
+      "block": 1,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192222171478312,
+      "block": 1,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192222171478895,
+      "block": 1,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192223244577270,
+      "block": 2,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192223244582187,
+      "block": 2,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192223244582812,
+      "block": 2,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192223244583228,
+      "block": 2,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192224318548270,
+      "block": 3,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192224318553478,
+      "block": 3,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192224318554228,
+      "block": 3,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192224318554728,
+      "block": 3,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192225391869145,
+      "block": 4,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192225391874145,
+      "block": 4,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192225391874812,
+      "block": 4,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192225391880353,
+      "block": 4,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192226465380228,
+      "block": 5,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192226465384895,
+      "block": 5,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192226465385603,
+      "block": 5,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192226465386020,
+      "block": 5,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192227533401520,
+      "block": 6,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192227533407062,
+      "block": 6,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192227533407645,
+      "block": 6,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192227533408103,
+      "block": 6,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192228599654228,
+      "block": 7,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192228599658728,
+      "block": 7,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192228599659312,
+      "block": 7,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192228599659770,
+      "block": 7,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192229671359103,
+      "block": 8,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192229671364437,
+      "block": 8,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192229671365020,
+      "block": 8,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192229671365395,
+      "block": 8,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192230732176062,
+      "block": 9,
+      "pid": 69634,
+      "cpu": 0.9,
+      "idlew": 0,
+      "power": 0.9
+    },
+    {
+      "t": 192230732179562,
+      "block": 9,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192230732180103,
+      "block": 9,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192230732180437,
+      "block": 9,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192231832830270,
+      "block": 10,
+      "pid": 69634,
+      "cpu": 0.9,
+      "idlew": 0,
+      "power": 0.9
+    },
+    {
+      "t": 192231832835603,
+      "block": 10,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192231832836062,
+      "block": 10,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192231832836437,
+      "block": 10,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192232900803270,
+      "block": 11,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192232900807562,
+      "block": 11,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192232900808145,
+      "block": 11,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192232900808520,
+      "block": 11,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192233973022145,
+      "block": 12,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192233973027270,
+      "block": 12,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192233973027853,
+      "block": 12,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192233973028228,
+      "block": 12,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192235041711937,
+      "block": 13,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192235041716520,
+      "block": 13,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192235041720145,
+      "block": 13,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192235041720562,
+      "block": 13,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192236114142020,
+      "block": 14,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192236114148728,
+      "block": 14,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192236114149353,
+      "block": 14,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192236114149728,
+      "block": 14,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192237189596937,
+      "block": 15,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192237189601145,
+      "block": 15,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192237189601770,
+      "block": 15,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192237189602187,
+      "block": 15,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192238259575187,
+      "block": 16,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192238259580562,
+      "block": 16,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192238259581103,
+      "block": 16,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192238259581478,
+      "block": 16,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192239327637562,
+      "block": 17,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192239327642062,
+      "block": 17,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192239327642645,
+      "block": 17,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192239327643020,
+      "block": 17,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192240396018062,
+      "block": 18,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192240396023103,
+      "block": 18,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192240396023812,
+      "block": 18,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192240396024270,
+      "block": 18,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192241457881270,
+      "block": 19,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192241457886145,
+      "block": 19,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192241457886687,
+      "block": 19,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192241457887062,
+      "block": 19,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192242547330562,
+      "block": 20,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192242547335437,
+      "block": 20,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192242547335937,
+      "block": 20,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192242547336270,
+      "block": 20,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192243605543062,
+      "block": 21,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192243605547937,
+      "block": 21,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192243605548437,
+      "block": 21,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192243605548895,
+      "block": 21,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192244668727395,
+      "block": 22,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192244668732853,
+      "block": 22,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192244668733395,
+      "block": 22,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192244668733728,
+      "block": 22,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192245733217187,
+      "block": 23,
+      "pid": 69634,
+      "cpu": 1.8,
+      "idlew": 0,
+      "power": 1.8
+    },
+    {
+      "t": 192245733223687,
+      "block": 23,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192245733224437,
+      "block": 23,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192245733224895,
+      "block": 23,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192246793760270,
+      "block": 24,
+      "pid": 69634,
+      "cpu": 1.1,
+      "idlew": 0,
+      "power": 1.1
+    },
+    {
+      "t": 192246793765312,
+      "block": 24,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192246793765812,
+      "block": 24,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192246793766228,
+      "block": 24,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192247866401145,
+      "block": 25,
+      "pid": 69634,
+      "cpu": 1,
+      "idlew": 0,
+      "power": 1
+    },
+    {
+      "t": 192247866406353,
+      "block": 25,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192247866406853,
+      "block": 25,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192247866407228,
+      "block": 25,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192248934265062,
+      "block": 26,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192248934268853,
+      "block": 26,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192248934269353,
+      "block": 26,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192248934269687,
+      "block": 26,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192250002821895,
+      "block": 27,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192250002828687,
+      "block": 27,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192250002829187,
+      "block": 27,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192250002829562,
+      "block": 27,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192251073636853,
+      "block": 28,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192251073642062,
+      "block": 28,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192251073642562,
+      "block": 28,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192251073642937,
+      "block": 28,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192252142266687,
+      "block": 29,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192252142271562,
+      "block": 29,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192252142272103,
+      "block": 29,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192252142272478,
+      "block": 29,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192253244477978,
+      "block": 30,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192253244483812,
+      "block": 30,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192253244484228,
+      "block": 30,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192253244484562,
+      "block": 30,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192254318935478,
+      "block": 31,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192254318940603,
+      "block": 31,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192254318941145,
+      "block": 31,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192254318941562,
+      "block": 31,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192255386776395,
+      "block": 32,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192255386781520,
+      "block": 32,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192255386782020,
+      "block": 32,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192255386782437,
+      "block": 32,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192256455007812,
+      "block": 33,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192256455013187,
+      "block": 33,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192256455013853,
+      "block": 33,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192256455014228,
+      "block": 33,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192257524873687,
+      "block": 34,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192257524878937,
+      "block": 34,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192257524879437,
+      "block": 34,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192257524879812,
+      "block": 34,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192258596144478,
+      "block": 35,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192258596148728,
+      "block": 35,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192258596149228,
+      "block": 35,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192258596149520,
+      "block": 35,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192259669963687,
+      "block": 36,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192259669968395,
+      "block": 36,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192259669973812,
+      "block": 36,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192259669974145,
+      "block": 36,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192260740786228,
+      "block": 37,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192260740790812,
+      "block": 37,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192260740791270,
+      "block": 37,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192260740791520,
+      "block": 37,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192261806665770,
+      "block": 38,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192261806669645,
+      "block": 38,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192261806670020,
+      "block": 38,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192261806670270,
+      "block": 38,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192262877779312,
+      "block": 39,
+      "pid": 69634,
+      "cpu": 0.9,
+      "idlew": 0,
+      "power": 0.9
+    },
+    {
+      "t": 192262877782812,
+      "block": 39,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192262877783187,
+      "block": 39,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192262877783478,
+      "block": 39,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192263977324062,
+      "block": 40,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192263977327187,
+      "block": 40,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192263977327520,
+      "block": 40,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192263977327728,
+      "block": 40,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192265047041103,
+      "block": 41,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192265047045353,
+      "block": 41,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192265047045770,
+      "block": 41,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192265047046020,
+      "block": 41,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192266117384937,
+      "block": 42,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192266117390187,
+      "block": 42,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192266117390562,
+      "block": 42,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192266117394770,
+      "block": 42,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192267190407062,
+      "block": 43,
+      "pid": 69634,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 192267190410687,
+      "block": 43,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192267190411020,
+      "block": 43,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192267190411270,
+      "block": 43,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192268259140228,
+      "block": 44,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192268259143937,
+      "block": 44,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192268259144353,
+      "block": 44,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192268259144645,
+      "block": 44,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192269328898187,
+      "block": 45,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192269328903312,
+      "block": 45,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192269328903687,
+      "block": 45,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192269328903978,
+      "block": 45,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192270400238770,
+      "block": 46,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192270400242812,
+      "block": 46,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192270400243312,
+      "block": 46,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192270400243603,
+      "block": 46,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192271469922270,
+      "block": 47,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192271469926062,
+      "block": 47,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192271469926437,
+      "block": 47,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192271469926645,
+      "block": 47,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192272542676228,
+      "block": 48,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192272542680478,
+      "block": 48,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192272542680895,
+      "block": 48,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192272542681187,
+      "block": 48,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192273611244770,
+      "block": 49,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192273611251770,
+      "block": 49,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192273611252270,
+      "block": 49,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192273611252562,
+      "block": 49,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192274712014353,
+      "block": 50,
+      "pid": 69634,
+      "cpu": 0.7,
+      "idlew": 0,
+      "power": 0.7
+    },
+    {
+      "t": 192274712038603,
+      "block": 50,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192274712039478,
+      "block": 50,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192274712039770,
+      "block": 50,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192275791874770,
+      "block": 51,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192275791878395,
+      "block": 51,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192275791878687,
+      "block": 51,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192275791878937,
+      "block": 51,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192276864802895,
+      "block": 52,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192276864807395,
+      "block": 52,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192276864807770,
+      "block": 52,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192276864808020,
+      "block": 52,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192277928019728,
+      "block": 53,
+      "pid": 69634,
+      "cpu": 0.5,
+      "idlew": 0,
+      "power": 0.5
+    },
+    {
+      "t": 192277928023687,
+      "block": 53,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192277928024020,
+      "block": 53,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192277928024228,
+      "block": 53,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192278986715478,
+      "block": 54,
+      "pid": 69634,
+      "cpu": 0.9,
+      "idlew": 0,
+      "power": 0.9
+    },
+    {
+      "t": 192278986718812,
+      "block": 54,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192278986719103,
+      "block": 54,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192278986719312,
+      "block": 54,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192280045111937,
+      "block": 55,
+      "pid": 69634,
+      "cpu": 0.6,
+      "idlew": 0,
+      "power": 0.6
+    },
+    {
+      "t": 192280045115895,
+      "block": 55,
+      "pid": 69653,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192280045116270,
+      "block": 55,
+      "pid": 69644,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 192280045116478,
+      "block": 55,
+      "pid": 69642,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    }
+  ],
+  "status": "ok",
+  "exit": {
+    "code": null,
+    "signal": "SIGTERM",
+    "t": 192280815775895
+  },
+  "log": "raw/scratch/blitzv8diag-1000-s4.log",
+  "wall_end": "2026-11-23T10:49:30.107Z"
+}

@@ -1,0 +1,254 @@
+{
+  "key": "gpuix-1000-s2",
+  "build": "gpuix",
+  "size": 1000,
+  "scenario": 2,
+  "scenario_name": "warm start",
+  "wall_start": "2026-11-23T10:32:44.154Z",
+  "pid": 57056,
+  "t_exec": 191275425447207.5,
+  "wall_exec": 1795429964615,
+  "clock_offset": {
+    "ns": -3458.5,
+    "err_ns": 22833.5
+  },
+  "startup": {
+    "window": 319.710375,
+    "window_settled": 441.149125,
+    "start": {
+      "ms_from_exec": 40.545125,
+      "app_ms": 1795429964656,
+      "wall_ms_from_exec": 41
+    },
+    "read": {
+      "ms_from_exec": 322.459,
+      "app_ms": 1795429964938,
+      "wall_ms_from_exec": 323
+    },
+    "parsed": {
+      "ms_from_exec": 322.814917,
+      "app_ms": 1795429964938.4,
+      "wall_ms_from_exec": 323.39990234375
+    },
+    "loaded": {
+      "ms_from_exec": 323.308334,
+      "app_ms": 1795429964938.8,
+      "wall_ms_from_exec": 323.800048828125
+    },
+    "mounted": {
+      "ms_from_exec": 330.355209,
+      "app_ms": 1795429964945.8,
+      "wall_ms_from_exec": 330.800048828125
+    },
+    "first_frame_after_mounted": {
+      "ms_from_exec": 353.95025,
+      "signal": "MARK frame:mounted"
+    },
+    "ensure_front": {
+      "ms_from_exec": 441.623375,
+      "took_ms": 6.809834,
+      "activated": false
+    },
+    "first_input": {
+      "mark": "highlight:WEB-180",
+      "ms_from_exec": 529.081875,
+      "presses": 3,
+      "presses_before_mark": 3,
+      "accepted": 3,
+      "first_press_accepted": true,
+      "refused": 0,
+      "trigger": "down",
+      "trigger_from": "calibration",
+      "first_press_ms_from_exec": 491.3307925,
+      "ms_from_first_press": 37.7510825,
+      "ms_from_last_press_before": 0.8647075,
+      "press_log": [
+        {
+          "refused": false,
+          "down": 191275916778000,
+          "up": 191275925384416,
+          "down_ms_from_exec": 491.3307925,
+          "up_ms_from_exec": 499.9372085,
+          "focus": {
+            "active": true,
+            "frontmost": true,
+            "ms": 13.099792,
+            "t": 191275874332916,
+            "ms_from_exec": 448.8857085
+          }
+        },
+        {
+          "refused": false,
+          "down": 191275930392708,
+          "up": 191275940426500,
+          "down_ms_from_exec": 504.9455005,
+          "up_ms_from_exec": 514.9792925,
+          "focus": {
+            "active": true,
+            "frontmost": true,
+            "ms": 1.560709,
+            "t": 191275926983791,
+            "ms_from_exec": 501.5365835
+          }
+        },
+        {
+          "refused": false,
+          "down": 191275953664375,
+          "up": 191275963183583,
+          "down_ms_from_exec": 528.2171675,
+          "up_ms_from_exec": 537.7363755,
+          "focus": {
+            "active": true,
+            "frontmost": true,
+            "ms": 4.997667,
+            "t": 191275947678333,
+            "ms_from_exec": 522.2311255
+          }
+        }
+      ]
+    }
+  },
+  "procs": [
+    {
+      "pid": 57056,
+      "path": "<repo>/compare/builds/Tracker-gpuix.app/Contents/MacOS/tracker",
+      "responsible": 57056,
+      "ppid": 56891
+    },
+    {
+      "pid": 57079,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 57056,
+      "ppid": 1
+    },
+    {
+      "pid": 57081,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "responsible": 57056,
+      "ppid": 1
+    }
+  ],
+  "usage": {
+    "user_ns": 405793082,
+    "system_ns": 97348624,
+    "pkg_idle_wkups": 10,
+    "interrupt_wkups": 222,
+    "energy_nj": 1847958854,
+    "penergy_nj": 1846346570,
+    "billed_energy": 362545950,
+    "serviced_energy": 159306045,
+    "instructions": 4816522709,
+    "cycles": 1879182251,
+    "cpu_ns": 503141706
+  },
+  "footprint": {
+    "t": 191277342370499.5,
+    "total": 130074736,
+    "processes": [
+      {
+        "pid": 57056,
+        "name": "tracker",
+        "footprint": 116147472,
+        "peak": 235750672
+      },
+      {
+        "pid": 57081,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12304888,
+        "peak": 12337656
+      },
+      {
+        "pid": 57079,
+        "name": "SetStoreUpdateService",
+        "footprint": 2490728,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "measured": {
+    "from": 191275425447207.5,
+    "to": 191277342425291.5
+  },
+  "footprint_mounted5": {
+    "t": 191280828425832.5,
+    "total": 127715440,
+    "processes": [
+      {
+        "pid": 57056,
+        "name": "tracker",
+        "footprint": 113788176,
+        "peak": 235750672
+      },
+      {
+        "pid": 57081,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12304888,
+        "peak": 12337656
+      },
+      {
+        "pid": 57079,
+        "name": "SetStoreUpdateService",
+        "footprint": 2490728,
+        "peak": 4604144
+      }
+    ],
+    "errors": [],
+    "ms_after_mounted": 5072.623416
+  },
+  "steps": [],
+  "inputs": [
+    {
+      "what": "key j",
+      "t": 191275916778000,
+      "down": 191275916778000,
+      "up": 191275925384416
+    },
+    {
+      "what": "key j",
+      "t": 191275930392708,
+      "down": 191275930392708,
+      "up": 191275940426500
+    },
+    {
+      "what": "key j",
+      "t": 191275953664375,
+      "down": 191275953664375,
+      "up": 191275963183583
+    }
+  ],
+  "top": [
+    {
+      "t": 191277969560916.5,
+      "block": 1,
+      "pid": 57056,
+      "cpu": 1.5,
+      "idlew": 1,
+      "power": 1.5
+    },
+    {
+      "t": 191279053258541.5,
+      "block": 2,
+      "pid": 57056,
+      "cpu": 1.3,
+      "idlew": 4,
+      "power": 1.4
+    },
+    {
+      "t": 191280131564374.5,
+      "block": 3,
+      "pid": 57056,
+      "cpu": 1.4,
+      "idlew": 2,
+      "power": 1.5
+    }
+  ],
+  "status": "ok",
+  "exit": {
+    "code": null,
+    "signal": "SIGTERM",
+    "t": 191280835155374.5
+  },
+  "log": "raw/scratch/gpuix-1000-s2.log",
+  "wall_end": "2026-11-23T10:32:50.122Z"
+}

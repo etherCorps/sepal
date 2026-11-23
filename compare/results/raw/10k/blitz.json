@@ -1,0 +1,234 @@
+{
+  "pid": 67715,
+  "size": 10000,
+  "clock_offset": {
+    "ns": -938,
+    "err_ns": 11479
+  },
+  "window": {
+    "alpha": 1,
+    "h": 832,
+    "id": 6639,
+    "name": "Issues · Tracker",
+    "onscreen": true,
+    "w": 1200,
+    "x": 680,
+    "y": 175,
+    "t": 192084676199687,
+    "stable_t": 192084793071103
+  },
+  "window_ms_from_exec": 226.649209,
+  "marks": {
+    "start": {
+      "ms_from_exec": 70.4,
+      "app_ms_from_exec": 70
+    },
+    "read": {
+      "ms_from_exec": 243.5,
+      "app_ms_from_exec": 243
+    },
+    "parsed": {
+      "ms_from_exec": 260.2,
+      "app_ms_from_exec": 260
+    },
+    "loaded": {
+      "ms_from_exec": 268.6,
+      "app_ms_from_exec": 268
+    },
+    "mounted": {
+      "ms_from_exec": 288.2,
+      "app_ms_from_exec": 288
+    }
+  },
+  "footprint_ms_after_mounted": 5006.771542,
+  "front": {
+    "front_pid": 67715,
+    "frontmost": true,
+    "onscreen": true,
+    "top_window_pid": 67715,
+    "windows": [
+      {
+        "alpha": 1,
+        "h": 832,
+        "id": 6639,
+        "name": "Issues · Tracker",
+        "onscreen": true,
+        "w": 1200,
+        "x": 680,
+        "y": 175
+      }
+    ]
+  },
+  "ax": [
+    {
+      "children": [
+        {
+          "frame": {},
+          "role": "",
+          "subrole": ""
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 688,
+            "y": 183
+          },
+          "role": "AXButton",
+          "subrole": "AXCloseButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 734,
+            "y": 183
+          },
+          "role": "AXButton",
+          "subrole": "AXFullScreenButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 711,
+            "y": 183
+          },
+          "role": "AXButton",
+          "subrole": "AXMinimizeButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 106,
+            "x": 762,
+            "y": 183
+          },
+          "role": "AXStaticText",
+          "subrole": ""
+        }
+      ],
+      "frame": {
+        "h": 832,
+        "w": 1200,
+        "x": 680,
+        "y": 175
+      },
+      "title": "Issues · Tracker"
+    }
+  ],
+  "procs": [
+    {
+      "pid": 67715,
+      "path": "<repo>/compare/builds/Tracker-blitz.app/Contents/MacOS/Tracker",
+      "responsible": 67715,
+      "ppid": 67553
+    },
+    {
+      "pid": 67716,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 67715,
+      "ppid": 1
+    },
+    {
+      "pid": 67717,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "responsible": 67715,
+      "ppid": 1
+    }
+  ],
+  "usage": [
+    {
+      "billed_energy": 275292098,
+      "cycles": 1163613107,
+      "diskio_read": 4096,
+      "diskio_written": 0,
+      "energy_nj": 1374995494,
+      "instructions": 3533599905,
+      "interrupt_wkups": 27,
+      "lifetime_max_phys_footprint": 466404408,
+      "penergy_nj": 1374670350,
+      "phys_footprint": 218514488,
+      "pid": 67715,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 2675820,
+      "system_ns": 72063125,
+      "t": 192089771609166,
+      "user_ns": 218649208
+    },
+    {
+      "billed_energy": 167206,
+      "cycles": 76026615,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 94612499,
+      "instructions": 240316051,
+      "interrupt_wkups": 1,
+      "lifetime_max_phys_footprint": 4604144,
+      "penergy_nj": 94579035,
+      "phys_footprint": 2474320,
+      "pid": 67716,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 0,
+      "system_ns": 3789458,
+      "t": 192089771614750,
+      "user_ns": 15270708
+    },
+    {
+      "billed_energy": 120959541,
+      "cycles": 385320305,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 362342330,
+      "instructions": 801427641,
+      "interrupt_wkups": 20,
+      "lifetime_max_phys_footprint": 12354064,
+      "penergy_nj": 362314567,
+      "phys_footprint": 12321296,
+      "pid": 67717,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 161402645,
+      "system_ns": 25619083,
+      "t": 192089771619583,
+      "user_ns": 73684916
+    }
+  ],
+  "footprint": {
+    "t": 192089827250020,
+    "total": 232556440,
+    "processes": [
+      {
+        "pid": 67715,
+        "name": "Tracker",
+        "footprint": 218514488,
+        "peak": 466404408
+      },
+      {
+        "pid": 67717,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12321296,
+        "peak": 12354064
+      },
+      {
+        "pid": 67716,
+        "name": "SetStoreUpdateService",
+        "footprint": 2474320,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "lines": [
+    "70.39ms fd2 [js error] MARK start 1795430773712.0",
+    "88.55ms fd2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms",
+    "198.18ms fd2 [trace] +0.090s first frame took 0.0ms",
+    "198.19ms fd2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800",
+    "243.47ms fd2 [js error] MARK read 1795430773885.0",
+    "260.20ms fd2 [js error] MARK parsed 1795430773902.0",
+    "268.60ms fd2 [js error] MARK loaded 1795430773910.0",
+    "288.17ms fd2 [js error] MARK mounted 1795430773930.0",
+    "292.02ms fd2 [trace] the app changed the page: 2598 ops, 1 layouts in 3.2ms",
+    "292.04ms fd2 [trace] +0.132s poll took 52.0ms",
+    "308.58ms fd2 [trace] +0.184s RedrawRequested took 16.4ms"
+  ]
+}

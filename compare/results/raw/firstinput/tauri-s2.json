@@ -1,0 +1,288 @@
+{
+  "key": "tauri-1000-s2",
+  "build": "tauri",
+  "size": 1000,
+  "scenario": 2,
+  "scenario_name": "warm start",
+  "wall_start": "2026-11-23T10:32:22.385Z",
+  "pid": 56566,
+  "t_exec": 191253660809479,
+  "wall_exec": 1795429942850,
+  "clock_offset": {
+    "ns": -7604,
+    "err_ns": 32646
+  },
+  "startup": {
+    "window": 211.713625,
+    "window_settled": 326.097417,
+    "start": {
+      "ms_from_exec": 248.020042,
+      "app_ms": 1795429943097,
+      "wall_ms_from_exec": 247
+    },
+    "read": {
+      "ms_from_exec": 343.07625,
+      "app_ms": 1795429943192,
+      "wall_ms_from_exec": 342
+    },
+    "parsed": {
+      "ms_from_exec": 343.513375,
+      "app_ms": 1795429943193,
+      "wall_ms_from_exec": 343
+    },
+    "loaded": {
+      "ms_from_exec": 344.173792,
+      "app_ms": 1795429943194,
+      "wall_ms_from_exec": 344
+    },
+    "mounted": {
+      "ms_from_exec": 348.736042,
+      "app_ms": 1795429943198,
+      "wall_ms_from_exec": 348
+    },
+    "first_frame_after_mounted": {
+      "ms_from_exec": 394.326625,
+      "signal": "MARK frame:mounted"
+    },
+    "ensure_front": {
+      "ms_from_exec": 394.3805,
+      "took_ms": 1.379417,
+      "activated": false
+    },
+    "first_input": {
+      "mark": "highlight:WEB-180",
+      "ms_from_exec": 443.8285,
+      "presses": 2,
+      "presses_before_mark": 2,
+      "accepted": 2,
+      "first_press_accepted": true,
+      "refused": 0,
+      "trigger": "down",
+      "trigger_from": "calibration",
+      "first_press_ms_from_exec": 415.902771,
+      "ms_from_first_press": 27.925729,
+      "ms_from_last_press_before": 9.586646,
+      "press_log": [
+        {
+          "refused": false,
+          "down": 191254076712250,
+          "up": 191254086734791,
+          "down_ms_from_exec": 415.902771,
+          "up_ms_from_exec": 425.925312,
+          "focus": {
+            "active": true,
+            "frontmost": true,
+            "ms": 0.737042,
+            "t": 191254056666583,
+            "ms_from_exec": 395.857104
+          }
+        },
+        {
+          "refused": false,
+          "down": 191254095051333,
+          "up": 191254103969041,
+          "down_ms_from_exec": 434.241854,
+          "up_ms_from_exec": 443.159562,
+          "focus": {
+            "active": true,
+            "frontmost": true,
+            "ms": 5.741833,
+            "t": 191254088281208,
+            "ms_from_exec": 427.471729
+          }
+        }
+      ]
+    }
+  },
+  "procs": [
+    {
+      "pid": 56566,
+      "path": "<repo>/compare/builds/Tracker-tauri.app/Contents/MacOS/tracker",
+      "responsible": 56566,
+      "ppid": 56398
+    },
+    {
+      "pid": 56589,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 56566,
+      "ppid": 1
+    },
+    {
+      "pid": 56590,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU",
+      "responsible": 56566,
+      "ppid": 1
+    },
+    {
+      "pid": 56591,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.WebContent.xpc/Contents/MacOS/com.apple.WebKit.WebContent",
+      "responsible": 56566,
+      "ppid": 1
+    },
+    {
+      "pid": 56592,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc/Contents/MacOS/com.apple.WebKit.Networking",
+      "responsible": 56566,
+      "ppid": 1
+    },
+    {
+      "pid": 56593,
+      "path": "/System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper",
+      "responsible": 56566,
+      "ppid": 1
+    }
+  ],
+  "usage": {
+    "user_ns": 465266915,
+    "system_ns": 186677665,
+    "pkg_idle_wkups": 9,
+    "interrupt_wkups": 370,
+    "energy_nj": 1942129042,
+    "penergy_nj": 1940494980,
+    "billed_energy": 335105211,
+    "serviced_energy": 61883988,
+    "instructions": 4854216291,
+    "cycles": 2279433529,
+    "cpu_ns": 651944580
+  },
+  "footprint": {
+    "t": 191255474308646,
+    "total": 312741944,
+    "processes": [
+      {
+        "pid": 56590,
+        "name": "com.apple.WebKit.GPU",
+        "footprint": 150045440,
+        "peak": 152830672
+      },
+      {
+        "pid": 56591,
+        "name": "com.apple.WebKit.WebContent",
+        "footprint": 113853328,
+        "peak": 125338512
+      },
+      {
+        "pid": 56566,
+        "name": "tracker",
+        "footprint": 34096256,
+        "peak": 34358400
+      },
+      {
+        "pid": 56592,
+        "name": "com.apple.WebKit.Networking",
+        "footprint": 6799816,
+        "peak": 8159688
+      },
+      {
+        "pid": 56593,
+        "name": "com.apple.audio.SandboxHelper",
+        "footprint": 5816824,
+        "peak": 5849592
+      },
+      {
+        "pid": 56589,
+        "name": "SetStoreUpdateService",
+        "footprint": 2523496,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "measured": {
+    "from": 191253660809479,
+    "to": 191255474356312
+  },
+  "footprint_mounted5": {
+    "t": 191259073871104,
+    "total": 353734760,
+    "processes": [
+      {
+        "pid": 56590,
+        "name": "com.apple.WebKit.GPU",
+        "footprint": 183403312,
+        "peak": 183567152
+      },
+      {
+        "pid": 56591,
+        "name": "com.apple.WebKit.WebContent",
+        "footprint": 121357200,
+        "peak": 125338512
+      },
+      {
+        "pid": 56566,
+        "name": "tracker",
+        "footprint": 34243712,
+        "peak": 34358400
+      },
+      {
+        "pid": 56592,
+        "name": "com.apple.WebKit.Networking",
+        "footprint": 6783432,
+        "peak": 8159688
+      },
+      {
+        "pid": 56593,
+        "name": "com.apple.audio.SandboxHelper",
+        "footprint": 5816824,
+        "peak": 5849592
+      },
+      {
+        "pid": 56589,
+        "name": "SetStoreUpdateService",
+        "footprint": 2523496,
+        "peak": 4604144
+      }
+    ],
+    "errors": [],
+    "ms_after_mounted": 5064.325583
+  },
+  "steps": [],
+  "inputs": [
+    {
+      "what": "key j",
+      "t": 191254076712250,
+      "down": 191254076712250,
+      "up": 191254086734791
+    },
+    {
+      "what": "key j",
+      "t": 191254095051333,
+      "down": 191254095051333,
+      "up": 191254103969041
+    }
+  ],
+  "top": [
+    {
+      "t": 191256205764979,
+      "block": 1,
+      "pid": 56566,
+      "cpu": 5.4,
+      "idlew": 6,
+      "power": 5.7
+    },
+    {
+      "t": 191257271542979,
+      "block": 2,
+      "pid": 56566,
+      "cpu": 2.2,
+      "idlew": 6,
+      "power": 2.5
+    },
+    {
+      "t": 191258341011812,
+      "block": 3,
+      "pid": 56566,
+      "cpu": 4.9,
+      "idlew": 6,
+      "power": 5.2
+    }
+  ],
+  "status": "ok",
+  "exit": {
+    "code": null,
+    "signal": "SIGTERM",
+    "t": 191259080253771
+  },
+  "log": "raw/scratch/tauri-1000-s2.log",
+  "wall_end": "2026-11-23T10:32:28.367Z"
+}

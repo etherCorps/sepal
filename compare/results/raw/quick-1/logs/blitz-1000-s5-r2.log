@@ -1,0 +1,27 @@
+196422603126103 2 [js error] MARK start 1795435111817.0
+196422621461270 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+196422743381687 2 [trace] +0.092s first frame took 0.0ms
+196422743383645 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+196422752126353 2 [js error] MARK read 1795435111966.0
+196422753268270 2 [js error] MARK parsed 1795435111967.0
+196422753814353 2 [js error] MARK loaded 1795435111968.0
+196422761912312 2 [js error] MARK mounted 1795435111976.0
+196422765817978 2 [trace] the app changed the page: 2644 ops, 1 layouts in 3.2ms
+196422765820020 2 [trace] +0.101s poll took 14.0ms
+196422768903187 2 [trace] +0.115s RedrawRequested took 3.0ms
+196422815105353 2 [trace] +0.149s RedrawRequested took 15.5ms
+196427859434395 2 [trace] +5.189s RedrawRequested took 19.4ms
+196427862438520 2 [trace] +5.211s PointerButton took 0.2ms
+196427866619562 2 [trace] +5.211s RedrawRequested took 4.1ms
+196427889300395 2 [js error] MARK highlight:WEB-180 1795435117104.0
+196427907371895 2 [js error] MARK nav:/issues/WEB-180 1795435117122.0
+196427910820395 2 [trace] the app was told the layout: 1 boxes changed, window 1200 x 800
+196427910847603 2 [trace] the app changed the page: 2041 ops, 1 layouts in 2.3ms
+196427910851103 2 [trace] +5.238s PointerButton took 22.0ms
+196427925116187 2 [trace] +5.261s RedrawRequested took 13.1ms
+196428950527770 2 [js error] MARK nav:/issues 1795435118165.0
+196428953858853 2 [trace] the app was told the layout: 1 boxes changed, window 1200 x 800
+196428953885562 2 [trace] the app changed the page: 786 ops, 1 layouts in 2.0ms
+196428953886353 2 [trace] +6.291s KeyboardInput took 11.5ms
+196428957010062 2 [trace] +6.306s KeyboardInput took 0.0ms
+196428965426770 2 [trace] +6.306s RedrawRequested took 8.3ms

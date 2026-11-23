@@ -1,0 +1,237 @@
+{
+  "key": "gpuix-1000-s1",
+  "build": "gpuix",
+  "size": 1000,
+  "scenario": 1,
+  "scenario_name": "first launch after quit",
+  "wall_start": "2026-11-23T10:29:31.931Z",
+  "pid": 54649,
+  "t_exec": 191082751574583.5,
+  "wall_exec": 1795429771940,
+  "clock_offset": {
+    "ns": -3041.5,
+    "err_ns": 27041.5
+  },
+  "startup": {
+    "window": 318.062041,
+    "window_settled": 448.697416,
+    "start": {
+      "ms_from_exec": 38.524708,
+      "app_ms": 1795429771979.3,
+      "wall_ms_from_exec": 39.300048828125
+    },
+    "read": {
+      "ms_from_exec": 339.141375,
+      "app_ms": 1795429772280,
+      "wall_ms_from_exec": 340
+    },
+    "parsed": {
+      "ms_from_exec": 339.49125,
+      "app_ms": 1795429772280.4,
+      "wall_ms_from_exec": 340.39990234375
+    },
+    "loaded": {
+      "ms_from_exec": 339.92125,
+      "app_ms": 1795429772280.8,
+      "wall_ms_from_exec": 340.800048828125
+    },
+    "mounted": {
+      "ms_from_exec": 346.845166,
+      "app_ms": 1795429772287.7,
+      "wall_ms_from_exec": 347.699951171875
+    },
+    "first_frame_after_mounted": {
+      "ms_from_exec": 369.199625,
+      "signal": "MARK frame:mounted"
+    },
+    "ensure_front": {
+      "ms_from_exec": 449.118833,
+      "took_ms": 2.53375,
+      "activated": false
+    },
+    "first_input": {
+      "mark": "highlight:WEB-180",
+      "ms_from_exec": 538.611916,
+      "presses": 2,
+      "refused": 0,
+      "trigger": "down",
+      "trigger_from": "calibration",
+      "first_press_ms_from_exec": 496.8289165,
+      "ms_from_first_press": 41.7829995,
+      "ms_from_last_press_before": 41.7829995,
+      "press_log": [
+        {
+          "refused": false,
+          "down": 191083248403500,
+          "up": 191083258428416,
+          "down_ms_from_exec": 496.8289165,
+          "up_ms_from_exec": 506.8538325,
+          "focus": {
+            "active": true,
+            "ax_error": 0,
+            "ax_focused_window": true,
+            "ax_main": true,
+            "frontmost": true,
+            "ms": 23.871625,
+            "t": 191083203363083,
+            "ms_from_exec": 451.7884995
+          }
+        },
+        {
+          "refused": false,
+          "down": 191083291635458,
+          "up": 191083299892666,
+          "down_ms_from_exec": 540.0608745,
+          "up_ms_from_exec": 548.3180825,
+          "focus": {
+            "active": true,
+            "ax_error": 0,
+            "ax_focused_window": true,
+            "ax_main": true,
+            "frontmost": true,
+            "ms": 30.589167,
+            "t": 191083259976166,
+            "ms_from_exec": 508.4015825
+          }
+        }
+      ]
+    }
+  },
+  "procs": [
+    {
+      "pid": 54649,
+      "path": "<repo>/compare/builds/Tracker-gpuix.app/Contents/MacOS/tracker",
+      "responsible": 54649,
+      "ppid": 54492
+    },
+    {
+      "pid": 54678,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 54649,
+      "ppid": 1
+    },
+    {
+      "pid": 54680,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "responsible": 54649,
+      "ppid": 1
+    }
+  ],
+  "usage": {
+    "user_ns": 390577541,
+    "system_ns": 93059124,
+    "pkg_idle_wkups": 9,
+    "interrupt_wkups": 194,
+    "energy_nj": 1816594551,
+    "penergy_nj": 1815543909,
+    "billed_energy": 342848638,
+    "serviced_energy": 172365275,
+    "instructions": 4741422389,
+    "cycles": 1826191289,
+    "cpu_ns": 483636665
+  },
+  "footprint": {
+    "t": 191084363866249.5,
+    "total": 247892080,
+    "processes": [
+      {
+        "pid": 54649,
+        "name": "tracker",
+        "footprint": 233981200,
+        "peak": 236422416
+      },
+      {
+        "pid": 54680,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12222968,
+        "peak": 12255736
+      },
+      {
+        "pid": 54678,
+        "name": "SetStoreUpdateService",
+        "footprint": 2556264,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "measured": {
+    "from": 191082751574583.5,
+    "to": 191084363915499.5
+  },
+  "footprint_mounted5": {
+    "t": 191088169188124.5,
+    "total": 128305264,
+    "processes": [
+      {
+        "pid": 54649,
+        "name": "tracker",
+        "footprint": 114394384,
+        "peak": 236422416
+      },
+      {
+        "pid": 54680,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12222968,
+        "peak": 12255736
+      },
+      {
+        "pid": 54678,
+        "name": "SetStoreUpdateService",
+        "footprint": 2556264,
+        "peak": 4604144
+      }
+    ],
+    "errors": [],
+    "ms_after_mounted": 5070.768375
+  },
+  "steps": [],
+  "inputs": [
+    {
+      "what": "key j",
+      "t": 191083248403500,
+      "down": 191083248403500,
+      "up": 191083258428416
+    },
+    {
+      "what": "key j",
+      "t": 191083291635458,
+      "down": 191083291635458,
+      "up": 191083299892666
+    }
+  ],
+  "top": [
+    {
+      "t": 191085271152749.5,
+      "block": 1,
+      "pid": 54649,
+      "cpu": 1.1,
+      "idlew": 0,
+      "power": 1.1
+    },
+    {
+      "t": 191086341509874.5,
+      "block": 2,
+      "pid": 54649,
+      "cpu": 0.8,
+      "idlew": 0,
+      "power": 0.8
+    },
+    {
+      "t": 191087415684208.5,
+      "block": 3,
+      "pid": 54649,
+      "cpu": 0.9,
+      "idlew": 0,
+      "power": 0.9
+    }
+  ],
+  "status": "ok",
+  "exit": {
+    "code": null,
+    "signal": "SIGTERM",
+    "t": 191088175731166.5
+  },
+  "log": "raw/scratch/gpuix-1000-s1.log",
+  "wall_end": "2026-11-23T10:29:37.462Z"
+}

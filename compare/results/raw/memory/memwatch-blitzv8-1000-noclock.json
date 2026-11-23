@@ -1,0 +1,8494 @@
+{
+	"build": "blitzv8",
+	"size": 1000,
+	"clock": false,
+	"secs": 70,
+	"every": 5,
+	"wall": "2026-11-23T10:37:13.656Z",
+	"samples": [
+		{
+			"s": 0.236709583,
+			"frontmost": true,
+			"total": 461722352,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 453365744,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 327417856,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 88
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37355520,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 21086208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 195
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 18743296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 143
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2061897,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 347
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1809865,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1376256,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 835584,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 32768,
+							"regions": 56
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 565489,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 198
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 528325,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 84
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 65536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "IOKit",
+							"dirty": 65536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 5865904,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 1441792,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 2310144,
+							"regions": 368
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 1223845,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 244
+						},
+						{
+							"name": "__DATA",
+							"dirty": 507642,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 71
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 376832,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 9
+						},
+						{
+							"name": "page table",
+							"dirty": 311728,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 294912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 253720,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 122
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 196608,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 190993,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 32
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Untagged",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2490704,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3407872,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 199028,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Stack",
+							"dirty": 147456,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 5.08095925,
+			"frontmost": true,
+			"total": 218223440,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 203296752,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 96468992,
+							"regions": 54
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37502976,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 18743296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 143
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1812441,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 688128,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 46
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12452368,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "Stack",
+							"dirty": 393216,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 327680,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2474320,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 114688,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 9
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 10.082839042,
+			"frontmost": true,
+			"total": 218010448,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 203198448,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 46137344,
+							"regions": 42
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37502976,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 18743296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 143
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1812441,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Stack",
+							"dirty": 589824,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 42
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12354064,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 327680,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 294912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 15.084604667,
+			"frontmost": true,
+			"total": 199218000,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 184406000,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37502976,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1812441,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Stack",
+							"dirty": 540672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 40
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12354064,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 327680,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 294912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 20.088126083,
+			"frontmost": true,
+			"total": 199267152,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 184455152,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37535744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1828825,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Stack",
+							"dirty": 540672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 40
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 32
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12354064,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 327680,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 294912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 25.078506458,
+			"frontmost": true,
+			"total": 199250768,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 184438768,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37535744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1828825,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Stack",
+							"dirty": 524288,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 38
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 32
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12354064,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 327680,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 294912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 30.076366333,
+			"frontmost": true,
+			"total": 199250768,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 184438768,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37535744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1828825,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Stack",
+							"dirty": 524288,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 38
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 32
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12354064,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 327680,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 294912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 35.079831,
+			"frontmost": true,
+			"total": 199185232,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 184438768,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37535744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1828825,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Stack",
+							"dirty": 524288,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 38
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 32
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 40.068873375,
+			"frontmost": true,
+			"total": 199185232,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 184438768,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 96550912,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 31
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 37535744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 15630336,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 15040512,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 203
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2805744,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2079233,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 352
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1828825,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 100
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17072128,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1392640,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1310720,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 618760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 205
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Stack",
+							"dirty": 524288,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 38
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Untagged",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 32
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 45.075408542,
+			"frontmost": true,
+			"total": 450253312,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 435506848,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 319668224,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 84
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 38207488,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 19
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 31260672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 5
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 11517952,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 7307264,
+							"regions": 188
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 9125888,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 540672,
+							"regions": 176
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 7864320,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 60
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 2576032,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2083705,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 354
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1861593,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 101
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1409024,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1327104,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 630672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 207
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Stack",
+							"dirty": 589824,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 40
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 33
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 50.076451208,
+			"frontmost": true,
+			"total": 471880984,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 457134520,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 319668224,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 84
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 43794432,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 21
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 31260672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 5
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 18743296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 143
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 13615104,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 376832,
+							"regions": 194
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 11517952,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 7405568,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 3117496,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2100065,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 364
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1877977,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 109
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1441792,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1327104,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Stack",
+							"dirty": 655360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 40
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 630696,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 209
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 33
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 55.088360958,
+			"frontmost": true,
+			"total": 239752472,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 225006008,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 97370112,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 96468992,
+							"regions": 54
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 43794432,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 21
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 31260672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 5
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 18743296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 143
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 13615104,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 376832,
+							"regions": 194
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 3117496,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2100065,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 364
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1877977,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 109
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17170432,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1441792,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1327104,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 630696,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 209
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Stack",
+							"dirty": 589824,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 36
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 33
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 60.075820167,
+			"frontmost": true,
+			"total": 477566232,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 462819768,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 321699840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 84
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 43876352,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 21
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 31260672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 5
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 22282240,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 170
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 13647872,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 376832,
+							"regions": 194
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 11517952,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 7405568,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 3117496,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2100065,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 364
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1877977,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 109
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1441792,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1327104,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Stack",
+							"dirty": 655360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 40
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 630696,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 209
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 33
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 65.080114583,
+			"frontmost": true,
+			"total": 245470488,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 230724024,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 99401728,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 117440512,
+							"regions": 59
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 43876352,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 21
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 31260672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 5
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 22282240,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 170
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 13664256,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 376832,
+							"regions": 194
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 3117496,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2100065,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 364
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1877977,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 109
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17170432,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1441792,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1327104,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 630696,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 209
+						},
+						{
+							"name": "Stack",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 38
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 33
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		},
+		{
+			"s": 70.080685,
+			"frontmost": true,
+			"total": 245044504,
+			"processes": [
+				{
+					"pid": 59555,
+					"name": "Tracker",
+					"footprint": 230298040,
+					"categories": [
+						{
+							"name": "Owned physical footprint (unmapped) (graphics)",
+							"dirty": 99401728,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 41943040,
+							"regions": 41
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 43876352,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 21
+						},
+						{
+							"name": "IOSurface",
+							"dirty": 31260672,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 5
+						},
+						{
+							"name": "Owned physical footprint (unmapped)",
+							"dirty": 21889024,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 167
+						},
+						{
+							"name": "App-Specific Tag 16",
+							"dirty": 13664256,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 376832,
+							"regions": 194
+						},
+						{
+							"name": "Malloc Large",
+							"dirty": 4194304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "page table",
+							"dirty": 3117496,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2100065,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 364
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1877977,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 109
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 1753088,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 17170432,
+							"regions": 188
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 1441792,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 12
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 1327104,
+							"swapped": 0,
+							"clean": 81920,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 630696,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 209
+						},
+						{
+							"name": "CoreUI Image Data",
+							"dirty": 606208,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Stack",
+							"dirty": 573440,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 36
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 537062,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 90
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 33
+						},
+						{
+							"name": "CoreAnimation",
+							"dirty": 262144,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 18
+						},
+						{
+							"name": "Accelerate Framework",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 114616,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 3
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Nano",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "Deferred Reclaim",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59557,
+					"name": "com.apple.SafariPlatformSupport.Helper",
+					"footprint": 12288528,
+					"categories": [
+						{
+							"name": "Malloc Small",
+							"dirty": 4505600,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 4521984,
+							"regions": 612
+						},
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 2259721,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 397
+						},
+						{
+							"name": "__DATA",
+							"dirty": 1407409,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 98
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 557056,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 11
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 541505,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 55
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 441549,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 191
+						},
+						{
+							"name": "page table",
+							"dirty": 377360,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 311296,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 16384,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 245760,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 6
+						},
+						{
+							"name": "Untagged",
+							"dirty": 163840,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 10
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 85944,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "IOAccelerator",
+							"dirty": 49152,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 32768,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Foundation",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "CoreGraphics",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOAccelerator (graphics)",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 2
+						},
+						{
+							"name": "ColorSync",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA_CONST",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "IOKit",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						}
+					]
+				},
+				{
+					"pid": 59556,
+					"name": "SetStoreUpdateService",
+					"footprint": 2457936,
+					"categories": [
+						{
+							"name": "__DATA_DIRTY",
+							"dirty": 508027,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 91
+						},
+						{
+							"name": "Malloc Metadata",
+							"dirty": 442368,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 8
+						},
+						{
+							"name": "Malloc Small",
+							"dirty": 278528,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 3424256,
+							"regions": 4
+						},
+						{
+							"name": "page table",
+							"dirty": 246096,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__DATA",
+							"dirty": 215412,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 22
+						},
+						{
+							"name": "unused dyld shared cache area",
+							"dirty": 198041,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 48
+						},
+						{
+							"name": "Dispatch Continuations",
+							"dirty": 131072,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Malloc Tiny",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Stack",
+							"dirty": 98304,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 7
+						},
+						{
+							"name": "__TPRO_CONST",
+							"dirty": 53176,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "__OBJC_RW",
+							"dirty": 48000,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "OS Alloc Once",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "Untagged",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						},
+						{
+							"name": "Activity Tracing",
+							"dirty": 16384,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 1
+						},
+						{
+							"name": "__AUTH",
+							"dirty": 9536,
+							"swapped": 0,
+							"clean": 0,
+							"reclaimable": 0,
+							"regions": 4
+						}
+					]
+				}
+			]
+		}
+	]
+}

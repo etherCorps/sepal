@@ -1,0 +1,236 @@
+{
+  "pid": 68610,
+  "size": 10000,
+  "clock_offset": {
+    "ns": -4292,
+    "err_ns": 25458
+  },
+  "window": {
+    "alpha": 1,
+    "h": 832,
+    "id": 6660,
+    "name": "Issues · Tracker",
+    "onscreen": true,
+    "w": 1200,
+    "x": 680,
+    "y": 320,
+    "t": 192131090298791,
+    "stable_t": 192131213261499
+  },
+  "window_ms_from_exec": 288.296,
+  "marks": {
+    "start": {
+      "ms_from_exec": 32.2,
+      "app_ms_from_exec": 33
+    },
+    "read": {
+      "ms_from_exec": 306.4,
+      "app_ms_from_exec": 307.1
+    },
+    "parsed": {
+      "ms_from_exec": 311,
+      "app_ms_from_exec": 311.8
+    },
+    "loaded": {
+      "ms_from_exec": 312.7,
+      "app_ms_from_exec": 313.5
+    },
+    "mounted": {
+      "ms_from_exec": 322.4,
+      "app_ms_from_exec": 323.1
+    }
+  },
+  "footprint_ms_after_mounted": 5004.718375,
+  "front": {
+    "front_pid": 68610,
+    "frontmost": true,
+    "onscreen": true,
+    "top_window_pid": 68610,
+    "windows": [
+      {
+        "alpha": 1,
+        "h": 832,
+        "id": 6660,
+        "name": "Issues · Tracker",
+        "onscreen": true,
+        "w": 1200,
+        "x": 680,
+        "y": 320
+      }
+    ]
+  },
+  "ax": [
+    {
+      "children": [
+        {
+          "frame": {
+            "h": 800,
+            "w": 1200,
+            "x": 680,
+            "y": 352
+          },
+          "role": "AXGroup",
+          "subrole": "AXUnknown"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 688,
+            "y": 328
+          },
+          "role": "AXButton",
+          "subrole": "AXCloseButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 734,
+            "y": 328
+          },
+          "role": "AXButton",
+          "subrole": "AXFullScreenButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 711,
+            "y": 328
+          },
+          "role": "AXButton",
+          "subrole": "AXMinimizeButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 106,
+            "x": 762,
+            "y": 328
+          },
+          "role": "AXStaticText",
+          "subrole": ""
+        }
+      ],
+      "frame": {
+        "h": 832,
+        "w": 1200,
+        "x": 680,
+        "y": 320
+      },
+      "title": "Issues · Tracker"
+    }
+  ],
+  "procs": [
+    {
+      "pid": 68610,
+      "path": "<repo>/compare/builds/Tracker-gpuix.app/Contents/MacOS/tracker",
+      "responsible": 68610,
+      "ppid": 68453
+    },
+    {
+      "pid": 68616,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 68610,
+      "ppid": 1
+    },
+    {
+      "pid": 68618,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "responsible": 68610,
+      "ppid": 1
+    }
+  ],
+  "usage": [
+    {
+      "billed_energy": 279905436,
+      "cycles": 1704749929,
+      "diskio_read": 4096,
+      "diskio_written": 0,
+      "energy_nj": 1764647763,
+      "instructions": 4504331448,
+      "interrupt_wkups": 959,
+      "lifetime_max_phys_footprint": 255001824,
+      "penergy_nj": 1764138688,
+      "phys_footprint": 254985440,
+      "pid": 68610,
+      "pkg_idle_wkups": 28,
+      "serviced_energy": 13700523,
+      "system_ns": 96301166,
+      "t": 192136479258541,
+      "user_ns": 390193041
+    },
+    {
+      "billed_energy": 1641076,
+      "cycles": 78582158,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 96059590,
+      "instructions": 239079435,
+      "interrupt_wkups": 1,
+      "lifetime_max_phys_footprint": 4604144,
+      "penergy_nj": 96028575,
+      "phys_footprint": 2523496,
+      "pid": 68616,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 0,
+      "system_ns": 3661166,
+      "t": 192136479264583,
+      "user_ns": 16443291
+    },
+    {
+      "billed_energy": 115931135,
+      "cycles": 375641698,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 340284496,
+      "instructions": 798359370,
+      "interrupt_wkups": 31,
+      "lifetime_max_phys_footprint": 12239352,
+      "penergy_nj": 340260254,
+      "phys_footprint": 12206584,
+      "pid": 68618,
+      "pkg_idle_wkups": 2,
+      "serviced_energy": 151697136,
+      "system_ns": 25852666,
+      "t": 192136479269791,
+      "user_ns": 75054291
+    }
+  ],
+  "footprint": {
+    "t": 192136538291958,
+    "total": 268929088,
+    "processes": [
+      {
+        "pid": 68610,
+        "name": "tracker",
+        "footprint": 254985440,
+        "peak": 255001824
+      },
+      {
+        "pid": 68618,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12206584,
+        "peak": 12239352
+      },
+      {
+        "pid": 68616,
+        "name": "SetStoreUpdateService",
+        "footprint": 2523496,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "lines": [
+    "32.25ms fd2 MARK start 1795430820027.0",
+    "221.63ms fd1 [gpuix-svelte] created native window",
+    "293.78ms fd1 [gpuix-svelte] mount complete",
+    "306.39ms fd2 MARK read 1795430820301.1",
+    "311.04ms fd2 MARK parsed 1795430820305.8",
+    "312.73ms fd2 MARK loaded 1795430820307.5",
+    "322.40ms fd2 MARK mounted 1795430820317.1",
+    "343.92ms fd2 MARK frame:mounted 1795430820338.7"
+  ]
+}

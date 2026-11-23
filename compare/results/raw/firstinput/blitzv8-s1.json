@@ -1,0 +1,235 @@
+{
+  "key": "blitzv8-1000-s1",
+  "build": "blitzv8",
+  "size": 1000,
+  "scenario": 1,
+  "scenario_name": "first launch after quit",
+  "wall_start": "2026-11-23T10:31:50.266Z",
+  "pid": 55828,
+  "t_exec": 191221085313353.5,
+  "wall_exec": 1795429910275,
+  "clock_offset": {
+    "ns": -562.5,
+    "err_ns": 22520.5
+  },
+  "startup": {
+    "window": 253.719542,
+    "window_settled": 365.037125,
+    "start": {
+      "ms_from_exec": 61.353417,
+      "app_ms": 1795429910336,
+      "wall_ms_from_exec": 61
+    },
+    "read": {
+      "ms_from_exec": 217.432417,
+      "app_ms": 1795429910492,
+      "wall_ms_from_exec": 217
+    },
+    "parsed": {
+      "ms_from_exec": 217.832959,
+      "app_ms": 1795429910492,
+      "wall_ms_from_exec": 217
+    },
+    "loaded": {
+      "ms_from_exec": 218.41425,
+      "app_ms": 1795429910493,
+      "wall_ms_from_exec": 218
+    },
+    "mounted": {
+      "ms_from_exec": 222.630334,
+      "app_ms": 1795429910497,
+      "wall_ms_from_exec": 222
+    },
+    "first_frame_after_mounted": {
+      "ms_from_exec": 229.288167,
+      "signal": "trace RedrawRequested"
+    },
+    "first_frame": 208.41275,
+    "ensure_front": {
+      "ms_from_exec": 365.442042,
+      "took_ms": 2.613333,
+      "activated": false
+    },
+    "first_input": {
+      "mark": "highlight:WEB-180",
+      "ms_from_exec": 425.526667,
+      "presses": 2,
+      "presses_before_mark": 2,
+      "accepted": 2,
+      "first_press_accepted": true,
+      "refused": 0,
+      "trigger": "down",
+      "trigger_from": "calibration",
+      "first_press_ms_from_exec": 404.3477715,
+      "ms_from_first_press": 21.1788955,
+      "ms_from_last_press_before": 4.8672705,
+      "press_log": [
+        {
+          "refused": false,
+          "down": 191221489661125,
+          "up": 191221499226208,
+          "down_ms_from_exec": 404.3477715,
+          "up_ms_from_exec": 413.9128545,
+          "focus": {
+            "active": true,
+            "frontmost": true,
+            "ms": 1.527042,
+            "t": 191221453677291,
+            "ms_from_exec": 368.3639375
+          }
+        },
+        {
+          "refused": false,
+          "down": 191221505972750,
+          "up": 191221516008250,
+          "down_ms_from_exec": 420.6593965,
+          "up_ms_from_exec": 430.6948965,
+          "focus": {
+            "active": true,
+            "frontmost": true,
+            "ms": 4.202,
+            "t": 191221500882000,
+            "ms_from_exec": 415.5686465
+          }
+        }
+      ]
+    }
+  },
+  "procs": [
+    {
+      "pid": 55828,
+      "path": "<repo>/compare/builds/Tracker-blitzv8.app/Contents/MacOS/Tracker",
+      "responsible": 55828,
+      "ppid": 55671
+    },
+    {
+      "pid": 55856,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 55828,
+      "ppid": 1
+    },
+    {
+      "pid": 55857,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/PrivateFrameworks/SafariPlatformSupport.framework/Versions/A/XPCServices/com.apple.SafariPlatformSupport.Helper.xpc/Contents/MacOS/com.apple.SafariPlatformSupport.Helper",
+      "responsible": 55828,
+      "ppid": 1
+    }
+  ],
+  "usage": {
+    "user_ns": 408110457,
+    "system_ns": 137946124,
+    "pkg_idle_wkups": 3,
+    "interrupt_wkups": 98,
+    "energy_nj": 1791684850,
+    "penergy_nj": 1790126982,
+    "billed_energy": 359520402,
+    "serviced_energy": 169503270,
+    "instructions": 4946174459,
+    "cycles": 1897579548,
+    "cpu_ns": 546056581
+  },
+  "footprint": {
+    "t": 191222892023937.5,
+    "total": 478335824,
+    "processes": [
+      {
+        "pid": 55828,
+        "name": "Tracker",
+        "footprint": 464277488,
+        "peak": 473649136
+      },
+      {
+        "pid": 55857,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12485136,
+        "peak": 12550672
+      },
+      {
+        "pid": 55856,
+        "name": "SetStoreUpdateService",
+        "footprint": 2441552,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "measured": {
+    "from": 191221085313353.5,
+    "to": 191222892078562.5
+  },
+  "footprint_mounted5": {
+    "t": 191226392497520.5,
+    "total": 235803472,
+    "processes": [
+      {
+        "pid": 55828,
+        "name": "Tracker",
+        "footprint": 221745136,
+        "peak": 473649136
+      },
+      {
+        "pid": 55857,
+        "name": "com.apple.SafariPlatformSupport.Helper",
+        "footprint": 12485136,
+        "peak": 12550672
+      },
+      {
+        "pid": 55856,
+        "name": "SetStoreUpdateService",
+        "footprint": 2441552,
+        "peak": 4604144
+      }
+    ],
+    "errors": [],
+    "ms_after_mounted": 5084.553833
+  },
+  "steps": [],
+  "inputs": [
+    {
+      "what": "key j",
+      "t": 191221489661125,
+      "down": 191221489661125,
+      "up": 191221499226208
+    },
+    {
+      "what": "key j",
+      "t": 191221505972750,
+      "down": 191221505972750,
+      "up": 191221516008250
+    }
+  ],
+  "top": [
+    {
+      "t": 191223627015103.5,
+      "block": 1,
+      "pid": 55828,
+      "cpu": 3.6,
+      "idlew": 1,
+      "power": 3.6
+    },
+    {
+      "t": 191224714977812.5,
+      "block": 2,
+      "pid": 55828,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    },
+    {
+      "t": 191225798841895.5,
+      "block": 3,
+      "pid": 55828,
+      "cpu": 0,
+      "idlew": 0,
+      "power": 0
+    }
+  ],
+  "status": "ok",
+  "exit": {
+    "code": null,
+    "signal": "SIGTERM",
+    "t": 191226399440478.5
+  },
+  "log": "raw/scratch/blitzv8-1000-s1.log",
+  "wall_end": "2026-11-23T10:31:55.686Z"
+}

@@ -1,0 +1,336 @@
+193042597671604 2 [js error] MARK start 1795431731793.0
+193042616041645 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+193042697504020 1 Resolve(1): 18ms (style: 1.3ms, damage: 4.5us, construct: 16ms, pconstruct: 336us, layout: 168us, transform: 2.9us, paint_tree: 8.7us, c_damage: 4.7us, subdocs: 250ns)
+193042715593645 1 Resolve(1): 6.5us (style: 3.0us, damage: 375ns, construct: 250ns, pconstruct: 792ns, layout: 542ns, transform: 166ns, paint_tree: 375ns, c_damage: 84ns, subdocs: 375ns)
+193042715613270 2 [trace] +0.083s first frame took 0.0ms
+193042715621812 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+193042743060354 1 Resolve(1): 8.3us (style: 3.4us, damage: 917ns, construct: 291ns, pconstruct: 709ns, layout: 916ns, transform: 0.0ns, paint_tree: 209ns, c_damage: 291ns, subdocs: 459ns)
+193042751901562 2 [js error] MARK read 1795431731948.0
+193042753289020 2 [js error] MARK parsed 1795431731949.0
+193042754046520 2 [js error] MARK loaded 1795431731950.0
+193042761971604 2 [js error] MARK mounted 1795431731958.0
+193042766321604 1 Resolve(1): 3.5ms (style: 1.4ms, damage: 8.7us, construct: 555us, pconstruct: 656us, layout: 819us, transform: 11us, paint_tree: 22us, c_damage: 8.3us, subdocs: 209ns)
+193042766359520 2 [trace] the app changed the page: 2651 ops, 1 layouts in 3.5ms
+193042766360979 2 [trace] +0.119s poll took 14.9ms
+193042766496645 1 Resolve(1): 3.3us (style: 1.7us, damage: 334ns, construct: 125ns, pconstruct: 333ns, layout: 250ns, transform: 42ns, paint_tree: 41ns, c_damage: 84ns, subdocs: 166ns)
+193042787095937 2 [trace] +0.134s RedrawRequested took 20.6ms
+193043758820729 2 [js error] MARK clock 1795431732954.0
+193043759065729 1 Resolve(1): 275us (style: 16us, damage: 6.8us, construct: 26us, pconstruct: 55us, layout: 164us, transform: 1.5us, paint_tree: 3.2us, c_damage: 1.5us, subdocs: 792ns)
+193043759084229 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193043759092937 1 Resolve(1): 1.8us (style: 625ns, damage: 208ns, construct: 84ns, pconstruct: 250ns, layout: 208ns, transform: 83ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 125ns)
+193043766679854 2 [trace] +1.127s RedrawRequested took 7.5ms
+193044763782520 2 [js error] MARK clock 1795431733959.0
+193044763937895 1 Resolve(1): 182us (style: 9.7us, damage: 3.4us, construct: 16us, pconstruct: 40us, layout: 105us, transform: 1.4us, paint_tree: 3.5us, c_damage: 1.2us, subdocs: 667ns)
+193044763951770 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193044763959562 1 Resolve(1): 1.7us (style: 666ns, damage: 250ns, construct: 42ns, pconstruct: 167ns, layout: 208ns, transform: 42ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 83ns)
+193044770087770 2 [trace] +2.132s RedrawRequested took 6.1ms
+193045764136395 2 [js error] MARK clock 1795431734960.0
+193045764327145 1 Resolve(1): 202us (style: 10us, damage: 2.8us, construct: 14us, pconstruct: 43us, layout: 124us, transform: 1.3us, paint_tree: 3.7us, c_damage: 1.3us, subdocs: 583ns)
+193045764350604 1 Resolve(1): 1.4us (style: 458ns, damage: 125ns, construct: 42ns, pconstruct: 208ns, layout: 167ns, transform: 41ns, paint_tree: 84ns, c_damage: 0.0ns, subdocs: 125ns)
+193045764357395 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193045770179520 2 [trace] +3.132s RedrawRequested took 5.8ms
+193046769303729 2 [js error] MARK clock 1795431735965.0
+193046769525312 1 Resolve(1): 271us (style: 15us, damage: 3.6us, construct: 18us, pconstruct: 63us, layout: 162us, transform: 1.8us, paint_tree: 4.8us, c_damage: 1.2us, subdocs: 667ns)
+193046769539479 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193046769546895 1 Resolve(1): 1.7us (style: 708ns, damage: 209ns, construct: 41ns, pconstruct: 125ns, layout: 167ns, transform: 42ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193046775728479 2 [trace] +4.137s RedrawRequested took 6.1ms
+193047773533104 2 [js error] MARK clock 1795431736969.0
+193047773750604 1 Resolve(1): 198us (style: 9.7us, damage: 3.6us, construct: 14us, pconstruct: 42us, layout: 119us, transform: 1.5us, paint_tree: 4.1us, c_damage: 1.5us, subdocs: 500ns)
+193047773762395 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193047773780562 1 Resolve(1): 1.9us (style: 667ns, damage: 250ns, construct: 83ns, pconstruct: 167ns, layout: 208ns, transform: 84ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193047796773604 2 [trace] +5.142s RedrawRequested took 22.9ms
+193048778739562 2 [js error] MARK clock 1795431737974.0
+193048779001145 1 Resolve(1): 326us (style: 23us, damage: 4.7us, construct: 30us, pconstruct: 73us, layout: 185us, transform: 1.7us, paint_tree: 5.1us, c_damage: 1.5us, subdocs: 542ns)
+193048779018229 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193048779035395 1 Resolve(1): 2.3us (style: 1.1us, damage: 250ns, construct: 84ns, pconstruct: 208ns, layout: 208ns, transform: 84ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193048785776479 2 [trace] +6.147s RedrawRequested took 6.7ms
+193049783450520 2 [js error] MARK clock 1795431738979.0
+193049783642270 1 Resolve(1): 208us (style: 11us, damage: 3.4us, construct: 17us, pconstruct: 45us, layout: 122us, transform: 1.6us, paint_tree: 4.0us, c_damage: 1.8us, subdocs: 959ns)
+193049783664562 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193049783675354 1 Resolve(1): 2.4us (style: 750ns, damage: 458ns, construct: 42ns, pconstruct: 208ns, layout: 292ns, transform: 125ns, paint_tree: 41ns, c_damage: 84ns, subdocs: 166ns)
+193049791997270 2 [trace] +7.152s RedrawRequested took 8.3ms
+193050788691354 2 [js error] MARK clock 1795431739984.0
+193050789012562 1 Resolve(1): 378us (style: 19us, damage: 5.2us, construct: 25us, pconstruct: 82us, layout: 233us, transform: 2.4us, paint_tree: 5.8us, c_damage: 2.2us, subdocs: 1.1us)
+193050789029312 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193050789045062 1 Resolve(1): 2.3us (style: 916ns, damage: 209ns, construct: 83ns, pconstruct: 292ns, layout: 250ns, transform: 83ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 167ns)
+193050796725312 2 [trace] +8.157s RedrawRequested took 7.7ms
+193051793678895 2 [js error] MARK clock 1795431740989.0
+193051793885520 1 Resolve(1): 242us (style: 14us, damage: 3.9us, construct: 18us, pconstruct: 54us, layout: 143us, transform: 1.8us, paint_tree: 3.8us, c_damage: 1.5us, subdocs: 709ns)
+193051793904604 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193051793915270 1 Resolve(1): 2.0us (style: 833ns, damage: 83ns, construct: 84ns, pconstruct: 166ns, layout: 292ns, transform: 42ns, paint_tree: 125ns, c_damage: 41ns, subdocs: 125ns)
+193051800507895 2 [trace] +9.162s RedrawRequested took 6.6ms
+193052798740520 2 [js error] MARK clock 1795431741994.0
+193052798943854 1 Resolve(1): 228us (style: 12us, damage: 3.3us, construct: 17us, pconstruct: 52us, layout: 135us, transform: 1.5us, paint_tree: 4.3us, c_damage: 1.6us, subdocs: 1.0us)
+193052798961062 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193052798971645 1 Resolve(1): 1.7us (style: 459ns, damage: 333ns, construct: 42ns, pconstruct: 166ns, layout: 209ns, transform: 41ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 125ns)
+193052806090145 2 [trace] +10.167s RedrawRequested took 7.1ms
+193053803831937 2 [js error] MARK clock 1795431742999.0
+193053804031187 1 Resolve(1): 236us (style: 12us, damage: 3.8us, construct: 17us, pconstruct: 52us, layout: 140us, transform: 1.4us, paint_tree: 4.3us, c_damage: 1.2us, subdocs: 875ns)
+193053804046187 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193053804054645 1 Resolve(1): 1.6us (style: 500ns, damage: 208ns, construct: 83ns, pconstruct: 167ns, layout: 167ns, transform: 83ns, paint_tree: 42ns, c_damage: 41ns, subdocs: 125ns)
+193053810367437 2 [trace] +11.172s RedrawRequested took 6.3ms
+193054808921770 2 [js error] MARK clock 1795431744005.0
+193054809086270 1 Resolve(1): 184us (style: 9.3us, damage: 2.8us, construct: 14us, pconstruct: 40us, layout: 110us, transform: 1.5us, paint_tree: 3.3us, c_damage: 1.0us, subdocs: 875ns)
+193054809099520 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193054809106937 1 Resolve(1): 1.6us (style: 666ns, damage: 167ns, construct: 42ns, pconstruct: 166ns, layout: 209ns, transform: 41ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 83ns)
+193054814298145 2 [trace] +12.177s RedrawRequested took 5.2ms
+193055814031062 2 [js error] MARK clock 1795431745010.0
+193055814178729 1 Resolve(1): 166us (style: 9.2us, damage: 2.5us, construct: 13us, pconstruct: 38us, layout: 98us, transform: 1.0us, paint_tree: 3.0us, c_damage: 1.0us, subdocs: 541ns)
+193055814191729 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193055814198979 1 Resolve(1): 1.8us (style: 625ns, damage: 250ns, construct: 41ns, pconstruct: 209ns, layout: 208ns, transform: 83ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 125ns)
+193055819407604 2 [trace] +13.182s RedrawRequested took 5.2ms
+193056816748312 2 [js error] MARK clock 1795431746012.0
+193056816888229 1 Resolve(1): 163us (style: 8.6us, damage: 3.1us, construct: 12us, pconstruct: 37us, layout: 96us, transform: 1.1us, paint_tree: 3.2us, c_damage: 750ns, subdocs: 459ns)
+193056816899020 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193056816904979 1 Resolve(1): 1.2us (style: 417ns, damage: 125ns, construct: 41ns, pconstruct: 167ns, layout: 167ns, transform: 41ns, paint_tree: 0.0ns, c_damage: 42ns, subdocs: 83ns)
+193056822694354 2 [trace] +14.185s RedrawRequested took 5.7ms
+193057822057520 2 [js error] MARK clock 1795431747018.0
+193057822446312 1 Resolve(1): 458us (style: 30us, damage: 10us, construct: 33us, pconstruct: 95us, layout: 271us, transform: 3.9us, paint_tree: 8.2us, c_damage: 2.3us, subdocs: 1.6us)
+193057822478645 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.5ms
+193057822490937 1 Resolve(1): 2.8us (style: 1.3us, damage: 333ns, construct: 125ns, pconstruct: 208ns, layout: 292ns, transform: 83ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 167ns)
+193057830019770 2 [trace] +15.190s RedrawRequested took 7.5ms
+193058827159270 2 [js error] MARK clock 1795431748023.0
+193058827460062 1 Resolve(1): 358us (style: 19us, damage: 5.3us, construct: 25us, pconstruct: 80us, layout: 215us, transform: 2.1us, paint_tree: 6.5us, c_damage: 1.5us, subdocs: 1.2us)
+193058827481729 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193058827494437 1 Resolve(1): 2.6us (style: 875ns, damage: 375ns, construct: 125ns, pconstruct: 292ns, layout: 333ns, transform: 83ns, paint_tree: 84ns, c_damage: 41ns, subdocs: 209ns)
+193058840261270 2 [trace] +16.195s RedrawRequested took 12.7ms
+193059832156187 2 [js error] MARK clock 1795431749028.0
+193059832392104 1 Resolve(1): 277us (style: 14us, damage: 4.0us, construct: 21us, pconstruct: 60us, layout: 168us, transform: 1.9us, paint_tree: 5.1us, c_damage: 1.7us, subdocs: 875ns)
+193059832410395 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193059832419562 1 Resolve(1): 2.1us (style: 833ns, damage: 250ns, construct: 42ns, pconstruct: 208ns, layout: 292ns, transform: 42ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 167ns)
+193059840664354 2 [trace] +17.200s RedrawRequested took 8.2ms
+193060837433937 2 [js error] MARK clock 1795431750033.0
+193060837696145 1 Resolve(1): 307us (style: 25us, damage: 3.9us, construct: 21us, pconstruct: 70us, layout: 178us, transform: 1.9us, paint_tree: 4.7us, c_damage: 1.6us, subdocs: 708ns)
+193060837747770 1 Resolve(1): 2.1us (style: 708ns, damage: 292ns, construct: 83ns, pconstruct: 208ns, layout: 250ns, transform: 84ns, paint_tree: 41ns, c_damage: 84ns, subdocs: 125ns)
+193060837762020 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193060844766062 2 [trace] +18.206s RedrawRequested took 7.0ms
+193061842379895 2 [js error] MARK clock 1795431751038.0
+193061842596312 1 Resolve(1): 244us (style: 13us, damage: 4.0us, construct: 17us, pconstruct: 55us, layout: 145us, transform: 1.7us, paint_tree: 4.5us, c_damage: 1.3us, subdocs: 750ns)
+193061842613770 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193061842623562 1 Resolve(1): 2.2us (style: 833ns, damage: 292ns, construct: 41ns, pconstruct: 250ns, layout: 250ns, transform: 84ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193061849826187 2 [trace] +19.210s RedrawRequested took 7.2ms
+193062847600187 2 [js error] MARK clock 1795431752043.0
+193062847817437 1 Resolve(1): 299us (style: 15us, damage: 4.7us, construct: 21us, pconstruct: 66us, layout: 180us, transform: 2.1us, paint_tree: 5.4us, c_damage: 1.8us, subdocs: 1.0us)
+193062847837520 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193062847848270 1 Resolve(1): 2.8us (style: 1.0us, damage: 375ns, construct: 41ns, pconstruct: 375ns, layout: 250ns, transform: 84ns, paint_tree: 41ns, c_damage: 84ns, subdocs: 208ns)
+193062854763895 2 [trace] +20.216s RedrawRequested took 6.9ms
+193063852832062 2 [js error] MARK clock 1795431753048.0
+193063853130687 1 Resolve(1): 350us (style: 21us, damage: 7.5us, construct: 26us, pconstruct: 78us, layout: 206us, transform: 2.4us, paint_tree: 5.0us, c_damage: 1.5us, subdocs: 1.0us)
+193063853149104 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193063853159604 1 Resolve(1): 2.3us (style: 833ns, damage: 250ns, construct: 83ns, pconstruct: 417ns, layout: 208ns, transform: 84ns, paint_tree: 41ns, c_damage: 84ns, subdocs: 250ns)
+193063860176812 2 [trace] +21.221s RedrawRequested took 7.0ms
+193064857838562 2 [js error] MARK clock 1795431754053.0
+193064858003354 1 Resolve(1): 219us (style: 11us, damage: 3.7us, construct: 18us, pconstruct: 46us, layout: 130us, transform: 2.0us, paint_tree: 4.5us, c_damage: 1.8us, subdocs: 833ns)
+193064858022145 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193064858033270 1 Resolve(1): 2.4us (style: 792ns, damage: 333ns, construct: 125ns, pconstruct: 209ns, layout: 291ns, transform: 42ns, paint_tree: 83ns, c_damage: 84ns, subdocs: 208ns)
+193064869510729 2 [trace] +22.226s RedrawRequested took 11.5ms
+193065862933312 2 [js error] MARK clock 1795431755059.0
+193065863159729 1 Resolve(1): 258us (style: 14us, damage: 3.7us, construct: 18us, pconstruct: 58us, layout: 154us, transform: 1.4us, paint_tree: 5.0us, c_damage: 1.5us, subdocs: 750ns)
+193065863175645 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193065863184895 1 Resolve(1): 2.0us (style: 709ns, damage: 208ns, construct: 125ns, pconstruct: 250ns, layout: 208ns, transform: 84ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193065869708270 2 [trace] +23.231s RedrawRequested took 6.5ms
+193066865427479 2 [js error] MARK clock 1795431756061.0
+193066865684770 1 Resolve(1): 289us (style: 14us, damage: 4.4us, construct: 21us, pconstruct: 63us, layout: 174us, transform: 2.7us, paint_tree: 5.4us, c_damage: 1.8us, subdocs: 1.1us)
+193066865704437 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193066865715270 1 Resolve(1): 2.5us (style: 1.1us, damage: 291ns, construct: 84ns, pconstruct: 291ns, layout: 209ns, transform: 125ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193066872849729 2 [trace] +24.234s RedrawRequested took 7.1ms
+193067870412437 2 [js error] MARK clock 1795431757066.0
+193067870593645 1 Resolve(1): 202us (style: 9.7us, damage: 3.1us, construct: 16us, pconstruct: 43us, layout: 122us, transform: 1.5us, paint_tree: 4.0us, c_damage: 1.4us, subdocs: 750ns)
+193067870632520 1 Resolve(1): 2.1us (style: 833ns, damage: 208ns, construct: 84ns, pconstruct: 208ns, layout: 250ns, transform: 83ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 166ns)
+193067870641354 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193067876941645 2 [trace] +25.238s RedrawRequested took 6.3ms
+193068875565645 2 [js error] MARK clock 1795431758071.0
+193068875751354 1 Resolve(1): 205us (style: 13us, damage: 3.6us, construct: 21us, pconstruct: 42us, layout: 117us, transform: 1.4us, paint_tree: 3.9us, c_damage: 1.4us, subdocs: 625ns)
+193068875773562 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193068875782854 1 Resolve(1): 1.8us (style: 667ns, damage: 250ns, construct: 41ns, pconstruct: 167ns, layout: 208ns, transform: 42ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 125ns)
+193068881886229 2 [trace] +26.244s RedrawRequested took 6.1ms
+193069879601395 2 [js error] MARK clock 1795431759075.0
+193069879767104 1 Resolve(1): 177us (style: 9.0us, damage: 2.6us, construct: 14us, pconstruct: 41us, layout: 103us, transform: 1.2us, paint_tree: 3.2us, c_damage: 958ns, subdocs: 708ns)
+193069879780395 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193069879787895 1 Resolve(1): 1.8us (style: 666ns, damage: 167ns, construct: 83ns, pconstruct: 167ns, layout: 250ns, transform: 42ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 83ns)
+193069887669645 2 [trace] +27.248s RedrawRequested took 7.9ms
+193070884006645 2 [js error] MARK clock 1795431760080.0
+193070884191020 1 Resolve(1): 176us (style: 10us, damage: 3.1us, construct: 12us, pconstruct: 37us, layout: 107us, transform: 1.0us, paint_tree: 3.2us, c_damage: 1.0us, subdocs: 625ns)
+193070884204729 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193070884234020 1 Resolve(1): 1.6us (style: 583ns, damage: 167ns, construct: 83ns, pconstruct: 167ns, layout: 166ns, transform: 42ns, paint_tree: 42ns, c_damage: 41ns, subdocs: 125ns)
+193070889252229 2 [trace] +28.252s RedrawRequested took 5.0ms
+193071889078520 2 [js error] MARK clock 1795431761085.0
+193071889237062 1 Resolve(1): 180us (style: 9.3us, damage: 2.7us, construct: 14us, pconstruct: 39us, layout: 108us, transform: 1.4us, paint_tree: 3.7us, c_damage: 917ns, subdocs: 500ns)
+193071889248270 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193071889259104 1 Resolve(1): 1.4us (style: 583ns, damage: 125ns, construct: 83ns, pconstruct: 125ns, layout: 125ns, transform: 42ns, paint_tree: 42ns, c_damage: 41ns, subdocs: 125ns)
+193071897106687 2 [trace] +29.257s RedrawRequested took 7.8ms
+193072892307270 2 [js error] MARK clock 1795431762088.0
+193072892472770 1 Resolve(1): 203us (style: 11us, damage: 2.8us, construct: 15us, pconstruct: 46us, layout: 122us, transform: 1.6us, paint_tree: 3.1us, c_damage: 1.2us, subdocs: 542ns)
+193072892483604 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193072892513562 1 Resolve(1): 1.6us (style: 667ns, damage: 167ns, construct: 41ns, pconstruct: 125ns, layout: 167ns, transform: 42ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193072902888645 2 [trace] +30.260s RedrawRequested took 10.3ms
+193073892700062 2 [js error] MARK clock 1795431763088.0
+193073892874020 1 Resolve(1): 195us (style: 9.2us, damage: 3.0us, construct: 14us, pconstruct: 44us, layout: 116us, transform: 1.5us, paint_tree: 4.3us, c_damage: 1.2us, subdocs: 750ns)
+193073892889145 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193073892897145 1 Resolve(1): 1.8us (style: 625ns, damage: 208ns, construct: 84ns, pconstruct: 166ns, layout: 250ns, transform: 42ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 125ns)
+193073907849854 2 [trace] +31.261s RedrawRequested took 14.9ms
+193074897785479 2 [js error] MARK clock 1795431764094.0
+193074898024854 1 Resolve(1): 193us (style: 11us, damage: 3.5us, construct: 15us, pconstruct: 43us, layout: 113us, transform: 1.2us, paint_tree: 4.0us, c_damage: 1.2us, subdocs: 708ns)
+193074898071395 1 Resolve(1): 1.6us (style: 500ns, damage: 292ns, construct: 42ns, pconstruct: 125ns, layout: 208ns, transform: 83ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 125ns)
+193074898089270 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193074904986562 2 [trace] +32.266s RedrawRequested took 6.9ms
+193075902931354 2 [js error] MARK clock 1795431765099.0
+193075903140312 1 Resolve(1): 243us (style: 13us, damage: 3.5us, construct: 17us, pconstruct: 51us, layout: 148us, transform: 1.7us, paint_tree: 4.7us, c_damage: 1.3us, subdocs: 750ns)
+193075903155479 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193075903175562 1 Resolve(1): 1.7us (style: 500ns, damage: 250ns, construct: 41ns, pconstruct: 167ns, layout: 167ns, transform: 41ns, paint_tree: 125ns, c_damage: 42ns, subdocs: 125ns)
+193075913795645 2 [trace] +33.271s RedrawRequested took 10.6ms
+193076908183062 2 [js error] MARK clock 1795431766104.0
+193076908484645 1 Resolve(1): 378us (style: 21us, damage: 6.2us, construct: 25us, pconstruct: 89us, layout: 223us, transform: 2.5us, paint_tree: 7.0us, c_damage: 1.8us, subdocs: 1.5us)
+193076908506062 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193076908523312 1 Resolve(1): 2.3us (style: 917ns, damage: 250ns, construct: 41ns, pconstruct: 250ns, layout: 209ns, transform: 83ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 167ns)
+193076923868937 2 [trace] +34.276s RedrawRequested took 15.3ms
+193077913392187 2 [js error] MARK clock 1795431767109.0
+193077913631812 1 Resolve(1): 305us (style: 21us, damage: 5.7us, construct: 24us, pconstruct: 78us, layout: 160us, transform: 1.6us, paint_tree: 10us, c_damage: 2.0us, subdocs: 1.3us)
+193077913651520 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193077913664812 1 Resolve(1): 2.5us (style: 834ns, damage: 333ns, construct: 83ns, pconstruct: 292ns, layout: 333ns, transform: 209ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 83ns)
+193077921041520 2 [trace] +35.282s RedrawRequested took 7.4ms
+193078916779354 2 [js error] MARK clock 1795431768112.0
+193078916984312 1 Resolve(1): 243us (style: 14us, damage: 4.5us, construct: 18us, pconstruct: 53us, layout: 144us, transform: 1.5us, paint_tree: 4.8us, c_damage: 1.5us, subdocs: 833ns)
+193078917001145 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193078917010604 1 Resolve(1): 2.1us (style: 709ns, damage: 291ns, construct: 42ns, pconstruct: 292ns, layout: 208ns, transform: 83ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 166ns)
+193078927500020 2 [trace] +36.285s RedrawRequested took 10.5ms
+193079922012187 2 [js error] MARK clock 1795431769118.0
+193079922308520 1 Resolve(1): 356us (style: 20us, damage: 4.8us, construct: 24us, pconstruct: 81us, layout: 213us, transform: 2.2us, paint_tree: 6.8us, c_damage: 1.7us, subdocs: 1.0us)
+193079922334729 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193079922396020 1 Resolve(1): 2.5us (style: 958ns, damage: 333ns, construct: 84ns, pconstruct: 250ns, layout: 291ns, transform: 84ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 125ns)
+193079930092604 2 [trace] +37.290s RedrawRequested took 7.7ms
+193080927134770 2 [js error] MARK clock 1795431770123.0
+193080927429604 1 Resolve(1): 360us (style: 22us, damage: 6.2us, construct: 27us, pconstruct: 93us, layout: 200us, transform: 2.1us, paint_tree: 4.9us, c_damage: 2.1us, subdocs: 834ns)
+193080927444812 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193080927496562 1 Resolve(1): 2.0us (style: 750ns, damage: 208ns, construct: 83ns, pconstruct: 125ns, layout: 292ns, transform: 83ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 125ns)
+193080935855687 2 [trace] +38.295s RedrawRequested took 8.4ms
+193081932192729 2 [js error] MARK clock 1795431771128.0
+193081932610187 1 Resolve(1): 283us (style: 14us, damage: 4.2us, construct: 21us, pconstruct: 63us, layout: 170us, transform: 2.1us, paint_tree: 5.6us, c_damage: 1.6us, subdocs: 1.5us)
+193081932718395 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193081932733395 1 Resolve(1): 3.0us (style: 1.3us, damage: 417ns, construct: 42ns, pconstruct: 250ns, layout: 375ns, transform: 83ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 167ns)
+193081945941895 2 [trace] +39.300s RedrawRequested took 13.4ms
+193082936431729 2 [js error] MARK clock 1795431772132.0
+193082936714187 1 Resolve(1): 371us (style: 20us, damage: 5.6us, construct: 27us, pconstruct: 87us, layout: 220us, transform: 1.8us, paint_tree: 6.5us, c_damage: 1.6us, subdocs: 1.2us)
+193082936743104 1 Resolve(1): 2.2us (style: 833ns, damage: 208ns, construct: 42ns, pconstruct: 208ns, layout: 334ns, transform: 41ns, paint_tree: 125ns, c_damage: 42ns, subdocs: 167ns)
+193082936754770 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193082946448604 2 [trace] +40.305s RedrawRequested took 9.7ms
+193083937298187 2 [js error] MARK clock 1795431773133.0
+193083937497604 1 Resolve(1): 224us (style: 10us, damage: 3.6us, construct: 17us, pconstruct: 48us, layout: 136us, transform: 1.9us, paint_tree: 4.8us, c_damage: 1.4us, subdocs: 875ns)
+193083937513937 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193083937522645 1 Resolve(1): 2.0us (style: 708ns, damage: 250ns, construct: 0.0ns, pconstruct: 250ns, layout: 250ns, transform: 42ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 125ns)
+193083944307937 2 [trace] +41.305s RedrawRequested took 6.8ms
+193084938345979 2 [js error] MARK clock 1795431774134.0
+193084938542062 1 Resolve(1): 209us (style: 12us, damage: 3.2us, construct: 16us, pconstruct: 47us, layout: 124us, transform: 1.2us, paint_tree: 4.0us, c_damage: 1.3us, subdocs: 708ns)
+193084938564270 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193084938571520 1 Resolve(1): 1.8us (style: 750ns, damage: 208ns, construct: 83ns, pconstruct: 125ns, layout: 167ns, transform: 42ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193084946541854 2 [trace] +42.306s RedrawRequested took 8.0ms
+193085939154187 2 [js error] MARK clock 1795431775135.0
+193085939285479 1 Resolve(1): 172us (style: 8.2us, damage: 3.1us, construct: 12us, pconstruct: 39us, layout: 98us, transform: 6.3us, paint_tree: 3.0us, c_damage: 833ns, subdocs: 708ns)
+193085939298145 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193085939312604 1 Resolve(1): 1.7us (style: 584ns, damage: 166ns, construct: 84ns, pconstruct: 166ns, layout: 250ns, transform: 42ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 83ns)
+193085944390354 2 [trace] +43.307s RedrawRequested took 5.1ms
+193086940543187 2 [js error] MARK clock 1795431776136.0
+193086940735145 1 Resolve(1): 230us (style: 14us, damage: 7.0us, construct: 16us, pconstruct: 55us, layout: 130us, transform: 1.4us, paint_tree: 3.8us, c_damage: 1.1us, subdocs: 1.0us)
+193086940745729 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193086940757895 1 Resolve(1): 1.3us (style: 458ns, damage: 167ns, construct: 83ns, pconstruct: 83ns, layout: 209ns, transform: 41ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 83ns)
+193086946582687 2 [trace] +44.309s RedrawRequested took 5.8ms
+193087945769770 2 [js error] MARK clock 1795431777141.0
+193087945995645 1 Resolve(1): 262us (style: 14us, damage: 4.2us, construct: 19us, pconstruct: 66us, layout: 149us, transform: 1.5us, paint_tree: 4.3us, c_damage: 1.3us, subdocs: 834ns)
+193087946012937 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193087946022520 1 Resolve(1): 1.9us (style: 583ns, damage: 208ns, construct: 84ns, pconstruct: 166ns, layout: 292ns, transform: 83ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 166ns)
+193087954793645 2 [trace] +45.314s RedrawRequested took 8.7ms
+193088950579020 2 [js error] MARK clock 1795431778146.0
+193088950889354 1 Resolve(1): 379us (style: 22us, damage: 6.3us, construct: 27us, pconstruct: 84us, layout: 225us, transform: 2.7us, paint_tree: 6.8us, c_damage: 1.7us, subdocs: 1.2us)
+193088950907479 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193088950934562 1 Resolve(1): 2.5us (style: 1.0us, damage: 250ns, construct: 125ns, pconstruct: 292ns, layout: 208ns, transform: 125ns, paint_tree: 84ns, c_damage: 41ns, subdocs: 125ns)
+193088965049395 2 [trace] +46.319s RedrawRequested took 14.0ms
+193089955647354 2 [js error] MARK clock 1795431779151.0
+193089955993145 1 Resolve(1): 394us (style: 23us, damage: 4.9us, construct: 23us, pconstruct: 90us, layout: 240us, transform: 2.1us, paint_tree: 7.1us, c_damage: 1.4us, subdocs: 1.2us)
+193089956013937 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193089956034854 1 Resolve(1): 3.3us (style: 1.8us, damage: 333ns, construct: 84ns, pconstruct: 250ns, layout: 250ns, transform: 83ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 125ns)
+193089964047729 2 [trace] +47.324s RedrawRequested took 8.0ms
+193090960823104 2 [js error] MARK clock 1795431780157.0
+193090961146145 1 Resolve(1): 385us (style: 21us, damage: 6.0us, construct: 27us, pconstruct: 85us, layout: 231us, transform: 2.6us, paint_tree: 6.8us, c_damage: 1.9us, subdocs: 1.6us)
+193090961166854 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193090961189687 1 Resolve(1): 3.0us (style: 1.1us, damage: 500ns, construct: 83ns, pconstruct: 250ns, layout: 375ns, transform: 84ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 208ns)
+193090977946312 2 [trace] +48.329s RedrawRequested took 16.6ms
+193091965893562 2 [js error] MARK clock 1795431781162.0
+193091966174937 1 Resolve(1): 352us (style: 21us, damage: 5.3us, construct: 23us, pconstruct: 77us, layout: 211us, transform: 2.2us, paint_tree: 6.5us, c_damage: 1.2us, subdocs: 1.4us)
+193091966191479 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193091966211687 1 Resolve(1): 2.3us (style: 875ns, damage: 375ns, construct: 83ns, pconstruct: 250ns, layout: 208ns, transform: 84ns, paint_tree: 83ns, c_damage: 42ns, subdocs: 125ns)
+193091979618104 2 [trace] +49.334s RedrawRequested took 13.3ms
+193092970482270 2 [js error] MARK clock 1795431782166.0
+193092970914437 1 Resolve(1): 432us (style: 15us, damage: 4.2us, construct: 21us, pconstruct: 59us, layout: 316us, transform: 2.5us, paint_tree: 6.3us, c_damage: 3.8us, subdocs: 1.0us)
+193092970929395 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.5ms
+193092970955479 1 Resolve(1): 3.2us (style: 1.5us, damage: 250ns, construct: 84ns, pconstruct: 666ns, layout: 209ns, transform: 125ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193092978112104 2 [trace] +50.339s RedrawRequested took 7.1ms
+193093975531479 2 [js error] MARK clock 1795431783171.0
+193093975733437 1 Resolve(1): 230us (style: 13us, damage: 3.8us, construct: 17us, pconstruct: 50us, layout: 137us, transform: 1.8us, paint_tree: 4.1us, c_damage: 1.4us, subdocs: 792ns)
+193093975746354 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193093975754687 1 Resolve(1): 1.9us (style: 625ns, damage: 166ns, construct: 42ns, pconstruct: 250ns, layout: 208ns, transform: 84ns, paint_tree: 41ns, c_damage: 84ns, subdocs: 125ns)
+193093986777729 2 [trace] +51.344s RedrawRequested took 11.0ms
+193094980635895 2 [js error] MARK clock 1795431784176.0
+193094980858479 1 Resolve(1): 253us (style: 13us, damage: 3.9us, construct: 18us, pconstruct: 57us, layout: 153us, transform: 1.6us, paint_tree: 4.4us, c_damage: 1.5us, subdocs: 1.0us)
+193094980871937 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193094980884604 1 Resolve(1): 1.9us (style: 792ns, damage: 208ns, construct: 42ns, pconstruct: 208ns, layout: 208ns, transform: 84ns, paint_tree: 41ns, c_damage: 42ns, subdocs: 125ns)
+193094988177937 2 [trace] +52.349s RedrawRequested took 7.3ms
+193095980949687 2 [js error] MARK clock 1795431785177.0
+193095981159104 1 Resolve(1): 242us (style: 14us, damage: 3.8us, construct: 17us, pconstruct: 55us, layout: 144us, transform: 1.7us, paint_tree: 4.3us, c_damage: 1.0us, subdocs: 792ns)
+193095981172020 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193095981187020 1 Resolve(1): 1.9us (style: 750ns, damage: 291ns, construct: 42ns, pconstruct: 125ns, layout: 208ns, transform: 42ns, paint_tree: 42ns, c_damage: 41ns, subdocs: 167ns)
+193095988668312 2 [trace] +53.349s RedrawRequested took 7.5ms
+193096986072645 2 [js error] MARK clock 1795431786182.0
+193096986249479 1 Resolve(1): 219us (style: 13us, damage: 3.0us, construct: 15us, pconstruct: 49us, layout: 130us, transform: 1.9us, paint_tree: 4.0us, c_damage: 1.1us, subdocs: 833ns)
+193096986268270 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193096986275437 1 Resolve(1): 1.8us (style: 708ns, damage: 250ns, construct: 42ns, pconstruct: 292ns, layout: 166ns, transform: 42ns, paint_tree: 42ns, c_damage: 41ns, subdocs: 125ns)
+193096991908812 2 [trace] +54.354s RedrawRequested took 5.6ms
+193097991156020 2 [js error] MARK clock 1795431787187.0
+193097991312395 1 Resolve(1): 174us (style: 9.0us, damage: 2.8us, construct: 13us, pconstruct: 39us, layout: 104us, transform: 1.4us, paint_tree: 3.5us, c_damage: 916ns, subdocs: 584ns)
+193097991328520 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193097991334979 1 Resolve(1): 1.7us (style: 500ns, damage: 209ns, construct: 83ns, pconstruct: 167ns, layout: 208ns, transform: 83ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 125ns)
+193097999622229 2 [trace] +55.359s RedrawRequested took 8.3ms
+193098994130104 2 [js error] MARK clock 1795431788190.0
+193098994292937 1 Resolve(1): 176us (style: 9.4us, damage: 2.8us, construct: 11us, pconstruct: 39us, layout: 107us, transform: 1.2us, paint_tree: 3.3us, c_damage: 959ns, subdocs: 625ns)
+193098994302187 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193098994311187 1 Resolve(1): 1.2us (style: 375ns, damage: 125ns, construct: 42ns, pconstruct: 125ns, layout: 166ns, transform: 84ns, paint_tree: 41ns, c_damage: 0.0ns, subdocs: 84ns)
+193099001966812 2 [trace] +56.362s RedrawRequested took 7.6ms
+193099999292729 2 [js error] MARK clock 1795431789195.0
+193099999472270 1 Resolve(1): 193us (style: 8.7us, damage: 2.9us, construct: 20us, pconstruct: 39us, layout: 114us, transform: 1.7us, paint_tree: 3.9us, c_damage: 1.0us, subdocs: 542ns)
+193099999481312 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193099999496020 1 Resolve(1): 1.4us (style: 542ns, damage: 125ns, construct: 83ns, pconstruct: 125ns, layout: 167ns, transform: 41ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 83ns)
+193100005608437 2 [trace] +57.367s RedrawRequested took 6.1ms
+193101004450729 2 [js error] MARK clock 1795431790200.0
+193101004613395 1 Resolve(1): 233us (style: 12us, damage: 3.8us, construct: 15us, pconstruct: 54us, layout: 140us, transform: 1.5us, paint_tree: 4.2us, c_damage: 834ns, subdocs: 958ns)
+193101004623812 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+193101004640645 1 Resolve(1): 2.0us (style: 1.1us, damage: 167ns, construct: 41ns, pconstruct: 167ns, layout: 208ns, transform: 0.0ns, paint_tree: 42ns, c_damage: 42ns, subdocs: 83ns)
+193101009849604 2 [trace] +58.373s RedrawRequested took 5.1ms
+193102009679020 2 [js error] MARK clock 1795431791205.0
+193102009963479 1 Resolve(1): 369us (style: 22us, damage: 4.7us, construct: 23us, pconstruct: 82us, layout: 223us, transform: 2.6us, paint_tree: 7.2us, c_damage: 1.9us, subdocs: 1.0us)
+193102009977104 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193102010000229 1 Resolve(1): 2.0us (style: 833ns, damage: 250ns, construct: 42ns, pconstruct: 208ns, layout: 209ns, transform: 41ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 84ns)
+193102029905145 2 [trace] +59.378s RedrawRequested took 19.8ms
+193103014788145 2 [js error] MARK clock 1795431792211.0
+193103015107187 1 Resolve(1): 403us (style: 25us, damage: 6.4us, construct: 29us, pconstruct: 104us, layout: 226us, transform: 3.0us, paint_tree: 5.9us, c_damage: 2.1us, subdocs: 1.0us)
+193103015124854 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193103015146854 1 Resolve(1): 2.5us (style: 750ns, damage: 375ns, construct: 83ns, pconstruct: 292ns, layout: 333ns, transform: 42ns, paint_tree: 83ns, c_damage: 84ns, subdocs: 166ns)
+193103023625520 2 [trace] +60.383s RedrawRequested took 8.4ms
+193104019995979 2 [js error] MARK clock 1795431793216.0
+193104020263937 1 Resolve(1): 287us (style: 17us, damage: 4.8us, construct: 22us, pconstruct: 70us, layout: 163us, transform: 1.8us, paint_tree: 4.6us, c_damage: 1.7us, subdocs: 750ns)
+193104020278145 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193104020286895 1 Resolve(1): 2.3us (style: 708ns, damage: 334ns, construct: 41ns, pconstruct: 209ns, layout: 291ns, transform: 125ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 250ns)
+193104030128312 2 [trace] +61.388s RedrawRequested took 9.8ms
+193105024980062 2 [js error] MARK clock 1795431794221.0
+193105025235854 1 Resolve(1): 298us (style: 15us, damage: 4.3us, construct: 19us, pconstruct: 62us, layout: 184us, transform: 2.6us, paint_tree: 6.1us, c_damage: 1.5us, subdocs: 958ns)
+193105025249479 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193105025271645 1 Resolve(1): 2.1us (style: 875ns, damage: 208ns, construct: 83ns, pconstruct: 209ns, layout: 208ns, transform: 83ns, paint_tree: 84ns, c_damage: 41ns, subdocs: 125ns)
+193105035481979 2 [trace] +62.393s RedrawRequested took 10.1ms
+193106026838979 2 [js error] MARK clock 1795431795223.0
+193106027162187 1 Resolve(1): 372us (style: 16us, damage: 3.7us, construct: 23us, pconstruct: 87us, layout: 229us, transform: 2.7us, paint_tree: 6.7us, c_damage: 2.0us, subdocs: 875ns)
+193106027178270 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+193106027197062 1 Resolve(1): 2.5us (style: 1.0us, damage: 208ns, construct: 84ns, pconstruct: 416ns, layout: 292ns, transform: 83ns, paint_tree: 42ns, c_damage: 83ns, subdocs: 125ns)
+193106036751895 2 [trace] +63.395s RedrawRequested took 9.5ms
+193107031838895 2 [js error] MARK clock 1795431796228.0
+193107032087770 1 Resolve(1): 256us (style: 18us, damage: 3.7us, construct: 21us, pconstruct: 56us, layout: 147us, transform: 1.6us, paint_tree: 4.2us, c_damage: 1.4us, subdocs: 1.1us)
+193107032101979 1 Resolve(1): 2.3us (style: 792ns, damage: 292ns, construct: 125ns, pconstruct: 250ns, layout: 291ns, transform: 84ns, paint_tree: 41ns, c_damage: 84ns, subdocs: 166ns)
+193107032108520 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+193107039536687 2 [trace] +64.400s RedrawRequested took 7.4ms

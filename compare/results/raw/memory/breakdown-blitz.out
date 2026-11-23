@@ -1,0 +1,97 @@
+{
+  "status": "ok",
+  "start": [
+    {
+      "pid": 77650,
+      "name": "Tracker",
+      "mb": 185.1,
+      "top": [
+        "Owned physical footprint (unmapped) (graphics) 92.0",
+        "Malloc Small 43.9",
+        "Owned physical footprint (unmapped) 17.9",
+        "IOSurface 14.9",
+        "Malloc Large 4.0",
+        "__DATA_DIRTY 2.0",
+        "IOAccelerator (graphics) 1.7",
+        "__DATA 1.5"
+      ]
+    },
+    {
+      "pid": 77661,
+      "name": "com.apple.SafariPlatformSupport.Helper",
+      "mb": 11.6,
+      "top": [
+        "Malloc Small 4.1",
+        "__DATA_DIRTY 2.2",
+        "__DATA 1.3",
+        "Malloc Metadata 0.5",
+        "__AUTH 0.5",
+        "unused dyld shared cache area 0.4",
+        "Stack 0.4",
+        "page table 0.3"
+      ]
+    },
+    {
+      "pid": 77652,
+      "name": "SetStoreUpdateService",
+      "mb": 2.4,
+      "top": [
+        "__DATA_DIRTY 0.5",
+        "Malloc Metadata 0.4",
+        "Malloc Small 0.3",
+        "page table 0.3",
+        "__DATA 0.2",
+        "unused dyld shared cache area 0.2",
+        "Stack 0.1",
+        "Dispatch Continuations 0.1"
+      ]
+    }
+  ],
+  "end": [
+    {
+      "pid": 77650,
+      "name": "Tracker",
+      "mb": 216.7,
+      "top": [
+        "Owned physical footprint (unmapped) (graphics) 93.9",
+        "Malloc Small 58.6",
+        "IOSurface 29.8",
+        "Owned physical footprint (unmapped) 17.9",
+        "Malloc Large 4.0",
+        "__DATA_DIRTY 2.0",
+        "IOAccelerator (graphics) 1.7",
+        "__DATA 1.6"
+      ]
+    },
+    {
+      "pid": 77661,
+      "name": "com.apple.SafariPlatformSupport.Helper",
+      "mb": 11.5,
+      "top": [
+        "Malloc Small 4.1",
+        "__DATA_DIRTY 2.2",
+        "__DATA 1.3",
+        "Malloc Metadata 0.5",
+        "__AUTH 0.5",
+        "unused dyld shared cache area 0.4",
+        "page table 0.3",
+        "Stack 0.3"
+      ]
+    },
+    {
+      "pid": 77652,
+      "name": "SetStoreUpdateService",
+      "mb": 2.3,
+      "top": [
+        "__DATA_DIRTY 0.5",
+        "Malloc Metadata 0.4",
+        "Malloc Small 0.3",
+        "page table 0.3",
+        "__DATA 0.2",
+        "unused dyld shared cache area 0.2",
+        "Dispatch Continuations 0.1",
+        "Malloc Tiny 0.1"
+      ]
+    }
+  ]
+}

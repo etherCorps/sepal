@@ -1,0 +1,22 @@
+{
+	"name": "tracker-gpuix",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"start": "gpuix-svelte --bun standalone.ts",
+		"build": "bun build.ts",
+		"build:bench": "bun build.ts --bench",
+		"typecheck": "tsc --noEmit && svelte-check --diagnostic-sources js,svelte"
+	},
+	"dependencies": {
+		"gpuix-svelte": "0.6.0",
+		"gpuix-svelte-ui": "0.6.0"
+	},
+	"devDependencies": {
+		"@types/node": "^26.6.5",
+		"svelte-check": "^4.7.6",
+		"typescript": "^5.9.3",
+		"wawoff2": "^2.0.1"
+	}
+}

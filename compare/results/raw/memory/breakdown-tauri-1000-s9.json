@@ -1,0 +1,3281 @@
+{
+	"key": "breakdown-tauri-1000-s9",
+	"build": "tauri",
+	"size": 1000,
+	"scenario": 9,
+	"scenario_name": "show all, then scroll top to bottom",
+	"wall_start": "2026-11-23T11:07:37.744Z",
+	"pid": 81419,
+	"t_exec": 193368555473020,
+	"wall_exec": 1795432057752,
+	"clock_offset": {
+		"ns": 1229,
+		"err_ns": 19396
+	},
+	"procs": [
+		{
+			"pid": 81419,
+			"path": "<repo>/compare/builds/Tracker-tauri.app/Contents/MacOS/tracker",
+			"responsible": 81419,
+			"ppid": 81262
+		},
+		{
+			"pid": 81424,
+			"path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81425,
+			"path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81426,
+			"path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.WebContent.xpc/Contents/MacOS/com.apple.WebKit.WebContent",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81427,
+			"path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc/Contents/MacOS/com.apple.WebKit.Networking",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81428,
+			"path": "/System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper",
+			"responsible": 81419,
+			"ppid": 1
+		}
+	],
+	"footprint_mounted5": {
+		"t": 193374584086020,
+		"total": 293883912,
+		"processes": [
+			{
+				"pid": 81425,
+				"name": "com.apple.WebKit.GPU",
+				"footprint": 148701928,
+				"peak": 148751080
+			},
+			{
+				"pid": 81426,
+				"name": "com.apple.WebKit.WebContent",
+				"footprint": 98157456,
+				"peak": 113787792
+			},
+			{
+				"pid": 81419,
+				"name": "tracker",
+				"footprint": 32720000,
+				"peak": 32949376
+			},
+			{
+				"pid": 81427,
+				"name": "com.apple.WebKit.Networking",
+				"footprint": 6586824,
+				"peak": 8176072
+			},
+			{
+				"pid": 81428,
+				"name": "com.apple.audio.SandboxHelper",
+				"footprint": 5652984,
+				"peak": 5751288
+			},
+			{
+				"pid": 81424,
+				"name": "SetStoreUpdateService",
+				"footprint": 2457936,
+				"peak": 4587760
+			}
+		],
+		"errors": [],
+		"ms_after_mounted": 5728.660583
+	},
+	"breakdown_start": [
+		{
+			"pid": 81425,
+			"name": "com.apple.WebKit.GPU",
+			"footprint": 148701928,
+			"categories": [
+				{
+					"name": "Owned physical footprint (unmapped) (graphics)",
+					"dirty": 122011648,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 51
+				},
+				{
+					"name": "Owned physical footprint (unmapped)",
+					"dirty": 9437184,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 72
+				},
+				{
+					"name": "IOAccelerator (graphics)",
+					"dirty": 6193152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 262144,
+					"regions": 63
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 5013504,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 4259840,
+					"regions": 518
+				},
+				{
+					"name": "WebKit Malloc",
+					"dirty": 1392640,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 2342912,
+					"regions": 5
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 1104241,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 148
+				},
+				{
+					"name": "__DATA",
+					"dirty": 550381,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 57
+				},
+				{
+					"name": "page table",
+					"dirty": 525032,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 491520,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 10
+				},
+				{
+					"name": "Stack",
+					"dirty": 475136,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 212992,
+					"regions": 34
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 294912,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 260866,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 92
+				},
+				{
+					"name": "CoreAnimation",
+					"dirty": 180224,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 11
+				},
+				{
+					"name": "Untagged",
+					"dirty": 163840,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 12
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 96872,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 25
+				},
+				{
+					"name": "App-Specific Tag 2",
+					"dirty": 81920,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "IOAccelerator",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "ColorSync",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "IOKit",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "CoreServices",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81426,
+			"name": "com.apple.WebKit.WebContent",
+			"footprint": 98157456,
+			"categories": [
+				{
+					"name": "WebKit Malloc",
+					"dirty": 26591232,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 28557312,
+					"regions": 7
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 2064384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 3997696,
+					"regions": 438
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 1271888,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 144
+				},
+				{
+					"name": "WebAssembly Memory",
+					"dirty": 917504,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 409600,
+					"regions": 546
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 819200,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 12
+				},
+				{
+					"name": "__DATA",
+					"dirty": 707054,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 68
+				},
+				{
+					"name": "page table",
+					"dirty": 639888,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 557056,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 34
+				},
+				{
+					"name": "JS JIT Generated Code",
+					"dirty": 475136,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 2392064,
+					"regions": 3
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 245760,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 240866,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 94
+				},
+				{
+					"name": "Untagged",
+					"dirty": 163840,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 136616,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 21
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "ColorSync",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "CoreServices",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81419,
+			"name": "tracker",
+			"footprint": 32720000,
+			"categories": [
+				{
+					"name": "Malloc Small",
+					"dirty": 18399232,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 16
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 2514440,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 369
+				},
+				{
+					"name": "WebKit Malloc",
+					"dirty": 2097152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 2326528,
+					"regions": 6
+				},
+				{
+					"name": "__DATA",
+					"dirty": 1794979,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 130
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 1540096,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 13
+				},
+				{
+					"name": "page table",
+					"dirty": 803968,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 786432,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 65536,
+					"regions": 52
+				},
+				{
+					"name": "CoreAnimation",
+					"dirty": 638976,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 49152,
+					"regions": 36
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 613116,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 215
+				},
+				{
+					"name": "CoreUI Image Data",
+					"dirty": 606208,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 583713,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 83
+				},
+				{
+					"name": "mapped file",
+					"dirty": 573440,
+					"swapped": 0,
+					"clean": 15138816,
+					"reclaimable": 0,
+					"regions": 34
+				},
+				{
+					"name": "Untagged",
+					"dirty": 376832,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 53
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 311296,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__DATA_CONST",
+					"dirty": 196608,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Accelerate Framework",
+					"dirty": 131072,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 114616,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "CoreServices",
+					"dirty": 65536,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Malloc Nano",
+					"dirty": 65536,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "IOAccelerator",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "CoreGraphics",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "SQLite Page Cache",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "ColorSync",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Deferred Reclaim",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "IOAccelerator (graphics)",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "IOKit",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81427,
+			"name": "com.apple.WebKit.Networking",
+			"footprint": 6586824,
+			"categories": [
+				{
+					"name": "WebKit Malloc",
+					"dirty": 2260992,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 1622016,
+					"regions": 6
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 1114112,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 1441792,
+					"regions": 283
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 1045177,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 125
+				},
+				{
+					"name": "__DATA",
+					"dirty": 508992,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 55
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 376832,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "page table",
+					"dirty": 328136,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 180224,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 10
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 177930,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 75
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 147456,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 116421,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 31
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "Untagged",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 5
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "SQLite Page Cache",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 49152,
+					"regions": 3
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81428,
+			"name": "com.apple.audio.SandboxHelper",
+			"footprint": 5652984,
+			"categories": [
+				{
+					"name": "Malloc Small",
+					"dirty": 3571712,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 557056,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 438363,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 71
+				},
+				{
+					"name": "page table",
+					"dirty": 360952,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__DATA",
+					"dirty": 193876,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 19
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 114688,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 89833,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 31
+				},
+				{
+					"name": "Dispatch Continuations",
+					"dirty": 81920,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 16384,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 7
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 49080,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Deferred Reclaim",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 48,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81424,
+			"name": "SetStoreUpdateService",
+			"footprint": 2457936,
+			"categories": [
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 508027,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 91
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 425984,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 8
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 278528,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 3440640,
+					"regions": 4
+				},
+				{
+					"name": "page table",
+					"dirty": 246096,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__DATA",
+					"dirty": 215412,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 22
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 198041,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 48
+				},
+				{
+					"name": "Stack",
+					"dirty": 147456,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 98304,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Dispatch Continuations",
+					"dirty": 98304,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Untagged",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 9536,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				}
+			]
+		}
+	],
+	"measured": {
+		"from": 193377965947145,
+		"to": 193387349646104,
+		"seconds": 9.383698959
+	},
+	"usage": {
+		"user_ns": 1683171834,
+		"system_ns": 556468167,
+		"pkg_idle_wkups": 36,
+		"interrupt_wkups": 3057,
+		"energy_nj": 4293338136,
+		"penergy_nj": 4292652835,
+		"billed_energy": 25870159,
+		"serviced_energy": 45010010,
+		"instructions": 12737410857,
+		"cycles": 6944411126,
+		"cpu_ns": 2239640001
+	},
+	"extra": {
+		"wheel": {
+			"events": 391,
+			"dy": 100,
+			"hz": 60,
+			"from": 193380830962895,
+			"to": 193387349456854,
+			"interval_ms": {
+				"n": 390,
+				"min": 5.29525,
+				"median": 16.666,
+				"p95": 18.382583,
+				"max": 27.561125
+			}
+		}
+	},
+	"procs_after": [
+		{
+			"pid": 81419,
+			"path": "<repo>/compare/builds/Tracker-tauri.app/Contents/MacOS/tracker",
+			"responsible": 81419,
+			"ppid": 81262
+		},
+		{
+			"pid": 81424,
+			"path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81425,
+			"path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81426,
+			"path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.WebContent.xpc/Contents/MacOS/com.apple.WebKit.WebContent",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81427,
+			"path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc/Contents/MacOS/com.apple.WebKit.Networking",
+			"responsible": 81419,
+			"ppid": 1
+		},
+		{
+			"pid": 81428,
+			"path": "/System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper",
+			"responsible": 81419,
+			"ppid": 1
+		}
+	],
+	"footprint": {
+		"t": 193387417717604,
+		"total": 567530968,
+		"processes": [
+			{
+				"pid": 81426,
+				"name": "com.apple.WebKit.WebContent",
+				"footprint": 366592960,
+				"peak": 586810304
+			},
+			{
+				"pid": 81425,
+				"name": "com.apple.WebKit.GPU",
+				"footprint": 152422536,
+				"peak": 154731720
+			},
+			{
+				"pid": 81419,
+				"name": "tracker",
+				"footprint": 34391168,
+				"peak": 34407552
+			},
+			{
+				"pid": 81427,
+				"name": "com.apple.WebKit.Networking",
+				"footprint": 6455752,
+				"peak": 8176072
+			},
+			{
+				"pid": 81428,
+				"name": "com.apple.audio.SandboxHelper",
+				"footprint": 5652984,
+				"peak": 5751288
+			},
+			{
+				"pid": 81424,
+				"name": "SetStoreUpdateService",
+				"footprint": 2408784,
+				"peak": 4587760
+			}
+		],
+		"errors": []
+	},
+	"breakdown_end": [
+		{
+			"pid": 81426,
+			"name": "com.apple.WebKit.WebContent",
+			"footprint": 296108992,
+			"categories": [
+				{
+					"name": "WebKit Malloc",
+					"dirty": 91226112,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 32194560,
+					"regions": 10
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 2228224,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 4014080,
+					"regions": 442
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 1271888,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 144
+				},
+				{
+					"name": "WebAssembly Memory",
+					"dirty": 917504,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 409600,
+					"regions": 546
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 819200,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 12
+				},
+				{
+					"name": "__DATA",
+					"dirty": 707054,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 68
+				},
+				{
+					"name": "page table",
+					"dirty": 672704,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "JS JIT Generated Code",
+					"dirty": 655360,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 2392064,
+					"regions": 3
+				},
+				{
+					"name": "Stack",
+					"dirty": 557056,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 32
+				},
+				{
+					"name": "Untagged",
+					"dirty": 491520,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 245760,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 240866,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 94
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 136616,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 21
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "ColorSync",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "CoreServices",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81425,
+			"name": "com.apple.WebKit.GPU",
+			"footprint": 152422536,
+			"categories": [
+				{
+					"name": "Owned physical footprint (unmapped) (graphics)",
+					"dirty": 123535360,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 50
+				},
+				{
+					"name": "Owned physical footprint (unmapped)",
+					"dirty": 8388608,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 64
+				},
+				{
+					"name": "IOAccelerator (graphics)",
+					"dirty": 6684672,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 983040,
+					"regions": 72
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 6307840,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 5734400,
+					"regions": 594
+				},
+				{
+					"name": "page table",
+					"dirty": 1509512,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "WebKit Malloc",
+					"dirty": 1392640,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 3047424,
+					"regions": 5
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 1104241,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 148
+				},
+				{
+					"name": "Stack",
+					"dirty": 950272,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 196608,
+					"regions": 26
+				},
+				{
+					"name": "__DATA",
+					"dirty": 550381,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 57
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 507904,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 10
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 311296,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 260866,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 92
+				},
+				{
+					"name": "Untagged",
+					"dirty": 163840,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 13
+				},
+				{
+					"name": "CoreAnimation",
+					"dirty": 147456,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 96872,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 25
+				},
+				{
+					"name": "App-Specific Tag 2",
+					"dirty": 81920,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "IOAccelerator",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "ColorSync",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "IOKit",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "CoreServices",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81419,
+			"name": "tracker",
+			"footprint": 34391168,
+			"categories": [
+				{
+					"name": "Malloc Small",
+					"dirty": 20086784,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 16
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 2518912,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 371
+				},
+				{
+					"name": "WebKit Malloc",
+					"dirty": 2113536,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 2424832,
+					"regions": 6
+				},
+				{
+					"name": "__DATA",
+					"dirty": 1827747,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 130
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 1540096,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 13
+				},
+				{
+					"name": "page table",
+					"dirty": 803968,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 688128,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 65536,
+					"regions": 48
+				},
+				{
+					"name": "CoreAnimation",
+					"dirty": 638976,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 35
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 625028,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 217
+				},
+				{
+					"name": "CoreUI Image Data",
+					"dirty": 606208,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 583713,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 83
+				},
+				{
+					"name": "mapped file",
+					"dirty": 573440,
+					"swapped": 0,
+					"clean": 15138816,
+					"reclaimable": 0,
+					"regions": 34
+				},
+				{
+					"name": "Untagged",
+					"dirty": 393216,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 55
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 311296,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__DATA_CONST",
+					"dirty": 196608,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Accelerate Framework",
+					"dirty": 131072,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 114616,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "CoreServices",
+					"dirty": 65536,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Malloc Nano",
+					"dirty": 65536,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "IOAccelerator",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "CoreGraphics",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "SQLite Page Cache",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "ColorSync",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Deferred Reclaim",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "IOAccelerator (graphics)",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 2
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "IOKit",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81427,
+			"name": "com.apple.WebKit.Networking",
+			"footprint": 6455752,
+			"categories": [
+				{
+					"name": "WebKit Malloc",
+					"dirty": 2179072,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 1703936,
+					"regions": 6
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 1114112,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 1441792,
+					"regions": 283
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 1045177,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 125
+				},
+				{
+					"name": "__DATA",
+					"dirty": 508992,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 55
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 376832,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "page table",
+					"dirty": 328136,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 177930,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 75
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 147456,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 131072,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 8
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 116421,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 31
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "Untagged",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 5
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 32768,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Foundation",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "SQLite Page Cache",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 65536,
+					"regions": 3
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81428,
+			"name": "com.apple.audio.SandboxHelper",
+			"footprint": 5652984,
+			"categories": [
+				{
+					"name": "Malloc Small",
+					"dirty": 3571712,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 557056,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 9
+				},
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 438363,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 71
+				},
+				{
+					"name": "page table",
+					"dirty": 360952,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__DATA",
+					"dirty": 193876,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 19
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 114688,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 89833,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 31
+				},
+				{
+					"name": "Dispatch Continuations",
+					"dirty": 81920,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 16384,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 49152,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 7
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 49080,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 3
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Deferred Reclaim",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 48,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				}
+			]
+		},
+		{
+			"pid": 81424,
+			"name": "SetStoreUpdateService",
+			"footprint": 2408784,
+			"categories": [
+				{
+					"name": "__DATA_DIRTY",
+					"dirty": 508027,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 91
+				},
+				{
+					"name": "Malloc Metadata",
+					"dirty": 425984,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 8
+				},
+				{
+					"name": "Malloc Small",
+					"dirty": 278528,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 3440640,
+					"regions": 4
+				},
+				{
+					"name": "page table",
+					"dirty": 246096,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "__DATA",
+					"dirty": 215412,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 22
+				},
+				{
+					"name": "unused dyld shared cache area",
+					"dirty": 198041,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 48
+				},
+				{
+					"name": "Malloc Tiny",
+					"dirty": 98304,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Dispatch Continuations",
+					"dirty": 98304,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Stack",
+					"dirty": 98304,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 7
+				},
+				{
+					"name": "__TPRO_CONST",
+					"dirty": 53176,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__OBJC_RW",
+					"dirty": 48000,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Activity Tracing",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "OS Alloc Once",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 1
+				},
+				{
+					"name": "Untagged",
+					"dirty": 16384,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				},
+				{
+					"name": "__AUTH",
+					"dirty": 9536,
+					"swapped": 0,
+					"clean": 0,
+					"reclaimable": 0,
+					"regions": 4
+				}
+			]
+		}
+	],
+	"frame_marks": 1,
+	"steps": [
+		{
+			"label": "click show-all",
+			"control": "show-all",
+			"trigger": "up",
+			"trigger_from": "calibration",
+			"input_t": 193379233552583,
+			"move_t": 193379182335208,
+			"down_t": 193379202388208,
+			"up_t": 193379233552583,
+			"hold_ms": 31.164375,
+			"mark": "shown:all",
+			"mark_t": 193379243640229,
+			"app_ms": 1795432068439,
+			"ms_to_mark": 10.087646,
+			"ms_from_down": 41.252021,
+			"ms_from_up": 10.087646,
+			"frame_t": 193379256520895,
+			"frame_signal": "MARK frame:shown:all",
+			"ms_to_frame": 22.968312
+		}
+	],
+	"inputs": [
+		{
+			"what": "wheel to page end",
+			"t": 193377978916041,
+			"all": [
+				193377978916041,
+				193377995600666,
+				193378013937208,
+				193378028934375,
+				193378047143458,
+				193378063545166,
+				193378080308250,
+				193378095892041,
+				193378113874458,
+				193378130195500,
+				193378145605500,
+				193378163935583,
+				193378180194000,
+				193378196956958,
+				193378213600541,
+				193378230226500,
+				193378246951333,
+				193378262935916,
+				193378279558166,
+				193378295600958,
+				193378313929416,
+				193378328931125,
+				193378347271375,
+				193378363521583,
+				193378378931083
+			]
+		},
+		{
+			"what": "click show-all",
+			"t": 193379202388208,
+			"move": 193379182335208,
+			"down": 193379202388208,
+			"up": 193379233552583,
+			"all": [
+				193379182335208,
+				193379202388208,
+				193379233552583
+			]
+		},
+		{
+			"what": "wheel to top",
+			"t": 193379257934916,
+			"all": [
+				193379257934916,
+				193379275467000,
+				193379292746750,
+				193379307949375,
+				193379324617083,
+				193379341907875,
+				193379359460208,
+				193379374620708,
+				193379392958125,
+				193379409199083,
+				193379424617958,
+				193379442951375,
+				193379457955458,
+				193379474822375,
+				193379492899958,
+				193379510231750,
+				193379525388750,
+				193379542757916,
+				193379559244208,
+				193379575973958,
+				193379592606083,
+				193379609303291,
+				193379625944500,
+				193379642633750,
+				193379659284250,
+				193379674929625,
+				193379691281000,
+				193379708261541,
+				193379726242541,
+				193379742549875,
+				193379761550208,
+				193379774610875,
+				193379792967125,
+				193379809203416,
+				193379825711750
+			]
+		},
+		{
+			"what": "wheel down",
+			"t": 193380832297000,
+			"all": [
+				193380832297000,
+				193380848981916,
+				193380865653125,
+				193380883988958,
+				193380900234541,
+				193380917005791,
+				193380933640375,
+				193380950317041,
+				193380967018833,
+				193380983671416,
+				193381000301583,
+				193381016979500,
+				193381033675833,
+				193381050329000,
+				193381066439041,
+				193381084940666,
+				193381098982458,
+				193381115650875,
+				193381133985166,
+				193381150233166,
+				193381165646583,
+				193381184012916,
+				193381198981291,
+				193381215648541,
+				193381234023583,
+				193381250125333,
+				193381265716208,
+				193381282316791,
+				193381299242625,
+				193381317283500,
+				193381335998250,
+				193381348983000,
+				193381367321833,
+				193381383596541,
+				193381400322041,
+				193381416988166,
+				193381433686708,
+				193381450333083,
+				193381465793291,
+				193381482316375,
+				193381500654583,
+				193381516898500,
+				193381533673541,
+				193381548981666,
+				193381566547541,
+				193381592919500,
+				193381598971416,
+				193381616742083,
+				193381633711666,
+				193381648979458,
+				193381665645458,
+				193381683976333,
+				193381700254208,
+				193381716330833,
+				193381733803666,
+				193381750276458,
+				193381767030125,
+				193381783646625,
+				193381800314125,
+				193381816993916,
+				193381835308166,
+				193381849895500,
+				193381867078708,
+				193381883638916,
+				193381900325333,
+				193381916990750,
+				193381933440416,
+				193381950372250,
+				193381966968708,
+				193381982334041,
+				193382000650083,
+				193382016906333,
+				193382032820625,
+				193382050522875,
+				193382066925208,
+				193382084560625,
+				193382100094458,
+				193382117047125,
+				193382132312666,
+				193382150653500,
+				193382165659666,
+				193382183990333,
+				193382200222208,
+				193382217000125,
+				193382233642208,
+				193382250329041,
+				193382266975208,
+				193382283653333,
+				193382300337500,
+				193382316969583,
+				193382334849791,
+				193382349646125,
+				193382367155125,
+				193382383612500,
+				193382400320750,
+				193382417019375,
+				193382432328416,
+				193382450663166,
+				193382466900083,
+				193382483642083,
+				193382500351791,
+				193382516975541,
+				193382532309958,
+				193382550653958,
+				193382566905500,
+				193382588487958,
+				193382599101458,
+				193382616118458,
+				193382633863541,
+				193382650258916,
+				193382666986416,
+				193382683677916,
+				193382700312583,
+				193382716981041,
+				193382732957375,
+				193382750503458,
+				193382765648750,
+				193382784050583,
+				193382800207791,
+				193382817031875,
+				193382835342666,
+				193382849909583,
+				193382867075000,
+				193382882316333,
+				193382899160291,
+				193382917275916,
+				193382933567875,
+				193382948983500,
+				193382967351416,
+				193382983733916,
+				193382999725875,
+				193383017130208,
+				193383033611458,
+				193383050326416,
+				193383066975625,
+				193383085267291,
+				193383099962625,
+				193383117071250,
+				193383133630375,
+				193383150353125,
+				193383166979375,
+				193383183650583,
+				193383199800625,
+				193383217156083,
+				193383232315083,
+				193383249429583,
+				193383266703375,
+				193383283726875,
+				193383300307708,
+				193383316864250,
+				193383334900458,
+				193383350009291,
+				193383365647500,
+				193383383992833,
+				193383400231750,
+				193383417044250,
+				193383433287958,
+				193383450415125,
+				193383466955541,
+				193383482313083,
+				193383500700875,
+				193383516894750,
+				193383533673666,
+				193383549552250,
+				193383567184541,
+				193383593688208,
+				193383598983458,
+				193383617349125,
+				193383632316958,
+				193383650646291,
+				193383666902208,
+				193383683056458,
+				193383700467250,
+				193383715674208,
+				193383733970125,
+				193383749808708,
+				193383765646208,
+				193383783980000,
+				193383800225250,
+				193383817025250,
+				193383834730000,
+				193383850052750,
+				193383865643458,
+				193383884029750,
+				193383900236666,
+				193383917005625,
+				193383933644625,
+				193383950338708,
+				193383966974750,
+				193383982314291,
+				193384000648166,
+				193384016290375,
+				193384033831166,
+				193384048980041,
+				193384067311000,
+				193384085293750,
+				193384099899416,
+				193384116609875,
+				193384133737000,
+				193384148974166,
+				193384166530375,
+				193384183762791,
+				193384198971916,
+				193384217361166,
+				193384233551791,
+				193384250343833,
+				193384266881416,
+				193384282313500,
+				193384298979458,
+				193384315649125,
+				193384336252833,
+				193384349666541,
+				193384365677458,
+				193384382317041,
+				193384400647958,
+				193384415946916,
+				193384432318375,
+				193384450670000,
+				193384465640875,
+				193384484000333,
+				193384500234208,
+				193384517022333,
+				193384533643166,
+				193384550340041,
+				193384565654791,
+				193384593215916,
+				193384598974958,
+				193384617347416,
+				193384633558958,
+				193384650341875,
+				193384666966875,
+				193384683675125,
+				193384700323916,
+				193384716979375,
+				193384732311250,
+				193384750663458,
+				193384766894416,
+				193384783697791,
+				193384799971083,
+				193384817091791,
+				193384833423708,
+				193384848989958,
+				193384867312000,
+				193384883584208,
+				193384898982125,
+				193384915649625,
+				193384932311166,
+				193384948976708,
+				193384967335708,
+				193384983594333,
+				193384998980125,
+				193385015891166,
+				193385032316083,
+				193385048981541,
+				193385067317541,
+				193385084669708,
+				193385100062750,
+				193385117054041,
+				193385133623875,
+				193385150340500,
+				193385166976291,
+				193385183685625,
+				193385200306083,
+				193385217001458,
+				193385233181416,
+				193385250442375,
+				193385266946791,
+				193385283670666,
+				193385300319208,
+				193385316989541,
+				193385337657125,
+				193385349320958,
+				193385365647208,
+				193385384000500,
+				193385400231125,
+				193385417021958,
+				193385433642416,
+				193385450339250,
+				193385466969250,
+				193385483665458,
+				193385499370541,
+				193385517247750,
+				193385533572708,
+				193385550345958,
+				193385566968833,
+				193385590814875,
+				193385598974708,
+				193385617335666,
+				193385633027291,
+				193385650539625,
+				193385666932708,
+				193385683420750,
+				193385699450041,
+				193385717226708,
+				193385732314708,
+				193385750664333,
+				193385766899125,
+				193385782318250,
+				193385799582166,
+				193385817174291,
+				193385833950750,
+				193385849963541,
+				193385865910125,
+				193385883938083,
+				193385898977500,
+				193385917360083,
+				193385932309708,
+				193385950659333,
+				193385965649333,
+				193385984032291,
+				193385999051791,
+				193386017303083,
+				193386032316500,
+				193386050655000,
+				193386066895333,
+				193386086119833,
+				193386098986250,
+				193386117316750,
+				193386133568208,
+				193386150354541,
+				193386165653958,
+				193386184017500,
+				193386200216875,
+				193386217027875,
+				193386233014000,
+				193386250486458,
+				193386266938375,
+				193386282311666,
+				193386299699458,
+				193386317190166,
+				193386338335125,
+				193386348971791,
+				193386366376916,
+				193386383829541,
+				193386400267791,
+				193386415647375,
+				193386432314958,
+				193386450690583,
+				193386466885375,
+				193386483704375,
+				193386498984000,
+				193386517330125,
+				193386532314208,
+				193386550678500,
+				193386565647833,
+				193386591162666,
+				193386598973041,
+				193386617344791,
+				193386633169208,
+				193386650188958,
+				193386667014875,
+				193386682316333,
+				193386700665125,
+				193386716921041,
+				193386733673916,
+				193386750314791,
+				193386766984125,
+				193386783670916,
+				193386800300916,
+				193386816986250,
+				193386835340208,
+				193386848986125,
+				193386866214958,
+				193386883846125,
+				193386898989958,
+				193386917341000,
+				193386933568416,
+				193386948974833,
+				193386965639750,
+				193386984016625,
+				193387000235583,
+				193387017026916,
+				193387032308750,
+				193387049778333,
+				193387067123958,
+				193387086739875,
+				193387098978708,
+				193387117335041,
+				193387133567000,
+				193387150361541,
+				193387166973333,
+				193387182869458,
+				193387200528625,
+				193387216928541,
+				193387232320208,
+				193387250677583,
+				193387266898833,
+				193387283674958,
+				193387300300291,
+				193387317014875,
+				193387339841291,
+				193387348975166
+			]
+		}
+	],
+	"top": [
+		{
+			"t": 193379438715312,
+			"block": 1,
+			"pid": 81426,
+			"cpu": 4.2,
+			"idlew": 0,
+			"power": 4.2
+		},
+		{
+			"t": 193379438736354,
+			"block": 1,
+			"pid": 81425,
+			"cpu": 3.2,
+			"idlew": 0,
+			"power": 3.2
+		},
+		{
+			"t": 193379438738062,
+			"block": 1,
+			"pid": 81419,
+			"cpu": 1.9,
+			"idlew": 0,
+			"power": 1.9
+		},
+		{
+			"t": 193379438738562,
+			"block": 1,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193379438738937,
+			"block": 1,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193379438739270,
+			"block": 1,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193380515703395,
+			"block": 2,
+			"pid": 81426,
+			"cpu": 3.5,
+			"idlew": 0,
+			"power": 3.5
+		},
+		{
+			"t": 193380515708020,
+			"block": 2,
+			"pid": 81425,
+			"cpu": 1.9,
+			"idlew": 0,
+			"power": 1.9
+		},
+		{
+			"t": 193380515708437,
+			"block": 2,
+			"pid": 81419,
+			"cpu": 1.8,
+			"idlew": 4,
+			"power": 2
+		},
+		{
+			"t": 193380515708812,
+			"block": 2,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193380515709145,
+			"block": 2,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193380515709437,
+			"block": 2,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193381576727562,
+			"block": 3,
+			"pid": 81426,
+			"cpu": 10.2,
+			"idlew": 1,
+			"power": 10.3
+		},
+		{
+			"t": 193381576733770,
+			"block": 3,
+			"pid": 81425,
+			"cpu": 6.8,
+			"idlew": 0,
+			"power": 6.8
+		},
+		{
+			"t": 193381576734479,
+			"block": 3,
+			"pid": 81419,
+			"cpu": 4.1,
+			"idlew": 3,
+			"power": 4.2
+		},
+		{
+			"t": 193381576734937,
+			"block": 3,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193381576739645,
+			"block": 3,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193381576740062,
+			"block": 3,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193382639674062,
+			"block": 4,
+			"pid": 81426,
+			"cpu": 14.7,
+			"idlew": 0,
+			"power": 14.7
+		},
+		{
+			"t": 193382639678854,
+			"block": 4,
+			"pid": 81425,
+			"cpu": 9.7,
+			"idlew": 0,
+			"power": 9.7
+		},
+		{
+			"t": 193382639679395,
+			"block": 4,
+			"pid": 81419,
+			"cpu": 6.2,
+			"idlew": 2,
+			"power": 6.3
+		},
+		{
+			"t": 193382639679729,
+			"block": 4,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193382639680062,
+			"block": 4,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193382639680270,
+			"block": 4,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193383701433604,
+			"block": 5,
+			"pid": 81426,
+			"cpu": 15.1,
+			"idlew": 0,
+			"power": 15.1
+		},
+		{
+			"t": 193383701437937,
+			"block": 5,
+			"pid": 81425,
+			"cpu": 10.4,
+			"idlew": 1,
+			"power": 10.4
+		},
+		{
+			"t": 193383701438437,
+			"block": 5,
+			"pid": 81419,
+			"cpu": 6.3,
+			"idlew": 3,
+			"power": 6.4
+		},
+		{
+			"t": 193383701438770,
+			"block": 5,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193383701439145,
+			"block": 5,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193383701439395,
+			"block": 5,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193384767619770,
+			"block": 6,
+			"pid": 81426,
+			"cpu": 14.8,
+			"idlew": 0,
+			"power": 14.8
+		},
+		{
+			"t": 193384767624312,
+			"block": 6,
+			"pid": 81425,
+			"cpu": 9,
+			"idlew": 0,
+			"power": 9
+		},
+		{
+			"t": 193384767624854,
+			"block": 6,
+			"pid": 81419,
+			"cpu": 5.8,
+			"idlew": 2,
+			"power": 5.9
+		},
+		{
+			"t": 193384767625312,
+			"block": 6,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193384767625687,
+			"block": 6,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193384767626020,
+			"block": 6,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193385828497729,
+			"block": 7,
+			"pid": 81426,
+			"cpu": 14.4,
+			"idlew": 1,
+			"power": 14.4
+		},
+		{
+			"t": 193385828502604,
+			"block": 7,
+			"pid": 81425,
+			"cpu": 8.4,
+			"idlew": 0,
+			"power": 8.4
+		},
+		{
+			"t": 193385828503270,
+			"block": 7,
+			"pid": 81419,
+			"cpu": 5.6,
+			"idlew": 11,
+			"power": 6.2
+		},
+		{
+			"t": 193385828503729,
+			"block": 7,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193385828504145,
+			"block": 7,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193385828504437,
+			"block": 7,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193386894317812,
+			"block": 8,
+			"pid": 81426,
+			"cpu": 12.5,
+			"idlew": 1,
+			"power": 12.6
+		},
+		{
+			"t": 193386894322312,
+			"block": 8,
+			"pid": 81425,
+			"cpu": 7.9,
+			"idlew": 2,
+			"power": 8
+		},
+		{
+			"t": 193386894322937,
+			"block": 8,
+			"pid": 81419,
+			"cpu": 5.5,
+			"idlew": 5,
+			"power": 5.7
+		},
+		{
+			"t": 193386894323312,
+			"block": 8,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193386894323687,
+			"block": 8,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193386894323979,
+			"block": 8,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193387956979062,
+			"block": 9,
+			"pid": 81419,
+			"cpu": 1.2,
+			"idlew": 0,
+			"power": 1.2
+		},
+		{
+			"t": 193387956984229,
+			"block": 9,
+			"pid": 81426,
+			"cpu": 0.1,
+			"idlew": 0,
+			"power": 0.1
+		},
+		{
+			"t": 193387956984770,
+			"block": 9,
+			"pid": 81425,
+			"cpu": 0.1,
+			"idlew": 0,
+			"power": 0.1
+		},
+		{
+			"t": 193387956985145,
+			"block": 9,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193387956985520,
+			"block": 9,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193387956985854,
+			"block": 9,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193389046415729,
+			"block": 10,
+			"pid": 81426,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193389046420770,
+			"block": 10,
+			"pid": 81419,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193389046421229,
+			"block": 10,
+			"pid": 81425,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193389046421604,
+			"block": 10,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193389046421895,
+			"block": 10,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193389046422187,
+			"block": 10,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193390109292104,
+			"block": 11,
+			"pid": 81425,
+			"cpu": 0.1,
+			"idlew": 0,
+			"power": 0.1
+		},
+		{
+			"t": 193390109297604,
+			"block": 11,
+			"pid": 81426,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193390109298062,
+			"block": 11,
+			"pid": 81419,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193390109298354,
+			"block": 11,
+			"pid": 81428,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193390109298645,
+			"block": 11,
+			"pid": 81427,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		},
+		{
+			"t": 193390109298895,
+			"block": 11,
+			"pid": 81424,
+			"cpu": 0,
+			"idlew": 0,
+			"power": 0
+		}
+	],
+	"status": "ok",
+	"exit": {
+		"code": null,
+		"signal": "SIGTERM",
+		"t": 193390975395645
+	},
+	"log": "raw/memory/breakdown-tauri-1000-s9.log",
+	"wall_end": "2026-11-23T11:08:00.270Z"
+}

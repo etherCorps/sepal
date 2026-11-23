@@ -1,0 +1,327 @@
+{
+  "pid": 81093,
+  "size": 10000,
+  "clock_offset": {
+    "ns": -1250,
+    "err_ns": 21500
+  },
+  "window": {
+    "alpha": 1,
+    "h": 832,
+    "id": 6771,
+    "name": "Issues · Tracker",
+    "onscreen": true,
+    "w": 1200,
+    "x": 680,
+    "y": 175,
+    "t": 193358866794041,
+    "stable_t": 193359631247500,
+    "activated_after": "no settled on-screen window within 5000 ms (last seen: null; Stage Manager or another app in front?)"
+  },
+  "window_ms_from_exec": 5153.006708,
+  "marks": {
+    "start": {
+      "ms_from_exec": 223.4,
+      "app_ms_from_exec": 222
+    },
+    "read": {
+      "ms_from_exec": 314.3,
+      "app_ms_from_exec": 314
+    },
+    "parsed": {
+      "ms_from_exec": 318.5,
+      "app_ms_from_exec": 318
+    },
+    "loaded": {
+      "ms_from_exec": 320.5,
+      "app_ms_from_exec": 320
+    },
+    "mounted": {
+      "ms_from_exec": 328.3,
+      "app_ms_from_exec": 328
+    }
+  },
+  "footprint_ms_after_mounted": 5595.5655,
+  "front": {
+    "front_pid": 81093,
+    "frontmost": true,
+    "onscreen": true,
+    "top_window_pid": 81093,
+    "windows": [
+      {
+        "alpha": 1,
+        "h": 832,
+        "id": 6771,
+        "name": "Issues · Tracker",
+        "onscreen": true,
+        "w": 1200,
+        "x": 680,
+        "y": 175
+      }
+    ]
+  },
+  "ax": [
+    {
+      "children": [
+        {
+          "frame": {
+            "h": 832,
+            "w": 1200,
+            "x": 680,
+            "y": 175
+          },
+          "role": "AXGroup",
+          "subrole": ""
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 688,
+            "y": 183
+          },
+          "role": "AXButton",
+          "subrole": "AXCloseButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 734,
+            "y": 183
+          },
+          "role": "AXButton",
+          "subrole": "AXFullScreenButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 16,
+            "x": 711,
+            "y": 183
+          },
+          "role": "AXButton",
+          "subrole": "AXMinimizeButton"
+        },
+        {
+          "frame": {
+            "h": 16,
+            "w": 106,
+            "x": 762,
+            "y": 183
+          },
+          "role": "AXStaticText",
+          "subrole": ""
+        }
+      ],
+      "frame": {
+        "h": 832,
+        "w": 1200,
+        "x": 680,
+        "y": 175
+      },
+      "title": "Issues · Tracker"
+    }
+  ],
+  "procs": [
+    {
+      "pid": 81093,
+      "path": "<repo>/compare/builds/Tracker-tauri.app/Contents/MacOS/tracker",
+      "responsible": 81093,
+      "ppid": 80936
+    },
+    {
+      "pid": 81098,
+      "path": "/System/Library/PrivateFrameworks/CascadeSets.framework/Versions/A/XPCServices/SetStoreUpdateService.xpc/Contents/MacOS/SetStoreUpdateService",
+      "responsible": 81093,
+      "ppid": 1
+    },
+    {
+      "pid": 81099,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.GPU.xpc/Contents/MacOS/com.apple.WebKit.GPU",
+      "responsible": 81093,
+      "ppid": 1
+    },
+    {
+      "pid": 81100,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.WebContent.xpc/Contents/MacOS/com.apple.WebKit.WebContent",
+      "responsible": 81093,
+      "ppid": 1
+    },
+    {
+      "pid": 81101,
+      "path": "/System/Volumes/Preboot/Cryptexes/OS/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.Networking.xpc/Contents/MacOS/com.apple.WebKit.Networking",
+      "responsible": 81093,
+      "ppid": 1
+    },
+    {
+      "pid": 81102,
+      "path": "/System/Library/Frameworks/AudioToolbox.framework/XPCServices/com.apple.audio.SandboxHelper.xpc/Contents/MacOS/com.apple.audio.SandboxHelper",
+      "responsible": 81093,
+      "ppid": 1
+    }
+  ],
+  "usage": [
+    {
+      "billed_energy": 299758639,
+      "cycles": 754121918,
+      "diskio_read": 8192,
+      "diskio_written": 4096,
+      "energy_nj": 679779294,
+      "instructions": 1712892827,
+      "interrupt_wkups": 296,
+      "lifetime_max_phys_footprint": 36815952,
+      "penergy_nj": 678509137,
+      "phys_footprint": 35882112,
+      "pid": 81093,
+      "pkg_idle_wkups": 14,
+      "serviced_energy": 2242506,
+      "system_ns": 56339125,
+      "t": 193359666010125,
+      "user_ns": 160754125
+    },
+    {
+      "billed_energy": 997705,
+      "cycles": 76500485,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 92652878,
+      "instructions": 239252173,
+      "interrupt_wkups": 1,
+      "lifetime_max_phys_footprint": 4604144,
+      "penergy_nj": 92599829,
+      "phys_footprint": 2425144,
+      "pid": 81098,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 0,
+      "system_ns": 4062500,
+      "t": 193359666019041,
+      "user_ns": 16617500
+    },
+    {
+      "billed_energy": 198274,
+      "cycles": 386184913,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 297414002,
+      "instructions": 799166534,
+      "interrupt_wkups": 53,
+      "lifetime_max_phys_footprint": 149013296,
+      "penergy_nj": 292059752,
+      "phys_footprint": 148980528,
+      "pid": 81099,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 7556655,
+      "system_ns": 61100708,
+      "t": 193359666024375,
+      "user_ns": 85880791
+    },
+    {
+      "billed_energy": 118558,
+      "cycles": 894489142,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 816689784,
+      "instructions": 2068248105,
+      "interrupt_wkups": 71,
+      "lifetime_max_phys_footprint": 127353768,
+      "penergy_nj": 802954673,
+      "phys_footprint": 103662504,
+      "pid": 81100,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 19503439,
+      "system_ns": 58758958,
+      "t": 193359666029708,
+      "user_ns": 242272041
+    },
+    {
+      "billed_energy": 206430,
+      "cycles": 99493572,
+      "diskio_read": 8192,
+      "diskio_written": 8192,
+      "energy_nj": 98247993,
+      "instructions": 236710682,
+      "interrupt_wkups": 36,
+      "lifetime_max_phys_footprint": 7864752,
+      "penergy_nj": 97952414,
+      "phys_footprint": 6504880,
+      "pid": 81101,
+      "pkg_idle_wkups": 1,
+      "serviced_energy": 20227211,
+      "system_ns": 11969458,
+      "t": 193359666033875,
+      "user_ns": 16145541
+    },
+    {
+      "billed_energy": 514491,
+      "cycles": 69059819,
+      "diskio_read": 0,
+      "diskio_written": 0,
+      "energy_nj": 86463192,
+      "instructions": 222240870,
+      "interrupt_wkups": 2,
+      "lifetime_max_phys_footprint": 5800464,
+      "penergy_nj": 86416859,
+      "phys_footprint": 5702160,
+      "pid": 81102,
+      "pkg_idle_wkups": 0,
+      "serviced_energy": 0,
+      "system_ns": 4069458,
+      "t": 193359666036583,
+      "user_ns": 16334541
+    }
+  ],
+  "footprint": {
+    "t": 193359725046500,
+    "total": 303009896,
+    "processes": [
+      {
+        "pid": 81099,
+        "name": "com.apple.WebKit.GPU",
+        "footprint": 148980528,
+        "peak": 149013296
+      },
+      {
+        "pid": 81100,
+        "name": "com.apple.WebKit.WebContent",
+        "footprint": 103908288,
+        "peak": 127353768
+      },
+      {
+        "pid": 81093,
+        "name": "tracker",
+        "footprint": 35882112,
+        "peak": 36815952
+      },
+      {
+        "pid": 81101,
+        "name": "com.apple.WebKit.Networking",
+        "footprint": 6504880,
+        "peak": 7864752
+      },
+      {
+        "pid": 81102,
+        "name": "com.apple.audio.SandboxHelper",
+        "footprint": 5702160,
+        "peak": 5800464
+      },
+      {
+        "pid": 81098,
+        "name": "SetStoreUpdateService",
+        "footprint": 2425144,
+        "peak": 4604144
+      }
+    ],
+    "errors": []
+  },
+  "lines": [
+    "223.39ms fd2 MARK start 1795432043133.0",
+    "314.35ms fd2 MARK read 1795432043225.0",
+    "318.48ms fd2 MARK parsed 1795432043229.0",
+    "320.51ms fd2 MARK loaded 1795432043231.0",
+    "328.34ms fd2 MARK mounted 1795432043239.0",
+    "5149.59ms fd2 MARK frame:start 1795432048059.0",
+    "5149.71ms fd2 MARK frame:loaded 1795432048060.0",
+    "5149.76ms fd2 MARK frame:mounted 1795432048060.0"
+  ]
+}
