@@ -135,7 +135,7 @@ export const view = $state({
 	scope: {} as { assignee?: string; project?: string },
 	groupBy: DEFAULT_SETTINGS.defaultGroupBy as GroupBy,
 	sortBy: 'updated' as SortBy,
-	/** how many rows are mounted; `Infinity` after Show all */
+	/** how many rows are paged in; `Infinity` after Show all. The list mounts only those in view. */
 	visible: PAGE_SIZE,
 	/** group ids that are collapsed */
 	collapsed: {} as Record<string, boolean>
@@ -342,7 +342,7 @@ const grouped = $derived.by((): Group[] => {
 });
 
 export interface PagedGroup extends Group {
-	/** only the rows that are mounted */
+	/** only the rows that are paged in */
 	issues: Issue[];
 	/** every issue in the group */
 	total: number;
@@ -350,14 +350,14 @@ export interface PagedGroup extends Group {
 }
 export interface Paged {
 	groups: PagedGroup[];
-	/** the mounted rows in screen order: what j/k and Shift+click walk */
+	/** the paged-in rows in screen order: what j/k and Shift+click walk */
 	rows: Issue[];
 	shown: number;
 	/** issues left for Show more, not counting collapsed groups */
 	hidden: number;
 }
 
-/** What the list mounts: the first `view.visible` rows, across groups. */
+/** What the list pages in: the first `view.visible` rows, across groups. */
 const paged = $derived.by((): Paged => {
 	let budget = view.visible;
 	const groups: PagedGroup[] = [];
@@ -536,7 +536,7 @@ export function get_issue(key: string): Issue | undefined {
 	return by_key.get(key);
 }
 
-/** The key `delta` rows after `key` among the mounted rows (j/k), or null at the ends. */
+/** The key `delta` rows after `key` among the paged-in rows (j/k), or null at the ends. */
 export function neighbor(key: string | null, delta: number): string | null {
 	const rows = paged.rows;
 	if (rows.length === 0) return null;
@@ -946,11 +946,18 @@ function reseed(count: number) {
 	return stats();
 }
 
+/** The keys of the rows the list has paged in, in screen order: more than it mounts. */
+function order() {
+	return paged.rows.map((issue) => issue.key);
+}
+
 function stats() {
 	return {
 		n,
 		issues: issues.length,
 		filtered: filtered.length,
+		/** rows the list has paged in (Show more, Show all); it mounts only those in view */
+		paged: paged.shown,
 		filter_ms,
 		stringify_ms: persist_stats.stringify_ms,
 		saves: persist_stats.saves,
@@ -964,7 +971,7 @@ function stats() {
 // and this keeps the store reachable for the harness whatever is mounted.
 // `update` and `save_now` let the bench make overlay edits without clicking (P10);
 // `goto` reaches URLs nothing links to (a 404) and navigates from a timer.
-(globalThis as any).__tracker = { reseed, stats, simulate_once, update, bulk_update, create, undo, thread, save_now: flush, issue: get_issue, delete: delete_issues, goto };
+(globalThis as any).__tracker = { reseed, stats, simulate_once, update, bulk_update, create, undo, thread, save_now: flush, issue: get_issue, delete: delete_issues, goto, order };
 
 load().then(({ overlay: saved, settings: loaded }) => {
 	Object.assign(settings, loaded);

@@ -1,6 +1,6 @@
 <!--
 	One issue in the list (docs/tracker-design.md, Row). Plain elements only:
-	200 to 20,000 of these are mounted, so no Bits UI and no transitions.
+	A screenful of these mounts on every scroll, so no Bits UI and no transitions.
 	The checkbox sits outside the link so a click on it never navigates.
 	`selectable={false}` drops the checkbox column, and the highlight with it
 	(Insights' oldest list).

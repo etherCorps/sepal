@@ -5,7 +5,7 @@ use super::*;
 #[test]
 fn search_filters_on_every_key_and_shows_the_empty_state() {
     let mut doc = load();
-    assert_eq!(count(&doc, "[data-testid=row]"), 200, "one page of rows");
+    assert_eq!(paged(&doc), 200, "one page of rows");
 
     click(&mut doc, "[data-testid=search]");
     doc.type_text("deploy");
@@ -25,7 +25,8 @@ fn search_filters_on_every_key_and_shows_the_empty_state() {
     );
     click(&mut doc, "[data-testid=clear-filters]");
     assert_eq!(text(&doc, "[data-testid=page-count]"), "5,000");
-    assert_eq!(count(&doc, "[data-testid=row]"), 200);
+    assert_eq!(paged(&doc), 200);
+    assert!(doc.query("[data-testid=row]").is_some());
 }
 
 #[test]
@@ -80,14 +81,15 @@ fn paging_and_collapsing_groups() {
     let mut doc = load();
     js(&doc, "globalThis.__tracker.reseed(1000), ''");
     doc.settle();
-    assert_eq!(count(&doc, "[data-testid=row]"), 200);
+    assert_eq!(paged(&doc), 200);
     click(&mut doc, "[data-testid=show-more]");
-    assert_eq!(count(&doc, "[data-testid=row]"), 400);
+    assert_eq!(paged(&doc), 400);
     click(&mut doc, "[data-testid=show-all]");
-    assert_eq!(count(&doc, "[data-testid=row]"), 1000);
+    assert_eq!(paged(&doc), 1000);
     assert!(doc.query("[data-testid=show-more]").is_none());
 
-    // Collapsing the first group unmounts its rows and keeps its header.
+    // Collapsing the first group pages out its rows and keeps its header;
+    // the next group's header comes up under it.
     let first = doc.query("[data-testid=group-header]").unwrap();
     let group = doc.attr(first, "data-group").unwrap();
     let in_group: usize = text(&doc, "[data-testid=group-header] span.font-mono")
@@ -95,7 +97,7 @@ fn paging_and_collapsing_groups() {
         .parse()
         .unwrap();
     click(&mut doc, "[data-testid=group-header]");
-    assert_eq!(count(&doc, "[data-testid=row]"), 1000 - in_group);
+    assert_eq!(paged(&doc), 1000 - in_group);
     assert_eq!(
         doc.attr(
             doc.query("[data-testid=group-header]").unwrap(),
@@ -105,8 +107,146 @@ fn paging_and_collapsing_groups() {
         Some("false"),
         "{group} collapsed"
     );
+    let headers = doc.query_all("[data-testid=group-header]");
+    assert!(headers.len() >= 2);
+    assert_eq!(
+        doc.rect(headers[1]).unwrap().1,
+        doc.rect(headers[0]).unwrap().1 + 32.0
+    );
     click(&mut doc, "[data-testid=group-header]");
-    assert_eq!(count(&doc, "[data-testid=row]"), 1000);
+    assert_eq!(paged(&doc), 1000);
+}
+
+/// Show all pages in every row, but the list mounts only those in view (and a
+/// few screens' worth around them): the cliff of docs/tracker-perf.md is gone.
+#[test]
+fn show_all_mounts_only_the_rows_in_view() {
+    let mut doc = load();
+    let mounted = count(&doc, "[data-testid=row]");
+    assert!(mounted > 15 && mounted < 40, "{mounted} rows mounted");
+
+    click(&mut doc, "[data-testid=show-all]");
+    assert_eq!(paged(&doc), 5000);
+    assert!(doc.query("[data-testid=show-all]").is_none());
+    assert_eq!(count(&doc, "[data-testid=row]"), mounted, "the same window");
+    assert!(doc.live_nodes() < 20_000, "{} live nodes", doc.live_nodes());
+    // The list is as tall as every row would make it: 36px a row, 32 a group header.
+    let groups = number(&js(
+        &doc,
+        "String(new Set(globalThis.__tracker.order().map((key) => globalThis.__tracker.issue(key).status)).size)",
+    ));
+    assert_eq!(
+        js(
+            &doc,
+            "String(document.querySelector('[data-testid=list]').scrollHeight)"
+        ),
+        (groups * 32 + 5000 * 36).to_string()
+    );
+}
+
+#[test]
+fn the_wheel_scrolls_the_list_and_mounts_the_rows_in_view() {
+    let mut doc = load();
+    pick(&mut doc, "[data-testid=group-by]", "none");
+    click(&mut doc, "[data-testid=show-all]");
+    let order = order(&doc);
+    assert_eq!(order.len(), 5000);
+    let list = doc.query("[data-testid=list]").unwrap();
+    let (x, top, width, height) = doc.rect(list).unwrap();
+    let (cx, cy) = ((x + width / 2.0) as f32, (top + height / 2.0) as f32);
+
+    // 100 rows down.
+    doc.wheel(cx, cy, 0.0, 3600.0);
+    assert_eq!(scroll_top(&doc), 3600.0);
+    let mounted = keys(&doc);
+    assert!(mounted.len() < 60, "{} rows mounted", mounted.len());
+    assert!(mounted.contains(&order[100]), "row 100 is mounted");
+    assert!(!mounted.contains(&order[0]), "row 0 is not");
+    // What is drawn at the top of the list is row 100: a click there ticks it.
+    let checkbox = doc
+        .rect(doc.query(&format!("{} input", row(&order[100]))).unwrap())
+        .unwrap();
+    doc.click_at((checkbox.0 + checkbox.2 / 2.0) as f32, (top + 18.0) as f32);
+    doc.settle();
+    assert_eq!(text(&doc, "[data-testid=bulk-count]"), "1 selected");
+    assert!(
+        doc.query(&format!("{} input:checked", row(&order[100])))
+            .is_some()
+    );
+
+    // A little further: the rows still in view are the same nodes, moved.
+    let kept = doc.query(&row(&order[110])).unwrap();
+    doc.wheel(cx, cy, 0.0, 360.0);
+    assert_eq!(scroll_top(&doc), 3960.0);
+    assert_eq!(
+        doc.query(&row(&order[110])),
+        Some(kept),
+        "reused, not re-created"
+    );
+    assert!(
+        doc.query(&row(&order[105])).is_some(),
+        "row 105 is in the overscan above"
+    );
+    assert!(doc.query(&row(&order[150])).is_none());
+
+    // To the end: the host stops at the last row.
+    doc.wheel(cx, cy, 0.0, 1_000_000.0);
+    assert_eq!(scroll_top(&doc), 5000.0 * 36.0 - height);
+    let last = doc
+        .rect(
+            doc.query(&row(&order[4999]))
+                .expect("the last row is mounted"),
+        )
+        .unwrap();
+    assert_eq!(last.1, top + height - 36.0, "at the bottom of the list");
+    assert!(count(&doc, "[data-testid=row]") < 60);
+
+    // A search shrinks the list under it: it ends up at its new end, not past
+    // it. (The click reaches the search, not a row scrolled up under it.)
+    click(&mut doc, "[data-testid=search]");
+    doc.type_text("deploy");
+    assert_eq!(text(&doc, "[data-testid=page-count]"), "652 of 5,000");
+    let shrunk = super::order(&doc);
+    assert_eq!(shrunk.len(), 652, "still showing all");
+    assert_eq!(scroll_top(&doc), 652.0 * 36.0 - height);
+    let last = doc
+        .rect(
+            doc.query(&row(&shrunk[651]))
+                .expect("the last row is mounted"),
+        )
+        .unwrap();
+    assert_eq!(last.1, top + height - 36.0, "at the bottom of the list");
+}
+
+#[test]
+fn j_past_the_bottom_of_the_list_scrolls_it() {
+    let mut doc = load();
+    let order = order(&doc);
+    let (_, top, _, height) = doc.rect(doc.query("[data-testid=list]").unwrap()).unwrap();
+    for _ in 0..30 {
+        doc.press("j");
+    }
+    doc.settle();
+    let active = doc
+        .query("[data-testid=row-active]")
+        .expect("the highlighted row is mounted");
+    assert!(text(&doc, "[data-testid=row-active]").starts_with(&order[29]));
+    // Scrolled just enough to bring it in at the bottom, as `block: 'nearest'`.
+    let y = doc.rect(active).unwrap().1;
+    assert_eq!(
+        y,
+        top + height - 36.0,
+        "the highlighted row is at the bottom"
+    );
+    assert_eq!(scroll_top(&doc), 32.0 + 30.0 * 36.0 - height);
+
+    // k back to the first row: the list goes back to the top, header and all.
+    for _ in 0..29 {
+        doc.press("k");
+    }
+    doc.settle();
+    assert!(text(&doc, "[data-testid=row-active]").starts_with(&order[0]));
+    assert_eq!(scroll_top(&doc), 0.0);
 }
 
 #[test]
