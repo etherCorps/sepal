@@ -162,6 +162,14 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `base_mut()` and `handle_ui_event` do wholesale. Forget one and scripts
   measure a stale page; clear it too eagerly and opening a Select costs 150
   layouts instead of 7.
+- **Window builds and test builds have different features.** Every test, the
+  `drive` example and the packaged binary use `--features screenshot`; `pnpm
+  dev`, `dev:tracker` and a plain `cargo build` do not. blitz-shell takes
+  blitz-paint with no features, so SVG and scrollbar painting come from the
+  host's own `blitz-paint` dependency, which `window` must enable too. When it
+  did not, windows drew no inline SVG at all while every test and screenshot
+  passed. A window-only problem: check `cargo tree -e features -i <crate>`
+  without `screenshot` before suspecting the code.
 - **Two engines, one `JsEngine`.** QuickJS is the default. `--features
   engine-v8` builds the host on V8 instead; the whole test suite passes on
   both (`cargo test --features "screenshot engine-v8"`). Anything added to

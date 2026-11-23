@@ -72,6 +72,9 @@ default = ["window"]
 window = [
     "dep:blitz-shell",
     "dep:anyrender_vello_hybrid",
+    # blitz-shell takes blitz-paint without features; without this the window
+    # draws no inline SVG and no scrollbars (only `screenshot` builds did).
+    "dep:blitz-paint",
     "dep:winit",
     "dep:objc2",
     "dep:objc2-app-kit",
