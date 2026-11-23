@@ -84,19 +84,26 @@ impl SvelteDocument {
     /// Press and release the primary mouse button at a point. Blitz hit-tests the
     /// point and synthesises `pointerdown`/`mousedown`/`pointerup`/`mouseup`/`click`.
     pub fn click_at(&mut self, x: f32, y: f32) {
-        self.handle_ui_event(UiEvent::PointerMove(pointer(x, y, MouseEventButtons::None)));
-        self.handle_ui_event(UiEvent::PointerDown(pointer(
-            x,
-            y,
-            MouseEventButtons::Primary,
-        )));
-        self.handle_ui_event(UiEvent::PointerUp(pointer(x, y, MouseEventButtons::None)));
+        self.click_at_with(x, y, Modifiers::empty());
+    }
+
+    /// [`click_at`](Self::click_at) with modifier keys held (Shift+click).
+    pub fn click_at_with(&mut self, x: f32, y: f32, mods: Modifiers) {
+        let at = |buttons| pointer(x, y, buttons, mods);
+        self.handle_ui_event(UiEvent::PointerMove(at(MouseEventButtons::None)));
+        self.handle_ui_event(UiEvent::PointerDown(at(MouseEventButtons::Primary)));
+        self.handle_ui_event(UiEvent::PointerUp(at(MouseEventButtons::None)));
         self.resolve();
     }
 
     /// Move the pointer to a point, with no button held.
     pub fn move_to(&mut self, x: f32, y: f32) {
-        self.handle_ui_event(UiEvent::PointerMove(pointer(x, y, MouseEventButtons::None)));
+        self.handle_ui_event(UiEvent::PointerMove(pointer(
+            x,
+            y,
+            MouseEventButtons::None,
+            Modifiers::empty(),
+        )));
         self.resolve();
     }
 
@@ -133,8 +140,13 @@ impl SvelteDocument {
 
     /// Click the centre of a node. The document must have been laid out.
     pub fn click(&mut self, node: NodeId) {
+        self.click_with(node, Modifiers::empty());
+    }
+
+    /// [`click`](Self::click) with modifier keys held.
+    pub fn click_with(&mut self, node: NodeId, mods: Modifiers) {
         let (x, y, width, height) = self.rect(node).expect("node has no layout");
-        self.click_at((x + width / 2.0) as f32, (y + height / 2.0) as f32);
+        self.click_at_with((x + width / 2.0) as f32, (y + height / 2.0) as f32, mods);
     }
 }
 
@@ -167,7 +179,7 @@ fn key_event(key: &str, modifiers: Modifiers, state: KeyState) -> BlitzKeyEvent 
     }
 }
 
-fn pointer(x: f32, y: f32, buttons: MouseEventButtons) -> BlitzPointerEvent {
+fn pointer(x: f32, y: f32, buttons: MouseEventButtons, mods: Modifiers) -> BlitzPointerEvent {
     BlitzPointerEvent {
         id: BlitzPointerId::Mouse,
         is_primary: true,
@@ -181,7 +193,7 @@ fn pointer(x: f32, y: f32, buttons: MouseEventButtons) -> BlitzPointerEvent {
         },
         button: MouseEventButton::Main,
         buttons,
-        mods: Default::default(),
+        mods,
         details: PointerDetails::default(),
         element: Default::default(),
         active_pointers: Default::default(),
