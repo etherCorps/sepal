@@ -45,9 +45,10 @@ import {
 	type Settings
 } from './persist';
 import { goto } from '$app/navigation';
+import { MAX_STEPS, apply_steps, apply_steps_grouped, comparators, kept, step_count, type Compare, type SortBy, type Step } from './order';
 
 export type GroupBy = Settings['defaultGroupBy'];
-export type SortBy = 'updated' | 'created' | 'priority' | 'title';
+export type { SortBy };
 /** The fields an edit may change. */
 export type Patch = Partial<Pick<Issue, 'title' | 'status' | 'priority' | 'assignee' | 'project' | 'labelIds' | 'estimate'>>;
 
@@ -64,8 +65,47 @@ let base: Issue[] = seed(n);
 let base_by_key = new Map(base.map((issue) => [issue.key, issue]));
 let overlay: Overlay = empty_overlay();
 
+// An edit of one issue out of 20,000 must not cost a pass over all of them
+// (in QuickJS a pass is ~5-15 ms, a sort ~30). So `issues` only changes
+// through `set_issues`, which says what changed when it knows (a Step), and
+// everything kept over all issues follows the steps: the key map and the
+// open counts here, the sorted, filtered and grouped lists below (order.ts).
+
 let issues = $state.raw<Issue[]>(base);
-const by_key = $derived(new Map(issues.map((issue) => [issue.key, issue])));
+/** Not reactive: read `issues` to depend on it (`get_issue` does). */
+let by_key = new Map(base.map((issue) => [issue.key, issue]));
+let open_by_project = $state.raw(count_open(base));
+
+/** What changed in `issues` since `ordered` last ran, step by step; null when unknown (sort again). */
+let pending: Step[] | null = null;
+
+function count_open(list: Issue[]): Record<string, number> {
+	const counts: Record<string, number> = Object.fromEntries(PROJECTS.map((p) => [p.key, 0]));
+	for (const issue of list) if (issue.closedAt === null) counts[issue.project]++;
+	return counts;
+}
+
+/** Replace `issues`. Pass what changed when it is known: then nothing goes over every issue again. */
+function set_issues(next: Issue[], step?: Step) {
+	if (step) {
+		if (pending !== null) pending.push(step);
+		const counts = { ...open_by_project };
+		for (const issue of step.removed) {
+			by_key.delete(issue.key);
+			if (issue.closedAt === null) counts[issue.project]--;
+		}
+		for (const issue of step.added) {
+			by_key.set(issue.key, issue);
+			if (issue.closedAt === null) counts[issue.project]++;
+		}
+		open_by_project = counts;
+	} else {
+		pending = null;
+		by_key = new Map(next.map((issue) => [issue.key, issue]));
+		open_by_project = count_open(next);
+	}
+	issues = next;
+}
 
 /** Bumped when comments or activity change, which live outside `issues`. */
 let rev = $state(0);
@@ -148,38 +188,86 @@ function haystack(issue: Issue): string {
 
 let filter_ms = 0;
 
-/** Scope, filters and search applied, in sort order. */
-const filtered = $derived.by(() => {
-	const start = performance.now();
+/**
+ * A list kept over all issues, with the steps that took it from the run
+ * before (null: rebuilt from scratch). `seq` counts runs, so what is built
+ * on a list can tell whether it saw the run just before this one.
+ */
+interface Run {
+	list: Issue[];
+	steps: Step[] | null;
+	seq: number;
+}
+
+let sorted: { by: SortBy; run: Run } | null = null;
+
+/**
+ * All issues in sort order: sorted once per sort change, not per keystroke.
+ * An edit of a few issues splices them out and back in (order.ts), ~30 ms
+ * less than sorting 20,000 again in QuickJS.
+ */
+const ordered = $derived.by((): Run => {
+	const by = view.sortBy;
+	const all = issues;
+	const steps = pending;
+	pending = [];
+	const compare = comparators[by];
+	const seq = (sorted?.run.seq ?? 0) + 1;
+	let list: Issue[] | null = null;
+	if (sorted?.by === by && steps !== null && step_count(steps) <= MAX_STEPS) list = apply_steps(sorted.run.list, steps, compare);
+	const run: Run = list === null ? { list: all.slice().sort(compare), steps: null, seq } : { list, steps, seq };
+	sorted = { by, run };
+	return run;
+});
+
+/** The filters and search as a test, and a key that changes when they do. */
+function matcher(): { key: string; test: (issue: Issue) => boolean } {
 	const query = view.search.trim().toLowerCase();
 	const { status, priority, assignee, project, week, scope } = view;
 	const [from, to] = week === null ? [0, 0] : week_range(week);
-	const out: Issue[] = [];
-	for (const issue of ordered) {
-		if (scope.project && issue.project !== scope.project) continue;
-		if (scope.assignee && issue.assignee !== scope.assignee) continue;
-		if (status && issue.status !== status) continue;
-		if (priority && issue.priority !== priority) continue;
-		if (assignee && issue.assignee !== (assignee === 'none' ? null : assignee)) continue;
-		if (project && issue.project !== project) continue;
-		if (week !== null && (issue.createdAt < from || issue.createdAt >= to)) continue;
-		if (query && !haystack(issue).includes(query)) continue;
-		out.push(issue);
+	const who = assignee === 'none' ? null : assignee;
+	return {
+		key: JSON.stringify([query, status, priority, assignee, project, week, scope.project, scope.assignee]),
+		test: (issue) =>
+			!(
+				(scope.project && issue.project !== scope.project) ||
+				(scope.assignee && issue.assignee !== scope.assignee) ||
+				(status && issue.status !== status) ||
+				(priority && issue.priority !== priority) ||
+				(assignee && issue.assignee !== who) ||
+				(project && issue.project !== project) ||
+				(week !== null && (issue.createdAt < from || issue.createdAt >= to)) ||
+				(query && !haystack(issue).includes(query))
+			)
+	};
+}
+
+let filtered_last: { from: number; key: string; run: Run } | null = null;
+
+/** Scope, filters and search applied, in sort order. */
+const filtered_run = $derived.by((): Run => {
+	const start = performance.now();
+	const source = ordered;
+	const { key, test } = matcher();
+	const last = filtered_last;
+	const seq = (last?.run.seq ?? 0) + 1;
+	let run: Run | null = null;
+	if (last && source.steps !== null && source.seq === last.from + 1 && key === last.key) {
+		const steps = kept(source.steps, test);
+		const list = apply_steps(last.run.list, steps, comparators[view.sortBy]);
+		if (list !== null) run = { list, steps, seq };
 	}
+	if (run === null) {
+		const list: Issue[] = [];
+		const all = source.list;
+		for (let i = 0; i < all.length; i++) if (test(all[i])) list.push(all[i]);
+		run = { list, steps: null, seq };
+	}
+	filtered_last = { from: source.seq, key, run };
 	filter_ms = performance.now() - start;
-	return out;
+	return run;
 });
-
-const priority_rank = Object.fromEntries(PRIORITIES.map((p, i) => [p.id, i])) as Record<PriorityId, number>;
-const comparators: Record<SortBy, (a: Issue, b: Issue) => number> = {
-	updated: (a, b) => b.updatedAt - a.updatedAt,
-	created: (a, b) => b.createdAt - a.createdAt,
-	priority: (a, b) => priority_rank[a.priority] - priority_rank[b.priority] || b.updatedAt - a.updatedAt,
-	title: (a, b) => (a.title < b.title ? -1 : a.title > b.title ? 1 : 0)
-};
-
-/** All issues in sort order: sorted once per edit or sort change, not per keystroke. */
-const ordered = $derived(issues.slice().sort(comparators[view.sortBy]));
+const filtered = $derived(filtered_run.list);
 
 export interface Group {
 	/** a status, priority, person or project id; 'none' for unassigned; 'all' when not grouped */
@@ -218,14 +306,38 @@ function group_of(issue: Issue, by: GroupBy): string {
 	}
 }
 
+/**
+ * The filtered list in buckets by `by`, kept through the filter's steps. One
+ * per user (the list's groups, the board's columns): each remembers the run
+ * it last saw.
+ */
+function grouper() {
+	let last: { seq: number; by: GroupBy; buckets: Map<string, Issue[]> } | null = null;
+	return (run: Run, by: GroupBy, compare: Compare): Map<string, Issue[]> => {
+		if (last && run.seq === last.seq && by === last.by) return last.buckets;
+		let buckets: Map<string, Issue[]> | null = null;
+		if (last && run.steps !== null && run.seq === last.seq + 1 && by === last.by) {
+			buckets = apply_steps_grouped(last.buckets, run.steps, compare, (issue) => group_of(issue, by));
+		}
+		if (buckets === null) {
+			buckets = new Map();
+			for (const { id } of group_order(by)) buckets.set(id, []);
+			const all = run.list;
+			for (let i = 0; i < all.length; i++) buckets.get(group_of(all[i], by))?.push(all[i]);
+		}
+		last = { seq: run.seq, by, buckets };
+		return buckets;
+	};
+}
+const list_groups = grouper();
+const board_columns = grouper();
+
 /** Sorted issues in groups; empty groups left out. */
 const grouped = $derived.by((): Group[] => {
 	const by = view.groupBy;
-	const buckets = new Map<string, Issue[]>();
-	for (const { id } of group_order(by)) buckets.set(id, []);
-	for (const issue of filtered) buckets.get(group_of(issue, by))?.push(issue);
+	const buckets = list_groups(filtered_run, by, comparators[view.sortBy]);
 	return group_order(by)
-		.map(({ id, name }) => ({ id, name, issues: buckets.get(id)! }))
+		.map(({ id, name }) => ({ id, name, issues: buckets.get(id) ?? [] }))
 		.filter((group) => group.issues.length > 0);
 });
 
@@ -272,19 +384,11 @@ export interface Column {
 
 /** The board: one column per status, the list's filters and sort. */
 const board = $derived.by((): Column[] => {
-	const columns: Column[] = STATUSES.map((status) => ({ status, issues: [], total: 0 }));
-	const index = Object.fromEntries(STATUSES.map((s, i) => [s.id, i])) as Record<StatusId, number>;
-	for (const issue of filtered) {
-		const column = columns[index[issue.status]];
-		if (column.total++ < BOARD_LIMIT) column.issues.push(issue);
-	}
-	return columns;
-});
-
-const open_by_project = $derived.by(() => {
-	const counts: Record<string, number> = Object.fromEntries(PROJECTS.map((p) => [p.key, 0]));
-	for (const issue of issues) if (issue.closedAt === null) counts[issue.project]++;
-	return counts;
+	const buckets = board_columns(filtered_run, 'status', comparators[view.sortBy]);
+	return STATUSES.map((status) => {
+		const all = buckets.get(status.id) ?? [];
+		return { status, issues: all.length <= BOARD_LIMIT ? all : all.slice(0, BOARD_LIMIT), total: all.length };
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -428,6 +532,7 @@ export const data = {
 };
 
 export function get_issue(key: string): Issue | undefined {
+	issues; // by_key is a plain Map: depend on what it follows
 	return by_key.get(key);
 }
 
@@ -454,7 +559,7 @@ export function person(id: string | null): Person | null {
 export function thread(key: string): Details {
 	rev;
 	const seeded = base_by_key.get(key);
-	const issue = seeded ?? by_key.get(key);
+	const issue = seeded ?? get_issue(key);
 	const generated: Details = seeded
 		? details(seeded)
 		: { description: '', comments: [], activity: issue ? [{ author: ME, text: 'created the issue', at: issue.createdAt }] : [] };
@@ -499,8 +604,18 @@ function save() {
 
 /** Put changed issue objects in place of the ones with their keys. */
 function replace(changed: Issue[]) {
-	const by = new Map(changed.map((issue) => [issue.key, issue]));
-	issues = issues.map((issue) => by.get(issue.key) ?? issue);
+	// slice and indexOf run in C; a map() over 20,000 issues calls back 20,000 times
+	const next = issues.slice();
+	const step: Step = { removed: [], added: [] };
+	for (const issue of changed) {
+		const old = by_key.get(issue.key);
+		const at = old === undefined ? -1 : next.indexOf(old);
+		if (at === -1) continue;
+		next[at] = issue;
+		step.removed.push(old!);
+		step.added.push(issue);
+	}
+	set_issues(next, step);
 	for (const issue of changed) put_overlay(issue);
 	save();
 }
@@ -665,11 +780,14 @@ export function create(fields: NewIssue): Issue {
 		updatedAt: at,
 		closedAt: status_by_id[status].open ? null : at
 	};
-	issues = [issue, ...issues];
+	set_issues([issue, ...issues], { removed: [], added: [issue] });
 	overlay.created.unshift(issue);
 	save();
 	push_undo(`Created ${issue.key}`, () => {
-		issues = issues.filter((i) => i.key !== issue.key);
+		set_issues(
+			issues.filter((i) => i.key !== issue.key),
+			{ removed: issues.filter((i) => i.key === issue.key), added: [] }
+		);
 		overlay.created = overlay.created.filter((i) => i.key !== issue.key);
 		save();
 	});
@@ -685,7 +803,10 @@ export function delete_issues(keys: string[]): number {
 	});
 	if (removed.length === 0) return 0;
 	const created = overlay.created.filter((issue) => gone.has(issue.key));
-	issues = issues.filter((issue) => !gone.has(issue.key));
+	set_issues(
+		issues.filter((issue) => !gone.has(issue.key)),
+		{ removed: removed.map((r) => r.issue), added: [] }
+	);
 	overlay.created = overlay.created.filter((issue) => !gone.has(issue.key));
 	const seeded = removed.map((r) => r.issue.key).filter((key) => base_by_key.has(key));
 	overlay.deleted.push(...seeded);
@@ -693,7 +814,7 @@ export function delete_issues(keys: string[]): number {
 	push_undo(removed.length === 1 ? `Deleted ${removed[0].issue.key}` : `Deleted ${removed.length} issues`, () => {
 		const next = issues.slice();
 		for (const { index, issue } of removed) next.splice(index, 0, issue);
-		issues = next;
+		set_issues(next, { removed: [], added: removed.map((r) => r.issue) });
 		overlay.created = [...created, ...overlay.created];
 		const back = new Set(seeded);
 		overlay.deleted = overlay.deleted.filter((key) => !back.has(key));
@@ -738,7 +859,7 @@ export function reset_edits(): Promise<void> {
 	undo_stack.length = 0;
 	history.size = 0;
 	history.last = '';
-	issues = base;
+	set_issues(base);
 	rev++;
 	return clear_edits();
 }
@@ -817,7 +938,7 @@ function reseed(count: number) {
 	n = count;
 	base = seed(n);
 	base_by_key = new Map(base.map((issue) => [issue.key, issue]));
-	issues = apply(overlay);
+	set_issues(apply(overlay));
 	undo_stack.length = 0;
 	history.size = 0;
 	view.visible = PAGE_SIZE;
@@ -850,7 +971,7 @@ load().then(({ overlay: saved, settings: loaded }) => {
 	view.groupBy = loaded.defaultGroupBy;
 	if (saved.created.length || saved.deleted.length || Object.keys(saved.changed).length || Object.keys(saved.comments).length) {
 		overlay = saved;
-		issues = apply(overlay);
+		set_issues(apply(overlay));
 		rev++;
 	}
 	if (loaded.simulate) set_simulate(true);
