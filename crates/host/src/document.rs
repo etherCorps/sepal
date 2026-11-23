@@ -7,6 +7,7 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::task::Context as TaskContext;
 use std::task::Waker;
+use std::time::{Duration, Instant};
 
 use blitz_dom::{
     BaseDocument, DocGuard, DocGuardMut, Document, DocumentConfig, EventDriver, EventHandler,
@@ -21,6 +22,7 @@ use keyboard_types::{Key, NamedKey};
 
 use crate::api::{Api, Work, denied};
 use crate::app::App;
+use crate::hud::{AppNumbers, Hud};
 use crate::js::{EventDetail, JsEngine, Mods};
 use crate::net::AppResources;
 use crate::ops::{self, ApplyStats, NodeMap};
@@ -39,6 +41,8 @@ pub struct TurnStats {
     pub detached: usize,
     /// Boxes whose scroll position changed, and that the app was told about.
     pub scrolled: usize,
+    /// The performance overlay changed (`hud.rs`). Not the app's doing.
+    pub hud: bool,
 }
 
 impl TurnStats {
@@ -53,7 +57,7 @@ impl TurnStats {
 
     /// The page may look different now: the window has to be redrawn.
     pub fn changed(&self) -> bool {
-        self.visible > 0
+        self.visible > 0 || self.hud
     }
 }
 
@@ -79,6 +83,8 @@ struct Page {
     forced: Vec<ApplyStats>,
     /// Layouts done since the last trace line, and the time they took.
     layouts: (u32, std::time::Duration),
+    /// Layouts done here since the start, for the performance overlay.
+    layout_count: u64,
     /// When the page was last laid out here, on the animation clock, if
     /// nothing has touched the document since. A script measures many nodes
     /// in a row; only the first of them should pay for a layout.
@@ -138,6 +144,7 @@ impl Page {
         self.laid_out_at = Some(time);
         self.layouts.0 += 1;
         self.layouts.1 += began.elapsed();
+        self.layout_count += 1;
     }
 
     /// For how many more seconds a CSS animation or transition runs on a
@@ -196,6 +203,10 @@ pub struct SvelteDocument {
     detached_since_gc: usize,
     /// When to collect garbage (JS clock, ms). See [`GC_AFTER_DETACHED`].
     gc_at: Option<f64>,
+    /// The performance overlay.
+    hud: Hud,
+    /// When the event that started this turn arrived, if one did.
+    turn_began: Option<Instant>,
 }
 
 /// Detached nodes are freed when JavaScript collects their objects, and an
@@ -232,7 +243,7 @@ pub fn animation_clock() -> std::time::Instant {
 }
 
 /// `SVELTE_BLITZ_TRACE` is set: report what the UI thread does (see `window.rs`).
-fn trace_enabled() -> bool {
+pub(crate) fn trace_enabled() -> bool {
     static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *ENABLED.get_or_init(|| std::env::var_os("SVELTE_BLITZ_TRACE").is_some())
 }
@@ -327,6 +338,7 @@ impl SvelteDocument {
             windowed: hold_host_calls,
             forced: Vec::new(),
             layouts: Default::default(),
+            layout_count: 0,
             laid_out_at: None,
             scrolled: Vec::new(),
         }));
@@ -405,6 +417,8 @@ impl SvelteDocument {
             hold_host_calls,
             detached_since_gc: 0,
             gc_at: None,
+            hud: Hud::default(),
+            turn_began: None,
         };
 
         this.js.eval(app_js)?;
@@ -465,6 +479,7 @@ impl SvelteDocument {
     ///
     /// This is the only place the tree is mutated after startup.
     pub fn settle(&mut self) -> TurnStats {
+        let began = self.turn_began.take().unwrap_or_else(Instant::now);
         let mut turn = TurnStats::default();
 
         self.js.run_jobs();
@@ -505,15 +520,25 @@ impl SvelteDocument {
 
         self.collect_detached(&mut turn);
 
+        self.hud.turn(began.elapsed(), turn.ops);
+        turn.hud = self.update_hud();
+
         // Read the deadline last: effects that ran above may have started or stopped timers.
         let now = self.js.now();
         let next = match (self.js.next_timer(), self.gc_at) {
             (Some(timer), Some(gc)) => Some(timer.min(gc)),
             (timer, gc) => timer.or(gc),
         };
-        self.timers.set_deadline(next.map(|at| at - now));
+        let mut wait = next.map(|at| at - now);
+        // The overlay's refresh, only while it is shown. On the real clock,
+        // where the JS one stands still outside a window.
+        if let Some(due) = self.hud.due() {
+            let hud = due.saturating_duration_since(Instant::now()).as_secs_f64() * 1000.0;
+            wait = Some(wait.map_or(hud, |wait| wait.min(hud)));
+        }
+        self.timers.set_deadline(wait);
 
-        if turn.changed() && trace_enabled() {
+        if turn.visible > 0 && trace_enabled() {
             let (layouts, took) = std::mem::take(&mut self.page.borrow_mut().layouts);
             eprintln!(
                 "[trace] the app changed the page: {} ops, {layouts} layouts in {:.1}ms",
@@ -799,6 +824,36 @@ impl SvelteDocument {
         }
     }
 
+    /// Show or hide the performance overlay (`hud.rs`). The tree changes in
+    /// the turn this ends with, as it does for the app.
+    pub fn set_hud(&mut self, shown: bool) {
+        self.hud.show(shown);
+        self.settle();
+    }
+
+    pub fn hud_shown(&self) -> bool {
+        self.hud.shown()
+    }
+
+    /// The window painted a frame, which held the UI thread this long.
+    pub fn hud_frame(&mut self, took: Duration) {
+        self.hud.frame(took);
+    }
+
+    fn update_hud(&mut self) -> bool {
+        let live_nodes = self.live_nodes();
+        let page = &mut *self.page.borrow_mut();
+        let numbers = AppNumbers {
+            live_nodes,
+            layouts: page.layout_count,
+        };
+        let changed = self.hud.update(&mut page.doc, &numbers);
+        if changed {
+            page.laid_out_at = None;
+        }
+        changed
+    }
+
     /// Run a garbage collection in JS and free the host nodes it released.
     pub fn collect_garbage(&mut self) -> TurnStats {
         self.js.collect_garbage();
@@ -816,6 +871,7 @@ impl Document for SvelteDocument {
     }
 
     fn handle_ui_event(&mut self, event: UiEvent) {
+        self.turn_began = Some(Instant::now());
         {
             // Handlers run synchronously while Blitz dispatches, which is what makes
             // `preventDefault()` work. That is safe because handlers never touch the

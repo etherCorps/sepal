@@ -800,6 +800,7 @@ crates/host/              the `svelte-blitz-host` crate
   src/timers.rs           wakes the event loop for JS timers
   src/window.rs           window + GPU renderer (blitz-shell, Vello Hybrid)
   src/screenshot.rs       CPU rendering to PNG, no display needed
+  src/hud.rs              the performance overlay
   src/testing.rs          query(), click(), text() for headless tests
   tests/counter.rs        end-to-end tests against the example bundle
   tests/manifest.rs       manifest parsing and icon decoding
@@ -964,6 +965,38 @@ What the time is spent on, from sampling:
   instead (`cargo build --features engine-v8`, experimental): long lists get
   about 3.5 times faster and components about 1.5 times once warm, for a
   binary of 62 MB instead of 24. `HANDOVER.md` has the table.
+
+### The performance overlay
+
+Press **Cmd+Option+P** in the window (Ctrl+Alt+P on Windows and Linux) to
+show or hide a box of numbers in the top-right corner. It can also start
+shown, with `SVELTE_BLITZ_HUD=1` in the host's environment, and in dev mode
+the line `hud` on the host's stdin toggles it. The host draws it; the app
+cannot see or restyle it, and clicks go through it.
+
+```
+ 60 fps   frame 4.2 / 9.1 ms
+CPU 12%   GPU (system) 8%
+layouts 2/s   QuickJS
+mem 142 MB   peak 160 MB
+nodes 3120   turn 3.1 ms, 42 ops
+```
+
+| | |
+|---|---|
+| fps | frames painted in the last second. Nothing is painted unless something changed, so an idle app reads 1: the overlay's own refresh. |
+| frame | average and longest time the UI thread spent on one frame (layout, paint and handing it to the GPU), in the last second |
+| CPU | the process's CPU time over the last second, all threads: 100% is one core |
+| GPU (system) | macOS only: how busy the GPU is, as the driver reports it to IOKit. **For the whole machine,** not this app: another app playing video shows up here. macOS has no per-app figure outside Instruments. |
+| layouts | layouts the host did between frames, for the app's measurements and scrolls. The layout before each paint is part of "frame". |
+| QuickJS / V8 | the JavaScript engine this host was built with |
+| mem, peak | macOS: the physical footprint (Activity Monitor's "Memory"), now and the highest since start. Linux: resident memory. Not shown on Windows. |
+| nodes | nodes the app has made that the host holds |
+| turn | the last turn that changed the page: from the input (or timer) to the page being ready to paint, and the number of ops it applied |
+
+Hidden, the overlay costs nothing. Shown, it wakes the window once a second
+to refresh, which is the one repaint it causes. With `SVELTE_BLITZ_TRACE=1`
+each refresh is also printed to stderr.
 
 ## Limitations
 

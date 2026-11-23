@@ -9,7 +9,8 @@
 //!
 //! Two more lines are understood on stdin, for driving a real window from a
 //! script: `move <x> <y>` and `click <x> <y>`, in logical pixels. They enter
-//! through the same function the OS's events do.
+//! through the same function the OS's events do. `hud` shows or hides the
+//! performance overlay, as Cmd+Option+P (Ctrl+Alt+P elsewhere) does.
 
 use std::io::BufRead;
 use std::sync::mpsc::{self, Receiver};
@@ -24,6 +25,7 @@ use winit::dpi::LogicalSize;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::icon::RgbaIcon;
+use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
 use winit::window::{WindowAttributes, WindowId};
 
 use crate::SvelteDocument;
@@ -43,12 +45,17 @@ enum Dev {
     },
     /// Press these keys, each named as `KeyboardEvent.key` names it.
     Keys(Vec<String>),
+    /// Show or hide the performance overlay.
+    Hud,
 }
 
 impl Dev {
     /// What a line on stdin asks for. Anything unrecognised is a reload, which
     /// is what the Vite preset sends.
     fn parse(line: &str) -> Self {
+        if line.trim() == "hud" {
+            return Dev::Hud;
+        }
         // `key Escape`, `key ArrowDown`; `type some text` is a key per character.
         if let Some(name) = line.strip_prefix("key ") {
             return Dev::Keys(vec![name.trim().to_owned()]);
@@ -81,7 +88,10 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     if std::env::var_os("SVELTE_BLITZ_GLYPH_CACHE").is_some_and(|value| value == "0") {
         anyrender_vello_hybrid::set_glyph_cache(false);
     }
-    let doc = SvelteDocument::for_window(&app)?;
+    let mut doc = SvelteDocument::for_window(&app)?;
+    if std::env::var_os("SVELTE_BLITZ_HUD").is_some_and(|value| value == "1") {
+        doc.set_hud(true);
+    }
     let manifest = app.manifest;
     // Before the event loop exists: winit builds the menu bar from this name.
     if let Some(name) = &manifest.name {
@@ -142,6 +152,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             dock_icon,
             reload,
             dev_events,
+            modifiers: ModifiersState::empty(),
             trace: std::env::var_os("SVELTE_BLITZ_TRACE").map(|_| Trace {
                 started: Instant::now(),
                 first_frame: false,
@@ -158,6 +169,8 @@ struct Host {
     dock_icon: Option<Vec<u8>>,
     reload: Option<Reload>,
     dev_events: Receiver<Dev>,
+    /// Held down now, for the overlay's shortcut.
+    modifiers: ModifiersState,
     /// Set by `SVELTE_BLITZ_TRACE`: report where the UI thread spends its time.
     trace: Option<Trace>,
 }
@@ -236,6 +249,27 @@ impl Host {
         }
     }
 
+    /// Show the performance overlay, or hide it.
+    fn toggle_hud(&mut self) {
+        let Some(view) = self.application.windows.values_mut().next() else {
+            return;
+        };
+        let doc = view.downcast_doc_mut::<SvelteDocument>();
+        doc.set_hud(!doc.hud_shown());
+        view.request_redraw();
+    }
+
+    /// Cmd+Option+P on macOS, Ctrl+Alt+P elsewhere. By the key's place, not
+    /// its letter: Option turns P into π.
+    fn is_hud_shortcut(&self, key: &winit::event::KeyEvent) -> bool {
+        let command = if cfg!(target_os = "macos") {
+            self.modifiers.meta_key()
+        } else {
+            self.modifiers.control_key()
+        };
+        command && self.modifiers.alt_key() && key.physical_key == PhysicalKey::Code(KeyCode::KeyP)
+    }
+
     /// Hand a window event to Blitz, timing it when tracing is on.
     fn forward(
         &mut self,
@@ -277,8 +311,12 @@ impl Host {
         let started = Instant::now();
         let doc = load().and_then(|app| SvelteDocument::for_window(&app));
         match doc {
-            Ok(doc) => {
+            Ok(mut doc) => {
                 if let Some(view) = self.application.windows.values_mut().next() {
+                    // The overlay stays up across a reload.
+                    if view.downcast_doc_mut::<SvelteDocument>().hud_shown() {
+                        doc.set_hud(true);
+                    }
                     view.replace_document(Box::new(doc), true);
                     eprintln!("[host] reloaded in {:.0?}", started.elapsed());
                 }
@@ -322,14 +360,29 @@ impl ApplicationHandler for Host {
         for view in self.application.windows.values_mut() {
             view.animation_timer = Some(crate::document::animation_clock());
         }
+        match &event {
+            WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers.state(),
+            // The host's own shortcut: the app never sees it.
+            WindowEvent::KeyboardInput { event: key, .. } if self.is_hud_shortcut(key) => {
+                if key.state.is_pressed() && !key.repeat {
+                    self.toggle_hud();
+                }
+                return;
+            }
+            _ => {}
+        }
         if matches!(event, WindowEvent::RedrawRequested) {
+            let began = Instant::now();
             self.forward(event_loop, window_id, event);
+            let took = began.elapsed();
             // The frame was laid out to be painted. If that moved something the
             // app measures (a resize, an animation), it hears about it now.
-            if let Some(view) = self.application.windows.get_mut(&window_id)
-                && view.downcast_doc_mut::<SvelteDocument>().after_layout()
-            {
-                view.request_redraw();
+            if let Some(view) = self.application.windows.get_mut(&window_id) {
+                let doc = view.downcast_doc_mut::<SvelteDocument>();
+                doc.hud_frame(took);
+                if doc.after_layout() {
+                    view.request_redraw();
+                }
             }
             return;
         }
@@ -345,6 +398,7 @@ impl ApplicationHandler for Host {
                 Dev::Reload => reload = true,
                 Dev::Pointer { x, y, click } => self.pointer(event_loop, x, y, click),
                 Dev::Keys(keys) => self.keys(&keys),
+                Dev::Hud => self.toggle_hud(),
                 Dev::Quit => {
                     // Drop the window before leaving the loop, as blitz-shell does
                     // on close (winit#4135).
