@@ -8,7 +8,8 @@
 //! Steps, in order: `click:SELECTOR`, `clickat:X,Y`, `move:X,Y`, `key:NAME`
 //! (as `KeyboardEvent.key`), `type:TEXT`, `time:SECONDS` (timers
 //! and animations move on), `text:SELECTOR`, `count:SELECTOR`,
-//! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `shot:FILE.png`
+//! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `hud:on`/`hud:off`
+//! (the performance overlay), `shot:FILE.png`
 //! (CPU renderer), `gpushot:FILE.png` (the window's renderer; needs a GPU).
 //!
 //! `click:` aims at the middle of the element's box before CSS transforms; for
@@ -68,6 +69,10 @@ fn main() {
                 println!("  type {rest}")
             }
             "eval" => println!("  eval: {:?}", doc.js().eval_string(rest)),
+            "hud" => {
+                doc.set_hud(rest == "on");
+                println!("  hud {rest}")
+            }
             "shot" => {
                 let png = svelte_blitz_host::screenshot::render_png(&mut doc, width, height, 1.0);
                 std::fs::write(rest, png).unwrap();

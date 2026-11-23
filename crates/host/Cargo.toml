@@ -46,6 +46,11 @@ anyrender = { version = "0.14", optional = true }
 anyrender_vello_cpu = { version = "0.18", optional = true }
 png = { version = "0.18", optional = true }
 
+# Process memory and CPU time for the performance overlay (`src/hud.rs`).
+# Already in the tree.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 # The Dock icon of an unbundled binary can only be set through AppKit.
 # Versions match the ones winit already pulls in.
 [target.'cfg(target_os = "macos")'.dependencies]

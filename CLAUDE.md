@@ -75,7 +75,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   build side of it), `api/` (desktop APIs and their permission checks), `js.rs` (the engine: `js/quickjs.rs`,
   or `js/v8_engine.rs` with `--features engine-v8`), `ops.rs` (apply batches), `scroll.rs` (scroll ops and reports),
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
-  `testing.rs`.
+  `testing.rs`, `hud.rs` (the performance overlay).
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
   `examples/routing/` — file-based routing. `examples/shadcn/` — the DOM
   layer under a real component library. `examples/sveltekit/` — a SvelteKit
@@ -110,7 +110,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 5. **`SvelteDocument::settle()` is the only place the tree is mutated** after
    startup, apart from the forced layout of invariant 2, which goes through
    the same `apply_batch`. Event handlers run synchronously inside Blitz's dispatch and are
-   only safe because they write to the op buffer, not the document.
+   only safe because they write to the op buffer, not the document. The
+   performance overlay's nodes (`hud.rs`) are the host's own; they too
+   change only inside `settle`.
 6. **Read `next_timer()` last in a turn.** Effects that run during microtasks
    can start or stop timers.
 7. **No frame loop, no polling.** The event loop waits in the OS. Anything that
@@ -119,7 +121,10 @@ profile while iterating; it is already tuned in `Cargo.toml`.
    host blocks on stdin, it does not watch files. Layout is reported at the
    end of a turn that changed the page and after a frame the shell drew
    anyway, never on a timer. Scroll positions likewise: at the end of the
-   turn that moved them.
+   turn that moved them. **One exception:** the performance overlay, while
+   it is shown, refreshes once a second through a one-shot deadline that each
+   refresh sets again (`hud.rs`). Hidden, it has no nodes and sets none;
+   `the_overlay_wakes_the_loop_only_while_shown` guards that.
 8. **`apply_batch` must never panic.** Batches come from app code. Unknown
    nodes and opcodes are logged and skipped. Blitz indexes node storage
    directly (`doc.nodes[id]`), so check `get_node(id).is_some()` first.
@@ -297,6 +302,13 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   step later, at the document, because winit cannot build a key event.
 - Positions for those commands come from `drive … rect:SEL` at the window's
   size. They go stale whenever the page's content changes.
+- The performance overlay (Cmd+Option+P, Ctrl+Alt+P elsewhere; `hud` on
+  stdin in `--watch` mode; `SVELTE_BLITZ_HUD=1` to start with it shown)
+  shows fps, frame time, memory, CPU, system GPU load and the app's last
+  turn. With `SVELTE_BLITZ_TRACE=1` each refresh is also printed as a
+  `[trace] hud:` line, so a script can read the numbers. Its nodes hang off
+  `<html>` after `<body>`, so `body > *` never finds them; `drive … hud:on`
+  shows it headless. Its own refresh is a repaint: an idle app reads 1 fps.
 
 ## Testing approach
 
