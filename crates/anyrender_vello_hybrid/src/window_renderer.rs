@@ -185,8 +185,8 @@ pub struct VelloHybridWindowRenderer {
     size: (u32, u32),
     damage: Option<crate::damage::DamageTracker>,
     recording: anyrender::Scene,
-    #[cfg(not(target_arch = "wasm32"))]
-    last_frame: Option<std::time::Instant>,
+    /// The last `render` drew nothing: nothing on screen had changed.
+    skipped: bool,
 }
 impl VelloHybridWindowRenderer {
     #[allow(clippy::new_without_default)]
@@ -208,9 +208,15 @@ impl VelloHybridWindowRenderer {
             size: (0, 0),
             damage: crate::damage::enabled().then(Default::default),
             recording: anyrender::Scene::new(),
-            #[cfg(not(target_arch = "wasm32"))]
-            last_frame: None,
+            skipped: false,
         }
+    }
+
+    /// svelte-blitz patch (damage): whether the last frame was skipped because
+    /// nothing on screen changed. Nothing was presented, so nothing waited for
+    /// the display either; a caller that redraws again at once spins.
+    pub fn skipped_last_frame(&self) -> bool {
+        self.skipped
     }
 
     pub fn current_device_handle(&self) -> Option<&DeviceHandle> {
@@ -598,22 +604,14 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             if crate::damage::trace() {
                 eprintln!("[trace] damage: {damage:?}");
             }
+            self.skipped = matches!(damage, crate::damage::Damage::None);
             let region = match damage {
                 // Nothing on screen changed: the window keeps the last frame. Presenting
-                // is what paced the redraw loop to the display (waiting for a drawable),
-                // and something animating without changing pixels asks for a redraw
-                // after every frame, so a skipped frame waits out a 60 Hz frame instead.
-                crate::damage::Damage::None => {
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        const FRAME: std::time::Duration = std::time::Duration::from_micros(16_667);
-                        if let Some(last) = self.last_frame {
-                            std::thread::sleep(FRAME.saturating_sub(last.elapsed()));
-                        }
-                        self.last_frame = Some(std::time::Instant::now());
-                    }
-                    return;
-                }
+                // is what paced the redraw loop to the display (it waits for a drawable),
+                // so the caller has to pace the next redraw itself (`skipped_last_frame`):
+                // something animating without changing pixels asks for one after every
+                // frame. Never by waiting here: that holds up input on the same thread.
+                crate::damage::Damage::None => return,
                 crate::damage::Damage::Full => kurbo::Rect::new(0., 0., width as f64, height as f64),
                 crate::damage::Damage::Rect(region) => {
                     target_init = TargetInit::SrcOver;
@@ -645,10 +643,6 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             crate::damage::replay(&mut scene_painter, commands, bounds, region);
         }
         state.renderer.set_root_offset(root_offset);
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            self.last_frame = Some(std::time::Instant::now());
-        }
 
         let Ok(texture_view) = render_surface.target_texture_view() else {
             // Skip frame in case of error getting surface texture

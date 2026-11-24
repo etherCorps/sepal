@@ -15,7 +15,7 @@
 use std::io::BufRead;
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use anyrender_vello_hybrid::VelloHybridWindowRenderer;
 use blitz_shell::{BlitzApplication, BlitzShellProxy, WindowConfig, create_default_event_loop};
@@ -23,7 +23,7 @@ use winit::application::ApplicationHandler;
 use winit::application::macos::ApplicationHandlerExtMacOS;
 use winit::dpi::LogicalSize;
 use winit::event::WindowEvent;
-use winit::event_loop::ActiveEventLoop;
+use winit::event_loop::{ActiveEventLoop, ControlFlow};
 use winit::icon::RgbaIcon;
 use winit::keyboard::{KeyCode, ModifiersState, PhysicalKey};
 use winit::window::{WindowAttributes, WindowId};
@@ -108,13 +108,16 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
                 // Blocks in read(), so this costs nothing between rebuilds.
                 for line in std::io::stdin().lock().lines() {
                     let Ok(line) = line else { break };
-                    if dev_sender.send(Dev::parse(&line)).is_err() {
+                    if dev_sender
+                        .send((Instant::now(), Dev::parse(&line)))
+                        .is_err()
+                    {
                         break;
                     }
                     wake.wake_up();
                 }
                 // The dev server is gone; so are we.
-                let _ = dev_sender.send(Dev::Quit);
+                let _ = dev_sender.send((Instant::now(), Dev::Quit));
                 wake.wake_up();
             })
             .map_err(|e| e.to_string())?;
@@ -153,6 +156,9 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             reload,
             dev_events,
             modifiers: ModifiersState::empty(),
+            skipped_frame: None,
+            input_since_frame: false,
+            redraw_at: None,
             trace: std::env::var_os("SVELTE_BLITZ_TRACE").map(|_| Trace {
                 started: Instant::now(),
                 first_frame: false,
@@ -168,9 +174,16 @@ struct Host {
     application: BlitzApplication<VelloHybridWindowRenderer>,
     dock_icon: Option<Vec<u8>>,
     reload: Option<Reload>,
-    dev_events: Receiver<Dev>,
+    /// What stdin asked for, and when it arrived.
+    dev_events: Receiver<(Instant, Dev)>,
     /// Held down now, for the overlay's shortcut.
     modifiers: ModifiersState,
+    /// When the renderer last skipped a frame (nothing on screen changed), whether
+    /// input came in since, and a redraw put off until the next 60 Hz frame.
+    /// See `defer_redraw`.
+    skipped_frame: Option<Instant>,
+    input_since_frame: bool,
+    redraw_at: Option<(WindowId, Instant)>,
     /// Set by `SVELTE_BLITZ_TRACE`: report where the UI thread spends its time.
     trace: Option<Trace>,
 }
@@ -186,6 +199,11 @@ struct Trace {
 impl Trace {
     /// A frame at 120 Hz. Work shorter than this cannot be felt.
     const SLOW: std::time::Duration = std::time::Duration::from_millis(8);
+
+    fn note(&self, what: &str) {
+        let at = self.started.elapsed().as_secs_f64();
+        eprintln!("[trace] +{at:.3}s {what}");
+    }
 
     fn report(&mut self, what: &str, began: Instant, always: bool) {
         let took = began.elapsed();
@@ -304,6 +322,25 @@ impl Host {
         }
     }
 
+    /// The renderer skips a frame in which nothing on screen changed, and
+    /// presenting nothing does not wait for the display the way presenting a
+    /// frame does. Something animating without changing pixels asks for the next
+    /// frame right after each one, so it would spin. Such a redraw waits for the
+    /// next 60 Hz frame instead, in the OS, not on this thread: input that comes
+    /// meanwhile is handled at once, and the redraw it asks for is not put off.
+    fn defer_redraw(&mut self, window_id: WindowId) -> bool {
+        const FRAME: Duration = Duration::from_micros(16_667);
+        let Some(skipped) = self.skipped_frame else {
+            return false;
+        };
+        let due = skipped + FRAME;
+        if self.input_since_frame || Instant::now() >= due {
+            return false;
+        }
+        self.redraw_at = Some((window_id, due));
+        true
+    }
+
     /// Replace the document with a freshly loaded one. The window, its size and
     /// the viewport scroll position stay; component state starts over.
     fn reload(&mut self) {
@@ -376,12 +413,18 @@ impl ApplicationHandler for Host {
             None => event,
         };
         if matches!(event, WindowEvent::RedrawRequested) {
+            if self.defer_redraw(window_id) {
+                return;
+            }
+            self.redraw_at = None;
+            self.input_since_frame = false;
             let began = Instant::now();
             self.forward(event_loop, window_id, event);
             let took = began.elapsed();
             // The frame was laid out to be painted. If that moved something the
             // app measures (a resize, an animation), it hears about it now.
             if let Some(view) = self.application.windows.get_mut(&window_id) {
+                self.skipped_frame = view.renderer.skipped_last_frame().then(Instant::now);
                 let doc = view.downcast_doc_mut::<SvelteDocument>();
                 doc.hud_frame(took);
                 if doc.after_layout() {
@@ -390,14 +433,43 @@ impl ApplicationHandler for Host {
             }
             return;
         }
+        self.input_since_frame = true;
         self.forward(event_loop, window_id, event);
+    }
+
+    fn about_to_wait(&mut self, event_loop: &dyn ActiveEventLoop) {
+        self.application.about_to_wait(event_loop);
+        // A one-shot deadline, set again only by the next skipped frame: nothing
+        // here wakes the loop on its own (invariant 7).
+        let flow = match self.redraw_at {
+            Some((_, due)) if Instant::now() < due => ControlFlow::WaitUntil(due),
+            Some((window_id, _)) => {
+                self.redraw_at = None;
+                if let Some(view) = self.application.windows.get(&window_id) {
+                    view.request_redraw();
+                }
+                ControlFlow::Wait
+            }
+            None => ControlFlow::Wait,
+        };
+        event_loop.set_control_flow(flow);
     }
 
     fn proxy_wake_up(&mut self, event_loop: &dyn ActiveEventLoop) {
         // Several rebuilds may have queued up while one reload ran: do it once.
         let mut reload = false;
-        let events: Vec<Dev> = self.dev_events.try_iter().collect();
-        for event in events {
+        let events: Vec<(Instant, Dev)> = self.dev_events.try_iter().collect();
+        if !events.is_empty() {
+            self.input_since_frame = true;
+        }
+        for (arrived, event) in events {
+            if let (Some(trace), Dev::Pointer { x, y, click }) = (&mut self.trace, &event) {
+                let what = if *click { "click" } else { "move" };
+                trace.note(&format!(
+                    "stdin {what} {x} {y}, {:.1}ms after it arrived",
+                    arrived.elapsed().as_secs_f64() * 1000.0
+                ));
+            }
             match event {
                 Dev::Reload => reload = true,
                 Dev::Pointer { x, y, click } => self.pointer(event_loop, x, y, click),
