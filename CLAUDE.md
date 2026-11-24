@@ -235,6 +235,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   added). Blitz's `get_client_bounding_rect` moves a scroll box by its own
   offset; `scroll::client_rect` undoes that for boxes the app sees. The
   viewport's scroll is not reported, and smooth scrolling is not done.
+  Trackpad deltas reach blitz-shell in physical pixels and it applies them
+  as CSS px; `window::logical_wheel` divides by the scale factor first.
 - **Event target id 0** means "outside everything the app made". Only the
   DOM layer listens to it (`host_hooks.outside`). Key presses arrive there
   when nothing has the focus.

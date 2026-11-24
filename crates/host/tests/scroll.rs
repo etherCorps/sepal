@@ -105,6 +105,51 @@ fn the_wheel_scrolls_a_box_and_the_app_hears_where_to() {
     assert_eq!(eval(&mut doc, "heard.join()"), "60,900");
 }
 
+/// macOS reports a trackpad's travel in points; winit turns that into
+/// physical pixels (`PixelDelta`), and blitz-shell 0.3.0-beta.4 passes those
+/// to Blitz as CSS pixels. At 2x, 100 points of travel must scroll the box
+/// 100 px, not 200.
+#[cfg(feature = "window")]
+#[test]
+fn a_trackpad_scrolls_as_far_as_the_fingers_move_at_2x() {
+    use svelte_blitz_host::window::logical_wheel;
+    use winit::dpi::LogicalPosition;
+    use winit::event::{MouseScrollDelta, TouchPhase, WindowEvent};
+
+    let scale = 2.0;
+    let wheel = |delta| WindowEvent::MouseWheel {
+        device_id: None,
+        delta,
+        phase: TouchPhase::Moved,
+    };
+    // What winit-appkit makes of 100 points of travel that move the content up.
+    let from_os = wheel(MouseScrollDelta::PixelDelta(
+        LogicalPosition::new(0.0, -100.0).to_physical(scale),
+    ));
+    let WindowEvent::MouseWheel {
+        delta: MouseScrollDelta::PixelDelta(pixels),
+        ..
+    } = logical_wheel(from_os, scale)
+    else {
+        panic!("still a pixel delta");
+    };
+    // blitz-shell hands `pixels.x`, `pixels.y` to Blitz as they are;
+    // `wheel` takes them the other way round, as `scrollBy` does.
+    let mut doc = page();
+    doc.wheel(50.0, 80.0, -pixels.x, -pixels.y);
+    assert_eq!(eval(&mut doc, "heard.join()"), "100");
+
+    // Lines have no unit to fix.
+    let lines = logical_wheel(wheel(MouseScrollDelta::LineDelta(0.0, -3.0)), scale);
+    assert!(matches!(
+        lines,
+        WindowEvent::MouseWheel {
+            delta: MouseScrollDelta::LineDelta(0.0, -3.0),
+            ..
+        }
+    ));
+}
+
 #[test]
 fn writing_scroll_top_moves_what_is_drawn_and_hit() {
     let mut doc = page();

@@ -371,6 +371,10 @@ impl ApplicationHandler for Host {
             }
             _ => {}
         }
+        let event = match self.application.windows.get(&window_id) {
+            Some(view) => logical_wheel(event, view.window.scale_factor()),
+            None => event,
+        };
         if matches!(event, WindowEvent::RedrawRequested) {
             let began = Instant::now();
             self.forward(event_loop, window_id, event);
@@ -421,6 +425,30 @@ impl ApplicationHandler for Host {
 
     fn macos_handler(&mut self) -> Option<&mut dyn ApplicationHandlerExtMacOS> {
         self.application.macos_handler()
+    }
+}
+
+/// blitz-shell 0.3.0-beta.4 hands winit's `PixelDelta` (a trackpad, a precise
+/// wheel), which is in physical pixels, to Blitz as CSS pixels, so on a 2x
+/// display everything scrolled twice as far as the fingers moved. Turn it into
+/// logical pixels before it gets there. `LineDelta` has no unit to fix.
+pub fn logical_wheel(event: WindowEvent, scale: f64) -> WindowEvent {
+    use winit::event::MouseScrollDelta;
+
+    match event {
+        WindowEvent::MouseWheel {
+            device_id,
+            delta: MouseScrollDelta::PixelDelta(pixels),
+            phase,
+        } => WindowEvent::MouseWheel {
+            device_id,
+            delta: MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition::new(
+                pixels.x / scale,
+                pixels.y / scale,
+            )),
+            phase,
+        },
+        event => event,
     }
 }
 
