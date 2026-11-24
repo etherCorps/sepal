@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
-import { sepal } from 'sepal/vite';
+import { sepalKit } from 'sepal/sveltekit';
 
 // App settings live in sepal.config.ts.
 export default defineConfig({
-	plugins: [tailwindcss(), sepal()]
+	plugins: [tailwindcss(), sepalKit()]
 });

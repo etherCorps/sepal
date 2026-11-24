@@ -1,8 +1,20 @@
 {
-	// The Vite preset, the route scanner and the CLI: the files that run in Node,
-	// so the only ones that may see Node's types.
-	"extends": "./tsconfig.vite.json",
-	"compilerOptions": { "types": ["node"], "rootDir": ".", "outDir": "types" },
-	"include": ["vite/vite.js", "vite/routes.js", "vite/bindings.js", "vite/app.js", "vite/head.js", "vite/sveltekit.js", "cli.js"],
-	"exclude": []
+	// The Vite presets and the CLI: the files that run in Node, so the only
+	// ones that may see Node's types.
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"strict": true,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"rootDir": ".",
+		"outDir": "types",
+		"target": "es2022",
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"lib": ["es2023"],
+		"types": ["node"],
+		"skipLibCheck": true
+	},
+	"include": ["vite/*.js", "cli.js"]
 }

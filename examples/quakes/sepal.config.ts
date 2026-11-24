@@ -1,7 +1,7 @@
 import { defineConfig } from 'sepal/vite';
 
 // Earthquakes from the USGS feeds, on a map: a SvelteKit app made with
-// `pnpm create sepal quakes --router sveltekit`, with shadcn-svelte.
+// `pnpm create sepal quakes`, with shadcn-svelte.
 export default defineConfig({
 	app: {
 		name: 'Quakes',

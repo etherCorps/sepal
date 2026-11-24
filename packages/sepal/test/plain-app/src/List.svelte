@@ -1,5 +1,5 @@
 <script>
-	let { ids, has_fallback } = $props();
+	let { ids } = $props();
 </script>
 
 <ul id="routes">
@@ -7,4 +7,3 @@
 		<li>{id}</li>
 	{/each}
 </ul>
-<p id="fallback">{has_fallback}</p>

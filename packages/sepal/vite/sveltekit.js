@@ -60,6 +60,18 @@ function files_in(directory) {
 }
 
 /**
+ * The files under `src` that SvelteKit would run on a server, which an app
+ * does not have: they would build, and then never run. Relative to `src`.
+ *
+ * ponytail: comes out when the backend thread lands; that is where they will run.
+ * @param {string} src
+ */
+export function server_files(src) {
+	if (!existsSync(src)) return [];
+	return files_in(src).filter((file) => /(^|\/)(\+(page|layout)\.server\.|\+server\.|hooks\.server\.)|\.remote\.[^/]+$/.test(file));
+}
+
+/**
  * Turn what SvelteKit built (an HTML page that imports one module) into what
  * the host loads (a script, a stylesheet, and the other files as they are).
  * @param {string} from SvelteKit's client output, with its fallback page as `index.html`
@@ -113,7 +125,13 @@ ${start}(__sepal_target);
 	);
 
 	const styles = [...html.matchAll(/<link href="\/([^"]+)" rel="stylesheet">/g)].map((link) => link[1]).filter((file) => files.includes(file));
-	writeFileSync(join(to, 'app.css'), styles.map((file) => rebase_css(readFileSync(join(from, file), 'utf8'), posix.dirname(file))).join('\n'));
+	const css = styles.map((file) => rebase_css(readFileSync(join(from, file), 'utf8'), posix.dirname(file)));
+	// SvelteKit's route announcer is a 1px `overflow: hidden` box at the top
+	// left. Blitz hit-tests what overflows such a box, so after the first
+	// navigation its invisible text took clicks meant for what is drawn there.
+	// ponytail: until Blitz's hit testing clips to `overflow: hidden`; then this goes.
+	css.push('#svelte-announcer { pointer-events: none }');
+	writeFileSync(join(to, 'app.css'), css.join('\n'));
 
 	// Everything else is for the app to load by its path: static files, and
 	// what SvelteKit put in `_app/immutable/assets`.
@@ -207,6 +225,17 @@ export async function sepalKit(inline = {}) {
 		configResolved(config) {
 			root = config.root;
 			watching = config.build.watch != null;
+		},
+		buildStart() {
+			// On every build, so that a file added in watch mode is caught too.
+			const src = resolve(root, kit.files?.src ?? 'src');
+			const found = server_files(src);
+			if (found.length > 0) {
+				const names = found.map((file) => posix.join(relative(root, src).replaceAll('\\', '/'), file)).join(', ');
+				this.error(
+					`sepal: ${names} ${found.length === 1 ? 'is' : 'are'} server code. It would run in the app's backend thread, which Sepal does not have yet, so it would never run. Use +page.ts/+layout.ts (\`load\` runs in the app) until then.`
+				);
+			}
 		},
 		transform(code, id) {
 			const edit = patch.find(({ file }) => id.endsWith(file));

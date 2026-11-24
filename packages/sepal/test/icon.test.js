@@ -14,7 +14,7 @@ const here = (path) => fileURLToPath(new URL(path, import.meta.url));
 const scratch = mkdtempSync(join(tmpdir(), 'sepal-icon-'));
 
 /**
- * Build the custom-router fixture, which has no `static/` of its own, and
+ * Build the plain-app fixture, which has no `static/` of its own, and
  * return the icon and the manifest written.
  * @param {string} name
  * @param {string} [public_dir] a static directory to use instead
@@ -22,11 +22,11 @@ const scratch = mkdtempSync(join(tmpdir(), 'sepal-icon-'));
 async function built(name, public_dir) {
 	const out = join(scratch, name);
 	await build({
-		root: here('./custom-router'),
+		root: here('./plain-app'),
 		...(public_dir ? { publicDir: public_dir } : {}),
 		configFile: false,
 		logLevel: 'silent',
-		plugins: [sepal({ router: false, app: { name: 'Icon' } })],
+		plugins: [sepal({ app: { name: 'Icon' } })],
 		build: { outDir: out, emptyOutDir: true }
 	});
 	return { png: readFileSync(join(out, 'icon.png')), manifest: JSON.parse(readFileSync(join(out, 'app.json'), 'utf8')) };
