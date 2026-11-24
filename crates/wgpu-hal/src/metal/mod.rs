@@ -25,6 +25,7 @@ mod command;
 mod conv;
 mod device;
 mod library_from_metallib;
+mod gpu_log; // svelte-blitz patch
 mod render_copy; // svelte-blitz patch
 mod surface;
 mod time;
@@ -701,6 +702,10 @@ impl crate::Queue for Queue {
         _surface_textures: &[&SurfaceTexture],
         (signal_fence, signal_value): (&Fence, crate::FenceValue),
     ) -> Result<(), crate::DeviceError> {
+        if gpu_log::on() {
+            // svelte-blitz patch
+            gpu_log::line(format_args!("submit: {} command buffer(s)", command_buffers.len()));
+        }
         autoreleasepool(|_| {
             // Drain caller-staged waits onto a dedicated command buffer
             // committed before the user CBs.
@@ -821,6 +826,10 @@ impl crate::Queue for Queue {
         _surface: &Surface,
         texture: SurfaceTexture,
     ) -> Result<(), crate::SurfaceError> {
+        if gpu_log::on() {
+            // svelte-blitz patch: one more command buffer, for the present.
+            gpu_log::line(format_args!("present (1 command buffer)"));
+        }
         autoreleasepool(|_| {
             // We do not bother adjusting `command_buffer_created_not_submitted`
             // because we immediately commit this buffer.

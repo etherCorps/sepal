@@ -1,11 +1,11 @@
 # Patched copy of wgpu-hal 30.0.2
 
 This is the crates.io source of `wgpu-hal` 30.0.2 (MIT OR Apache-2.0,
-https://github.com/gfx-rs/wgpu), with one change, in its Metal backend only.
+https://github.com/gfx-rs/wgpu), with two changes, in its Metal backend only.
 `crates/host/Cargo.toml` swaps it in through `[patch.crates-io]`. All of it is
 marked `svelte-blitz patch`.
 
-## The change
+## The changes
 
 **1. Clears and uploads in render passes, not blits.** `src/metal/render_copy.rs`
 (new), and hooks in `src/metal/command.rs` (`clear_buffer`,
@@ -42,10 +42,21 @@ Issues list, the New issue dialog, the Board and Insights, and `gpushot:`
 renders of an image drawn from the atlas and of one in a texture of its own,
 are byte-identical either way.
 
+**2. A log of what each frame asks of the GPU.** `src/metal/gpu_log.rs` (new),
+and one call each in `src/metal/command.rs` (`begin_encoding`, `clear_buffer`,
+the four copies, `begin_render_pass`, `begin_compute_pass`) and
+`src/metal/mod.rs` (`Queue::submit`, `Queue::present`). With
+`SVELTE_BLITZ_GPU_LOG=1` every command buffer, render or compute pass (with
+its targets' sizes, formats and load/store actions), clear and copy (with its
+size, and whether change 1 draws it in a render pass) is printed on stderr as
+`[gpu] …`, and so is every submit and present. A frame is what lies between two
+presents. Off (the default), it costs one cached check per call. For
+measuring, not for shipping builds to read.
+
 ## Updating
 
 Do not edit anything else here, and do not run `cargo fmt` on the crate (the
 patched files were rustfmt-clean upstream, and only the patch was formatted).
 To move to a new version, replace the directory with that version's source,
-add `render_copy.rs` back and reapply the hooks (search for
+add `render_copy.rs` and `gpu_log.rs` back and reapply the hooks (search for
 `svelte-blitz patch`).
