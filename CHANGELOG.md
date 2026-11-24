@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **`fetch` in SvelteKit apps.** `Request`, `Headers` and `Response` are
+  globals now, next to `fetch`, which also takes a `Request`. SvelteKit's
+  client checks `instanceof Request` on every fetch, so until now every
+  `fetch` in a SvelteKit app failed with "Request is not defined".
+- **Fonts and other `url()`s in SvelteKit apps.** The adapter merges
+  SvelteKit's stylesheets into `app.css`; their relative `url()`s now point
+  where the files are, so `@font-face` fonts load.
+
 ## 0.1.0-alpha.1
 
 **The host comes in one package per platform.** `@ethercorps/calyx` no longer

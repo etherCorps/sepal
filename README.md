@@ -789,8 +789,10 @@ How the permissions work:
 What to know:
 
 - **`fetch` is the everyday part of the Fetch API**: method, headers, a string
-  or byte body, and `text()`, `json()`, `arrayBuffer()`, `bytes()`. No
-  streaming, no `AbortSignal`, no `Request`/`Headers`/`FormData` classes.
+  or byte body, and `text()`, `json()`, `arrayBuffer()`, `bytes()`. `Request`,
+  `Headers` and `Response` are there too, because libraries test for them
+  (SvelteKit's client checks `instanceof Request` on every fetch). No
+  streaming, no `AbortSignal`, no `FormData`.
 - **Calls made while the app starts** wait until the window exists.
 - **A message or confirm dialog blocks the app** until it is answered.
 - **Not run here:** writing to the real clipboard and opening a link in the

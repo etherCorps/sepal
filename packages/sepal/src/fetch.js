@@ -1,57 +1,143 @@
-// `fetch`, installed as a global when the engine has none.
+// `fetch`, and the Fetch API classes around it (`Request`, `Headers`,
+// `Response`), installed as globals when the engine has none.
 //
 // The host makes the request, and only to URLs the app's `permissions.http`
 // allows. This is the everyday part of the Fetch API: method, headers, a
 // string or byte body, and `text()`, `json()`, `arrayBuffer()`, `bytes()` on
-// the response. There is no streaming, no `AbortSignal`, and no `Request`,
-// `Headers` or `FormData` classes.
+// the response. There is no streaming, no `AbortSignal` and no `FormData`.
+// The classes are there because libraries test for them and build them:
+// SvelteKit's client asks `input instanceof Request` on every fetch.
 
 import { host_call } from './host-call.js';
 import { decode, encode, to_bytes } from './base64.js';
 
-/** Response headers: names are case-insensitive, as in the Fetch API. */
-class ResponseHeaders {
-	/** @param {[string, string][]} pairs */
-	constructor(pairs) {
-		/** @type {Map<string, string>} */
-		this.values = new Map();
-		for (const [name, value] of pairs) {
-			const key = name.toLowerCase();
-			const earlier = this.values.get(key);
-			this.values.set(key, earlier === undefined ? value : `${earlier}, ${value}`);
-		}
+/** Headers: names are case-insensitive and kept in lower case, as in the Fetch API. */
+export class Headers {
+	/** @type {Map<string, string>} */
+	#map = new Map();
+
+	/** @param {unknown} [init] a plain object, a list of pairs, or another `Headers` */
+	constructor(init) {
+		for (const [name, value] of header_pairs(init)) this.append(name, value);
+	}
+	/** @param {string} name @param {string} value */
+	append(name, value) {
+		const key = name.toLowerCase();
+		const earlier = this.#map.get(key);
+		this.#map.set(key, earlier === undefined ? String(value) : `${earlier}, ${value}`);
+	}
+	/** @param {string} name @param {string} value */
+	set(name, value) {
+		this.#map.set(name.toLowerCase(), String(value));
 	}
 	/** @param {string} name */
 	get(name) {
-		return this.values.get(name.toLowerCase()) ?? null;
+		return this.#map.get(name.toLowerCase()) ?? null;
 	}
 	/** @param {string} name */
 	has(name) {
-		return this.values.has(name.toLowerCase());
+		return this.#map.has(name.toLowerCase());
 	}
-	/** @param {(value: string, name: string) => void} callback */
+	/** @param {string} name */
+	delete(name) {
+		this.#map.delete(name.toLowerCase());
+	}
+	/** @param {(value: string, name: string, headers: Headers) => void} callback */
 	forEach(callback) {
-		this.values.forEach(callback);
+		this.#map.forEach((value, name) => callback(value, name, this));
 	}
 	entries() {
-		return this.values.entries();
+		return this.#map.entries();
+	}
+	keys() {
+		return this.#map.keys();
+	}
+	values() {
+		return this.#map.values();
 	}
 	[Symbol.iterator]() {
-		return this.values.entries();
+		return this.#map.entries();
 	}
 }
 
-class FetchResponse {
+const METHODS = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH'];
+
+/** A request to make: what `fetch` takes, as a string, a URL or one of these. */
+export class Request {
+	/**
+	 * @param {string | Request | { url?: string, href?: string }} input
+	 * @param {{ method?: string, headers?: unknown, body?: string | ArrayBuffer | ArrayBufferView | null }} [init]
+	 */
+	constructor(input, init = {}) {
+		/** @type {Request | null} */
+		const from = input instanceof Request ? input : null;
+		const target = /** @type {any} */ (input);
+		/** @type {string} */
+		this.url = from ? from.url : typeof input === 'string' ? input : String(target?.url ?? target?.href ?? input);
+		/** @type {string} */
+		const method = init.method ?? from?.method ?? 'GET';
+		// As the Fetch API does: the standard methods in upper case, any other as written.
+		/** @type {string} */
+		this.method = METHODS.includes(method.toUpperCase()) ? method.toUpperCase() : method;
+		/** @type {Headers} */
+		this.headers = new Headers(init.headers ?? from?.headers);
+		/** @type {string | ArrayBuffer | ArrayBufferView | null} */
+		this.body = init.body ?? from?.body ?? null;
+	}
+}
+
+/** A response with its body in hand: what `new Response(body, init)` makes. `fetch` answers with a subclass. */
+export class Response {
+	/**
+	 * @param {string | ArrayBuffer | ArrayBufferView | null} [body]
+	 * @param {{ status?: number, statusText?: string, headers?: unknown }} [init]
+	 */
+	constructor(body = null, init = {}) {
+		this.status = init.status ?? 200;
+		this.statusText = init.statusText ?? '';
+		this.ok = this.status >= 200 && this.status < 300;
+		this.headers = new Headers(init.headers);
+		this.url = '';
+		this.redirected = false;
+		this.bodyUsed = false;
+		/** @type {string | Uint8Array | null} */
+		this.held = body == null || typeof body === 'string' ? body : to_bytes(body);
+	}
+
+	/** @returns {string | Uint8Array} */
+	take() {
+		if (this.bodyUsed) throw new TypeError('the response body was already read');
+		this.bodyUsed = true;
+		return this.held ?? '';
+	}
+
+	/** @returns {Promise<string>} */
+	async text() {
+		const body = this.take();
+		if (typeof body !== 'string') throw new TypeError('text() of a byte body is not supported; use bytes()');
+		return body;
+	}
+	async json() {
+		return JSON.parse(await this.text());
+	}
+	/** @returns {Promise<Uint8Array>} */
+	async bytes() {
+		const body = this.take();
+		if (typeof body === 'string') throw new TypeError('bytes() of a string body is not supported; use text()');
+		return body;
+	}
+	async arrayBuffer() {
+		return /** @type {ArrayBuffer} */ ((await this.bytes()).buffer);
+	}
+}
+
+/** What `fetch` answers with: the body stays with the host until it is asked for. */
+class FetchResponse extends Response {
 	/** @param {{ id: number, status: number, status_text: string, url: string, redirected: boolean, headers: [string, string][] }} head */
 	constructor(head) {
-		this.status = head.status;
-		this.statusText = head.status_text;
-		this.ok = head.status >= 200 && head.status < 300;
+		super(null, { status: head.status, statusText: head.status_text, headers: head.headers });
 		this.url = head.url;
 		this.redirected = head.redirected;
-		this.headers = new ResponseHeaders(head.headers);
-		this.bodyUsed = false;
-		/** The body stays with the host until it is asked for. */
 		this.body_id = head.id;
 	}
 
@@ -65,14 +151,8 @@ class FetchResponse {
 	text() {
 		return this.read('text');
 	}
-	async json() {
-		return JSON.parse(await this.read('text'));
-	}
 	async bytes() {
 		return decode(await this.read('base64'));
-	}
-	async arrayBuffer() {
-		return (await this.bytes()).buffer;
 	}
 }
 
@@ -95,17 +175,15 @@ function header_pairs(headers) {
 }
 
 /**
- * @param {string | { url: string } | { href: string }} input
+ * @param {string | Request | { url?: string, href?: string }} input
  * @param {{ method?: string, headers?: unknown, body?: string | ArrayBuffer | ArrayBufferView | null }} [init]
- * @returns {Promise<FetchResponse>}
+ * @returns {Promise<Response>}
  */
 export async function fetch(input, init = {}) {
-	const target = /** @type {any} */ (input);
-	const url = typeof input === 'string' ? input : String(target.url ?? target.href ?? input);
+	const { url, method, headers, body } = new Request(input, init);
 	/** @type {Record<string, unknown>} */
-	const request = { url, method: init.method ?? 'GET', headers: header_pairs(init.headers) };
+	const request = { url, method, headers: [...headers] };
 
-	const body = init.body;
 	if (typeof body === 'string') request.body = body;
 	else if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) request.body_base64 = encode(to_bytes(body));
 	else if (body != null) throw new TypeError('fetch: the body must be a string, an ArrayBuffer or a typed array');
