@@ -55,6 +55,7 @@ pnpm run test:host          # end-to-end headless tests (QuickJS + blitz-dom)
 pnpm run check              # tsc on the package, svelte-check on the examples
 pnpm run build:host         # release host -> packages/calyx-<platform>/bin/calyx, and its THIRD-PARTY-LICENSES.txt
 pnpm run test:template      # pack the packages, create a project from the template, build and render it
+pnpm release prerelease     # ask for a release: bump everything, file the CHANGELOG, commit (see release.yml)
 pnpm test                   # check + all test suites
 pnpm run screenshot         # CPU-render examples/counter to screenshot.png
 pnpm start                  # open examples/counter in a window (needs a display)
@@ -117,9 +118,12 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   it. Pins are exact all the way down (sepal -> calyx -> platform package),
   and the CLI refuses a calyx binary of another version than sepal's unless
   `SEPAL_HOST` is set (`test/cli.test.js`).
-- `scripts/publish.js` publishes the packed tarballs: order, waiting for
-  tarballs to download, skipping what is already up, dist-tags. See the top
-  of the file and `release.yml`.
+- Releases are CI's: a commit on main whose version is not on npm is
+  released by `release.yml` (trusted publishing, no token), after its tests.
+  `pnpm release` (`scripts/release.js`) asks for one. `scripts/publish.js`
+  publishes the packed tarballs: order, waiting for tarballs to download,
+  skipping what is already up, dist-tags. `check-versions.js` keeps the
+  host crate at the packages' version, which `calyx --version` prints.
 - `crates/host/` — the Rust host: crate `sepal`, binary `calyx`. `app.rs` (app directory, `app.json`
   manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
   data: URLs and the app directory only), `updater.rs` (self-update and the

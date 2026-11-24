@@ -85,10 +85,9 @@ on 22 Nov).
 **Publishing the `sepal` crate.** To crates.io, or only through git? `sepal`
 was still free on crates.io on 24 Nov, after the npm packages were published.
 Publishing works: the crate depends on `blitz-dom =0.3.0-beta.4`, and each
-app's patch lines replace that. Either way step 4 needs something to pin to,
-and no release has been tagged yet (publishing has been by hand, see
-"Releases from 0.1.0-alpha.1"): tag releases from now on (`v0.1.0-alpha.1`
-would be the first), or pin to a commit.
+app's patch lines replace that. Either way step 4 needs something to pin to:
+release.yml tags every release `v<version>` from 0.1.0-alpha.2 on (see
+"Automatic releases"); earlier versions have no tag.
 
 ### Why the patches need care now
 
@@ -614,7 +613,7 @@ after publishing a new name means nothing.
 
 **Releases from 0.1.0-alpha.1 (24 Nov 2026).** The host is split by platform
 (see "Package layout"), so a run packs seven packages, and publishing is
-`node scripts/publish.js packs`, the same by hand as on a `v*` tag:
+`node scripts/publish.js packs`, in CI or by hand:
 
 - Order: the four `@ethercorps/calyx-<platform>` packages, then
   `@ethercorps/calyx`, `sepal`, `create-sepal`. Before each stage it waits
@@ -623,7 +622,7 @@ after publishing a new name means nothing.
 - A package already at the version is skipped (its dist-tags are still set),
   so a run that failed halfway is simply repeated.
 - `--dry-run` prints what it would run; the release workflow does that on
-  every run without a tag.
+  every run started by hand.
 
 **The dist-tag rule.** A stable release is `latest`. A prerelease goes out
 under its own tag (`0.1.0-alpha.1` as `alpha`) and, as long as `sepal` has
@@ -632,6 +631,46 @@ no stable release, also moves `latest`, on every package: otherwise
 a stable release exists, prereleases leave `latest` alone.
 `scripts/publish.js` applies it and says so at the top; `release.yml` repeats
 it.
+
+**Automatic releases (from 0.1.0-alpha.2).** CI publishes, nobody else. A
+commit on main whose version is not on npm yet is released by
+`.github/workflows/release.yml`; every other push stops at its first job.
+To release:
+
+```sh
+pnpm release prerelease      # or patch, minor, or an exact version
+git push origin main
+```
+
+`pnpm release` (`scripts/release.js`) sets every package, the host crate and
+its Cargo.lock entry to the new version, files CHANGELOG.md's "Unreleased"
+section under it with today's date, and commits "Release <version>"; it does
+not push. The workflow then checks the CHANGELOG has a section for the
+version, runs what ci.yml runs, builds and checks the host on all four
+platforms (`calyx --version` must say the version), packs, publishes with
+`scripts/publish.js`, tags `v<version>` on that commit, and makes a GitHub
+Release from the CHANGELOG section with the tarballs attached (a prerelease
+for prerelease versions). Re-running a failed release finishes it: what is
+already on npm, tagged or released is skipped. Run by hand, on any branch,
+it is a dry run.
+
+Publishing is npm trusted publishing: no token anywhere. Shivam's one-time
+setup is a GitHub environment named `npm` in the repository, and each
+package trusting release.yml from it:
+
+```sh
+for p in sepal create-sepal @ethercorps/calyx \
+  @ethercorps/calyx-darwin-arm64 @ethercorps/calyx-darwin-x64 \
+  @ethercorps/calyx-linux-x64-gnu @ethercorps/calyx-linux-arm64-gnu; do
+  npm trust github "$p" --file release.yml --repo etherCorps/sepal --env npm --allow-publish
+done
+```
+
+npm only trusts a package that exists. A brand-new package (a Windows calyx,
+`sepal-secrets`) is published once by hand, then given the same `npm trust`
+line, before CI can publish it. The publish job updates npm to 11.21 or
+newer first: older npm can publish with OIDC but not set dist-tags, and the
+dist-tag rule above moves `latest`.
 
 Do not fetch a tarball's URL before it is published: the registry's CDN
 caches the 404 for five minutes (`max-age=300`), and installs at that edge

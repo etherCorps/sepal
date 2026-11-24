@@ -1,6 +1,7 @@
 // Publish the packed tarballs in a directory to npm, in the order installs
-// need them, and set the dist-tags. Used by release.yml on a `v*` tag, and by
-// hand the same way:
+// need them, and set the dist-tags. release.yml runs it when a commit on main
+// carries a version that is not on npm yet (with npm trusted publishing, no
+// token); by hand it works the same way, with your own login:
 //
 //   node scripts/publish.js packs            publish
 //   node scripts/publish.js packs --dry-run  print what it would run

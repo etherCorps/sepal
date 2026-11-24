@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `calyx --version` prints its version, the same as the npm packages it
+  ships in.
+
 ## 0.1.0-alpha.1
 
 **The host comes in one package per platform.** `@ethercorps/calyx` no longer
