@@ -399,6 +399,13 @@ impl ApplicationHandler for Host {
         }
         match &event {
             WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers.state(),
+            // A frame drawn before the window was first on screen is lost, and the
+            // redraw that follows would find nothing changed and leave it blank.
+            WindowEvent::Occluded(false) => {
+                if let Some(view) = self.application.windows.get_mut(&window_id) {
+                    view.renderer.repaint_all();
+                }
+            }
             // The host's own shortcut: the app never sees it.
             WindowEvent::KeyboardInput { event: key, .. } if self.is_hud_shortcut(key) => {
                 if key.state.is_pressed() && !key.repeat {

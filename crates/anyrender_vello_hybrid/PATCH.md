@@ -78,8 +78,10 @@ Presenting is what paced the redraw loop (it waits for a drawable), and
 something animating without changing pixels asks for a redraw after every
 frame, so the caller has to put the next redraw off itself: the host does, to
 the next 60 Hz frame, waiting in the OS (`defer_redraw` in its `window.rs`).
-Waiting here instead held up input behind every skipped frame. Full repaints: first frame, resize, new surface,
-over 500 changed commands, or a region over half the window. Commands drawn
+Waiting here instead held up input behind every skipped frame. Full repaints:
+first frame, resize, new surface, `repaint_all()` (the host calls it when the
+window comes on screen: macOS drops a frame presented before that), over 500
+changed commands, or a region over half the window. Commands drawn
 from an app-registered texture count as changed every frame. Commands with an
 empty box are left out (blitz-paint emits border paths whose points are all
 NaN; they draw nothing and never compare equal). Partial frames draw without
