@@ -153,7 +153,8 @@ impl Encoder<'_> {
 }
 
 impl super::CommandEncoder {
-    pub fn raw_command_buffer(&self) -> Option<&ProtocolObject<dyn MTLCommandBuffer>> {
+    pub fn raw_command_buffer(&mut self) -> Option<&ProtocolObject<dyn MTLCommandBuffer>> {
+        self.encoded = true; // svelte-blitz patch: whoever asks may encode into it
         self.raw_cmd_buf.as_deref()
     }
 
@@ -161,6 +162,7 @@ impl super::CommandEncoder {
         if self.state.blit.is_none() {
             self.leave_acceleration_structure_builder();
             debug_assert!(self.state.render.is_none() && self.state.compute.is_none());
+            self.encoded = true; // svelte-blitz patch
             let cmd_buf = self.raw_cmd_buf.as_ref().unwrap();
 
             // This code path is currently unused since the written timestamp is always 0.
@@ -265,6 +267,7 @@ impl super::CommandEncoder {
         self.leave_blit();
         self.leave_acceleration_structure_builder();
         debug_assert!(self.state.render.is_none() && self.state.compute.is_none());
+        self.encoded = true;
         self.raw_cmd_buf.clone()
     }
 
@@ -284,6 +287,7 @@ impl super::CommandEncoder {
                     && self.state.compute.is_none()
                     && self.state.blit.is_none()
             );
+            self.encoded = true; // svelte-blitz patch
             let cmd_buf = self.raw_cmd_buf.as_ref().unwrap();
             autoreleasepool(|_| {
                 self.state.acceleration_structure_builder =
@@ -543,6 +547,8 @@ impl crate::CommandEncoder for super::CommandEncoder {
         debug_assert!(self.state.pending_timer_queries.is_empty());
 
         self.raw_cmd_buf = Some(raw);
+        // svelte-blitz patch: a relay wait is work of its own.
+        self.encoded = relay.is_some();
 
         Ok(())
     }
@@ -586,6 +592,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         Ok(super::CommandBuffer {
             raw: self.raw_cmd_buf.take().unwrap(),
             queue_shared: Arc::clone(&self.queue_shared),
+            empty: !self.encoded, // svelte-blitz patch
         })
     }
 
@@ -1224,6 +1231,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
             if let Some(mv) = desc.multiview_mask {
                 descriptor.setRenderTargetArrayLength(32 - mv.leading_zeros() as usize);
             }
+            self.encoded = true; // svelte-blitz patch
             let raw = self.raw_cmd_buf.as_ref().unwrap();
             let encoder = raw.renderCommandEncoderWithDescriptor(&descriptor).unwrap();
             if let Some(mv) = desc.multiview_mask {
@@ -1868,6 +1876,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         debug_assert!(self.state.compute.is_none());
         debug_assert!(self.state.render.is_none());
 
+        self.encoded = true; // svelte-blitz patch
         let raw = self.raw_cmd_buf.as_ref().unwrap();
 
         autoreleasepool(|_| {
