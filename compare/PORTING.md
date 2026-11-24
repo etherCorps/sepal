@@ -242,7 +242,7 @@ then `cp -R src-tauri/target/release/bundle/macos/Tracker.app ../builds/Tracker-
 | Events | `dispatch()` in `renderer.js` bubbles | WebKit's events; Svelte delegates `onclick` and similar to the mount target (`<body>`) | DOM build behaviour. The router's `document` listener still runs after the app's handlers, as with Sepal's root listener |
 | `sepal/{fs,dialog,clipboard,window}` | host calls | `compare/tauri/src/desktop.js` on the plugins | see below |
 | HTML page | the host's base document | `public/index.html`: `<link rel=stylesheet href=app.css>`, `<script src=app.js>` at the end of `<body>` | Tauri needs a page. Nothing else is in it |
-| `app.json`, `static/icon.png` | written and copied | not used; the icon is in `src-tauri/icons` (made from the same `static/icon.png` with `tauri icon`) | Tauri's equivalent is `tauri.conf.json` |
+| `app.json`, `icon.png` | written; the icon is the Sepal one, since the Tracker has none of its own | not used; the icon is in `src-tauri/icons` (made from `assets/brand/sepal-app-icon-1024.png` with `tauri icon`, the icon the Tracker gets from the preset) | Tauri's equivalent is `tauri.conf.json` |
 | App id / data dir | `com.compare.tracker.blitz` | `com.compare.tracker.tauri` (`~/Library/Application Support/com.compare.tracker.tauri`) | PROTOCOL.md |
 
 #### Desktop shims (`compare/tauri/src/desktop.js`)

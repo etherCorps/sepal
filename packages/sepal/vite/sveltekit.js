@@ -161,8 +161,9 @@ export async function sepalKit(inline = {}) {
 			await builder.generateFallback(join(staging, 'index.html'));
 			convert(staging, to);
 
-			const source = manifest(options, root, existsSync(static_dir()) ? static_dir() : '');
-			if (source) writeFileSync(join(to, 'app.json'), source);
+			const written = manifest(options, root, existsSync(static_dir()) ? static_dir() : '');
+			if (written) writeFileSync(join(to, 'app.json'), written.json);
+			if (written?.icon) cpSync(written.icon, join(to, 'icon.png'));
 			builder.log.minor(`Wrote the app to ${out}`);
 			if (watching) show();
 		}

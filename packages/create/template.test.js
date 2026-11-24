@@ -84,7 +84,10 @@ try {
 		run('pnpm', ['run', 'build'], app);
 		const manifest = JSON.parse(readFileSync(join(app, 'dist/app.json'), 'utf8'));
 		assert(manifest.name === 'My App' && manifest.id === 'com.example.my-app', 'manifest not written from the template');
-		assert(existsSync(join(app, 'dist/app.js')) && existsSync(join(app, 'dist/icon.png')), 'bundle or icon missing');
+		assert(existsSync(join(app, 'dist/app.js')), 'bundle missing');
+		// The starter has no icon of its own, so the packed package has to supply one.
+		const sepal_icon = readFileSync(join(packages, 'sepal/vite/icon.png'));
+		assert(readFileSync(join(app, 'dist/icon.png')).equals(sepal_icon), 'the build does not have the Sepal icon');
 		assert(existsSync(join(app, 'dist/logo.svg')), 'static/ was not copied into the build');
 		// The template is file-routed: the About page only exists in the bundle if src/routes was read.
 		const bundle = readFileSync(join(app, 'dist/app.js'), 'utf8');

@@ -50,9 +50,10 @@ fn sveltekit_routes_between_pages() {
     let (pixels, width, _) = sepal::screenshot::render_rgba(&mut doc, 800, 600, 1.0);
     let (x, y, w, h) = doc.rect(logo).unwrap();
     let at = ((y + h / 2.0) as usize * width as usize + (x + w / 2.0) as usize) * 4;
+    // The bar behind it is dark, so white here is the mark itself.
     assert!(
-        pixels[at] > 200 && pixels[at + 2] < 120,
-        "the logo is drawn, in its orange: {:?}",
+        pixels[at..at + 3].iter().all(|&channel| channel > 200),
+        "the logo is drawn, in white: {:?}",
         &pixels[at..at + 3]
     );
 

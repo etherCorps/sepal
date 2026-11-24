@@ -7,6 +7,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadConfigFromFile } from 'vite';
 import { find_host } from '@ethercorps/calyx';
 
@@ -26,13 +27,18 @@ export async function load_config(project, env) {
 	return { config: /** @type {import('./vite.js').Config} */ (loaded?.config ?? {}), path };
 }
 
+/** The Sepal app icon, for an app that has none of its own. A byte copy of assets/brand/sepal-app-icon-1024.png. */
+export const SEPAL_ICON = fileURLToPath(new URL('./icon.png', import.meta.url));
+
 /**
  * The contents of `app.json`, or `null` when the config says nothing the host
- * needs. Throws with a message for the user when the icon is not usable.
+ * needs. `icon` is a file to write into the build as `icon.png`: the Sepal
+ * icon, when the app has no icon of its own. Throws with a message for the
+ * user when the icon is not usable.
  * @param {import('./vite.js').Config} options
  * @param {string} root the project
  * @param {string} static_dir where the icon is looked for; empty when there is none
- * @returns {string | null}
+ * @returns {{ json: string, icon: string | null } | null}
  */
 export function manifest(options, root, static_dir) {
 	if (!options.app && !options.permissions) return null;
@@ -45,14 +51,21 @@ export function manifest(options, root, static_dir) {
 	// The icon is one of the static files: it is copied into the build with
 	// them, and the manifest names it by the same relative path.
 	if (app.icon === undefined && static_dir && existsSync(join(static_dir, 'icon.png'))) app.icon = 'icon.png';
-	if (app.icon !== undefined) {
+	let icon = null;
+	if (app.icon === undefined) {
+		// No icon of the app's own: the build gets the Sepal icon, under the
+		// name a static one would have had.
+		app.icon = 'icon.png';
+		icon = SEPAL_ICON;
+	} else {
 		// The host decodes PNG only; fail here rather than when the app starts.
 		if (!app.icon.toLowerCase().endsWith('.png')) throw new Error(`app.icon must be a PNG file, got ${app.icon}`);
 		if (!static_dir || !existsSync(join(static_dir, app.icon))) {
 			throw new Error(`app.icon: there is no ${app.icon} in the static directory (${static_dir || 'turned off'})`);
 		}
 	}
-	return JSON.stringify(options.permissions ? { ...app, permissions: options.permissions } : app, null, '\t') + '\n';
+	const json = JSON.stringify(options.permissions ? { ...app, permissions: options.permissions } : app, null, '\t') + '\n';
+	return { json, icon };
 }
 
 /**

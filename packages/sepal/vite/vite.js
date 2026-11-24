@@ -14,7 +14,7 @@
 // In watch mode (`vite build --watch`) with a host binary available, it also
 // opens the app and reloads it in place after every rebuild.
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
@@ -33,7 +33,8 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  *
  * `name` is the app's name and the fallback window title. `icon` is a PNG
  * (square, 1024×1024 recommended) in the `static/` directory, named relative to
- * it; `static/icon.png` is used when `icon` is left out. `width` and `height`
+ * it; `static/icon.png` is used when `icon` is left out, and the Sepal icon
+ * when there is no `static/icon.png` either. `width` and `height`
  * are the initial window size in logical pixels. `id` (a bundle identifier such as `com.example.counter`) and
  * `version` are used when the app is bundled.
  *
@@ -254,13 +255,15 @@ export function sepal(inline = {}) {
 				options = { ...file.config, ...inline, router: options.router, entry: options.entry };
 			},
 			generateBundle() {
-				let source;
+				let written;
 				try {
-					source = manifest(options, root, static_dir);
+					written = manifest(options, root, static_dir);
 				} catch (error) {
 					this.error(/** @type {Error} */ (error).message);
 				}
-				if (source) this.emitFile({ type: 'asset', fileName: 'app.json', source });
+				if (!written) return;
+				this.emitFile({ type: 'asset', fileName: 'app.json', source: written.json });
+				if (written.icon) this.emitFile({ type: 'asset', fileName: 'icon.png', source: readFileSync(written.icon) });
 			}
 		}),
 		{

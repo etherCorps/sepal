@@ -1,4 +1,9 @@
-<p align="center"><img src="docs/logo/logo.svg" width="112" alt="svelte-blitz logo"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/sepal-logo-white.svg">
+    <img src="assets/brand/sepal-logo.svg" width="280" alt="Sepal">
+  </picture>
+</p>
 
 # svelte-blitz
 
@@ -136,7 +141,7 @@ export default defineConfig({
 	app: {
 		name: 'Counter',
 		id: 'com.example.counter',
-		// icon: static/icon.png is used when it exists (PNG, square, 1024×1024 recommended)
+		// icon: static/icon.png when it exists (PNG, square, 1024×1024 recommended); the Sepal icon otherwise
 		window: { title: 'Svelte on Blitz', width: 800, height: 600 }
 		// version: defaults to the one in package.json
 		// updater: see "Updates"
@@ -165,6 +170,8 @@ Vite restarted.
 
 The icon is a static file: put it in `static/` and it is copied with the
 rest. `app.icon` names another file there if it is not called `icon.png`.
+An app with neither gets the Sepal icon, written into the build as
+`icon.png`; the starter relies on that until you add your own.
 
 The build writes `dist/app.json`. Point
 the host at the directory and it picks them up: `svelte-blitz-host dist`.

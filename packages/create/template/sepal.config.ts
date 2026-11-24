@@ -5,7 +5,8 @@ export default defineConfig({
 		name: '__NAME__',
 		// Change this to an identifier you own before you ship.
 		id: '__ID__',
-		// The icon is static/icon.png.
+		// Put your own icon at static/icon.png (PNG, square, 1024×1024).
+		// Until then the app has the Sepal icon.
 		window: { width: 800, height: 600 }
 		// Self-update: see "Updates" in the Sepal README.
 		// updater: { url: 'https://example.com/latest.json', pubkey: '…' }
