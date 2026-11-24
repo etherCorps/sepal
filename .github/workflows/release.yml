@@ -218,7 +218,7 @@ jobs:
 
   # Only here, in release.yml itself: npm's trusted publisher names this file.
   publish:
-    name: publish ${{ needs.version.outputs.version }}
+    name: publish
     needs: [version, pack]
     if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-latest
