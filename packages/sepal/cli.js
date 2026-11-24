@@ -4,6 +4,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
 import { find_host, platform_package } from '@ethercorps/calyx';
 
 const own = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
@@ -26,8 +27,8 @@ function fail(message) {
 	process.exit(1);
 }
 
-/** Run the host with these arguments and exit with its status. @param {string[]} args @returns {never} */
-function host(args) {
+/** This machine's calyx, once its version is known to fit. @returns {string} */
+function calyx() {
 	/** @type {ReturnType<typeof find_host>} */
 	let found;
 	try {
@@ -45,9 +46,44 @@ function host(args) {
 				'again). To run a different calyx on purpose, point SEPAL_HOST at it.'
 		);
 	}
-	const { status, error } = spawnSync(found.path, args, { stdio: 'inherit' });
-	if (error) fail(`sepal: cannot start ${found.path}: ${error.message}`);
+	return found.path;
+}
+
+/** Run a binary with these arguments and exit with its status. @param {string} bin @param {string[]} args @returns {never} */
+function start(bin, args) {
+	const { status, error } = spawnSync(bin, args, { stdio: 'inherit' });
+	if (error) fail(`sepal: cannot start ${bin}: ${error.message}`);
 	process.exit(status ?? 1);
+}
+
+/** Run the host with these arguments and exit with its status. @param {string[]} args @returns {never} */
+function host(args) {
+	start(calyx(), args);
+}
+
+/**
+ * macOS takes the name in the Dock, the app switcher and Activity Monitor
+ * from the bundle a process runs from; a bare calyx is called "calyx". So on
+ * macOS an app with a name runs out of a throwaway bundle in
+ * node_modules/.sepal, as it does in dev, and still loads from `dir`.
+ * @param {string} bin @param {string} dir
+ */
+function bundled(bin, dir) {
+	if (process.platform !== 'darwin') return bin;
+	let name;
+	try {
+		name = JSON.parse(readFileSync(join(dir, 'app.json'), 'utf8')).name;
+	} catch {
+		return bin;
+	}
+	if (!name) return bin;
+	const made = spawnSync(bin, ['--bundle', dir, resolve('node_modules/.sepal')], { encoding: 'utf8' });
+	if (made.status !== 0) {
+		console.warn(`sepal: running unbundled: ${made.stderr.trim()}`);
+		return bin;
+	}
+	const bundle = made.stdout.trim();
+	return join(bundle, 'Contents/MacOS', basename(bundle, '.app'));
 }
 
 const [command, ...args] = process.argv.slice(2);
@@ -56,7 +92,7 @@ const dist = args[0] !== undefined && !args[0].startsWith('--') ? args : ['dist'
 
 switch (command) {
 	case 'run':
-		host(dist);
+		start(bundled(calyx(), dist[0]), dist);
 	case 'bundle':
 		host(['--bundle', ...dist]);
 	case 'signer':

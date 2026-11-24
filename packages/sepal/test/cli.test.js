@@ -1,6 +1,7 @@
 // The `sepal` command and the calyx it runs: a binary from a platform package
-// of another version is refused, SEPAL_HOST is taken as it is, and a missing
-// platform package is named. Runs the real cli.js and calyx index.js out of a
+// of another version is refused, SEPAL_HOST is taken as it is, a missing
+// platform package is named, and on macOS an app with a name runs from a
+// bundle, so that it is not called "calyx" in the Dock. Runs the real cli.js and calyx index.js out of a
 // node_modules laid out as an install would, with a script standing in for the
 // binary.
 
@@ -40,7 +41,19 @@ function install(version) {
 	if (version === null) return;
 	write_package(platform_dir, { name: platform_package(), version });
 	mkdirSync(join(platform_dir, 'bin'));
-	writeFileSync(join(platform_dir, 'bin/calyx'), '#!/bin/sh\necho "calyx ran: $*"\n');
+	// `--bundle <dist> <out>` makes "<out>/App.app", whose binary says it ran; anything else just says so.
+	writeFileSync(
+		join(platform_dir, 'bin/calyx'),
+		'#!/bin/sh\n' +
+			'if [ "$1" = "--bundle" ]; then\n' +
+			'  mkdir -p "$3/App.app/Contents/MacOS"\n' +
+			'  printf \'#!/bin/sh\\necho "bundled ran: $*"\\n\' > "$3/App.app/Contents/MacOS/App"\n' +
+			'  chmod +x "$3/App.app/Contents/MacOS/App"\n' +
+			'  echo "$3/App.app"\n' +
+			'  exit 0\n' +
+			'fi\n' +
+			'echo "calyx ran: $*"\n'
+	);
 	chmodSync(join(platform_dir, 'bin/calyx'), 0o755);
 }
 
@@ -57,6 +70,14 @@ try {
 	let ran = sepal();
 	assert.equal(ran.status, 0, ran.stderr);
 	assert.equal(ran.stdout.trim(), 'calyx ran: dist');
+
+	// An app with a name: on macOS through a throwaway bundle in node_modules/.sepal, elsewhere as it is.
+	mkdirSync(join(scratch, 'dist'), { recursive: true });
+	writeFileSync(join(scratch, 'dist/app.json'), JSON.stringify({ name: 'App' }));
+	ran = sepal();
+	assert.equal(ran.status, 0, ran.stderr);
+	assert.equal(ran.stdout.trim(), process.platform === 'darwin' ? 'bundled ran: dist' : 'calyx ran: dist');
+	rmSync(join(scratch, 'dist'), { recursive: true });
 
 	// Another version: refused, saying which and what to reinstall, and nothing runs.
 	install('0.9.0');

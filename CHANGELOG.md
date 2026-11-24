@@ -9,6 +9,9 @@
 - **Fonts and other `url()`s in SvelteKit apps.** The adapter merges
   SvelteKit's stylesheets into `app.css`; their relative `url()`s now point
   where the files are, so `@font-face` fonts load.
+- **`sepal run` shows the app's name on macOS,** not "calyx": like dev, it
+  runs an app with a `name` from a throwaway bundle in `node_modules/.sepal`,
+  which is where macOS takes the Dock and app switcher name from.
 - **`#lib` in the SvelteKit starter.** SvelteKit 3 replaced `$lib` with
   `#lib`, which a project declares in package.json's `imports`. The
   starter now does, and its `src/lib/index.ts` says how to import it.

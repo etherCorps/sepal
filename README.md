@@ -244,9 +244,10 @@ runs without a manifest.
 A missing or undecodable icon stops the app with an error naming the file.
 
 On macOS `name` also becomes the process name, which is what the menu bar
-items ("Quit Counter") use. Run straight from the host binary, the Dock label,
-the app switcher and Activity Monitor still say `calyx`: macOS takes
-those from an app bundle. Build one to get them right.
+items ("Quit Counter") use. The Dock label, the app switcher and Activity
+Monitor come from the app bundle a process runs from, so `sepal run` and dev
+run an app with a `name` out of a throwaway bundle in `node_modules/.sepal`.
+Started by hand (`calyx dist`), or without a `name`, it shows as `calyx`.
 
 ## Bundle a macOS app
 
