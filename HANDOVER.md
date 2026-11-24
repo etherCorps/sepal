@@ -393,6 +393,12 @@ a stable release exists, prereleases leave `latest` alone.
 `scripts/publish.js` applies it and says so at the top; `release.yml` repeats
 it.
 
+Do not fetch a tarball's URL before it is published: the registry's CDN
+caches the 404 for five minutes (`max-age=300`), and installs at that edge
+fail until it expires. On 24 Nov a check made a second before `sepal`
+0.1.0-alpha.1's tarball existed did exactly that. Add a query string
+(`?probe=…`) to anything that probes; `scripts/publish.js` does.
+
 ## What only Shivam can do
 
 - Choose the licence, the repo location and the first version.

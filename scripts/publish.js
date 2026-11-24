@@ -60,7 +60,9 @@ async function downloadable(packages) {
 	for (const { name, version } of packages) {
 		const url = view([`${name}@${version}`, 'dist.tarball']);
 		while (true) {
-			const status = url ? (await fetch(url, { method: 'HEAD' }).catch(() => null))?.status : null;
+			// The query keeps this probe out of the CDN's cache: a request for the plain URL
+			// before the tarball exists leaves a 404 there for five minutes, for everyone.
+			const status = url ? (await fetch(`${url}?probe=${Date.now()}`, { method: 'HEAD' }).catch(() => null))?.status : null;
 			if (status === 200) break;
 			if (Date.now() > deadline) throw new Error(`${name}@${version} still does not download (${url}: ${status})`);
 			console.log(`  waiting for ${name}@${version} to download (${status ?? 'no tarball yet'})`);
