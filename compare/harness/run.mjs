@@ -13,6 +13,8 @@
 //        [--sizes 1000,10000] [--scenarios 1,5] [--runs n] [--warmup n] [--config plan.json]
 //        [--versions file.json] [--no-record] [--idle seconds] [--focus-ax]
 //        [--env K=V,...]                                    more environment for svelte-blitz
+//        [--interleave]                                     alternate builds run by run (A/B within
+//                                                           one session) instead of build by build
 //   node compare/harness/run.mjs memwatch <build> [size] [--clock] [--secs 70] [--every 5]
 //                                                           launch, then footprint (with categories)
 //                                                           every few seconds while left alone
@@ -84,6 +86,9 @@ const COLUMNS = {
 	'com.compare.tracker.blitzv8': { name: 'blitzv8', kind: 'blitz' },
 	'com.compare.tracker.tauri': { name: 'tauri', kind: 'tauri' },
 	'com.compare.tracker.gpuix': { name: 'gpuix', kind: 'gpuix' },
+	// More svelte-blitz builds, for comparing changes to it in one session (--interleave).
+	'com.compare.tracker.blitzb': { name: 'blitzb', kind: 'blitz' },
+	'com.compare.tracker.blitzc': { name: 'blitzc', kind: 'blitz' },
 	// Diagnostic only (blitz-dom's log-phase-times): never measured.
 	'com.compare.tracker.blitzdiag': { name: 'blitzdiag', kind: 'blitz' },
 	'com.compare.tracker.blitzv8diag': { name: 'blitzv8diag', kind: 'blitz' }
@@ -1240,6 +1245,7 @@ function args_of(argv) {
 		else if (a === '--clock') out.clock = true;
 		else if (a === '--focus-ax') out.focus_ax = true;
 		else if (a === '--breakdown') out.breakdown = true;
+		else if (a === '--interleave') out.interleave = true;
 		else if (a.startsWith('--')) out[a.slice(2)] = argv[++i];
 		else out._.push(a);
 	}
@@ -1259,6 +1265,7 @@ async function session(opts, builds) {
 	if (opts.scenarios) plan.scenarios = list_of(opts.scenarios);
 	if (opts.record === false) plan.record = false;
 	if (opts.env) plan.env = opts.env;
+	if (opts.interleave) plan.interleave = true;
 	plan.builds = list_of(opts.builds, String) ?? plan.builds ?? ['blitz', 'blitzv8', 'tauri', 'gpuix'].filter((b) => builds[b]);
 	for (const b of plan.builds) if (!builds[b]) throw new Error(`no build ${b} (found: ${Object.keys(builds).join(', ')})`);
 	for (const s of plan.sizes) if (!fs.existsSync(path.join(FIXTURES, `issues-${s}.json`))) throw new Error(`no fixture for ${s}`);
@@ -1291,9 +1298,24 @@ async function session(opts, builds) {
 
 	const total = plan.builds.length * plan.sizes.length * plan.scenarios.length * (plan.warmup + plan.runs);
 	let count = 0;
-	for (const b of plan.builds) {
+	// Build by build, or (--interleave) every build in turn for each run of each
+	// scenario, so that a slow drift of the machine (clocks, heat) falls on all
+	// builds alike.
+	const order = [];
+	for (const size of plan.sizes) {
+		if (plan.interleave) {
+			for (let i = 0; i < plan.warmup + plan.runs; i++)
+				for (const n of plan.scenarios) for (const b of plan.builds) order.push({ b, size, n, i });
+		} else {
+			for (const b of plan.builds)
+				for (const n of plan.scenarios) for (let i = 0; i < plan.warmup + plan.runs; i++) order.push({ b, size, n, i });
+		}
+	}
+	if (!plan.interleave) order.sort((x, y) => plan.builds.indexOf(x.b) - plan.builds.indexOf(y.b));
+	const calibs = new Map();
+	for (const { b, size, n, i } of order) {
 		const build = builds[b];
-		for (const size of plan.sizes) {
+		if (!calibs.has(`${b}-${size}`)) {
 			const calib_file = path.join(dir, `calibration-${b}-${size}.json`);
 			let calib = fs.existsSync(calib_file) ? JSON.parse(fs.readFileSync(calib_file, 'utf8')) : null;
 			for (let attempt = 1; (!calib || calib.aborted) && attempt <= plan.attempts; attempt++) {
@@ -1304,33 +1326,29 @@ async function session(opts, builds) {
 				for (const m of calib.missing) console.error(`  missing: ${m}`);
 				await sleep(plan.cooldown.short * 1000);
 			}
-			if (calib.aborted) {
-				console.error(`SKIPPING ${b} ${size}: no calibration (${calib.aborted})`);
-				continue;
-			}
-			for (const n of plan.scenarios) {
-				for (let i = 0; i < plan.warmup + plan.runs; i++) {
-					count++;
-					const key = `${b}-${size}-s${n}-r${i}`;
-					for (;;) {
-						const d = done.get(key) ?? { ok: false, attempts: 0 };
-						if (d.ok || d.attempts >= plan.attempts) break;
-						const record = plan.record && i === plan.warmup;
-						console.error(`[${count}/${total}] ${key}${i < plan.warmup ? ' (warm-up)' : ''}${record ? ' (recorded)' : ''}${d.attempts ? ` attempt ${d.attempts + 1}` : ''}`);
-						const r = await run_one(build, size, n, { calib, key, log_dir: logs, record_dir: record ? caps : null });
-						r.run = i;
-						r.warmup = i < plan.warmup;
-						r.recorded = record;
-						r.attempt = d.attempts + 1;
-						fs.appendFileSync(runs_file, json(r) + '\n');
-						d.attempts++;
-						d.ok = r.status === 'ok';
-						done.set(key, d);
-						if (r.status !== 'ok') console.error(`  ABORTED: ${r.reason}`);
-						await sleep((LONG.has(n) ? plan.cooldown.long : plan.cooldown.short) * 1000);
-					}
-				}
-			}
+			if (calib.aborted) console.error(`SKIPPING ${b} ${size}: no calibration (${calib.aborted})`);
+			calibs.set(`${b}-${size}`, calib);
+		}
+		const calib = calibs.get(`${b}-${size}`);
+		count++;
+		if (calib.aborted) continue;
+		const key = `${b}-${size}-s${n}-r${i}`;
+		for (;;) {
+			const d = done.get(key) ?? { ok: false, attempts: 0 };
+			if (d.ok || d.attempts >= plan.attempts) break;
+			const record = plan.record && i === plan.warmup;
+			console.error(`[${count}/${total}] ${key}${i < plan.warmup ? ' (warm-up)' : ''}${record ? ' (recorded)' : ''}${d.attempts ? ` attempt ${d.attempts + 1}` : ''}`);
+			const r = await run_one(build, size, n, { calib, key, log_dir: logs, record_dir: record ? caps : null });
+			r.run = i;
+			r.warmup = i < plan.warmup;
+			r.recorded = record;
+			r.attempt = d.attempts + 1;
+			fs.appendFileSync(runs_file, json(r) + '\n');
+			d.attempts++;
+			d.ok = r.status === 'ok';
+			done.set(key, d);
+			if (r.status !== 'ok') console.error(`  ABORTED: ${r.reason}`);
+			await sleep((LONG.has(n) ? plan.cooldown.long : plan.cooldown.short) * 1000);
 		}
 	}
 	info.finished = new Date().toISOString();
