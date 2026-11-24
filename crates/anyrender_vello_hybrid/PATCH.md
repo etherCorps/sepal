@@ -2,7 +2,7 @@
 
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
-windows with, with eight changes. `crates/host/Cargo.toml` swaps it in through
+windows with, with nine changes. `crates/host/Cargo.toml` swaps it in through
 `[patch.crates-io]`. All are marked `svelte-blitz patch`.
 
 ## The changes
@@ -71,8 +71,8 @@ atlas. Checked with a 4500 x 300 PNG as a CSS background: `gpushot:` matches
 `recording::Scene`), compared in order with the last frame's (Myers' diff), and
 only the commands that touch the region whose commands changed are drawn, moved
 so the region's corner is the scene's origin and placed with vello_gpu's root
-offset (its PATCH.md, change 2), over the last frame kept in the surface's
-intermediate texture (`TargetInit::SrcOver`). A frame that changes nothing on
+offset (its PATCH.md, change 2), over the last frame, kept in a texture of
+its own (change 9; `TargetInit::SrcOver`). A frame that changes nothing on
 screen draws nothing and returns at once; `skipped_last_frame()` says so.
 Presenting is what paced the redraw loop (it waits for a drawable), and
 something animating without changing pixels asks for a redraw after every
@@ -93,7 +93,7 @@ Measured on the Tracker (release, 1200x800 at 2x, GPU time from the driver's
 per-client `accumulatedGPUTime`): a clock repainting once a second 29 -> 18 ms
 over 20 s, the New issue dialog 103 -> 68 ms, switching four views 97 -> 69 ms,
 Show all and scrolling 583 -> 269 ms GPU and 2.5 -> 1.9 s CPU. Cost: the
-intermediate texture, ~15-20 MB. Window captures of seven states (list, hover,
+kept frame, ~15-20 MB. Window captures of seven states (list, hover,
 dialog open and closed, Board, Insights, list again) match a full repaint
 exactly or within 1/255 on a few dozen antialiased edge pixels of what changed
 (vello reaches them through a different path in a small scene); a partial frame
@@ -127,6 +127,26 @@ with how many pixels differ by more than 2/255, the rectangle they are in, and
 every command drawn there. The kept frame gets `COPY_SRC` for it. Reading back
 is a blit, so this mode costs the driver memory change 1 of wgpu-hal avoids,
 and a frame takes tens of milliseconds more: for checking, never for measuring.
+
+**9. The kept frame is ours, copied to the surface in the frame's submit.**
+`src/window_renderer.rs`, `SurfaceCopy` and `Kept`: with damage tracking
+(change 6) the last frame used to be kept in wgpu_context's intermediate
+texture, which `maybe_blit_and_present` copies to the surface with wgpu's
+`TextureBlitter`, in a submit of its own and in a pass that loads the surface
+texture; a surface texture is new every frame, so wgpu cleared it first, in a
+full-window pass of its own. The renderer now owns the kept frame (created on
+resume and resize) and copies it to the surface texture at the end of the
+frame's own command encoder, in a pass that clears instead of loading. The
+surface is created without an intermediate texture on Apple (elsewhere, a
+`PostMultiplied` surface still has one, for its alpha conversion).
+
+A clock tick is one submit of 3 command buffers plus the present, 5 render
+passes instead of 6, and no full-window clear. Measured against the code
+before it in one interleaved session (compare harness, 1,000 issues, 3 runs
+each): switching views 61.9 -> 39.4 ms GPU and 382 -> 340 ms CPU; the clock,
+the New issue dialog and scrolling the same within noise. Window captures of
+seven states (list, hover, New issue open and closed, Board, Insights, list
+again) match `SVELTE_BLITZ_DAMAGE=0`.
 
 ## Updating
 

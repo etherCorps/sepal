@@ -285,7 +285,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   of 4096 (64 MB each), and images larger than a page in textures of their own
   (vello_gpu panics on them), and damage tracking: each frame's drawing
   commands are diffed with the last frame's and only the changed region is
-  repainted, over the last frame kept in an intermediate texture
+  repainted, over the last frame kept in a texture of its own
   (`SVELTE_BLITZ_DAMAGE=0` turns it off, `SVELTE_BLITZ_TRACE=1` prints each
   frame's damage). A frame with nothing to draw presents nothing, so nothing
   paces the next one; the host puts that redraw off to the next 60 Hz frame
