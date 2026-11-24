@@ -1,11 +1,49 @@
-# svelte-blitz
+# Sepal
 
-Svelte apps in a native window with no webview and no Node at runtime. Svelte
-components are compiled with Svelte's custom renderer API and drive Blitz (a
-Rust HTML/CSS engine) through a batched op buffer. JavaScript runs in an
-embedded QuickJS-ng. Styling is plain CSS; Tailwind v4 works.
+Native Svelte apps, drawn by Blitz. Svelte apps in a native window with no
+webview and no Node at runtime. Svelte components are compiled with Svelte's
+custom renderer API and drive Blitz (a Rust HTML/CSS engine) through a
+batched op buffer. JavaScript runs in an embedded QuickJS-ng. Styling is
+plain CSS; Tailwind v4 works.
 
 Read `README.md` for the architecture and `HANDOVER.md` for the current work.
+
+## Naming
+
+Anything people type stays plain and starts with `sepal`: the `sepal`
+package and its subpaths (`sepal/vite`, `sepal/fs`, …), the `sepal`
+command, `create-sepal`, `sepal.config.ts`, `SEPAL_*` variables, `sepal()`
+and `sepalKit()`. The host packages are the exception, because nobody types
+them: `@ethercorps/calyx`, and the `calyx` binary of the `sepal` crate.
+
+The plant words go in docs, the README and CLI messages, only where they
+read naturally. Never force them into an API.
+
+| Word | Means |
+|---|---|
+| calyx | the host, prebuilt or built per app |
+| bud | an app |
+| stem | the JS backend thread; its folder and `$backend` stubs keep plain names |
+| graft | a native plugin; in code it stays `Plugin` and `.plugin()` |
+| seed | a starter template |
+| bloom | the packaged app that `--bundle` produces |
+
+Keep the standard terms: permissions, sidecar, adapter, Vite plugin. Never
+use "root" as a plant word (next to permissions it reads as root access),
+nor xylem or phloem (Xilem and Floem are Rust UI frameworks). Names taken
+from upstream Blitz (`crates/blitz-dom`, `crates/anyrender_vello_hybrid`,
+the `blitz-*` crates, "Blitz" for the engine) stay as they are.
+
+## Brand
+
+The logo kit is in `assets/brand/`: the logo (mark and wordmark) for light
+and dark backgrounds, the mark alone, the app icon, `favicon.svg`, and PNGs
+for places without SVG. The colour is `#111714`, or white on dark. Use the
+files as they are: do not redraw, recolour or re-export them.
+`packages/sepal/vite/icon.png` is a byte copy of `sepal-app-icon-1024.png`
+(the icon for apps without one; `test/icon.test.js` checks the copy), and
+the starter's and `examples/sveltekit`'s `static/logo.svg` are copies of
+the mark.
 
 ## Commands
 
@@ -39,7 +77,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 
 ## Layout
 
-- `packages/core/` — `@ethercorps/svelte-blitz`, the runtime. `renderer.js`
+- `packages/sepal/` — the `sepal` package. `src/` is the runtime: `renderer.js`
   (node mirror, op buffer, event bubbling), `shims.js` (console, timers),
   `index.js` (`mount`, `__sb` entry points), `protocol.js` (opcodes),
   `host-call.js` (async calls to the host), `updater.js` (the update API),
@@ -47,8 +85,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `shell.js`, `window.js` (desktop APIs; public names are camelCase),
   `dom.js` (the opt-in DOM layer for web component libraries). Runs in
   QuickJS: no Node code belongs here.
-- `packages/vite/` — `@ethercorps/svelte-blitz-vite`. `vite.js` (the preset),
-  `sveltekit.js` (`svelteBlitzKit()`: SvelteKit on this renderer, as an
+- `packages/sepal/vite/` — the preset and router (`sepal/vite`,
+  `sepal/sveltekit`, `sepal/router`, …). `vite.js` (the preset),
+  `sveltekit.js` (`sepalKit()`: SvelteKit on this renderer, as an
   adapter plus two edits to SvelteKit's client; see the `patch` table there
   before touching a SvelteKit version), `app.js` (config file, manifest and
   dev window, shared by both presets), `head.js` and `bindings.js`
@@ -57,19 +96,19 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `Router.svelte` (the in-memory router; `$app/navigation` and `$app/state`
   alias to it), `router.js` (its public API). `vite.js`, `sveltekit.js`,
   `app.js`, `head.js`, `bindings.js` and `routes.js` run in Node; the rest
-  runs in the engine.
-- `packages/cli/` — the `svelte-blitz` command. `packages/create/` — the
-  starter (`template/`), what differs for the SvelteKit one laid over it
+  runs in the engine. `icon.png` is the Sepal icon for apps without one.
+- `packages/sepal/cli.js` — the `sepal` command. `packages/create/` —
+  `create-sepal`: the starter (`template/`), what differs for the SvelteKit one laid over it
   (`template-sveltekit/`), and the script that copies them and asks which.
   A change to a page in `template/` reaches both starters;
   `pnpm run test:template` builds both.
-- `packages/host/` — `@ethercorps/svelte-blitz-host`: `index.js` finds the
+- `packages/host/` — `@ethercorps/calyx`: `index.js` finds the
   host binary, `bin/<platform>/` holds the binaries
   (`scripts/build-host-package.js` fills it). A stale binary there is used by
-  anything that does not set `SVELTE_BLITZ_HOST`; the root scripts set it or
+  anything that does not set `SEPAL_HOST`; the root scripts set it or
   call cargo directly.
-- All five packages share one version; `scripts/check-versions.js` enforces it.
-- `crates/host/` — the Rust host. `app.rs` (app directory, `app.json`
+- All three packages share one version; `scripts/check-versions.js` enforces it.
+- `crates/host/` — the Rust host: crate `sepal`, binary `calyx`. `app.rs` (app directory, `app.json`
   manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
   data: URLs and the app directory only), `updater.rs` (self-update and the
   build side of it), `api/` (desktop APIs and their permission checks), `js.rs` (the engine: `js/quickjs.rs`,
@@ -79,7 +118,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
   `examples/routing/` — file-based routing. `examples/shadcn/` — the DOM
   layer under a real component library. `examples/sveltekit/` — a SvelteKit
-  app, built with `svelteBlitzKit()`.
+  app, built with `sepalKit()`.
 
 ## Invariants — do not break these
 
@@ -144,14 +183,14 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `vm` context for this reason. QuickJS-ng does provide `performance`,
   `queueMicrotask`, `WeakRef`, `FinalizationRegistry`; it does not provide
   `console` or timers (see `shims.js`).
-- **`bind:` on elements is rewritten by the preset** (`packages/vite/src/bindings.js`)
+- **`bind:` on elements is rewritten by the preset** (`packages/sepal/vite/bindings.js`)
   because Svelte refuses it for custom renderers: `bind:this` and `bind:value`
   become attachments, anything else compiles and warns. Attachments and
   actions get a `BlitzNode`, which has `addEventListener`/`removeEventListener`,
   `scrollTop`/`scrollLeft`, `scrollTo`/`scrollBy`/`scrollIntoView` and little
   else of the DOM.
 - **Libraries that assume a browser fail at run time, not at compile time.**
-  `dom: true` in `app.config.ts` loads `packages/core/src/dom.js`, a DOM on
+  `dom: true` in `sepal.config.ts` loads `packages/sepal/src/dom.js`, a DOM on
   top of the renderer's tree, which is enough for Bits UI's Switch, Checkbox,
   Tabs, Accordion, Dialog, Select and Tooltip. It measures through a forced
   layout (invariant 2), except inside an event handler, where it gets the
@@ -184,7 +223,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   another thread.
 - **Where time goes** (measured 22 Nov 2026, see README "Performance"): turns
   are bound by JavaScript in QuickJS, an interpreter, not by Blitz. Do not
-  optimise Rust before `SVELTE_BLITZ_TRACE=1` says layouts are the cost.
+  optimise Rust before `SEPAL_TRACE=1` says layouts are the cost.
 - **What GPU time costs** (measured 23 Nov 2026, driver's `accumulatedGPUTime`
   per process, the number Activity Monitor shows): at the clocks an idle app
   runs at, mostly a fixed cost per command buffer (~0.15 ms), little per pass
@@ -266,7 +305,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   in JS ends with an error instead of a frozen window.
 - **Svelte features unavailable to custom renderers:**
   `transition:`/`animate:`/`in:`/`out:`, `<svelte:window|body|document>`
-  (`<svelte:head>` too, but `packages/vite/src/head.js` rewrites it),
+  (`<svelte:head>` too, but `packages/sepal/vite/head.js` rewrites it),
   `css: 'injected'`, hydration, event delegation. Svelte does not bubble events
   for custom renderers; `dispatch()` in `renderer.js` does.
 - **A `.svelte` file without a rune compiles in legacy mode**, where
@@ -291,7 +330,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   (vello_gpu panics on them), and damage tracking: each frame's drawing
   commands are diffed with the last frame's and only the changed region is
   repainted, over the last frame kept in a texture of its own
-  (`SVELTE_BLITZ_DAMAGE=0` turns it off, `SVELTE_BLITZ_TRACE=1` prints each
+  (`SEPAL_DAMAGE=0` turns it off, `SEPAL_TRACE=1` prints each
   frame's damage). A frame with nothing to draw presents nothing, so nothing
   paces the next one; the host puts that redraw off to the next 60 Hz frame
   (`defer_redraw` in `window.rs`). Never sleep in the renderer for it: input
@@ -308,7 +347,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `PATCH.md`. Same rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
   It differs from crates.io 0.3.0-beta.4 in thirteen places, all marked
-  `svelte-blitz patch` and described in `crates/blitz-dom/PATCH.md`. Do not
+  `sepal patch` (as are the changes in the other patched copies) and
+  described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.
 - **Tailwind colours reach Blitz as `lab()`**, not sRGB. Anything that turns a
   computed colour into a string for another parser has to convert first.
@@ -323,7 +363,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   no running event loop: window calls would be lost and rfd dialogs panic.
 - **Tests must not open dialogs, write the clipboard or open links.** They
   would act on the machine of whoever runs them.
-- **App settings live in `app.config.ts`**, loaded by the preset with
+- **App settings live in `sepal.config.ts`**, loaded by the preset with
   Vite's `loadConfigFromFile`. `vite.config.ts` only lists plugins.
 - **Never unpack an update before `verify()`.** `install_archive` trusts its
   input; `Updater::download` is what earns that trust.
@@ -333,7 +373,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 
 ## Looking at a real window without eyes
 
-- `SVELTE_BLITZ_TRACE=1` makes the host print UI-thread timings to stderr:
+- `SEPAL_TRACE=1` makes the host print UI-thread timings to stderr:
   every click, every repaint, every change the app made to the page (with the
   number of ops, and how many layouts it took and for how long), and any
   other step that took longer than 8 ms.
@@ -343,7 +383,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `gpushot:out.png` draws with the window's GPU renderer instead of the CPU
   one (needs a GPU; the two agree to within 2/255 when the glyph atlas is
   off, and differ only on glyph edges when it is on).
-- `SVELTE_BLITZ_GLYPH_CACHE=0` turns the glyph atlas off in a window, to
+- `SEPAL_GLYPH_CACHE=0` turns the glyph atlas off in a window, to
   find out whether odd-looking text is the atlas's doing.
 - In `--watch` mode stdin also accepts `move <x> <y>` and `click <x> <y>`
   (logical pixels). They enter through the same function OS events do, so a
@@ -354,9 +394,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - Positions for those commands come from `drive … rect:SEL` at the window's
   size. They go stale whenever the page's content changes.
 - The performance overlay (Cmd+Option+P, Ctrl+Alt+P elsewhere; `hud` on
-  stdin in `--watch` mode; `SVELTE_BLITZ_HUD=1` to start with it shown)
+  stdin in `--watch` mode; `SEPAL_HUD=1` to start with it shown)
   shows fps, frame time, memory, CPU, system GPU load and the app's last
-  turn. With `SVELTE_BLITZ_TRACE=1` each refresh is also printed as a
+  turn. With `SEPAL_TRACE=1` each refresh is also printed as a
   `[trace] hud:` line, so a script can read the numbers. Its nodes hang off
   `<html>` after `<body>`, so `body > *` never finds them; `drive … hud:on`
   shows it headless. Its own refresh is a repaint: an idle app reads 1 fps.
@@ -378,9 +418,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   waited for.
 - `doc.rect()` and `doc.click(node)` ignore CSS transforms; hit testing does
   not. For a translated element, use `click_at`.
-- Renderer-only changes: extend `packages/core/test/mock-host.test.js`.
-  DOM layer changes: `packages/core/test/dom.test.js`, and `tests/shadcn.rs`.
-- Preset and router changes: `packages/vite/test/`, and `tests/routing.rs`.
+- Renderer-only changes: extend `packages/sepal/test/mock-host.test.js`.
+  DOM layer changes: `packages/sepal/test/dom.test.js`, and `tests/shadcn.rs`.
+- Preset and router changes: `packages/sepal/test/`, and `tests/routing.rs`.
 - Linux CI needs no display for any of the tests.
 - CI runs Node 22, the oldest the packages support; this Mac has 26. A test
   that compares against Node's own behaviour (`url.test.js`) has to hold on
@@ -413,9 +453,10 @@ in the window have not been confirmed by eye yet.
   (matching Svelte's own source), JSDoc types. `tsc` type-checks it
   (`checkJs`, `strict`) and emits `.d.ts` into each package's `types/`
   (generated by `prepare`, git-ignored). Do not convert the source to `.ts`.
-- The `tsconfig.json` of `packages/core` and `packages/vite` has no `dom` lib
-  on purpose: it turns `window`/`document` use in code that runs in QuickJS
-  into a type error. Node-side files are checked separately with Node types.
+- `packages/sepal`'s `tsconfig.json` (the runtime) and `tsconfig.vite.json`
+  (the router) have no `dom` lib on purpose: it turns `window`/`document` use
+  in code that runs in QuickJS into a type error. Node-side files (the
+  preset, the CLI) are checked separately by `tsconfig.node.json`.
 - Examples are TypeScript (`main.ts`, `lang="ts"`, `vite.config.ts`).
 - TypeScript stays on 6.x until `svelte-check` supports 7.
 - Rust: `cargo fmt`, no warnings, errors as `Result<_, String>` at the edges.
