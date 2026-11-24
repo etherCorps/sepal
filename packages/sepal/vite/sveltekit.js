@@ -19,7 +19,7 @@
 // Runs in Node.
 
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, posix, relative, resolve } from 'node:path';
 import { dev_window, load_config, manifest } from './app.js';
 import { element_bindings } from './bindings.js';
 import { head } from './head.js';
@@ -110,7 +110,7 @@ ${start}(element);
 	);
 
 	const styles = [...html.matchAll(/<link href="\/([^"]+)" rel="stylesheet">/g)].map((link) => link[1]).filter((file) => files.includes(file));
-	writeFileSync(join(to, 'app.css'), styles.map((file) => readFileSync(join(from, file), 'utf8')).join('\n'));
+	writeFileSync(join(to, 'app.css'), styles.map((file) => rebase_css(readFileSync(join(from, file), 'utf8'), posix.dirname(file))).join('\n'));
 
 	// Everything else is for the app to load by its path: static files, and
 	// what SvelteKit put in `_app/immutable/assets`.
@@ -119,6 +119,20 @@ ${start}(element);
 		mkdirSync(dirname(join(to, file)), { recursive: true });
 		cpSync(join(from, file), join(to, file));
 	}
+}
+
+/**
+ * A stylesheet moved from `dir` (relative to the build, `/`-separated) to
+ * app.css at its root. Its relative `url()`s, such as a font next to it in
+ * `_app/immutable/assets`, have to say where they now are from there.
+ * @param {string} css
+ * @param {string} dir
+ */
+export function rebase_css(css, dir) {
+	return css.replace(
+		/url\(\s*(['"]?)(?![a-z][a-z0-9+.-]*:|\/|#)([^'")]+)\1\s*\)/gi,
+		(_, quote, path) => `url(${quote}${posix.join(dir, path)}${quote})`
+	);
 }
 
 /**

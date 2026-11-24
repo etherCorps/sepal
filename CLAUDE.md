@@ -134,7 +134,10 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
   `examples/routing/` — file-based routing. `examples/shadcn/` — the DOM
   layer under a real component library. `examples/sveltekit/` — a SvelteKit
-  app, built with `sepalKit()`.
+  app, built with `sepalKit()`. `examples/quakes/` — a SvelteKit app made
+  with `pnpm create sepal --router sveltekit`: live USGS feeds over `fetch`,
+  a d3-geo world map, shadcn-svelte. It needs the network, so no test runs
+  it; `drive … real:4` does.
 
 ## Invariants — do not break these
 
@@ -327,6 +330,14 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **A `.svelte` file without a rune compiles in legacy mode**, where
   `<Component>` tags are resolved once and never switch. Package components
   that render other components dynamically need `<svelte:options runes />`.
+- **Inline SVG is drawn without the page's CSS.** `fill="var(--land)"` in an
+  SVG attribute resolves to nothing, and the shape comes out black. Give SVG
+  attributes literal colours (`examples/quakes/src/lib/geo.ts`, `PALETTE`).
+- **SvelteKit 3 has no `$lib`.** It is `#lib`, declared in package.json's
+  `imports` (the SvelteKit starter does), and imports through it need the
+  file's extension: `'#lib/format.ts'`, `'#lib/components/ui/card/index.ts'`.
+  Components copied from an app on Sepal's own router import `$lib/…` and
+  have to be changed.
 - **No `URL`, `URLSearchParams`, `location` or `history` in QuickJS.** The
   router keeps its own location; do not reach for those.
 - **Resolve condition.** Svelte's custom-renderer build is selected with the
@@ -407,6 +418,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   AppKit: it cannot show a problem in how macOS delivers events.
   `key <name>` (`key Escape`) and `type <text>` press keys; those start one
   step later, at the document, because winit cannot build a key event.
+- `drive`'s `time:` moves virtual time and returns at once, so a `fetch`
+  over the network is still on its way. `real:SECONDS` lets real time pass
+  while the host's answers come in: `drive <app> real:4 text:SEL`.
 - Positions for those commands come from `drive … rect:SEL` at the window's
   size. They go stale whenever the page's content changes.
 - The performance overlay (Cmd+Option+P, Ctrl+Alt+P elsewhere; `hud` on

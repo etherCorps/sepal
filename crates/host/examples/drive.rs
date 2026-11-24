@@ -7,7 +7,9 @@
 //!
 //! Steps, in order: `click:SELECTOR`, `clickat:X,Y`, `move:X,Y`, `key:NAME`
 //! (as `KeyboardEvent.key`), `type:TEXT`, `time:SECONDS` (timers
-//! and animations move on), `text:SELECTOR`, `count:SELECTOR`,
+//! and animations move on), `real:SECONDS` (real time passes and the host's
+//! answers arrive: for `fetch` and other host calls that wait on the network
+//! or the disk), `text:SELECTOR`, `count:SELECTOR`,
 //! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `hud:on`/`hud:off`
 //! (the performance overlay), `shot:FILE.png`
 //! (CPU renderer), `gpushot:FILE.png` (the window's renderer; needs a GPU).
@@ -105,6 +107,18 @@ fn main() {
             "time" => {
                 doc.wait(rest.parse().unwrap());
                 println!("  time {rest}")
+            }
+            "real" => {
+                // Virtual time stands still; host work (a request over the
+                // network) does not. Deliver its answers as they come.
+                let until = std::time::Instant::now()
+                    + std::time::Duration::from_secs_f64(rest.parse().unwrap());
+                while std::time::Instant::now() < until {
+                    std::thread::sleep(std::time::Duration::from_millis(20));
+                    doc.settle();
+                    doc.resolve();
+                }
+                println!("  real {rest}")
             }
             "rect" => println!(
                 "  rect {rest}: {:?}",

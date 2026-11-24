@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn-svelte/tailwind.css';
+@import '@fontsource/jetbrains-mono/latin-400.css';
+@import '@fontsource/jetbrains-mono/latin-500.css';
+
+/* Inter, latin subset only: every subset is inlined as a data URL and parsed at start. */
+@font-face {
+	font-family: 'Inter Variable';
+	font-style: normal;
+	font-display: swap;
+	font-weight: 100 900;
+	src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+/* A night desk: dark ink, one warm signal for the ground moving. */
+:root {
+	--background: oklch(0.17 0.012 250);
+	--foreground: oklch(0.94 0.006 250);
+	--card: oklch(0.205 0.013 250);
+	--card-foreground: var(--foreground);
+	--popover: oklch(0.225 0.014 250);
+	--popover-foreground: var(--foreground);
+	--primary: oklch(0.78 0.15 70);
+	--primary-foreground: oklch(0.2 0.02 70);
+	--secondary: oklch(0.25 0.014 250);
+	--secondary-foreground: var(--foreground);
+	--muted: oklch(0.24 0.013 250);
+	--muted-foreground: oklch(0.66 0.015 250);
+	--accent: oklch(0.27 0.016 250);
+	--accent-foreground: var(--foreground);
+	--destructive: oklch(0.63 0.2 25);
+	--border: oklch(0.3 0.014 250);
+	--input: oklch(0.33 0.015 250);
+	--ring: oklch(0.78 0.15 70);
+	--radius: 0.5rem;
+
+	/* the map */
+	--ocean: oklch(0.15 0.012 250);
+	--land: oklch(0.27 0.012 250);
+	--coast: oklch(0.36 0.014 250);
+	--grid: oklch(0.21 0.012 250);
+
+	/* magnitude: one ramp from quiet to violent */
+	--mag-1: oklch(0.72 0.1 200);
+	--mag-2: oklch(0.82 0.14 110);
+	--mag-3: oklch(0.8 0.15 75);
+	--mag-4: oklch(0.7 0.18 45);
+	--mag-5: oklch(0.63 0.22 25);
+}
+
+@theme inline {
+	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-ocean: var(--ocean);
+	--color-land: var(--land);
+	--color-mag-1: var(--mag-1);
+	--color-mag-2: var(--mag-2);
+	--color-mag-3: var(--mag-3);
+	--color-mag-4: var(--mag-4);
+	--color-mag-5: var(--mag-5);
+	--radius-sm: calc(var(--radius) * 0.6);
+	--radius-md: var(--radius);
+	--radius-lg: calc(var(--radius) + 2px);
+	--radius-xl: calc(var(--radius) * 1.4);
+}
+
+@layer base {
+	* { @apply border-border outline-ring/50; }
+	html { @apply font-sans; font-size: 16px; }
+	body { @apply bg-background text-foreground; font-size: 13px; line-height: 1.45; }
+	button:not(:disabled), [role='button']:not(:disabled), a { cursor: pointer; }
+}
+
+/* Bits UI reads a Select list's z-index from getComputedStyle(), which is blank under the DOM layer. */
+[data-bits-floating-content-wrapper] { z-index: 50; }

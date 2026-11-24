@@ -3,6 +3,10 @@
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
+	"imports": {
+		"#lib": "./src/lib/index.ts",
+		"#lib/*": "./src/lib/*"
+	},
 	"scripts": {
 		"dev": "vite build --watch",
 		"build": "vite build",
