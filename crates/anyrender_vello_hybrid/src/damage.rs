@@ -129,6 +129,21 @@ impl DamageTracker {
         for i in unmatched_new {
             add(bounds[new_at[i]]);
         }
+        // A filter's output anywhere depends on its whole layer: a region that cuts
+        // one would draw it from part of what it filters. Grow to whole layers.
+        loop {
+            let grown = commands.iter().zip(bounds).fold(region, |region, (command, r)| {
+                if is_filter_layer(command) && region.intersect(*r).area() > 0.0 {
+                    region.union(*r)
+                } else {
+                    region
+                }
+            });
+            if grown == region {
+                break;
+            }
+            region = grown;
+        }
         let target = Rect::new(0.0, 0.0, f64::from(size.0), f64::from(size.1));
         let region = Rect::new(
             (region.x0 / ALIGN_X).floor() * ALIGN_X,
@@ -322,15 +337,27 @@ pub(crate) fn unmatched<T: PartialEq>(
     Some((gone, added))
 }
 
+/// A layer with a CSS filter: blitz-paint widens its clip by how far the filter
+/// reaches (blur, drop-shadow offsets), and what it draws anywhere in there can
+/// depend on any command inside it.
+fn is_filter_layer(command: &RenderCommand) -> bool {
+    matches!(command, RenderCommand::PushLayer(c) if c.filter.is_some() || c.backdrop_filter.is_some())
+}
+
 /// Where each command can change pixels, in device space: its shape's box (grown
 /// for strokes, glyph extents and blur), transformed, and cut to the layers it is in.
-/// A layer's own commands cover its clip.
+/// A layer's own commands cover its clip. Inside a filter layer every command
+/// covers the (outermost) filter layer's clip: a change to any of them changes
+/// the filter's output, which reaches past their own boxes.
 pub(crate) fn visible_bounds(commands: &[RenderCommand]) -> Vec<Rect> {
     let everywhere = Rect::new(-1e9, -1e9, 1e9, 1e9);
     let mut clips: Vec<Rect> = Vec::new();
+    // The outermost filter layer open, as (its depth in `clips`, its bounds).
+    let mut filter: Option<(usize, Rect)> = None;
     let mut out = Vec::with_capacity(commands.len());
     for command in commands {
         let clip = *clips.last().unwrap_or(&everywhere);
+        let depth = clips.len();
         let r = match command {
             RenderCommand::PushLayer(c) => {
                 let r = bbox(c.transform, c.clip.bounding_box()).intersect(clip);
@@ -368,7 +395,19 @@ pub(crate) fn visible_bounds(commands: &[RenderCommand]) -> Vec<Rect> {
                 bbox(c.transform, c.rect.inflate(grow, grow)).intersect(clip)
             }
         };
-        out.push(if r.area() > 0.0 { r } else { Rect::ZERO });
+        if r.area() <= 0.0 {
+            // Draws nothing (and NaN geometry never compares equal): stays out of
+            // the diff, filter or not.
+            out.push(Rect::ZERO);
+            continue;
+        }
+        if filter.is_none() && is_filter_layer(command) {
+            filter = Some((depth, r));
+        }
+        out.push(filter.map_or(r, |(_, unit)| unit));
+        if filter.is_some_and(|(depth, _)| clips.len() == depth) {
+            filter = None;
+        }
     }
     out
 }

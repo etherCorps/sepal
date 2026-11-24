@@ -84,7 +84,19 @@ window comes on screen: macOS drops a frame presented before that), over 500
 changed commands, or a region over half the window. Commands drawn
 from an app-registered texture count as changed every frame. Commands with an
 empty box are left out (blitz-paint emits border paths whose points are all
-NaN; they draw nothing and never compare equal). Partial frames draw without
+NaN; they draw nothing and never compare equal). A layer with a filter or a
+backdrop filter is one unit: blitz-paint widens its clip by how far the filter
+reaches, and every command inside takes that clip as its box, since a change to
+any of them changes the filter's output past their own boxes (a drop shadow
+whose colour changed left its old shadow behind). A region that touches such a
+layer grows to all of it, since drawing part of a filter's input gives a
+different output at the cut (a hover next to a shadow erased the part of the
+shadow inside the region).
+
+Partial frames rely on an opaque base colour: the region is drawn
+`SrcOver` the last frame, starting with the base colour's fill, which covers
+what was there. A window with a transparent base colour would blend the new
+region over the old one; it would have to clear the region first. Partial frames draw without
 the depth buffer (clearing and storing a window-sized one costs more than the
 overdraw it saves there). `SVELTE_BLITZ_DAMAGE=0` turns it off;
 `SVELTE_BLITZ_TRACE=1` prints each frame's damage.
