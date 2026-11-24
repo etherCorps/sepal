@@ -162,6 +162,8 @@ export async function sepalKit(inline = {}) {
 	let root = process.cwd();
 	let watching = false;
 	const show = dev_window(() => ({ root, out_dir: resolve(root, out), name: options.app?.name }));
+	// Deprecated in SvelteKit 3's types, but still the only way to move `static/`:
+	// the top-level `assets` is `paths.assets`, a URL.
 	const static_dir = () => resolve(root, kit.files?.assets ?? 'static');
 
 	/** @type {import('@sveltejs/kit').Adapter} */
