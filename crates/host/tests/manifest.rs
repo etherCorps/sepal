@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-use svelte_blitz_host::app::{App, Manifest, decode_icon};
+use sepal::app::{App, Manifest, decode_icon};
 
 fn counter_dist() -> &'static Path {
     Path::new(concat!(
@@ -15,7 +15,7 @@ fn counter_dist() -> &'static Path {
 
 /// An empty scratch directory, unique to one test.
 fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("svelte-blitz-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sepal-{}-{name}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -31,13 +31,16 @@ fn reads_what_the_vite_preset_wrote() {
     assert_eq!(manifest.title.as_deref(), Some("Svelte on Blitz"));
     assert_eq!(manifest.size(), (800, 600));
 
-    let icon = manifest.icon.expect("the example declares an icon");
+    // The example has no icon of its own, so the preset gave it the Sepal icon.
+    let icon = manifest.icon.expect("the preset writes an icon");
     assert_eq!((icon.width, icon.height), (1024, 1024));
     assert_eq!(icon.rgba.len(), 1024 * 1024 * 4);
-    // The corner is outside the rounded tile, the centre is the white bolt.
-    assert_eq!(icon.rgba[3], 0, "corner is transparent");
-    let centre = (512 * 1024 + 512) * 4;
-    assert_eq!(&icon.rgba[centre..centre + 4], &[255, 255, 255, 255]);
+    // The corner is outside the rounded tile, the centre is the dark tile
+    // (#111714), and the white dot sits up and to the right of it.
+    let pixel = |x: usize, y: usize| &icon.rgba[(y * 1024 + x) * 4..][..4];
+    assert_eq!(pixel(0, 0)[3], 0, "corner is transparent");
+    assert_eq!(pixel(512, 512), &[0x11, 0x17, 0x14, 255]);
+    assert_eq!(pixel(655, 410), &[255, 255, 255, 255]);
 }
 
 #[test]

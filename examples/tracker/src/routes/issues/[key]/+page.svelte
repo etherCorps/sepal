@@ -8,7 +8,7 @@
 	import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import XIcon from '@lucide/svelte/icons/x';
-	import { writeText } from '@ethercorps/svelte-blitz/clipboard';
+	import { writeText } from 'sepal/clipboard';
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';

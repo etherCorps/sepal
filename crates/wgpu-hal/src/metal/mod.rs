@@ -25,8 +25,8 @@ mod command;
 mod conv;
 mod device;
 mod library_from_metallib;
-mod gpu_log; // svelte-blitz patch
-mod render_copy; // svelte-blitz patch
+mod gpu_log; // sepal patch
+mod render_copy; // sepal patch
 mod surface;
 mod time;
 
@@ -402,7 +402,7 @@ struct AdapterShared {
     private_texture_format_caps: PrivateTextureFormatCapabilities,
     settings: Settings,
     presentation_timer: time::PresentationTimer,
-    /// svelte-blitz patch: clears and uploads in render passes (`render_copy.rs`),
+    /// sepal patch: clears and uploads in render passes (`render_copy.rs`),
     /// built on first use.
     render_copy_wanted: bool,
     render_copy: OnceLock<Option<render_copy::RenderCopy>>,
@@ -433,7 +433,7 @@ impl AdapterShared {
         }
     }
 
-    /// svelte-blitz patch: `None` where clears and uploads stay blits.
+    /// sepal patch: `None` where clears and uploads stay blits.
     fn render_copy(&self) -> Option<&render_copy::RenderCopy> {
         if !self.render_copy_wanted {
             return None;
@@ -703,7 +703,7 @@ impl crate::Queue for Queue {
         (signal_fence, signal_value): (&Fence, crate::FenceValue),
     ) -> Result<(), crate::DeviceError> {
         if gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             let empty = command_buffers.iter().filter(|c| c.empty).count();
             gpu_log::line(format_args!(
                 "submit: {} command buffer(s), {empty} of them empty (not committed)",
@@ -767,7 +767,7 @@ impl crate::Queue for Queue {
                     fence_sync.1.notify_all();
                 });
 
-                // svelte-blitz patch: the last command buffer that will be committed.
+                // sepal patch: the last command buffer that will be committed.
                 let last = command_buffers.iter().rev().find(|c| !c.empty);
                 let raw = match last {
                     Some(&cmd_buf) => cmd_buf.raw.clone(),
@@ -810,7 +810,7 @@ impl crate::Queue for Queue {
             };
 
             for cmd_buffer in command_buffers {
-                // svelte-blitz patch: an empty one is dropped, not committed
+                // sepal patch: an empty one is dropped, not committed
                 // (the fence's signal went on the last one that is not empty),
                 // and counted out when it is dropped (`Drop for CommandBuffer`).
                 if cmd_buffer.empty {
@@ -839,7 +839,7 @@ impl crate::Queue for Queue {
         texture: SurfaceTexture,
     ) -> Result<(), crate::SurfaceError> {
         if gpu_log::on() {
-            // svelte-blitz patch: one more command buffer, for the present.
+            // sepal patch: one more command buffer, for the present.
             gpu_log::line(format_args!("present (1 command buffer)"));
         }
         autoreleasepool(|_| {
@@ -1392,7 +1392,7 @@ pub struct CommandEncoder {
     shared: Arc<AdapterShared>,
     queue_shared: Arc<QueueShared>,
     raw_cmd_buf: Option<Retained<ProtocolObject<dyn MTLCommandBuffer>>>,
-    /// svelte-blitz patch: whether anything was encoded into `raw_cmd_buf`
+    /// sepal patch: whether anything was encoded into `raw_cmd_buf`
     /// (`CommandBuffer::empty`).
     encoded: bool,
     state: CommandState,
@@ -1415,7 +1415,7 @@ unsafe impl Sync for CommandEncoder {}
 pub struct CommandBuffer {
     raw: Retained<ProtocolObject<dyn MTLCommandBuffer>>,
     queue_shared: Arc<QueueShared>,
-    /// svelte-blitz patch: nothing was encoded into it, so `Queue::submit`
+    /// sepal patch: nothing was encoded into it, so `Queue::submit`
     /// does not commit it. wgpu makes several such per frame (a "Pre Pass" for
     /// every pass, "Transit", "PendingWrites"; transitions are no-ops on
     /// Metal), and each committed command buffer costs GPU time.

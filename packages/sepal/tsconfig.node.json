@@ -1,0 +1,8 @@
+{
+	// The Vite preset, the route scanner and the CLI: the files that run in Node,
+	// so the only ones that may see Node's types.
+	"extends": "./tsconfig.vite.json",
+	"compilerOptions": { "types": ["node"], "rootDir": ".", "outDir": "types" },
+	"include": ["vite/vite.js", "vite/routes.js", "vite/bindings.js", "vite/app.js", "vite/head.js", "vite/sveltekit.js", "cli.js"],
+	"exclude": []
+}

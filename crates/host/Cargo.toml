@@ -1,10 +1,10 @@
 [package]
-name = "svelte-blitz-host"
+name = "sepal"
 version = "0.1.0"
 edition = "2024"
-description = "Runs a Svelte app compiled for the svelte-blitz renderer in a native window"
+description = "Runs a Svelte app compiled for the Sepal renderer in a native window"
 license = "MIT"
-repository = "https://github.com/etherCorps/svelte-blitz"
+repository = "https://github.com/etherCorps/sepal"
 # Shipped as prebuilt binaries through npm, not through crates.io.
 publish = false
 
@@ -84,6 +84,11 @@ screenshot = ["dep:blitz-paint", "dep:anyrender", "dep:anyrender_vello_cpu", "de
 # Run the app in V8 (with its JIT) instead of QuickJS. Bigger binary, faster
 # JavaScript. Experimental.
 engine-v8 = ["dep:v8"]
+
+# The prebuilt host is named calyx; the library stays `sepal` for tests and examples.
+[[bin]]
+name = "calyx"
+path = "src/main.rs"
 
 [[example]]
 name = "drive"

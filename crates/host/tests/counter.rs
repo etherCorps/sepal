@@ -8,7 +8,7 @@ use std::path::Path;
 use std::time::Instant;
 
 use blitz_dom::DocumentConfig;
-use svelte_blitz_host::SvelteDocument;
+use sepal::SvelteDocument;
 
 fn load() -> SvelteDocument {
     let dist = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/counter/dist");
@@ -232,7 +232,7 @@ fn timers_wake_the_event_loop() {
     // As in a window: only there does time pass by itself. In any other
     // document the clock is the test's to move (`doc.wait`).
     let dist = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/counter/dist");
-    let app = svelte_blitz_host::app::App::from_dir(Path::new(dist)).unwrap();
+    let app = sepal::app::App::from_dir(Path::new(dist)).unwrap();
     let mut doc = SvelteDocument::for_window(&app).unwrap();
     doc.layout(800, 600);
     doc.poll(Some(Context::from_waker(&waker)));
@@ -275,7 +275,7 @@ fn timers_wake_the_event_loop() {
 #[cfg(feature = "screenshot")]
 #[test]
 fn screenshot_after_interaction() {
-    use svelte_blitz_host::screenshot::render_png;
+    use sepal::screenshot::render_png;
 
     let mut doc = load();
     doc.layout(800, 600);

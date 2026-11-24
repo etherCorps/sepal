@@ -3,7 +3,7 @@
 //! The same engine a browser has, with its JIT: JavaScript-bound work runs
 //! several times faster than in QuickJS, and the binary is much larger.
 //!
-//! `SVELTE_BLITZ_V8_FLAGS` is passed to V8 as it starts, for example
+//! `SEPAL_V8_FLAGS` is passed to V8 as it starts, for example
 //! `--jitless` to run without generating machine code.
 
 use std::cell::RefCell;
@@ -102,7 +102,7 @@ impl Watchdog {
 fn start_v8() {
     static START: Once = Once::new();
     START.call_once(|| {
-        if let Ok(flags) = std::env::var("SVELTE_BLITZ_V8_FLAGS") {
+        if let Ok(flags) = std::env::var("SEPAL_V8_FLAGS") {
             v8::V8::set_flags_from_string(&flags);
         }
         let platform = v8::new_default_platform(0, false).make_shared();
@@ -141,7 +141,7 @@ impl JsEngine {
         });
         let (watcher, handle) = (watchdog.clone(), isolate.thread_safe_handle());
         std::thread::Builder::new()
-            .name("svelte-blitz-watchdog".into())
+            .name("sepal-watchdog".into())
             .spawn(move || watcher.watch(handle))
             .map_err(|e| e.to_string())?;
 

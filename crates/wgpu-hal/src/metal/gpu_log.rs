@@ -1,4 +1,4 @@
-//! svelte-blitz patch: `SVELTE_BLITZ_GPU_LOG=1` prints on stderr every command
+//! sepal patch: `SEPAL_GPU_LOG=1` prints on stderr every command
 //! buffer, pass and copy this backend encodes, and every submit and present:
 //! what one frame asks of the GPU, without a Metal capture. Off, it costs one
 //! cached check per call.
@@ -11,7 +11,7 @@ use objc2_metal::{MTLLoadAction, MTLPixelFormat, MTLStoreAction, MTLTexture};
 
 pub(super) fn on() -> bool {
     static ON: OnceLock<bool> = OnceLock::new();
-    *ON.get_or_init(|| std::env::var_os("SVELTE_BLITZ_GPU_LOG").is_some_and(|v| v == "1"))
+    *ON.get_or_init(|| std::env::var_os("SEPAL_GPU_LOG").is_some_and(|v| v == "1"))
 }
 
 pub(super) fn line(what: std::fmt::Arguments<'_>) {

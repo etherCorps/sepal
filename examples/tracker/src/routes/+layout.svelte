@@ -9,7 +9,7 @@
 	import { tick, type Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { setTitle } from '@ethercorps/svelte-blitz/window';
+	import { setTitle } from 'sepal/window';
 	import LayoutListIcon from '@lucide/svelte/icons/layout-list';
 	import CircleUserIcon from '@lucide/svelte/icons/circle-user-round';
 	import KanbanIcon from '@lucide/svelte/icons/square-kanban';

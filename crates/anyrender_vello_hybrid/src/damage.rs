@@ -1,4 +1,4 @@
-//! svelte-blitz patch: repaint only what changed.
+//! sepal patch: repaint only what changed.
 //!
 //! Each frame's drawing commands are recorded, compared with the last frame's, and
 //! only the region whose commands differ is drawn again, over the last frame kept in
@@ -20,24 +20,24 @@ const MAX_SHARE: f64 = 0.5;
 const ALIGN_X: f64 = 256.0;
 const ALIGN_Y: f64 = 4.0;
 
-/// Whether windows repaint only what changed: on unless `SVELTE_BLITZ_DAMAGE=0`.
+/// Whether windows repaint only what changed: on unless `SEPAL_DAMAGE=0`.
 pub(crate) fn enabled() -> bool {
     static ON: OnceLock<bool> = OnceLock::new();
-    *ON.get_or_init(|| std::env::var("SVELTE_BLITZ_DAMAGE").as_deref() != Ok("0"))
+    *ON.get_or_init(|| std::env::var("SEPAL_DAMAGE").as_deref() != Ok("0"))
 }
 
-/// `SVELTE_BLITZ_DAMAGE=verify`: after every frame that was not drawn in full,
+/// `SEPAL_DAMAGE=verify`: after every frame that was not drawn in full,
 /// also draw it in full and compare (`window_renderer`, `verify_frame`). Slow;
 /// for checking, never for measuring.
 pub(crate) fn verify() -> bool {
     static ON: OnceLock<bool> = OnceLock::new();
-    *ON.get_or_init(|| std::env::var("SVELTE_BLITZ_DAMAGE").as_deref() == Ok("verify"))
+    *ON.get_or_init(|| std::env::var("SEPAL_DAMAGE").as_deref() == Ok("verify"))
 }
 
-/// `SVELTE_BLITZ_TRACE=1` prints each frame's damage.
+/// `SEPAL_TRACE=1` prints each frame's damage.
 pub(crate) fn trace() -> bool {
     static ON: OnceLock<bool> = OnceLock::new();
-    *ON.get_or_init(|| std::env::var_os("SVELTE_BLITZ_TRACE").is_some())
+    *ON.get_or_init(|| std::env::var_os("SEPAL_TRACE").is_some())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

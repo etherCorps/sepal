@@ -1,7 +1,7 @@
 //! The board and Insights screens (docs/tracker-design.md).
 
 use super::*;
-use svelte_blitz_host::screenshot::render_rgba;
+use sepal::screenshot::render_rgba;
 
 /// The key of the card with the focus ring.
 fn focused_card(doc: &SvelteDocument) -> Option<String> {

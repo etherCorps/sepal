@@ -1,4 +1,4 @@
-// DOM copy of packages/vite/src/routing.svelte.js (compare/tauri/vite.config.js
+// DOM copy of packages/sepal/vite/routing.svelte.js (compare/tauri/vite.config.js
 // aliases it in). Two lines differ: no renderer import, and the click
 // listener is on `document` instead of the renderer's root.
 

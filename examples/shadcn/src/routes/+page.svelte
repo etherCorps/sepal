@@ -1,6 +1,6 @@
 <!--
-	The shadcn-svelte components that work in svelte-blitz today. The interactive
-	ones (Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip) need `dom: true` in app.config.ts.
+	The shadcn-svelte components that work in Sepal today. The interactive
+	ones (Switch, Checkbox, Tabs, Accordion, Dialog, Select, Tooltip) need `dom: true` in sepal.config.ts.
 	`node probe.mjs` tries every file in src/probes, including the components
 	that do not work yet.
 -->

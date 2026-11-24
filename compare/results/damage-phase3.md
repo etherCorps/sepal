@@ -1,4 +1,4 @@
-# svelte-blitz: fewer command buffers, and scrolling by moving the kept frame
+# Sepal: fewer command buffers, and scrolling by moving the kept frame
 
 The Tracker, bench build, 1,000 issues, window 1200x800 at 2x, Apple M4 Pro.
 Compare harness, scenarios 4 (clock, 20 s), 8 (New issue dialog), 9 (Show all
@@ -38,7 +38,7 @@ When only a scrolled box's offset changed, move its pixels in the kept frame
 (two render passes through a scratch texture; a texture-to-texture copy would
 be a blit) and draw only the exposed strip, what changed inside, what is drawn
 over the box (the overlay scrollbar) and changes elsewhere. Verify mode
-(`SVELTE_BLITZ_DAMAGE=verify`) found no frame differing from a full repaint at
+(`SEPAL_DAMAGE=verify`) found no frame differing from a full repaint at
 1,000 and 10,000 issues (`raw/p4-verify`).
 
 First version, separate renders for up to 4 regions, detection on every frame

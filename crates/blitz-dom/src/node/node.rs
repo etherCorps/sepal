@@ -1484,7 +1484,7 @@ impl Node {
             let child_position = child.taffy_position();
             let mut child_x = x;
             let mut child_y = y;
-            // svelte-blitz patch: upstream undoes the offset for out-of-flow
+            // sepal patch: upstream undoes the offset for out-of-flow
             // children only. Inline boxes are placed relative to this node's
             // border box as well (see `layout/inline.rs`), so without this a
             // button in a line of text is hit-tested as if it were shifted by

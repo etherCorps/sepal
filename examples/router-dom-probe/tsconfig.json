@@ -6,7 +6,7 @@
 		// "dom" is here for Svelte's element and event types only. The app runs
 		// in QuickJS: there is no `window`, `document` or `fetch` at runtime.
 		"lib": ["es2023", "dom"],
-		"types": ["vite/client", "@ethercorps/svelte-blitz-vite/ambient"],
+		"types": ["vite/client", "sepal/ambient"],
 		"paths": { "$lib": ["./src/lib"], "$lib/*": ["./src/lib/*"] },
 		"strict": true,
 		"verbatimModuleSyntax": true,
@@ -14,5 +14,5 @@
 		"noEmit": true,
 		"skipLibCheck": true
 	},
-	"include": ["src", "vite.config.ts", "app.config.ts"]
+	"include": ["src", "vite.config.ts", "sepal.config.ts"]
 }

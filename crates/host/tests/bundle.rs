@@ -5,8 +5,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use svelte_blitz_host::app::decode_icon;
-use svelte_blitz_host::bundle::bundle_macos;
+use sepal::app::decode_icon;
+use sepal::bundle::bundle_macos;
 
 fn counter_dist() -> &'static Path {
     Path::new(concat!(
@@ -17,7 +17,7 @@ fn counter_dist() -> &'static Path {
 
 /// An empty scratch directory, unique to one test.
 fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("svelte-blitz-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sepal-{}-{name}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir
@@ -153,7 +153,7 @@ fn defaults_and_escaping() {
         "{plist}"
     );
     assert!(
-        plist.contains("<string>app.svelte-blitz.tom-jerry-3</string>"),
+        plist.contains("<string>app.sepal.tom-jerry-3</string>"),
         "{plist}"
     );
     assert!(plist.contains("<string>0.1.0</string>"));

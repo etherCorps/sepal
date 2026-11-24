@@ -68,7 +68,7 @@ pub fn bundle_macos(dist: &Path, out: &Path, host: &Path) -> Result<PathBuf, Str
         // they can name any application on the machine, so only replace our own.
         if !resources.join("app.js").is_file() {
             return Err(format!(
-                "{} exists and was not built by svelte-blitz; not replacing it",
+                "{} exists and was not built by Sepal; not replacing it",
                 bundle.display()
             ));
         }

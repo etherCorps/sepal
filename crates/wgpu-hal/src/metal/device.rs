@@ -487,7 +487,7 @@ impl crate::Device for super::Device {
                 raw.setLabel(Some(&NSString::from_str(label)));
             }
             if super::gpu_log::on() {
-                // svelte-blitz patch
+                // sepal patch
                 super::gpu_log::line(format_args!(
                     "+ buffer #{:x} {:?}: {} B, {} B allocated",
                     Retained::as_ptr(&raw) as *const () as usize,
@@ -505,7 +505,7 @@ impl crate::Device for super::Device {
     }
     unsafe fn destroy_buffer(&self, _buffer: super::Buffer) {
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             super::gpu_log::line(format_args!(
                 "- buffer #{:x}: {} B allocated",
                 Retained::as_ptr(&_buffer.raw) as *const () as usize,
@@ -598,7 +598,7 @@ impl crate::Device for super::Device {
             unsafe { descriptor.setMipmapLevelCount(desc.mip_level_count as usize) };
             descriptor.setPixelFormat(mtl_format);
             let mut usage = conv::map_texture_usage(desc.format, desc.usage);
-            // svelte-blitz patch: uploads to it are drawn (`render_copy.rs`).
+            // sepal patch: uploads to it are drawn (`render_copy.rs`).
             if self.shared.render_copy_wanted
                 && desc.usage.contains(wgt::TextureUses::COPY_DST)
                 && super::render_copy::RenderCopy::supports(desc.format)
@@ -617,7 +617,7 @@ impl crate::Device for super::Device {
                 raw.setLabel(Some(&NSString::from_str(label)));
             }
             if super::gpu_log::on() {
-                // svelte-blitz patch
+                // sepal patch
                 super::gpu_log::line(format_args!(
                     "+ texture #{:x} {:?}: {}, {} B allocated",
                     Retained::as_ptr(&raw) as *const () as usize,
@@ -643,7 +643,7 @@ impl crate::Device for super::Device {
 
     unsafe fn destroy_texture(&self, _texture: super::Texture) {
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             super::gpu_log::line(format_args!(
                 "- texture #{:x}: {}, {} B allocated",
                 Retained::as_ptr(&_texture.raw) as *const () as usize,
@@ -818,7 +818,7 @@ impl crate::Device for super::Device {
             shared: Arc::clone(&self.shared),
             queue_shared: Arc::clone(&desc.queue.shared),
             raw_cmd_buf: None,
-            encoded: false, // svelte-blitz patch
+            encoded: false, // sepal patch
             state: super::CommandState::default(),
             temp: super::Temp::default(),
             counters: Arc::clone(&self.counters),

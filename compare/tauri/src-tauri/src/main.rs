@@ -16,7 +16,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
-            // svelte-blitz's fs creates missing parents on write; plugin-fs does not.
+            // Sepal's fs creates missing parents on write; plugin-fs does not.
             std::fs::create_dir_all(app.path().app_data_dir()?)?;
             Ok(())
         })

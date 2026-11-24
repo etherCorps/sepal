@@ -16,7 +16,7 @@ raw = Path(__file__).parent / 'raw' / session
 S = json.loads((raw / 'session.json').read_text())
 R = [json.loads(line) for line in (raw / 'runs.jsonl').open()]
 B = ['blitz', 'blitzv8', 'tauri', 'gpuix']
-NAMES = {'blitz': 'svelte-blitz QuickJS', 'blitzv8': 'svelte-blitz V8', 'tauri': 'Tauri 2', 'gpuix': 'gpuix † (Svelte 5.57.2)'}
+NAMES = {'blitz': 'Sepal QuickJS', 'blitzv8': 'Sepal V8', 'tauri': 'Tauri 2', 'gpuix': 'gpuix † (Svelte 5.57.2)'}
 HELPERS = {'SetStoreUpdateService', 'SafariPlatformSupport.Helper'}  # attributed to every app by macOS
 SIZE = 1000
 
@@ -120,7 +120,7 @@ p(f"{len([r for r in R if r['status'] == 'ok'])} runs ok, {len(aborted)} aborted
 p('')
 p('**Clocks.** Input events and every app line are stamped by the harness with `mach_absolute_time` (0.04 µs), '
   'app lines on arrival over stderr. App-side clocks are 1 ms. Treat latency differences under 2 ms as noise. '
-  '"→ frame" uses each runtime\'s own signal (svelte-blitz: host repaint trace; Tauri: double rAF, mark over async IPC; '
+  '"→ frame" uses each runtime\'s own signal (Sepal: host repaint trace; Tauri: double rAF, mark over async IPC; '
   'gpuix: `next_frame()`), three different things. "Screen" is the independent check: first changed window frame in a 75 Hz '
   'ScreenCaptureKit recording, one recorded run per scenario, so ±13.3 ms (one frame) and a single value, not a median.')
 p('')

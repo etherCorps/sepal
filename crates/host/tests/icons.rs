@@ -8,10 +8,10 @@ use std::sync::mpsc;
 
 use blitz_dom::{NodeId, ns};
 use blitz_traits::net::{Bytes, NetHandler, NetProvider, Request, Url};
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::app::App;
-use svelte_blitz_host::net::AppResources;
-use svelte_blitz_host::screenshot::{render_png, render_rgba};
+use sepal::SvelteDocument;
+use sepal::app::App;
+use sepal::net::AppResources;
+use sepal::screenshot::{render_png, render_rgba};
 
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 480;
@@ -252,7 +252,7 @@ fn only_data_urls_and_the_apps_own_files_load() {
 #[cfg(unix)]
 #[test]
 fn a_symlink_cannot_lead_out_of_the_app_directory() {
-    let dir = std::env::temp_dir().join(format!("svelte-blitz-{}-symlink", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sepal-{}-symlink", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("app")).unwrap();
     std::fs::write(dir.join("secret.txt"), "secret").unwrap();

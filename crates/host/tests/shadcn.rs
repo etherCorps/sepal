@@ -5,8 +5,8 @@
 
 use std::path::Path;
 
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::app::App;
+use sepal::SvelteDocument;
+use sepal::app::App;
 
 fn load() -> SvelteDocument {
     let dist = Path::new(concat!(
@@ -81,13 +81,13 @@ fn shadcn_components_render_and_react() {
     let bar = doc
         .rect(doc.query("[data-slot=progress]").unwrap())
         .unwrap();
-    let (pixels, width, _) = svelte_blitz_host::screenshot::render_rgba(&mut doc, 900, 700, 1.0);
+    let (pixels, width, _) = sepal::screenshot::render_rgba(&mut doc, 900, 700, 1.0);
     let at = ((bar.1 + bar.3 / 2.0) as usize * width as usize + (bar.0 + bar.2 / 2.0) as usize) * 4;
     assert!(pixels[at] > 200, "an empty bar is light: {}", pixels[at]);
 }
 
 /// The components built on Bits UI, which is written for a browser. They run
-/// on the DOM layer that `dom: true` in app.config.ts loads.
+/// on the DOM layer that `dom: true` in sepal.config.ts loads.
 #[test]
 fn bits_ui_components_work_on_the_dom_layer() {
     let mut doc = load();
@@ -192,7 +192,7 @@ fn bits_ui_components_work_on_the_dom_layer() {
 fn a_dialog_opens_over_the_page_and_closes() {
     let mut doc = load();
     let pixel = |doc: &mut SvelteDocument, x: usize, y: usize| {
-        let (pixels, width, _) = svelte_blitz_host::screenshot::render_rgba(doc, 900, 700, 1.0);
+        let (pixels, width, _) = sepal::screenshot::render_rgba(doc, 900, 700, 1.0);
         let at = (y * width as usize + x) * 4;
         [pixels[at], pixels[at + 1], pixels[at + 2]]
     };

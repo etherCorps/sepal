@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
-import { svelteBlitzKit } from '@ethercorps/svelte-blitz-vite/sveltekit';
+import { sepalKit } from 'sepal/sveltekit';
 
-// `svelteBlitzKit()` takes the place of `sveltekit()`; SvelteKit's own options
-// go in `svelteBlitzKit({ kit: { … } })`. App settings live in app.config.ts.
+// `sepalKit()` takes the place of `sveltekit()`; SvelteKit's own options
+// go in `sepalKit({ kit: { … } })`. App settings live in sepal.config.ts.
 export default defineConfig({
-	plugins: [tailwindcss(), svelteBlitzKit()]
+	plugins: [tailwindcss(), sepalKit()]
 });

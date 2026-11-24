@@ -122,7 +122,7 @@ impl Hud {
                     Vec::new(),
                 );
                 m.set_attribute(element, attribute("style"), STYLE);
-                m.set_attribute(element, attribute("data-svelte-blitz-hud"), "");
+                m.set_attribute(element, attribute("data-sepal-hud"), "");
                 let text = m.create_text_node("");
                 m.append_children(element, &[text]);
                 m.append_children(html, &[element]);

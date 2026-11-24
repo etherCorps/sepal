@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Start a svelte-blitz project: `pnpm create @ethercorps/svelte-blitz my-app`.
+// Start a Sepal project: `pnpm create sepal my-app`.
 // Copies the starter in ./template and fills in the project's name.
 //
 // The starter comes with one of two routers, both with pages as files in
-// `src/routes`: the one built into svelte-blitz, or SvelteKit's. Asked for
+// `src/routes`: the one built into Sepal, or SvelteKit's. Asked for
 // when run in a terminal; `--router built-in` or `--router sveltekit` (or
 // `--sveltekit`) answers ahead of time.
 
@@ -13,7 +13,7 @@ import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 
 const ROUTERS = /** @type {const} */ ({
-	'built-in': 'svelte-blitz\'s own: small, nothing of a browser needed',
+	'built-in': 'Sepal\'s own: small, nothing of a browser needed',
 	sveltekit: 'SvelteKit\'s, as a single-page app: its full client API, more to load'
 });
 
@@ -23,7 +23,7 @@ function fail(message) {
 	process.exit(1);
 }
 
-const USAGE = 'usage: create-svelte-blitz <directory> [--router built-in|sveltekit]';
+const USAGE = 'usage: create-sepal <directory> [--router built-in|sveltekit]';
 
 /** @type {string | undefined} */
 let directory;
@@ -79,15 +79,15 @@ renameSync(join(target, 'gitignore'), join(target, '.gitignore'));
 const pkg_path = join(target, 'package.json');
 const pkg = JSON.parse(readFileSync(pkg_path, 'utf8'));
 pkg.name = slug;
-// Every svelte-blitz package is released together under one version.
+// The sepal package is released together with this one, under one version.
 for (const group of [pkg.dependencies, pkg.devDependencies]) {
 	for (const dependency of Object.keys(group)) {
-		if (dependency.startsWith('@ethercorps/svelte-blitz')) group[dependency] = `^${own.version}`;
+		if (dependency === 'sepal') group[dependency] = `^${own.version}`;
 	}
 }
 writeFileSync(pkg_path, JSON.stringify(pkg, null, '\t') + '\n');
 
-const config_path = join(target, 'app.config.ts');
+const config_path = join(target, 'sepal.config.ts');
 const config = readFileSync(config_path, 'utf8')
 	.replace("'__NAME__'", JSON.stringify(name))
 	.replace("'__ID__'", JSON.stringify(`com.example.${slug}`));

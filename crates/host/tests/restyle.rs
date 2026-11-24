@@ -11,8 +11,8 @@
 //! Uses the shadcn example's bundle for its DOM layer, with a stylesheet of
 //! its own. Build the bundle first: `pnpm run build` in the repository root.
 
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::screenshot::render_rgba;
+use sepal::SvelteDocument;
+use sepal::screenshot::render_rgba;
 
 const CSS: &str = "
     div { height: 10px; width: 10px }

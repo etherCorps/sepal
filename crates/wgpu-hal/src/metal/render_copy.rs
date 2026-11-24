@@ -1,4 +1,4 @@
-//! svelte-blitz patch: buffer clears and copies done in render passes.
+//! sepal patch: buffer clears and copies done in render passes.
 //!
 //! On Apple GPUs the driver commits about 80 MB of memory the first time a
 //! process runs any blit or compute work, on top of the ~120 MB its first render
@@ -12,7 +12,7 @@
 //! source buffer. Formats without such a function, 3D textures and the rare
 //! texture-to-texture and texture-to-buffer copies still use blits.
 //!
-//! `SVELTE_BLITZ_GPU_COPIES=blit` turns this off.
+//! `SEPAL_GPU_COPIES=blit` turns this off.
 
 use objc2::{rc::Retained, runtime::ProtocolObject};
 use objc2_foundation::NSString;
@@ -108,7 +108,7 @@ impl RenderCopy {
     /// Whether this is in use on `device`: Apple GPUs only, where the driver
     /// behaves as described above.
     pub(super) fn wanted(device: &ProtocolObject<dyn MTLDevice>) -> bool {
-        std::env::var("SVELTE_BLITZ_GPU_COPIES").as_deref() != Ok("blit")
+        std::env::var("SEPAL_GPU_COPIES").as_deref() != Ok("blit")
             && device.supportsFamily(MTLGPUFamily::Apple7)
     }
 

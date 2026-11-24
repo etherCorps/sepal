@@ -154,7 +154,7 @@ impl Encoder<'_> {
 
 impl super::CommandEncoder {
     pub fn raw_command_buffer(&mut self) -> Option<&ProtocolObject<dyn MTLCommandBuffer>> {
-        self.encoded = true; // svelte-blitz patch: whoever asks may encode into it
+        self.encoded = true; // sepal patch: whoever asks may encode into it
         self.raw_cmd_buf.as_deref()
     }
 
@@ -162,7 +162,7 @@ impl super::CommandEncoder {
         if self.state.blit.is_none() {
             self.leave_acceleration_structure_builder();
             debug_assert!(self.state.render.is_none() && self.state.compute.is_none());
-            self.encoded = true; // svelte-blitz patch
+            self.encoded = true; // sepal patch
             let cmd_buf = self.raw_cmd_buf.as_ref().unwrap();
 
             // This code path is currently unused since the written timestamp is always 0.
@@ -257,7 +257,7 @@ impl super::CommandEncoder {
         self.state.blit.as_ref().unwrap().clone()
     }
 
-    /// svelte-blitz patch: the command buffer, with no blit or acceleration
+    /// sepal patch: the command buffer, with no blit or acceleration
     /// structure encoder open, for a render copy (`render_copy.rs`); `None` when
     /// those are off.
     fn render_copy_encoder(&mut self) -> Option<Retained<ProtocolObject<dyn MTLCommandBuffer>>> {
@@ -287,7 +287,7 @@ impl super::CommandEncoder {
                     && self.state.compute.is_none()
                     && self.state.blit.is_none()
             );
-            self.encoded = true; // svelte-blitz patch
+            self.encoded = true; // sepal patch
             let cmd_buf = self.raw_cmd_buf.as_ref().unwrap();
             autoreleasepool(|_| {
                 self.state.acceleration_structure_builder =
@@ -528,7 +528,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
                 cmd_buf_ref.setLabel(Some(&NSString::from_str(label)));
             }
             if super::gpu_log::on() {
-                // svelte-blitz patch
+                // sepal patch
                 super::gpu_log::line(format_args!("command buffer {:?}", label.unwrap_or("")));
             }
             // If strict event sync is enabled on this queue, gate the
@@ -547,7 +547,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         debug_assert!(self.state.pending_timer_queries.is_empty());
 
         self.raw_cmd_buf = Some(raw);
-        // svelte-blitz patch: a relay wait is work of its own.
+        // sepal patch: a relay wait is work of its own.
         self.encoded = relay.is_some();
 
         Ok(())
@@ -592,7 +592,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         Ok(super::CommandBuffer {
             raw: self.raw_cmd_buf.take().unwrap(),
             queue_shared: Arc::clone(&self.queue_shared),
-            empty: !self.encoded, // svelte-blitz patch
+            empty: !self.encoded, // sepal patch
         })
     }
 
@@ -617,7 +617,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
 
     unsafe fn clear_buffer(&mut self, buffer: &super::Buffer, range: crate::MemoryRange) {
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             super::gpu_log::line(format_args!(
                 "  clear buffer: {} B of {} B{}",
                 range.end - range.start,
@@ -625,7 +625,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
                 if self.shared.render_copy_wanted { " (render pass)" } else { " (blit)" }
             ));
         }
-        // svelte-blitz patch: in a render pass where possible (`render_copy.rs`).
+        // sepal patch: in a render pass where possible (`render_copy.rs`).
         if let Some(cmd_buf) = self.render_copy_encoder() {
             if let Some(copier) = self.shared.render_copy() {
                 copier.clear_buffer(&cmd_buf, &buffer.raw, range);
@@ -646,7 +646,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
     {
         let regions: SmallVec<[crate::BufferCopy; 4]> = regions.collect();
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             let bytes: u64 = regions.iter().map(|copy| copy.size.get()).sum();
             super::gpu_log::line(format_args!(
                 "  copy buffer to buffer: {bytes} B in {} region(s), into a {} B buffer{}",
@@ -656,7 +656,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
             ));
         }
         let regions = regions.into_iter();
-        // svelte-blitz patch: in a render pass where possible (`render_copy.rs`).
+        // sepal patch: in a render pass where possible (`render_copy.rs`).
         if let Some(cmd_buf) = self.render_copy_encoder() {
             if let Some(copier) = self.shared.render_copy() {
                 copier.copy_buffer(&cmd_buf, &src.raw, &dst.raw, regions);
@@ -699,7 +699,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         };
         let regions: SmallVec<[crate::TextureCopy; 4]> = regions.collect();
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             let sizes: Vec<alloc::string::String> = regions
                 .iter()
                 .map(|copy| format!("{}x{}", copy.size.width, copy.size.height))
@@ -741,7 +741,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
     ) where
         T: Iterator<Item = crate::BufferTextureCopy>,
     {
-        // svelte-blitz patch: drawn where possible (`render_copy.rs`).
+        // sepal patch: drawn where possible (`render_copy.rs`).
         let drawable = super::render_copy::RenderCopy::supports(dst.format)
             && matches!(
                 dst.raw_type,
@@ -756,7 +756,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
                     && copy.buffer_layout.bytes_per_row.unwrap_or(0) % 4 == 0
             });
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             let sizes: Vec<alloc::string::String> = regions
                 .iter()
                 .map(|copy| format!("{}x{}", copy.size.width, copy.size.height))
@@ -854,7 +854,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
     {
         let regions: SmallVec<[crate::BufferTextureCopy; 4]> = regions.collect();
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             let sizes: Vec<alloc::string::String> = regions
                 .iter()
                 .map(|copy| format!("{}x{}", copy.size.width, copy.size.height))
@@ -1143,7 +1143,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
             }
 
             if super::gpu_log::on() {
-                // svelte-blitz patch
+                // sepal patch
                 let mut targets = Vec::new();
                 for i in 0..desc.color_attachments.len() {
                     let at = unsafe { descriptor.colorAttachments().objectAtIndexedSubscript(i) };
@@ -1231,7 +1231,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
             if let Some(mv) = desc.multiview_mask {
                 descriptor.setRenderTargetArrayLength(32 - mv.leading_zeros() as usize);
             }
-            self.encoded = true; // svelte-blitz patch
+            self.encoded = true; // sepal patch
             let raw = self.raw_cmd_buf.as_ref().unwrap();
             let encoder = raw.renderCommandEncoderWithDescriptor(&descriptor).unwrap();
             if let Some(mv) = desc.multiview_mask {
@@ -1867,7 +1867,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
 
     unsafe fn begin_compute_pass(&mut self, desc: &crate::ComputePassDescriptor<super::QuerySet>) {
         if super::gpu_log::on() {
-            // svelte-blitz patch
+            // sepal patch
             super::gpu_log::line(format_args!("  compute pass {:?}", desc.label.unwrap_or("")));
         }
         self.begin_pass();
@@ -1876,7 +1876,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         debug_assert!(self.state.compute.is_none());
         debug_assert!(self.state.render.is_none());
 
-        self.encoded = true; // svelte-blitz patch
+        self.encoded = true; // sepal patch
         let raw = self.raw_cmd_buf.as_ref().unwrap();
 
         autoreleasepool(|_| {

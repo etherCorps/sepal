@@ -3,7 +3,7 @@
 This is the crates.io source of `wgpu-hal` 30.0.2 (MIT OR Apache-2.0,
 https://github.com/gfx-rs/wgpu), with three changes, in its Metal backend only.
 `crates/host/Cargo.toml` swaps it in through `[patch.crates-io]`. All of it is
-marked `svelte-blitz patch`.
+marked `sepal patch`.
 
 ## The changes
 
@@ -34,7 +34,7 @@ broke text, because a texture's zero-initialisation then landed after the
 glyphs written into it. Textures of those formats that are copied into get the
 render-target usage so they can be drawn into. Other formats, 3D textures,
 texture-to-texture and texture-to-buffer copies still use blits. Apple7 GPUs
-(M1) and later only; `SVELTE_BLITZ_GPU_COPIES=blit` turns it off.
+(M1) and later only; `SEPAL_GPU_COPIES=blit` turns it off.
 
 Measured on the Tracker (release, bench mode, a clock repainting once a
 second, `footprint`): 377 MB with blits, 285 MB without. Window captures of the
@@ -46,7 +46,7 @@ are byte-identical either way.
 and one call each in `src/metal/command.rs` (`begin_encoding`, `clear_buffer`,
 the four copies, `begin_render_pass`, `begin_compute_pass`) and
 `src/metal/mod.rs` (`Queue::submit`, `Queue::present`). With
-`SVELTE_BLITZ_GPU_LOG=1` every command buffer, render or compute pass (with
+`SEPAL_GPU_LOG=1` every command buffer, render or compute pass (with
 its targets' sizes, formats and load/store actions), clear and copy (with its
 size, and whether change 1 draws it in a render pass) is printed on stderr as
 `[gpu] …`, and so is every submit and present. A frame is what lies between two
@@ -88,4 +88,4 @@ Do not edit anything else here, and do not run `cargo fmt` on the crate (the
 patched files were rustfmt-clean upstream, and only the patch was formatted).
 To move to a new version, replace the directory with that version's source,
 add `render_copy.rs` and `gpu_log.rs` back and reapply the hooks (search for
-`svelte-blitz patch`).
+`sepal patch`).

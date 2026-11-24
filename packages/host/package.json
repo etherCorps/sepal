@@ -1,15 +1,15 @@
 {
-  "name": "@ethercorps/svelte-blitz-host",
+  "name": "@ethercorps/calyx",
   "version": "0.1.0-alpha.0",
-  "description": "The svelte-blitz host binaries, and the lookup that picks the one for this machine",
+  "description": "Calyx, the Sepal host: its prebuilt binaries, and the lookup that picks the one for this machine",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/etherCorps/svelte-blitz.git",
+    "url": "git+https://github.com/etherCorps/sepal.git",
     "directory": "packages/host"
   },
-  "homepage": "https://github.com/etherCorps/svelte-blitz#readme",
-  "bugs": "https://github.com/etherCorps/svelte-blitz/issues",
+  "homepage": "https://github.com/etherCorps/sepal#readme",
+  "bugs": "https://github.com/etherCorps/sepal/issues",
   "engines": {
     "node": ">=22"
   },

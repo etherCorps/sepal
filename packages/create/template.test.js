@@ -1,9 +1,9 @@
 // The starter template, the way a user gets it: pack every package, run the
-// packed `create-svelte-blitz`, install from the tarballs, type-check and build.
+// packed `create-sepal`, install from the tarballs, type-check and build.
 // Once for each router it offers.
 //
 // When this platform's host binary has been built (`pnpm run build:host`), the
-// app is also rendered through the CLI with no `SVELTE_BLITZ_HOST`: the whole
+// app is also rendered through the CLI with no `SEPAL_HOST`: the whole
 // path a user without Rust takes.
 //
 // Needs the npm registry, or a warm pnpm store, for the template's dependencies.
@@ -16,11 +16,11 @@ import { fileURLToPath } from 'node:url';
 import { bundled_host, platform } from '../host/index.js';
 
 const packages = fileURLToPath(new URL('..', import.meta.url));
-const scratch = mkdtempSync(join(tmpdir(), 'svelte-blitz-template-'));
+const scratch = mkdtempSync(join(tmpdir(), 'sepal-template-'));
 
 // A host from the environment would hide a broken host package.
 const env = { ...process.env };
-delete env.SVELTE_BLITZ_HOST;
+delete env.SEPAL_HOST;
 
 /** @param {string} command @param {string[]} args @param {string} cwd */
 const run = (command, args, cwd) =>
@@ -54,7 +54,7 @@ try {
 	// Run the create script out of its tarball, so a file missing from the package shows up here.
 	const create = join(scratch, 'create');
 	mkdirSync(create);
-	run('tar', ['-xzf', tarballs['@ethercorps/create-svelte-blitz'], '-C', create], scratch);
+	run('tar', ['-xzf', tarballs['create-sepal'], '-C', create], scratch);
 	// No terminal here, so nothing is asked: no flag means the built-in router.
 	for (const [router, flags] of /** @type {[string, string[]][]} */ ([
 		['built-in', []],
@@ -68,19 +68,13 @@ try {
 		const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'));
 		assert(pkg.name === 'my-app', `package name is ${pkg.name}`);
 		assert(('@sveltejs/kit' in pkg.devDependencies) === (router === 'sveltekit'), `wrong starter for the ${router} router`);
-		for (const [group, name] of [
-			['dependencies', '@ethercorps/svelte-blitz'],
-			['devDependencies', '@ethercorps/svelte-blitz-vite'],
-			['devDependencies', '@ethercorps/svelte-blitz-cli']
-		]) {
-			assert(/^\^\d/.test(pkg[group][name]), `${name} is not a versioned entry in ${group}`);
-		}
-		assert(readFileSync(join(app, 'app.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
+		assert(/^\^\d/.test(pkg.dependencies.sepal), 'sepal is not a versioned entry in dependencies');
+		assert(readFileSync(join(app, 'sepal.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
 
 		// What is tested is this checkout, not what is published: the overrides stand in for the registry. Its own
 		// workspace file also keeps the project out of this repository's workspace.
 		const overrides = Object.entries(tarballs)
-			.filter(([name]) => name !== '@ethercorps/create-svelte-blitz')
+			.filter(([name]) => name !== 'create-sepal')
 			// `/` on Windows too: a backslash in a quoted YAML string starts an escape.
 			.map(([name, tarball]) => `  "${name}": "file:${tarball.replaceAll('\\', '/')}"\n`);
 		writeFileSync(join(app, 'pnpm-workspace.yaml'), `packages: []\noverrides:\n${overrides.join('')}`);
@@ -90,7 +84,10 @@ try {
 		run('pnpm', ['run', 'build'], app);
 		const manifest = JSON.parse(readFileSync(join(app, 'dist/app.json'), 'utf8'));
 		assert(manifest.name === 'My App' && manifest.id === 'com.example.my-app', 'manifest not written from the template');
-		assert(existsSync(join(app, 'dist/app.js')) && existsSync(join(app, 'dist/icon.png')), 'bundle or icon missing');
+		assert(existsSync(join(app, 'dist/app.js')), 'bundle missing');
+		// The starter has no icon of its own, so the packed package has to supply one.
+		const sepal_icon = readFileSync(join(packages, 'sepal/vite/icon.png'));
+		assert(readFileSync(join(app, 'dist/icon.png')).equals(sepal_icon), 'the build does not have the Sepal icon');
 		assert(existsSync(join(app, 'dist/logo.svg')), 'static/ was not copied into the build');
 		// The template is file-routed: the About page only exists in the bundle if src/routes was read.
 		const bundle = readFileSync(join(app, 'dist/app.js'), 'utf8');
@@ -101,7 +98,7 @@ try {
 
 		if (existsSync(bundled_host())) {
 			const shot = join(scratch, `${router}.png`);
-			run('pnpm', ['exec', 'svelte-blitz', 'screenshot', shot], app);
+			run('pnpm', ['exec', 'sepal', 'screenshot', shot], app);
 			assert(existsSync(shot), 'the CLI did not render a screenshot');
 			console.log(`template (${router}): rendered with the packaged ${platform()} host`);
 		} else {

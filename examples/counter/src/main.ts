@@ -1,4 +1,4 @@
-import { mount, unmount } from '@ethercorps/svelte-blitz';
+import { mount, unmount } from 'sepal';
 import './app.css';
 import App from './App.svelte';
 

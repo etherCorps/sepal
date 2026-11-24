@@ -157,7 +157,7 @@ pub struct Renderer {
 }
 
 impl Renderer {
-    /// svelte-blitz patch: draw the scene with its (0, 0) at `offset` in the target, so a
+    /// sepal patch: draw the scene with its (0, 0) at `offset` in the target, so a
     /// scene the size of a region can be drawn into that region of a larger target
     /// (with `TargetInit::SrcOver`, the rest of the target is kept). `render`'s
     /// `render_size` stays the target's size. Applies to the next `render`.
@@ -427,7 +427,7 @@ impl Renderer {
         root_output_target: RootTarget,
         texture_bindings: &TextureBindings,
     ) -> Result<(), RenderError> {
-        // svelte-blitz patch: the root offset only moves the user's surface; glyphs
+        // sepal patch: the root offset only moves the user's surface; glyphs
         // drawn into an atlas page (`RootTarget::AtlasLayer`) go where their slot is.
         self.programs.target_offset = match root_output_target {
             RootTarget::UserSurface => self.programs.root_offset,
@@ -446,7 +446,7 @@ impl Renderer {
 
         // We currently only grow and never shrink textures, so max it with whatever
         // we had in the previous run.
-        // svelte-blitz patch: ... unless the frame needs less than a quarter of
+        // sepal patch: ... unless the frame needs less than a quarter of
         // the area. A layer as large as the window (a dialog's backdrop) made every
         // layer texture that large for good; now they shrink once it is gone,
         // while a layer that shrinks a little each frame (an animation) does not
@@ -965,7 +965,7 @@ struct Programs {
     strips_arena: StripBufferArena,
     /// Dimensions of the rendering target
     render_size: RenderSize,
-    /// svelte-blitz patch: where the root scene's (0, 0) lands in the target
+    /// sepal patch: where the root scene's (0, 0) lands in the target
     /// (`Renderer::set_root_offset`), the offset of the render in progress (the root
     /// offset for the user's surface, 0 for glyphs drawn into an atlas page), and the
     /// offset the config buffer holds.
@@ -1846,7 +1846,7 @@ impl Programs {
         let mut pages_dropped = false;
         for (index, textures) in self.resources.layer_textures.iter_mut().enumerate() {
             let required_page_count = layer_pages[index];
-            // svelte-blitz patch: pages this frame does not need are dropped, as
+            // sepal patch: pages this frame does not need are dropped, as
             // textures only grew before (see `render_scene`).
             if textures.len() > required_page_count {
                 textures.truncate(required_page_count);
@@ -1882,7 +1882,7 @@ impl Programs {
 
         self.resources.texture_size = texture_size;
 
-        // svelte-blitz patch: bind groups of dropped pages would keep them alive.
+        // sepal patch: bind groups of dropped pages would keep them alive.
         if size_changed || pages_dropped {
             self.clear_layer_bind_group_caches();
         }
@@ -2362,7 +2362,7 @@ impl Programs {
         resource_texture_dimension_2d: u32,
         new_render_size: &RenderSize,
     ) {
-        // svelte-blitz patch: the offset is part of the config too.
+        // sepal patch: the offset is part of the config too.
         if self.render_size != *new_render_size || self.config_offset != self.target_offset {
             self.config_offset = self.target_offset;
             let config = Config {

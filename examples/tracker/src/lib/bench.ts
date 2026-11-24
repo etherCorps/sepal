@@ -7,7 +7,7 @@
 // own `fs` aliased in and `__bench_emit` defined to send lines over IPC.
 
 /// <reference types="vite/client" />
-import { readTextFile } from '@ethercorps/svelte-blitz/fs';
+import { readTextFile } from 'sepal/fs';
 import type { Issue } from './seed';
 
 export interface Bench {
@@ -37,7 +37,7 @@ let held: string[] | null = BENCH_BUILD ? null : [];
 function emit(line: string) {
 	const g = globalThis as any;
 	if (g.__bench_emit) g.__bench_emit(line);
-	// svelte-blitz: the host's log, level 2, is stderr (`[js error] ` in front;
+	// Sepal: the host's log, level 2, is stderr (`[js error] ` in front;
 	// console.log goes to stdout). Not console.error: on V8 `console` is V8's
 	// own, which prints nothing without an inspector.
 	else if (g.__sb_host?.log) g.__sb_host.log(2, line);
@@ -86,7 +86,7 @@ const IDS = [
 
 function rect(name: string, element: Element) {
 	let { x, y, width, height } = element.getBoundingClientRect();
-	// svelte-blitz's boxes leave CSS transforms out (dom.js), and a Select's
+	// Sepal's boxes leave CSS transforms out (dom.js), and a Select's
 	// content is placed with an inline `transform: translate(Xpx, Ypx)`.
 	// ponytail: only that form; other transforms are not added in.
 	if ((globalThis as any).__sb_host) {

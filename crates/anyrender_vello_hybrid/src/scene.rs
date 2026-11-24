@@ -65,13 +65,13 @@ pub struct ImageManager<'a> {
     pub(crate) queue: &'a Queue,
     pub(crate) encoder: &'a mut CommandEncoder,
     pub(crate) cache: &'a mut FxHashMap<u64, ImageId>,
-    /// svelte-blitz patch: images larger than an atlas page, each in a texture of its own.
+    /// sepal patch: images larger than an atlas page, each in a texture of its own.
     pub(crate) own_textures: &'a mut FxHashMap<u64, OwnTexture>,
-    /// svelte-blitz patch: the atlas page size, `(width, height)`.
+    /// sepal patch: the atlas page size, `(width, height)`.
     pub(crate) atlas_page: (u16, u16),
 }
 
-/// svelte-blitz patch: an image too large for an atlas page. vello_gpu's
+/// sepal patch: an image too large for an atlas page. vello_gpu's
 /// `upload_image` panics on those (`TextureTooLarge`), so they are drawn as
 /// external textures instead, which also lets the atlas pages stay small.
 pub struct OwnTexture {
@@ -106,7 +106,7 @@ impl<'a> ImageManager<'a> {
         }
     }
 
-    /// svelte-blitz patch: where an image is drawn from, uploading it on first use.
+    /// sepal patch: where an image is drawn from, uploading it on first use.
     /// `None` for an image larger than the GPU can hold, which is not drawn.
     pub(crate) fn image_source(&mut self, image: &ImageData) -> Option<ImageSource> {
         let peniko_id = image.data.id();
@@ -211,7 +211,7 @@ pub(crate) enum LayerKind {
 }
 
 pub struct VelloHybridScenePainter<'s> {
-    /// svelte-blitz patch: when set, drawing commands are recorded here instead of
+    /// sepal patch: when set, drawing commands are recorded here instead of
     /// drawn, to be compared with the last frame's (`damage.rs`).
     pub(crate) recorder: Option<&'s mut anyrender::Scene>,
     pub(crate) scene: &'s mut vello_gpu::Scene,
@@ -426,7 +426,7 @@ impl PaintScene for VelloHybridScenePainter<'_> {
                     .normalized_coords(normalized_coords)
                     .font_embolden(FontEmbolden::new(Diagonal2::new(embolden.x, embolden.y)))
                     .glyph_transform(glyph_transform.unwrap_or_default())
-                    // svelte-blitz patch: upstream leaves the glyph atlas off, so
+                    // sepal patch: upstream leaves the glyph atlas off, so
                     // every glyph is rasterised again for every frame.
                     .atlas_cache(crate::glyph_cache())
                     .fill_glyphs(glyphs.map(|g| glifo::Glyph {
@@ -444,7 +444,7 @@ impl PaintScene for VelloHybridScenePainter<'_> {
                     .hint(hint)
                     .normalized_coords(normalized_coords)
                     .glyph_transform(glyph_transform.unwrap_or_default())
-                    .atlas_cache(crate::glyph_cache()) // svelte-blitz patch
+                    .atlas_cache(crate::glyph_cache()) // sepal patch
                     .stroke_glyphs(glyphs.map(|g| glifo::Glyph {
                         id: g.id,
                         x: g.x,

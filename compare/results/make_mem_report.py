@@ -12,7 +12,7 @@ from pathlib import Path
 
 RAW = Path(__file__).parent / 'raw'
 B = ['blitz', 'blitzv8', 'tauri', 'gpuix']
-NAMES = {'blitz': 'svelte-blitz (QuickJS)', 'blitzv8': 'svelte-blitz (V8)', 'tauri': 'Tauri 2', 'gpuix': 'gpuix-svelte †'}
+NAMES = {'blitz': 'Sepal (QuickJS)', 'blitzv8': 'Sepal (V8)', 'tauri': 'Tauri 2', 'gpuix': 'gpuix-svelte †'}
 HELPERS = {'SetStoreUpdateService', 'com.apple.SafariPlatformSupport.Helper', 'SafariPlatformSupport.Helper'}
 MB = 2**20
 
@@ -58,8 +58,8 @@ p(f"{m['cpu']} ({m['hw_model']}), {m['drive']['os']}, {disp['pixels'][0]}x{disp[
   f"Sessions: {', '.join(sessions)} ({sessions and S[sessions[0]]['started'][:16]} UTC). "
   f"{len(ok)} measured runs, {len(aborted)} aborted and retried. Cells: **median (min–max) of {n_runs} runs** after 1 discarded warm-up.")
 p('')
-p('svelte-blitz is at commit 9375147 (the memory work: small atlas pages, shrinking layer textures, uploads in render passes). '
-  '**† gpuix-svelte is a port** (its own widgets, a CSS subset, a pre-release Svelte 5.57.2); Tauri runs the same components and CSS as svelte-blitz.')
+p('Sepal is at commit 9375147 (the memory work: small atlas pages, shrinking layer textures, uploads in render passes). '
+  '**† gpuix-svelte is a port** (its own widgets, a CSS subset, a pre-release Svelte 5.57.2); Tauri runs the same components and CSS as Sepal.')
 p('')
 p('**What is measured**')
 p('- **RAM**: physical footprint (`footprint`, what Activity Monitor calls Memory) summed over every process the app owns: '
@@ -82,7 +82,7 @@ sizes = {b: first['builds'][b]['sizes'] for b in B if b in first['builds']}
 p('| `.app` on disk | ' + ' | '.join(f"{sizes[b]['du_kb'] / 1024:.1f} MB" if b in sizes else '—' for b in B) + ' |')
 p('| zipped (`ditto -c -k`) | ' + ' | '.join(f"{sizes[b]['zip_bytes'] / MB:.1f} MB" if b in sizes else '—' for b in B) + ' |')
 p('')
-p('Tauri is small because the web engine is the system\'s WKWebView, not in the app; svelte-blitz V8 carries V8 (~40 MB); gpuix carries the Bun runtime.')
+p('Tauri is small because the web engine is the system\'s WKWebView, not in the app; Sepal V8 carries V8 (~40 MB); gpuix carries the Bun runtime.')
 p('')
 
 SC = {3: 'idle (nothing on screen changes)', 4: 'a clock ticking once a second', 8: 'create an issue (New issue dialog)',

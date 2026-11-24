@@ -1,6 +1,6 @@
 # Frames per view switch (scenario 10, one recorded run per app, 1,000 issues)
 
-Session `j4-views` (raw data: `compare/results/raw/j4-views` on branch tracker-compare): svelte-blitz HEAD (4a2ae4b) on a debug host that also prints
+Session `j4-views` (raw data: `compare/results/raw/j4-views` on branch tracker-compare): Sepal HEAD (4a2ae4b) on a debug host that also prints
 each frame's changed commands (`SB_DEBUG_CHANGES`, local only, not committed),
 gpuix-svelte and Tauri 2, each with a screen recording (`frames/`).
 
@@ -8,11 +8,11 @@ gpuix-svelte and Tauri 2, each with a screen recording (`frames/`).
 
 | | Board | Insights | Settings | Issues |
 |---|---|---|---|---|
-| svelte-blitz | 10 | 14 | 16 | 12 |
+| Sepal | 10 | 14 | 16 | 12 |
 | gpuix-svelte | 3 | 3 | 5 | 4 |
 | Tauri 2 | 14 | 13 | 15 | 14 |
 
-## svelte-blitz: every frame presented, and what caused it (from the host's trace)
+## Sepal: every frame presented, and what caused it (from the host's trace)
 
 Board, 17 frames:
 - 3 ms: 1 full. First frame after the idle release (4a2ae4b): the window had been idle 5 s,

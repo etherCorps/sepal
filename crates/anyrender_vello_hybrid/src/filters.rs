@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyrender::filters::{EdgeMode, Filter, FilterEffect};
 use vello_common::filter_effects::FilterPrimitive;
 
-/// svelte-blitz patch: whether this renderer draws CSS backdrop filters. It does
+/// sepal patch: whether this renderer draws CSS backdrop filters. It does
 /// not (`VelloHybridScenePainter::push_layer` ignores them), so a layer whose only
 /// filter is a backdrop filter draws exactly like one without. Damage tracking
 /// (`damage::is_filter_layer`) and drawing such a layer as a clip

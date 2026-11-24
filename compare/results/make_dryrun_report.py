@@ -50,7 +50,7 @@ def control(label):
 def trigger(b, label):
     t = TRIG.get(b, {}).get(control(label) or '')
     return t['trigger'] if t else 'down'
-NAMES = {'blitz': 'svelte-blitz QuickJS', 'blitzv8': 'svelte-blitz V8', 'tauri': 'Tauri 2', 'gpuix': 'gpuix-svelte †'}
+NAMES = {'blitz': 'Sepal QuickJS', 'blitzv8': 'Sepal V8', 'tauri': 'Tauri 2', 'gpuix': 'gpuix-svelte †'}
 HEAD = '| ' + ' | '.join(NAMES[b] for b in B) + ' |'
 
 
@@ -101,12 +101,12 @@ p('')
 p('| Build | Runtime | JS engine | Svelte | Versions | .app on disk | zipped |')
 p('|---|---|---|---|---|---|---|')
 sizes = {b: S['builds'][b]['sizes'] for b in B}
-p(f"| svelte-blitz QuickJS | Blitz (Rust HTML/CSS engine), native window | QuickJS {v['svelte-blitz']['rquickjs']} (rquickjs, interpreter) | {v['app']['svelte']} | blitz-dom {v['svelte-blitz']['blitz-dom']} | {sizes['blitz']['du_kb']/1024:.1f} MB | {sizes['blitz']['zip_bytes']/2**20:.1f} MB |")
-p(f"| svelte-blitz V8 | same host, built with `engine-v8` | V8 (crate {v['svelte-blitz']['v8']}, JIT) | {v['app']['svelte']} | same | {sizes['blitzv8']['du_kb']/1024:.1f} MB | {sizes['blitzv8']['zip_bytes']/2**20:.1f} MB |")
+p(f"| Sepal QuickJS | Blitz (Rust HTML/CSS engine), native window | QuickJS {v['Sepal']['rquickjs']} (rquickjs, interpreter) | {v['app']['svelte']} | blitz-dom {v['Sepal']['blitz-dom']} | {sizes['blitz']['du_kb']/1024:.1f} MB | {sizes['blitz']['zip_bytes']/2**20:.1f} MB |")
+p(f"| Sepal V8 | same host, built with `engine-v8` | V8 (crate {v['Sepal']['v8']}, JIT) | {v['app']['svelte']} | same | {sizes['blitzv8']['du_kb']/1024:.1f} MB | {sizes['blitzv8']['zip_bytes']/2**20:.1f} MB |")
 p(f"| Tauri 2 | system WKWebView | JavaScriptCore (JIT), in WebKit's WebContent process | {v['app']['svelte']} | tauri {v['tauri']['tauri']}, wry {v['tauri']['wry']}, tao {v['tauri']['tao']} | {sizes['tauri']['du_kb']/1024:.1f} MB | {sizes['tauri']['zip_bytes']/2**20:.1f} MB |")
 p(f"| gpuix-svelte † | GPUI (Zed's UI framework) via @gpuix/native {v['gpuix']['@gpuix/native']} | Bun {v['gpuix']['bun']} (JavaScriptCore, JIT) | **{v['gpuix']['bundled_svelte']}** | gpuix-svelte {v['gpuix']['gpuix-svelte']} | {sizes['gpuix']['du_kb']/1024:.1f} MB | {sizes['gpuix']['zip_bytes']/2**20:.1f} MB |")
 p('')
-p('svelte-blitz and Tauri run the **same Svelte components and the same Tailwind CSS** (byte-identical app.css); only four '
+p('Sepal and Tauri run the **same Svelte components and the same Tailwind CSS** (byte-identical app.css); only four '
   'desktop calls and the router\'s DOM hook differ. **† gpuix-svelte is a port**: same screens, data, store logic and '
   'list-windowing algorithm, but its own widgets (no bits-ui/shadcn), a CSS subset instead of Tailwind, icons as SVG '
   'strings, and a pre-release Svelte 5.57.2. Every gpuix number carries that caveat.')
@@ -121,10 +121,10 @@ p('- **Latency** = OS input event → the app\'s mark after its DOM/state update
   'every clicked control acts on the **release** (mouse up), every key on the **press** (key down). '
   f'The dry run measured clicks from the press, which added the click\'s hold (a 30 ms sleep, {HOLD:.1f} ms when stamped later) to every click; it did not stamp the release. '
   'Click rows below are therefore **estimates from the release: as measured minus the median hold (≈, ±3 ms: stamped holds ranged 30-35 ms)**, with the as-measured value from the press in brackets. Key rows are unchanged. '
-  'The three frame signals are **different clocks of different things**: svelte-blitz = host repaint trace (`RedrawRequested`); '
+  'The three frame signals are **different clocks of different things**: Sepal = host repaint trace (`RedrawRequested`); '
   'Tauri = double `requestAnimationFrame` (mark sent over async IPC, ~1.1-1.5 ms later; rAF ≤ 75 fps here); '
   'gpuix = `next_frame()` (GPUI\'s next 8 ms tick, not presentation). The independent check (screen recording at 75 Hz) was **not** run in this dry run.')
-p('- **App clock resolution**: 1 ms in all four (svelte-blitz `Date.now()`, WKWebView `performance.now()`); arrival stamps are ~0.04 µs. '
+p('- **App clock resolution**: 1 ms in all four (Sepal `Date.now()`, WKWebView `performance.now()`); arrival stamps are ~0.04 µs. '
   'Treat differences under ~2 ms, and under one 75 Hz frame (13.3 ms) for anything frame-related, as noise.')
 p('- **CPU, wake-ups**: `proc_pid_rusage` at scenario start and end, summed over every process the app owns '
   '(found by responsible PID: Tauri\'s WebKit WebContent/GPU/Networking helpers included). No energy figure: see the note under scenario 9.')
@@ -181,9 +181,9 @@ p('"First input accepted" from exec is mostly the harness: it posts the first `j
   'The app\'s part is the first `j` → `highlight` row. In every build every press posted was accepted '
   '(as many highlight marks, one row further each, as presses): gpuix\'s "2-3 presses" are presses posted while its first was '
   'still being handled (it marks a key in ~35-50 ms, the harness re-presses every 20 ms). '
-  'svelte-blitz V8\'s ~600 ms was the harness posting late (588 / 601 ms after exec; V8 marked the press 7 ms later), during the minutes '
+  'Sepal V8\'s ~600 ms was the harness posting late (588 / 601 ms after exec; V8 marked the press 7 ms later), during the minutes '
   'when Stage Manager was moving windows (see "What went wrong"). Re-run on 23 Nov, scenarios 1-2 twice per build (`raw/firstinput/`): at every press the app was active and frontmost, and (asked through AX in one set) had a focused, main window; '
-  'no press was dropped; first `j` → `highlight` was 18-23 ms (QuickJS), 17-23 (V8), 20-28 (Tauri), 38-49 (gpuix). The first key a fresh process gets costs more than later ones in every build (svelte-blitz handles the second in ~2 ms). '
+  'no press was dropped; first `j` → `highlight` was 18-23 ms (QuickJS), 17-23 (V8), 20-28 (Tauri), 38-49 (gpuix). The first key a fresh process gets costs more than later ones in every build (Sepal handles the second in ~2 ms). '
   '`read` / `parsed` marks were added after the dry run.')
 p('')
 
@@ -312,7 +312,7 @@ for sc in range(1, 12):
     p(row(f'{sc}. {next((x["scenario_name"] for x in records if int(x["scenario"]) == sc), "")}', cells))
 p('')
 p('**Why these swing (found after the dry run):** each build owns GPU memory that macOS reclaims about 1-2 s after the app last '
-  'presented a frame, and that comes back with the next frame. svelte-blitz\'s "Owned physical footprint (unmapped) (graphics)" '
+  'presented a frame, and that comes back with the next frame. Sepal\'s "Owned physical footprint (unmapped) (graphics)" '
   'goes 312 → 92 MB with the app frontmost and doing nothing (no trace event, no CPU); Tauri\'s WebKit GPU process (~120 MB of graphics) '
   'shrinks or leaves; gpuix\'s graphics go 151 → 37 MB. Scenario 3 (no clock) ends a minute after the last frame, so it shows the '
   'low state; scenario 4\'s clock repaints every second, so it shows the high one; scenario 10 (2 s after the last click) and 9 '
@@ -356,7 +356,7 @@ if fp.exists():
     g = lambda x: sum(c['dirty'] + c['swapped'] for c in x['processes'][0]['categories'] if c['name'] == 'Owned physical footprint (unmapped) (graphics)') / 2**20
     seq = ', '.join(f"+{x['s']:.0f} s {g(x):.0f}" for x in d['samples'][:4])
     p('')
-    p(f'Sampled every second (svelte-blitz V8, frontmost throughout, last repaint at +0.05 s, no trace event after it): GPU memory {seq} MB, then flat.')
+    p(f'Sampled every second (Sepal V8, frontmost throughout, last repaint at +0.05 s, no trace event after it): GPU memory {seq} MB, then flat.')
 p('')
 p('### What the memory is (MB; `run.mjs breakdown`: footprint categories and `vmmap --summary`, 5 s after `mounted` and after scenario 9)')
 p('')
@@ -373,9 +373,9 @@ for b in B:
             total, gr = mg.groups(fp)
             p(f'| {NAMES[b]} | {label} | {total:.0f} | ' + ' | '.join(f'{gr[k]:.0f}' for k in mg.GROUPS) + ' |')
 p('')
-p('Both svelte-blitz captures are in the low GPU state (a few seconds after the last frame); in the high state add ~220 MB of GPU memory (memwatch above). '
+p('Both Sepal captures are in the low GPU state (a few seconds after the last frame); in the high state add ~220 MB of GPU memory (memwatch above). '
   'gpuix is in its low state at start-up (37 MB GPU) and its high one after scenario 9 (174 MB). Tauri\'s GPU process held ~120 MB of graphics at both points. '
-  'svelte-blitz QuickJS at ~430 MB is therefore: ~310-350 MB GPU memory (Metal resources owned by the process, mostly "unmapped (graphics)", plus 15-30 MB of IOSurfaces, its window\'s drawables), '
+  'Sepal QuickJS at ~430 MB is therefore: ~310-350 MB GPU memory (Metal resources owned by the process, mostly "unmapped (graphics)", plus 15-30 MB of IOSurfaces, its window\'s drawables), '
   '~45-65 MB malloc (QuickJS\'s heap, which uses malloc, together with Blitz\'s DOM, Stylo and the Rust side: footprint cannot split them), 18 MB kernel-owned unmapped memory, ~10 MB binaries and stacks. '
   'V8 is the same plus ~10-15 MB of V8 heap regions (VM tag 16), with less malloc. Tauri: the WebContent process (JS and DOM: WebKit Malloc, JSC regions) grows from ~94 to ~280 MB over scenario 9; '
   'its GPU process holds ~120 MB graphics; the app process ~31 MB. gpuix: one process, Bun/JSC heap in tagged regions (20-40 MB), malloc ~30 MB, GPU 37-174 MB.')
@@ -390,7 +390,7 @@ p(row('memory 5 s after `mounted` (MB, all processes)', [f(K[b]['footprint']['to
 p('')
 p('No build takes seconds or gigabytes with 10,000 issues. Tauri\'s window was parked by Stage Manager (it launched behind Chrome) and was activated by the probe before its memory sample.')
 p('')
-p('### One clock tick in svelte-blitz (scenario 4 on the diagnostic builds; `diag_ticks.py`, ms per tick, median / max of ~60)')
+p('### One clock tick in Sepal (scenario 4 on the diagnostic builds; `diag_ticks.py`, ms per tick, median / max of ~60)')
 p('')
 p('| Phase | QuickJS | V8 |')
 p('|---|---|---|')

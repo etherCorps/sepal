@@ -1,9 +1,9 @@
-"""Damage tracking on vs off for svelte-blitz: GPU and CPU time, GPU memory, frames.
+"""Damage tracking on vs off for Sepal: GPU and CPU time, GPU memory, frames.
 
-    python3 compare/results/make_damage_report.py <session> [<session with SVELTE_BLITZ_DAMAGE=0>]
+    python3 compare/results/make_damage_report.py <session> [<session with SEPAL_DAMAGE=0>]
 
 Every number comes from compare/results/raw/<session>/runs.jsonl. Warm-up and aborted runs are
-excluded; aborted runs are listed. Frames come from the host's SVELTE_BLITZ_TRACE lines during the
+excluded; aborted runs are listed. Frames come from the host's SEPAL_TRACE lines during the
 scenario: `damage: Full|Rect|None` per frame drawn with damage tracking on, `RedrawRequested` per
 frame with it off (every one of those is drawn in full and presented).
 """
@@ -48,7 +48,7 @@ def presented(r):
 
 on_name = sys.argv[1]
 off_name = sys.argv[2] if len(sys.argv) > 2 else None
-title = 'svelte-blitz: damage tracking on and off' if off_name else 'svelte-blitz, damage tracking on'
+title = 'Sepal: damage tracking on and off' if off_name else 'Sepal, damage tracking on'
 on_s, on_runs = load(on_name)
 off_s, off_runs = load(off_name) if off_name else (None, [])
 cols = ['damage on', 'damage off'] if off_name else ['damage on']
@@ -62,7 +62,7 @@ p(f'# {title}')
 p('')
 p(f"{m['cpu']}, {m['drive']['os']}, the Tracker (bench build, {on_s['plan']['sizes'][0]:,} issues), window 1200x800 at 2x. "
   f"Session `{on_name}` (damage tracking on, the default)"
-  + (f" and `{off_name}` (`SVELTE_BLITZ_DAMAGE=0`)" if off_name else '')
+  + (f" and `{off_name}` (`SEPAL_DAMAGE=0`)" if off_name else '')
   + f", {on_s['plan']['warmup']} warm-up + {on_s['plan']['runs']} measured runs per scenario. Cells: median (min–max).")
 p('')
 p('- GPU time: the driver\'s per-process `accumulatedGPUTime` (what Activity Monitor shows) during the scenario.')

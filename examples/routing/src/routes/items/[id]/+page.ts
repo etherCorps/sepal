@@ -1,4 +1,4 @@
-import { error } from '@ethercorps/svelte-blitz-vite/router';
+import { error } from 'sepal/router';
 import { items } from '$lib/items';
 
 export async function load({ params, parent, url }: { params: { id: string }; parent: () => Promise<{ app: string }>; url: { searchParams: { get(name: string): string | null } } }) {

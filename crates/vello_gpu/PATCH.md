@@ -3,7 +3,7 @@
 This is the crates.io source of `vello_gpu` 0.3.0 (Apache-2.0 OR MIT,
 https://github.com/linebender/vello), the GPU renderer under
 `anyrender_vello_hybrid`, with two changes. `crates/host/Cargo.toml` swaps it
-in through `[patch.crates-io]`. Both are marked `svelte-blitz patch`.
+in through `[patch.crates-io]`. Both are marked `sepal patch`.
 
 ## The changes
 
@@ -39,5 +39,5 @@ glyph first drawn in a partial frame landed outside its slot and stayed blank.
 
 Do not edit anything else here, and do not run `cargo fmt` on it. To move to a
 new version, replace the directory with that version's source and reapply the
-changes (search for `svelte-blitz patch`), unless upstream shrinks the
+changes (search for `sepal patch`), unless upstream shrinks the
 textures itself by then.

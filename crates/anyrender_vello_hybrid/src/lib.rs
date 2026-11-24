@@ -1,9 +1,9 @@
 //! A [`vello_gpu`] backend for the [`anyrender`] 2D drawing abstraction
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-mod damage; // svelte-blitz patch
+mod damage; // sepal patch
 mod filters;
-// svelte-blitz patch
+// sepal patch
 #[cfg(not(target_arch = "wasm32"))]
 mod offscreen;
 mod scene;
@@ -19,7 +19,7 @@ pub use window_renderer::*;
 
 pub use wgpu;
 
-// svelte-blitz patch: see `scene.rs`, `draw_glyphs`.
+// sepal patch: see `scene.rs`, `draw_glyphs`.
 static GLYPH_CACHE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
 
 /// Whether glyphs are rasterised once into an atlas and reused (the default

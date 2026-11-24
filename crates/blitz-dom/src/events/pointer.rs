@@ -506,7 +506,7 @@ pub(crate) fn handle_pointerdown(
                 doc.clear_text_selection();
             }
 
-            // svelte-blitz patch: a press moves the focus, as in a browser: to
+            // sepal patch: a press moves the focus, as in a browser: to
             // the nearest ancestor that can take it (a button, a link,
             // anything with `tabindex`), or away from whatever had it.
             // Upstream moves the focus on `click` instead, and only to a few
@@ -846,7 +846,7 @@ pub(crate) fn handle_click(
         false
     };
 
-    // svelte-blitz patch: upstream clears the focus here when the click
+    // sepal patch: upstream clears the focus here when the click
     // matched nothing. The press already moved it (see `handle_pointerdown`),
     // and a click that lands elsewhere, or comes from the keyboard, must not.
     let _ = matched;

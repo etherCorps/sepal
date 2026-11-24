@@ -1,4 +1,4 @@
-// examples/tracker/src/lib/persist.ts with Node/Bun `fs` in place of `@ethercorps/svelte-blitz/fs`:
+// examples/tracker/src/lib/persist.ts with Node/Bun `fs` in place of `sepal/fs`:
 // edits.json and settings.json in the app's data directory. Otherwise unchanged.
 
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';

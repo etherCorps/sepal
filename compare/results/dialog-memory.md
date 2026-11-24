@@ -2,7 +2,7 @@
 
 The bench Tracker, 1,000 issues, window 1200x800 at 2x, the clock ticking (so frames are being
 drawn, as in the scenarios), snapshot 3 s after opening New issue with `c`. wgpu's textures and
-buffers come from `SVELTE_BLITZ_GPU_LOG=1` (wgpu-hal change 2) replayed by
+buffers come from `SEPAL_GPU_LOG=1` (wgpu-hal change 2) replayed by
 `compare/harness/gpu_live.py`; the rest is `footprint` at the same moment. Single snapshots: the
 driver's categories move by ~10-15 MB between runs.
 
@@ -11,7 +11,7 @@ driver's categories move by ~10-15 MB between runs.
 | | clock only | clock + dialog (before) | clock + dialog (after the fix) | what it is | needed |
 |---|---|---|---|---|---|
 | kept frame, 2400x1600 BGRA8Unorm | 15.1 MB | 15.1 MB | 15.1 MB | damage tracking's last frame (anyrender_vello_hybrid change 9) | yes; let go when idle (change 10) |
-| depth texture, 2400x1600 Depth32Float | 15.1 MB | 15.1 MB | 15.1 MB | vello_gpu's depth test for opaque strips, full frames only | trades 15 MB for scroll speed; kept on by your decision (`SVELTE_BLITZ_DEPTH=0` drops it); let go when idle |
+| depth texture, 2400x1600 Depth32Float | 15.1 MB | 15.1 MB | 15.1 MB | vello_gpu's depth test for opaque strips, full frames only | trades 15 MB for scroll speed; kept on by your decision (`SEPAL_DEPTH=0` drops it); let go when idle |
 | layer texture, RGBA8Unorm | — | 15.1 MB (2400x1600) | 1.0 MB (512x512) | vello_gpu's intermediate texture for layers (opacity, blending, filters), sized for the largest layer of the frame | the 2400x1600 one was waste: see below |
 | atlas page, 1024x1024 RGBA8Unorm | 4.0 MB | 4.0 MB | 4.0 MB | glyphs and images (change 4) | yes |
 | alpha texture, 4096xN RGBA32Uint | 1.0 MB (N=16) | 2.0 MB (N=21) | 2.0 MB | this frame's strip coverage masks; grows with what is drawn | yes |
@@ -42,7 +42,7 @@ PATCH.md refers to; it grows with the work per frame and is returned 1-2 s after
   composites exactly like its contents drawn directly. It cost vello_gpu a 2400x1600 layer
   texture and the passes that fill and composite it. **Fixed** (anyrender_vello_hybrid change
   11): such a layer is drawn as a clip. Window captures with the dialog open are identical to
-  before (0 pixels differ), and match `SVELTE_BLITZ_DAMAGE=0`.
+  before (0 pixels differ), and match `SEPAL_DAMAGE=0`.
 
 Nothing else here is plainly waste. What remains above the clock-only state is the dialog's
 own drawing (bigger strip buffers and alpha masks) and the driver's memory for the extra work.

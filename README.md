@@ -1,6 +1,16 @@
-<p align="center"><img src="docs/logo/logo.svg" width="112" alt="svelte-blitz logo"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/sepal-logo-white.svg">
+    <img src="assets/brand/sepal-logo.svg" width="280" alt="Sepal">
+  </picture>
+</p>
 
-# svelte-blitz
+# Sepal
+
+**Native Svelte apps, drawn by Blitz.**
+
+A sepal is the leaf that wraps a bud and holds up the flower. Sepal wraps your
+Svelte app and holds it up natively. Formerly svelte-blitz.
 
 Svelte apps in a native window, without a webview and without Node at runtime.
 
@@ -33,13 +43,13 @@ pnpm dev               # the same, reloading on every save
 ## Start a project
 
 ```sh
-pnpm create @ethercorps/svelte-blitz my-app   # TypeScript, Tailwind, file-based routes, icon, manifest, static/
+pnpm create sepal my-app   # TypeScript, Tailwind, file-based routes, icon, manifest, static/
 cd my-app
 pnpm install
-pnpm dev                        # opens the app, reloads on save
-pnpm start                      # build once and open it
-pnpm bundle                     # my-app.app
-pnpm check                      # svelte-check
+pnpm dev                   # opens the app, reloads on save
+pnpm start                 # build once and open it
+pnpm bundle                # my-app.app
+pnpm check                 # svelte-check
 ```
 
 The starter comes with one of two routers. Both have pages as files in
@@ -47,43 +57,57 @@ The starter comes with one of two routers. Both have pages as files in
 
 | | |
 |---|---|
-| `built-in` (the default) | svelte-blitz's own router. Small, and needs nothing of a browser. See "Routing". |
+| `built-in` (the default) | Sepal's own router. Small, and needs nothing of a browser. See "Routing". |
 | `sveltekit` | SvelteKit's router, as a single-page app: its full client API, at the cost of the DOM layer and a larger bundle. See "SvelteKit". |
 
 In a terminal you are asked which. To say so ahead of time:
-`pnpm create @ethercorps/svelte-blitz my-app --router sveltekit`.
+`pnpm create sepal my-app --router sveltekit`.
 
 The packages are on npm as `0.1.0-alpha.0`, an alpha: expect rough edges and
 changes between versions. Prebuilt hosts exist for macOS (arm64, x64) and
 Linux (x64, arm64, glibc 2.35 or newer); on anything else, build the host
-from `crates/host` and point `SVELTE_BLITZ_HOST` at it.
+from `crates/host` and point `SEPAL_HOST` at it.
+
+## Names
+
+Anything you type is plain and starts with `sepal`: the package, its imports,
+the command, `sepal.config.ts`, the `SEPAL_*` variables. The parts have plant
+names, used in these docs:
+
+| Word | What it is |
+|---|---|
+| bud | an app |
+| calyx | the host: the native program that opens the window and runs the bud, prebuilt (`@ethercorps/calyx`) or built per app |
+| seed | a starter template (`pnpm create sepal`) |
+| bloom | the packaged app that `sepal bundle` (`--bundle`) produces |
+| stem | the JS backend thread (planned) |
+| graft | a native plugin (planned); in code it stays `Plugin` and `.plugin()` |
+
+Permissions, sidecars, adapters and Vite plugins keep their usual names.
 
 ## Packages
 
 | Package | What it is | Directory |
 |---|---|---|
-| `@ethercorps/svelte-blitz` | The runtime: `mount`, the renderer, the op protocol. No Node code. | `packages/core` |
-| `@ethercorps/svelte-blitz-vite` | The Vite preset (build, app manifest, `static/`, dev reload) and the file-based router. | `packages/vite` |
-| `@ethercorps/svelte-blitz-cli` | The `svelte-blitz` command. | `packages/cli` |
-| `@ethercorps/create-svelte-blitz` | The starter template. | `packages/create` |
-| `@ethercorps/svelte-blitz-host` | The host binaries, and the lookup that picks one. | `packages/host` |
+| `sepal` | The runtime (`mount`, the renderer, the op protocol, the desktop APIs), the Vite preset and the file-based router (`sepal/vite`, `sepal/sveltekit`, `sepal/router`), and the `sepal` command. The runtime has no Node code. | `packages/sepal` |
+| `create-sepal` | The seeds: the starter templates. | `packages/create` |
+| `@ethercorps/calyx` | Calyx, the host: its binaries, and the lookup that picks one. | `packages/host` |
 
 They are released together under one version (`pnpm run check` fails if they
-drift). An app depends on the first, and has the Vite preset and the CLI as
-dev dependencies.
+drift). An app depends on `sepal`; calyx comes with it.
 
 ```
-svelte-blitz run [dist]
-svelte-blitz bundle [dist] [out-dir] [--sign <identity>] [--notarize <keychain-profile>]
-svelte-blitz screenshot <out.png> [dist] [WIDTHxHEIGHT]
+sepal run [dist]
+sepal bundle [dist] [out-dir] [--sign <identity>] [--notarize <keychain-profile>]
+sepal screenshot <out.png> [dist] [WIDTHxHEIGHT]
 ```
 
-### Where the host binary comes from
+### Where calyx, the host binary, comes from
 
-One package, `@ethercorps/svelte-blitz-host`, holds the binary for every
+One package, `@ethercorps/calyx`, holds the binary for every
 platform under `bin/<platform>/`, so nobody who installs from npm needs Rust.
 The Vite preset and the CLI ask that package for the path;
-`SVELTE_BLITZ_HOST` overrides it with a host you built yourself.
+`SEPAL_HOST` overrides it with a host you built yourself.
 
 The release workflow (`.github/workflows/release.yml`) builds it on each
 platform and collects the binaries into the package:
@@ -108,7 +132,7 @@ Rust crates and of QuickJS, which are compiled into the binary
 ## Dev: reload on save
 
 `vite build --watch` is the dev command (`pnpm dev` in this repository builds
-the host first and points `SVELTE_BLITZ_HOST` at it). The preset starts the
+the host first and points `SEPAL_HOST` at it). The preset starts the
 host after the first build and tells it to reload after each later one. The window stays open and keeps its size,
 position and page scroll; the app itself starts over, so component state is
 lost. This is a live reload, not Svelte HMR.
@@ -118,25 +142,25 @@ lost. This is a live reload, not Svelte HMR.
 - Closing the window ends Vite. Stopping Vite closes the window.
 - Changes to `app.json` (title, size, icon) need a restart.
 - On macOS the host runs out of a throwaway bundle in
-  `node_modules/.svelte-blitz/`, so the Dock and the app switcher show the
+  `node_modules/.sepal/`, so the Dock and the app switcher show the
   app's name and icon in dev too. This needs `app.name` in the manifest.
 - There is no file watcher and no polling in the host: Vite writes one line to
-  the host's stdin per rebuild. `svelte-blitz-host --watch dist` run by hand
+  the host's stdin per rebuild. `calyx --watch dist` run by hand
   reloads when you press Enter.
 
 
 ## App config
 
-An app describes itself in `app.config.ts`, next to `vite.config.ts`:
+An app describes itself in `sepal.config.ts`, next to `vite.config.ts`:
 
 ```ts
-import { defineConfig } from '@ethercorps/svelte-blitz-vite';
+import { defineConfig } from 'sepal/vite';
 
 export default defineConfig({
 	app: {
 		name: 'Counter',
 		id: 'com.example.counter',
-		// icon: static/icon.png is used when it exists (PNG, square, 1024×1024 recommended)
+		// icon: static/icon.png when it exists (PNG, square, 1024×1024 recommended); the Sepal icon otherwise
 		window: { title: 'Svelte on Blitz', width: 800, height: 600 }
 		// version: defaults to the one in package.json
 		// updater: see "Updates"
@@ -153,22 +177,24 @@ That leaves `vite.config.ts` as a list of plugins:
 
 ```ts
 export default defineConfig({
-	plugins: [tailwindcss(), svelteBlitz()]
+	plugins: [tailwindcss(), sepal()]
 });
 ```
 
 The file can also be `.js` or `.mjs`, and can export a function, which gets
-Vite's `{ mode, command }`. Anything passed to `svelteBlitz({ … })` directly
+Vite's `{ mode, command }`. Anything passed to `sepal({ … })` directly
 overrides the file, key by key. In watch mode, edits to `app` and
 `permissions` are picked up on the next build; a change to `router` needs
 Vite restarted.
 
 The icon is a static file: put it in `static/` and it is copied with the
 rest. `app.icon` names another file there if it is not called `icon.png`.
+An app with neither gets the Sepal icon, written into the build as
+`icon.png`; the starter relies on that until you add your own.
 
 The build writes `dist/app.json`. Point
-the host at the directory and it picks them up: `svelte-blitz-host dist`.
-Every field is optional; `svelte-blitz-host app.js app.css` still works and
+the host at the directory and it picks them up: `calyx dist`.
+Every field is optional; `calyx app.js app.css` still works and
 runs without a manifest.
 
 | Platform | Where the icon shows |
@@ -181,14 +207,16 @@ A missing or undecodable icon stops the app with an error naming the file.
 
 On macOS `name` also becomes the process name, which is what the menu bar
 items ("Quit Counter") use. Run straight from the host binary, the Dock label,
-the app switcher and Activity Monitor still say `svelte-blitz-host`: macOS takes
+the app switcher and Activity Monitor still say `calyx`: macOS takes
 those from an app bundle. Build one to get them right.
 
 ## Bundle a macOS app
 
+The bundle is the bloom: the bud and its calyx, packed as one `.app`.
+
 ```sh
 pnpm run bundle        # examples/counter/bundle/Counter.app
-svelte-blitz-host --bundle dist [out-dir]
+calyx --bundle dist [out-dir]
 ```
 
 ```
@@ -198,7 +226,7 @@ Counter.app/Contents/
   Resources/           everything from dist/, plus AppIcon.icns
 ```
 
-The manifest needs a `name`. `id` (default `app.svelte-blitz.<name>`) and
+The manifest needs a `name`. `id` (default `app.sepal.<name>`) and
 `version` (default `0.1.0`) should be set for anything you ship. The icon must
 be square; the `.icns` is generated from it at every size up to its own.
 Double-clicking the app runs the host with no arguments, and it loads the app
@@ -221,7 +249,7 @@ ID certificate and notarised by Apple.
 # once: store an app-specific password in the keychain under a profile name
 xcrun notarytool store-credentials my-profile --apple-id you@example.com --team-id TEAMID
 
-svelte-blitz bundle dist --sign "Developer ID Application: Your Name (TEAMID)" --notarize my-profile
+sepal bundle dist --sign "Developer ID Application: Your Name (TEAMID)" --notarize my-profile
 ```
 
 `--sign` signs with the hardened runtime and a secure timestamp; the host
@@ -253,7 +281,7 @@ src/routes/
 
 ```ts
 // src/routes/items/[id]/+page.ts
-import { error } from '@ethercorps/svelte-blitz-vite/router';
+import { error } from 'sepal/router';
 import { items } from '$lib/items';
 
 export async function load({ params, parent }) {
@@ -289,7 +317,7 @@ What works as in SvelteKit:
 - `<a href="/path">` navigates. `goto()` from `$app/navigation`, `page` from
   `$app/state`, and the `$lib` alias.
 - `error(status, message)` and `redirect(status, location)` inside `load`,
-  imported from `@ethercorps/svelte-blitz-vite/router`.
+  imported from `sepal/router`.
 
 What is different, because there is no browser and no server:
 
@@ -314,9 +342,9 @@ The built-in router is the default, not a requirement. The preset's `router`
 option replaces it or turns it off:
 
 ```ts
-svelteBlitz({ router: false })                          // no routing; src/main.ts is the entry
-svelteBlitz({ router: { entry: 'src/my-router.ts' } })  // your router is the entry
-svelteBlitz({ router: { dir: 'src/pages' } })           // built-in router, other directory
+sepal({ router: false })                          // no routing; src/main.ts is the entry
+sepal({ router: { entry: 'src/my-router.ts' } })  // your router is the entry
+sepal({ router: { dir: 'src/pages' } })           // built-in router, other directory
 ```
 
 A router of your own is a module that mounts the app. It can use the route
@@ -324,8 +352,8 @@ table the preset generates from the routes directory, or ignore it:
 
 ```ts
 // src/my-router.ts
-import { mount } from '@ethercorps/svelte-blitz';
-import { routes, fallback } from 'virtual:svelte-blitz/routes';
+import { mount } from 'sepal';
+import { routes, fallback } from 'virtual:sepal/routes';
 import Shell from './Shell.svelte';
 
 // Each route: { id, pattern, names, layouts, page, error, error_depth }.
@@ -335,29 +363,29 @@ mount(Shell, { props: { routes, fallback } });
 
 With a custom entry the built-in `$app/navigation` and `$app/state` are not
 set up; your router exports its own API. The `Route` and `RouteNode` types
-come from `@ethercorps/svelte-blitz-vite/router`.
+come from `sepal/router`.
 
 ### SvelteKit
 
 A SvelteKit app runs in the host with SvelteKit's own client router: links,
 `goto`, parameters, `load`, `$app/state`, `$app/navigation` and the back
-button. `examples/sveltekit` is one. In `vite.config.ts`, `svelteBlitzKit()`
+button. `examples/sveltekit` is one. In `vite.config.ts`, `sepalKit()`
 takes the place of `sveltekit()`:
 
 ```ts
-import { svelteBlitzKit } from '@ethercorps/svelte-blitz-vite/sveltekit';
+import { sepalKit } from 'sepal/sveltekit';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [svelteBlitzKit()]
-	// svelteBlitzKit({ kit: { alias: { … } } }) passes options on to SvelteKit
+	plugins: [sepalKit()]
+	// sepalKit({ kit: { alias: { … } } }) passes options on to SvelteKit
 });
 ```
 
-Everything else is as for any svelte-blitz app: settings in `app.config.ts`,
+Everything else is as for any Sepal app: settings in `sepal.config.ts`,
 the icon and other files in `static/`, `vite build` writes `dist/`,
 `vite build --watch` opens the app and reloads it on every save, and
-`svelte-blitz run` and `bundle` work on the result. Needs `@sveltejs/kit`
+`sepal run` and `bundle` work on the result. Needs `@sveltejs/kit`
 3.4 or later in the project; no adapter.
 
 What is different from SvelteKit on the web:
@@ -401,12 +429,12 @@ them, creates elements, moves focus and measures boxes.
 ### `dom: true`
 
 ```ts
-// app.config.ts
+// sepal.config.ts
 export default defineConfig({ dom: true });
 ```
 
 This builds the app as a browser bundle (the `browser` export condition) and
-loads `@ethercorps/svelte-blitz/dom` before anything else. That module puts a
+loads `sepal/dom` before anything else. That module puts a
 small DOM on top of the renderer's own tree: `window`, `document`, selectors
 (`querySelector`, `matches`, `closest`), attributes, `classList`, `style`,
 `dataset`, tree edits, `Event` and its subclasses, `EventTarget`,
@@ -521,7 +549,7 @@ text field exist in Blitz but have not been tried.
 Out of the box none of it compiled, because every shadcn component has
 `bind:this={ref}` on its root element and Svelte refuses that for custom
 renderers. The preset rewrites element bindings before Svelte sees them
-(`packages/vite/src/bindings.js`), which applies to any component library.
+(`packages/sepal/vite/bindings.js`), which applies to any component library.
 
 `examples/shadcn` is a page of the working components. `node probe.mjs` in
 that directory compiles and runs each file in `src/probes` and reports
@@ -580,14 +608,14 @@ built into the app, replaces itself and restarts.
 **1. Make a key pair, once.**
 
 ```sh
-svelte-blitz signer generate ~/.keys/my-app.key
+sepal signer generate ~/.keys/my-app.key
 # prints the public key
 ```
 
 The file is the private key. Keep it secret and backed up: updates signed
 with any other key are refused by every copy of the app already installed.
 
-**2. Tell the app where updates come from**, in `app.config.ts`.
+**2. Tell the app where updates come from**, in `sepal.config.ts`.
 
 ```ts
 export default defineConfig({
@@ -606,7 +634,7 @@ export default defineConfig({
 
 ```svelte
 <script lang="ts">
-	import { check } from '@ethercorps/svelte-blitz/updater';
+	import { check } from 'sepal/updater';
 
 	async function update() {
 		const found = await check();        // null when up to date
@@ -622,7 +650,7 @@ export default defineConfig({
 
 ```sh
 vite build
-svelte-blitz bundle --sign "Developer ID Application: …" --notarize my-profile \
+sepal bundle --sign "Developer ID Application: …" --notarize my-profile \
   --update-key ~/.keys/my-app.key --update-notes "What changed"
 ```
 
@@ -635,7 +663,7 @@ My App-1.1.0-darwin-arm64.app.tar.gz.sig    its signature
 latest.json                                 the feed
 ```
 
-In CI, `SVELTE_BLITZ_UPDATER_KEY` can hold the private key instead of
+In CI, `SEPAL_UPDATER_KEY` can hold the private key instead of
 `--update-key`.
 
 What it guarantees:
@@ -669,7 +697,7 @@ The updater talks to the feed URL and the archive it names, and nothing else.
 ## Desktop APIs
 
 An app reaches outside its window through the APIs below. All of them are
-**off until `permissions` in `app.config.ts` allows them**, and the
+**off until `permissions` in `sepal.config.ts` allows them**, and the
 host enforces that, not JavaScript. A refused call rejects with a message
 naming the entry to add.
 
@@ -687,15 +715,15 @@ permissions: {
 | API | Import | Permission |
 |---|---|---|
 | `fetch(url, { method, headers, body })` | a global, nothing to import | `http` |
-| `readTextFile`, `writeTextFile`, `readFile`, `writeFile`, `exists`, `mkdir`, `readDir`, `remove`, `dir` | `@ethercorps/svelte-blitz/fs` | `fs` |
-| `open`, `save`, `message`, `confirm` | `@ethercorps/svelte-blitz/dialog` | `dialog` |
-| `readText`, `writeText` | `@ethercorps/svelte-blitz/clipboard` | `clipboard` |
-| `open(linkOrPath)` | `@ethercorps/svelte-blitz/shell` | `open` |
-| `setTitle`, `minimize`, `maximize`, `unmaximize`, `isMaximized`, `setDecorations`, `startDragging`, `close` | `@ethercorps/svelte-blitz/window` | `window` |
+| `readTextFile`, `writeTextFile`, `readFile`, `writeFile`, `exists`, `mkdir`, `readDir`, `remove`, `dir` | `sepal/fs` | `fs` |
+| `open`, `save`, `message`, `confirm` | `sepal/dialog` | `dialog` |
+| `readText`, `writeText` | `sepal/clipboard` | `clipboard` |
+| `open(linkOrPath)` | `sepal/shell` | `open` |
+| `setTitle`, `minimize`, `maximize`, `unmaximize`, `isMaximized`, `setDecorations`, `startDragging`, `close` | `sepal/window` | `window` |
 
 ```ts
-import { writeTextFile, readTextFile } from '@ethercorps/svelte-blitz/fs';
-import { open } from '@ethercorps/svelte-blitz/dialog';
+import { writeTextFile, readTextFile } from 'sepal/fs';
+import { open } from 'sepal/dialog';
 
 // The app's own data directory; created on first write.
 await writeTextFile('settings.json', JSON.stringify(settings), { dir: 'data' });
@@ -748,7 +776,7 @@ generates each package's `types/` on `pnpm install`.
 
 - Svelte strips type annotations itself. TypeScript features that emit code
   (`enum`, parameter properties) in a `.svelte` file need `vitePreprocess`,
-  passed as `svelteBlitz({ svelte: { preprocess: vitePreprocess() } })`.
+  passed as `sepal({ svelte: { preprocess: vitePreprocess() } })`.
 - An app's `tsconfig.json` includes the `dom` lib because Svelte's element and
   event types need it. That means `window`, `document` and `fetch` type-check
   but do not exist at runtime.
@@ -757,7 +785,7 @@ generates each package's `types/` on `pnpm install`.
 ## Layout
 
 ```
-packages/core/            @ethercorps/svelte-blitz: the runtime
+packages/sepal/           sepal: the runtime, the preset and the command
   src/renderer.js         createRenderer(): node mirror, op buffer, event bubbling
   src/shims.js            console, timers, queueMicrotask for a bare engine
   src/index.js            mount() and the host's entry points (globalThis.__sb)
@@ -768,26 +796,26 @@ packages/core/            @ethercorps/svelte-blitz: the runtime
   src/fs.js, dialog.js, clipboard.js, shell.js, window.js   desktop APIs
   src/dom.js              window, document and element methods, for `dom: true`
   src/url.js, text.js     URL, URLSearchParams, TextEncoder, TextDecoder (part of the DOM layer)
-  test/                   a host written in JS, for testing without Rust
-packages/vite/            @ethercorps/svelte-blitz-vite: preset and router
-  src/vite.js             Vite preset: one app.js (IIFE) + one app.css
-  src/routes.js           reads src/routes into a route table (build time)
-  src/routing.svelte.js   the in-memory router: page, goto, back, load, errors
-  src/Router.svelte       renders layouts around the current page
-  src/router.js           the router's public API
-  src/bindings.js         rewrites `bind:` on elements, which Svelte refuses here
-  src/head.js             rewrites `<svelte:head>`, likewise
-  src/app.js              app.config.ts, the manifest, the dev window: shared by both presets
-  src/sveltekit.js        svelteBlitzKit(): SvelteKit on this renderer
-packages/cli/             @ethercorps/svelte-blitz-cli: the svelte-blitz command
-packages/create/          @ethercorps/create-svelte-blitz
-  template/               the starter it copies
-packages/host/            @ethercorps/svelte-blitz-host
+  vite/vite.js            sepal/vite, the Vite preset: one app.js (IIFE) + one app.css
+  vite/routes.js          reads src/routes into a route table (build time)
+  vite/routing.svelte.js  the in-memory router: page, goto, back, load, errors
+  vite/Router.svelte      renders layouts around the current page
+  vite/router.js          sepal/router, the router's public API
+  vite/bindings.js        rewrites `bind:` on elements, which Svelte refuses here
+  vite/head.js            rewrites `<svelte:head>`, likewise
+  vite/app.js             sepal.config.ts, the manifest, the dev window: shared by both presets
+  vite/icon.png           the Sepal icon, for apps without one (a copy of assets/brand/sepal-app-icon-1024.png)
+  vite/sveltekit.js       sepal/sveltekit, sepalKit(): SvelteKit on this renderer
+  cli.js                  the sepal command
+  test/                   a host written in JS, for testing without Rust, and the preset's tests
+packages/create/          create-sepal
+  template/               the seed it copies
+packages/host/            @ethercorps/calyx
   index.js                finds the host binary
   bin/<platform>/         the binaries (built, not committed)
 scripts/build-host-package.js   builds the host into packages/host/bin
 scripts/check-versions.js       all packages must share one version
-crates/host/              the `svelte-blitz-host` crate
+crates/host/              the `sepal` crate; its binary is calyx
   src/js.rs               QuickJS embedding
   src/ops.rs              applies op batches to blitz-dom
   src/scroll.rs           scrolls the app asks for, and what it is told when one happens
@@ -878,15 +906,15 @@ Checked on Linux x86-64, in a sandbox with no display:
 | shadcn-svelte components from its CLI: nine render and react, `bind:this` reaches the element | `tests/shadcn.rs`, `examples/shadcn/probe.mjs` |
 | Bits UI components on the DOM layer: Switch and Checkbox (bound value reaches the page), Tabs, Accordion, Dialog (opens over the page, closes on a click outside) | `tests/shadcn.rs`, `test/dom.test.js` |
 | Measuring: a script sees what it just changed, an Accordion slides open to its measured height, a Select opens under its trigger in the same turn and picks an item, a Tooltip is centred over what is hovered, `ResizeObserver`, `innerWidth` and `resize` follow the window, an idle turn reports nothing | `tests/shadcn.rs`, `test/dom.test.js` |
-| The same Select and Accordion in a real window on macOS, by scripted clicks and the trace: they open and close, a click takes 2 to 4 ms, then no more redraws | `SVELTE_BLITZ_TRACE=1` with `--watch` |
+| The same Select and Accordion in a real window on macOS, by scripted clicks and the trace: they open and close, a click takes 2 to 4 ms, then no more redraws | `SEPAL_TRACE=1` with `--watch` |
 | Exit animations: an Accordion slides shut and is hidden after, a Dialog is still on the page while it fades | `tests/shadcn.rs` |
 | Keyboard: Tab, Enter and Space on buttons, typing and editing keys in a bound input, a Select driven by arrows, Enter and Escape, a Dialog that traps Tab and returns the focus, focus ring for keyboard only | `tests/shadcn.rs`, `tests/counter.rs`, `test/dom.test.js` |
-| The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SVELTE_BLITZ_TRACE=1` with `--watch` |
+| The same keys in a real window on macOS, scripted (`key`, `type` on stdin) and traced | `SEPAL_TRACE=1` with `--watch` |
 | An attribute change restyles descendants and siblings, with and without sibling selectors in play | `tests/restyle.rs` |
 | Children that are added, removed or moved are styled, and so is what depends on their position (`:first-child`, `:nth-child()`, `a + b`, `:empty`) | `tests/restyle.rs` |
 | `:has()`: follows an attribute, a child that arrives or leaves, and the focus, for a parent, an ancestor, what is under it, and siblings on either side | `tests/restyle.rs` |
 | The window's GPU renderer draws what the CPU screenshots show: the same page differs by at most 2/255 per channel | `drive … gpushot:` against `shot:` (needs a GPU; by hand) |
-| A SvelteKit app built with `svelteBlitzKit()`: a link, `goto`, a parameter with `load`, `$app/state`, back twice, component styles, a static image by root path, `<svelte:head>` titles | `tests/sveltekit.rs`, `test/head.test.js` |
+| A SvelteKit app built with `sepalKit()`: a link, `goto`, a parameter with `load`, `$app/state`, back twice, component styles, a static image by root path, `<svelte:head>` titles | `tests/sveltekit.rs`, `test/head.test.js` |
 | SvelteKit in dev: an edit rebuilds, `dist/` has the change, the host is told to reload | by hand, with a stand-in host |
 | `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder` agree with Node's on 231 URLs and on text cut at every byte | `test/url.test.js`, `test/text.test.js` |
 | A promise rejected with nobody listening is reported as `Uncaught (in promise)`; one that is handled is not | `tests/counter.rs`, on both engines |
@@ -911,8 +939,8 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 | Manifest → host: title, size and icon parsed; bad icons are errors, not panics | `tests/manifest.rs` |
 | The window opens at the size the manifest asks for | window bounds from WindowServer |
 | Bundle: `plutil` and `iconutil` accept the plist and `.icns`, `codesign --verify --strict` passes, the app launches from `open`, macOS reports the name "Counter" and shows the icon for the bundle | `pnpm run bundle`, macOS tools |
-| A fresh project made by the packed create script and installed from the package tarballs, no `SVELTE_BLITZ_HOST`: type-check, build, render | `pnpm run test:template` |
-| A router of the app's own as the entry, and routing switched off | `packages/vite/test/custom-router.test.js` |
+| A fresh project made by the packed create script and installed from the package tarballs, no `SEPAL_HOST`: type-check, build, render | `pnpm run test:template` |
+| A router of the app's own as the entry, and routing switched off | `packages/sepal/test/custom-router.test.js` |
 | Dev runs from a bundle: macOS reports the name "Counter" and its bundle id | `pnpm dev`, `lsappinfo` |
 | Developer ID signing: `codesign --verify --strict` passes, hardened runtime flag set, the app launches | `--sign` with a real identity |
 | Dev reload: edit → reload in ~130 ms, broken builds keep the old one, Vite and host stop together | `pnpm dev`, read from the host log |
@@ -934,7 +962,7 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 ## Performance
 
 Measured on an M-series Mac, the shadcn rows in a window with
-`SVELTE_BLITZ_TRACE=1` (which prints how long each input took and how many
+`SEPAL_TRACE=1` (which prints how long each input took and how many
 layouts it needed), the counter rows headless with the `drive` example. Time
 from the press to the page being ready to paint:
 
@@ -970,7 +998,7 @@ What the time is spent on, from sampling:
 
 Press **Cmd+Option+P** in the window (Ctrl+Alt+P on Windows and Linux) to
 show or hide a box of numbers in the top-right corner. It can also start
-shown, with `SVELTE_BLITZ_HUD=1` in the host's environment, and in dev mode
+shown, with `SEPAL_HUD=1` in the host's environment, and in dev mode
 the line `hud` on the host's stdin toggles it. The host draws it; the app
 cannot see or restyle it, and clicks go through it.
 
@@ -995,7 +1023,7 @@ nodes 3120   turn 3.1 ms, 42 ops
 | turn | the last turn that changed the page: from the input (or timer) to the page being ready to paint, and the number of ops it applied |
 
 Hidden, the overlay costs nothing. Shown, it wakes the window once a second
-to refresh, which is the one repaint it causes. With `SVELTE_BLITZ_TRACE=1`
+to refresh, which is the one repaint it causes. With `SEPAL_TRACE=1`
 each refresh is also printed to stderr.
 
 ## Limitations

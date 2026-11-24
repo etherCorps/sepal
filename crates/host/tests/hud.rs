@@ -9,11 +9,11 @@ use std::task::{Context, Wake, Waker};
 use std::time::{Duration, Instant};
 
 use blitz_dom::Document;
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::app::App;
+use sepal::SvelteDocument;
+use sepal::app::App;
 
 const COUNTER: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/counter/dist");
-const HUD: &str = "[data-svelte-blitz-hud]";
+const HUD: &str = "[data-sepal-hud]";
 
 #[test]
 fn the_overlay_is_the_hosts_and_the_app_never_sees_it() {
@@ -62,7 +62,7 @@ fn the_overlay_is_the_hosts_and_the_app_never_sees_it() {
 
     #[cfg(feature = "screenshot")]
     {
-        let (pixels, w, _) = svelte_blitz_host::screenshot::render_rgba(&mut doc, 800, 600, 2.0);
+        let (pixels, w, _) = sepal::screenshot::render_rgba(&mut doc, 800, 600, 2.0);
         // Inside the box, away from the text: the dark background.
         let (px, py) = (
             ((x + width) * 2.0 - 6.0) as u32,
@@ -123,7 +123,7 @@ fn the_overlay_wakes_the_loop_only_while_shown() {
     // To look at.
     #[cfg(feature = "screenshot")]
     {
-        let png = svelte_blitz_host::screenshot::render_png(&mut doc, 800, 600, 2.0);
+        let png = sepal::screenshot::render_png(&mut doc, 800, 600, 2.0);
         let out = Path::new(env!("CARGO_TARGET_TMPDIR")).join("hud.png");
         std::fs::write(&out, png).unwrap();
         println!("screenshot: {}", out.display());

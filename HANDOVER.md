@@ -3,21 +3,26 @@
 Written 22 Nov 2026 for whoever picks this up in Claude Code. `CLAUDE.md` has the
 standing rules and `README.md` the architecture; this file is the work.
 
+**Renamed to Sepal on 24 Nov 2026.** The names below are the current ones;
+what was published before the rename, and under which names, is in
+`CHANGELOG.md`.
+
 ## Goal
 
 1. **Icons**, in both senses:
    - UI icons inside apps (inline SVG, Lucide, Iconify-style components) render
      correctly, including with Tailwind colours.
    - An app can set its window, taskbar and dock icon.
-2. **Release** the project on npm as **`@ethercorps/svelte-blitz`**, with the
+2. **Release** the project on npm as **`sepal`**, with the
    Rust host shipped as **prebuilt per-platform binaries** so users need no Rust
    toolchain.
 
 ## Decisions already made (by Shivam)
 
-- Package name: `@ethercorps/svelte-blitz`. The unscoped `svelte-blitz` is taken
-  on npm by an unrelated 2022 Blitz.js port. The `@ethercorps` scope already
-  publishes `@ethercorps/sveltekit-og`.
+- Package name: `sepal`, unscoped (decided with the rename, 24 Nov 2026;
+  `sepal`, `create-sepal` and `sepal-secrets` were free on npm). The host
+  package stays in the `@ethercorps` scope, which already publishes
+  `@ethercorps/sveltekit-og`.
 - Host distribution: prebuilt binaries through npm optional dependencies (the
   esbuild pattern). Not `cargo install`.
 - Draw target stays Blitz; no native controls; one codebase for all platforms.
@@ -29,7 +34,7 @@ standing rules and `README.md` the architecture; this file is the work.
 - ~~Licence.~~ Decided 22 Nov 2026: MIT. `LICENSE` is in the root and in each
   package. Still to do: a third-party licence file for the binary (Stylo is
   MPL-2.0).
-- ~~GitHub repo.~~ Decided 22 Nov 2026: `etherCorps/svelte-blitz`. A local git
+- ~~GitHub repo.~~ Decided 22 Nov 2026, renamed 24 Nov: `etherCorps/sepal`. A local git
   repository exists; the GitHub repo has to be created by Shivam and nothing
   has been pushed.
 - Package manager: pnpm (decided 22 Nov 2026).
@@ -66,23 +71,24 @@ renderer; getting a window up on the CPU first is a fine intermediate step.
 
 ### 1. Repo hygiene and rename
 
-**Status (22 Nov 2026):** the rename to `@ethercorps/svelte-blitz` is done, the
+**Status (22 Nov 2026):** the rename to the scoped npm name is done (itself
+renamed to Sepal on 24 Nov), the
 crate is `publish = false`, and the package has `bin` and `files`. The repo
 uses pnpm. `git init`, `LICENSE` and the package metadata are done.
 `.github/workflows/ci.yml` is written but has never run: it needs the GitHub
 repo. Expect to fix the Linux system-library list on its first run.
 
 - `git init`, first commit of the tree as delivered, then work in small commits.
-- Rename the npm package to `@ethercorps/svelte-blitz`. Places that hard-code
+- Rename the npm package to `sepal`. Places that hard-code
   the old name:
   - `packages/renderer/package.json` (`name`)
-  - `packages/renderer/src/vite.js` (`customRenderer: 'svelte-blitz/renderer'`
+  - `packages/renderer/src/vite.js` (`customRenderer: 'sepal/renderer'`
     must become the new specifier; this string ends up as an `import` in every
     compiled component)
   - `examples/*/package.json`, `examples/*/src/main.ts`,
     `examples/*/vite.config.ts`
   - `README.md`, `CLAUDE.md`
-- The crate can stay `svelte-blitz-host`; mark it `publish = false`.
+- The crate (now `sepal`, its binary `calyx`) is `publish = false`.
 - Add `LICENSE` once decided, plus `repository`, `license`, `files`,
   `keywords` and `engines` to the package.
 - Add a CI workflow that runs `pnpm test` on Linux for every push. It needs no
@@ -187,9 +193,9 @@ host takes two file paths. Icons need one, and so will the window title and
 size.
 
 **3a. App manifest.** Extend the Vite preset so that
-`svelteBlitz({ app: { name, icon, window: { title, width, height } } })` writes
+`sepal({ app: { name, icon, window: { title, width, height } } })` writes
 `dist/app.json` and copies the icon next to it. Let the host accept a directory
-(`svelte-blitz-host dist/`) and read the manifest; keep the two-path form
+(`calyx dist/`) and read the manifest; keep the two-path form
 working for tests. Use `WindowConfig::with_attributes` in `window.rs` to apply
 title and size.
 
@@ -220,7 +226,7 @@ PNG decoding (including a malformed icon producing a clear error, not a panic).
 from tarballs: `packages/host-darwin-arm64`, `scripts/build-host-package.js`,
 `optionalDependencies` as `workspace:*` (packed as the exact version), and
 `pnpm run test:template` installs both tarballs into a scratch project and
-renders with no `SVELTE_BLITZ_HOST`. `strip = true` is on (25.3 → 21.2 MB);
+renders with no `SEPAL_HOST`. `strip = true` is on (25.3 → 21.2 MB);
 the `screenshot` feature is in the shipped binary (+1.5 MB, 22.8 MB total).
 Still open: the other three platform packages (add a `package.json` each and
 list them in `optionalDependencies`), the CI matrix, `codegen-units`/
@@ -229,25 +235,25 @@ list them in `optionalDependencies`), the CI matrix, `codegen-units`/
 **Package shape**
 
 ```
-@ethercorps/svelte-blitz                 renderer, Vite preset, CLI; no binary
-@ethercorps/svelte-blitz-darwin-arm64    one file: the host binary
-@ethercorps/svelte-blitz-darwin-x64
-@ethercorps/svelte-blitz-linux-x64-gnu
-@ethercorps/svelte-blitz-win32-x64-msvc
+sepal                             renderer, Vite preset, CLI; no binary
+@ethercorps/calyx-darwin-arm64    one file: the host binary
+@ethercorps/calyx-darwin-x64
+@ethercorps/calyx-linux-x64-gnu
+@ethercorps/calyx-win32-x64-msvc
 ```
 
 - Each platform package sets `os` and `cpu` (and `libc` on Linux) so npm
   installs only the matching one. The main package lists all of them under
   `optionalDependencies` at exactly its own version.
-- The `bin` (`svelte-blitz`: `create`, `run`, `bundle`, `screenshot`) exists in
+- The `bin` (`sepal`: `create`, `run`, `bundle`, `screenshot`) exists in
   `packages/renderer/src/cli.js`, with host lookup in `src/host.js`. What is
   left is the platform packages it looks for. Original brief:
-  Add a `bin` (`svelte-blitz`) to the main package: a small Node script that
+  Add a `bin` (`sepal`) to the main package: a small Node script that
   finds the platform package with `require.resolve`, honours a
-  `SVELTE_BLITZ_HOST` override for local builds, prints a useful message when
+  `SEPAL_HOST` override for local builds, prints a useful message when
   no binary matches the platform, and forwards arguments. Minimum commands:
-  `svelte-blitz run [dist]` and `svelte-blitz screenshot <out.png> [dist]`.
-  Dev reload already exists in the Vite preset (`SVELTE_BLITZ_HOST` + `vite build
+  `sepal run [dist]` and `sepal screenshot <out.png> [dist]`.
+  Dev reload already exists in the Vite preset (`SEPAL_HOST` + `vite build
   --watch`, see README); a `dev` command only has to set that variable. It is
   not required for the first release.
 - Type declarations: done. `tsc` generates `packages/renderer/types/` from the
@@ -272,7 +278,7 @@ list them in `optionalDependencies`), the CI matrix, `codegen-units`/
 
 - A release workflow triggered by a `v*` tag: build matrix (macOS arm64, macOS
   x64, Linux x64, Windows x64) → upload binaries as artifacts → one job
-  assembles the five packages, checks all versions match, and publishes the
+  assembles the packages, checks all versions match, and publishes the
   platform packages before the main one.
 - Publish with provenance. Prefer npm trusted publishing (OIDC) over a
   long-lived token; either way the npm-side setup is Shivam's to do.
@@ -282,8 +288,8 @@ list them in `optionalDependencies`), the CI matrix, `codegen-units`/
   tarballs into a scratch project) and use it before any real publish.
 
 **Check:** in an empty directory on a machine with no Rust installed,
-`npm create vite` → add `@ethercorps/svelte-blitz` from the packed tarballs →
-`npx svelte-blitz run` opens the app. Then, and only with Shivam's explicit
+`npm create vite` → add `sepal` from the packed tarballs →
+`npx sepal run` opens the app. Then, and only with Shivam's explicit
 go-ahead, tag and publish the alpha.
 
 **CI (23 Nov 2026).** `.github/workflows/ci.yml` runs on every push:
@@ -326,7 +332,8 @@ it publishes nothing: it builds the host on macOS arm64 and x64 and Linux x64
 and arm64, runs `test:template` on each with the binary just built (both
 starters created from the packed packages, built, and rendered by the
 packaged host), collects the four binaries and the licence file into
-`packages/host`, packs the five packages and attaches the tarballs to the run
+`packages/host`, packs the three packages (`sepal`, `create-sepal`,
+`@ethercorps/calyx`) and attaches the tarballs to the run
 as the `packages` artifact. That has been run once and passed. Pushing a
 `v<version>` tag does the same and then publishes those tarballs with
 `npm publish --provenance`; that half has never run. It needs an `NPM_TOKEN`
@@ -334,22 +341,25 @@ secret in the repository, and the tag has to equal the packages' version. A
 prerelease version publishes under its own dist-tag (`0.1.0-alpha.0` as
 `alpha`).
 
-**First release: 0.1.0-alpha.0 (23 Nov 2026).** All five packages are on
-npm. The tarballs were built by the release workflow run by hand
+**First release: 0.1.0-alpha.0 (23 Nov 2026).** All five packages of the
+layout at the time are on npm, under the names they had before the rename
+(`CHANGELOG.md`). The tarballs were built by the release workflow run by hand
 (run 45102868820, commit `9937a1a`), downloaded, checked, and published by
 Shivam from his terminal with `pnpm publish <tarball> --access public --tag
 alpha`: the account asks for a second factor, which only an interactive
 terminal can answer. The registry's checksums match the tarballs. Being the
 first version of each package it is `latest` as well as `alpha`. Checked from
-the registry afterwards on macOS arm64: both starters created with
-`pnpm create @ethercorps/svelte-blitz@alpha`, installed, type-checked, built
-and rendered by the host that came with them.
+the registry afterwards on macOS arm64: both starters created with the
+published create package's `@alpha`, installed, type-checked, built and
+rendered by the host that came with them.
 
 No git tag was pushed. A `v*` tag makes the workflow publish, which needs an
 `NPM_TOKEN` secret that does not exist, and that half of the workflow has
 still never run. For the next release either set the secret up and tag, or
-repeat what was done here: bump the five versions, push, `gh workflow run
-release.yml`, download the `packages` artifact, publish host first.
+repeat what was done here: bump the three versions, push, `gh workflow run
+release.yml`, download the `packages` artifact, publish `@ethercorps/calyx`
+first, then `sepal`, then `create-sepal`. The Sepal names have not been
+published yet; until they are, `pnpm create sepal` does not work.
 
 The registry took about four minutes to show the new packages; a 404 right
 after publishing a new name means nothing.
@@ -363,31 +373,32 @@ after publishing a new name means nothing.
 - Hands-on checks that need eyes: the window, idle CPU, the Dock icon.
 - Say "publish".
 
-## Package layout (decided by Shivam, 22 Nov 2026)
+## Package layout (decided by Shivam, 22 Nov 2026; renamed 24 Nov 2026)
 
 This replaces the "Package shape" in task 4 below and the single
-`packages/renderer` the older notes refer to.
+`packages/renderer` the older notes refer to. With the rename to Sepal the
+runtime, the Vite preset and the CLI became one package.
 
 | Package | Directory |
 |---|---|
-| `@ethercorps/svelte-blitz` (runtime) | `packages/core` |
-| `@ethercorps/svelte-blitz-vite` (preset + router, with a `router` option for custom routers) | `packages/vite` |
-| `@ethercorps/svelte-blitz-cli` | `packages/cli` |
-| `@ethercorps/create-svelte-blitz` | `packages/create` |
-| `@ethercorps/svelte-blitz-host` (all platform binaries in one package) | `packages/host` |
+| `sepal`: the runtime; the Vite preset and router (`sepal/vite`, `sepal/sveltekit`, `sepal/router`, with a `router` option for custom routers); the `sepal` command | `packages/sepal` |
+| `create-sepal`: the seeds | `packages/create` |
+| `@ethercorps/calyx`: calyx, the host (all platform binaries in one package) | `packages/host` |
 
 One version for all of them. The host package holds every platform's binary
 under `bin/<platform>/`; the per-platform optional-dependency packages are
 gone. Shivam's alternative was "the way Prisma does it" (download the matching
 binary); that needs release hosting, which does not exist yet, and can be
 adopted later inside `packages/host` alone. A release now has to collect all
-platform binaries into `packages/host/bin` before packing it.
+platform binaries into `packages/host/bin` before packing it. If the
+binaries are ever split per platform again, those packages are
+`@ethercorps/calyx-<os>-<arch>`.
 
 ## Added outside the original brief (22 Nov 2026)
 
 - TypeScript in the package and the examples.
 - Dev reload (`vite build --watch`), run from a throwaway bundle on macOS.
-- `svelte-blitz` CLI and a starter template with `static/`.
+- `sepal` CLI and a starter template with `static/`.
 - SvelteKit-style file routing (`src/routes`, `load`, `$app/navigation`,
   `$app/state`). See "Routing" in the README for what differs from SvelteKit.
   Not done: generated `./$types`, `invalidate`, navigation lifecycle hooks,
@@ -398,7 +409,7 @@ platform binaries into `packages/host/bin` before packing it.
   download progress, merging feeds across CI machines.
 - Async host calls (`__sb_host.call` / `__sb.resolve`), which `fetch` and
   other host APIs can now be built on.
-- `app.config.ts` for app settings, so `vite.config.ts` stays small
+- `sepal.config.ts` for app settings, so `vite.config.ts` stays small
   (Shivam's request).
 - Desktop APIs behind a default-deny `permissions` manifest (Shivam's
   decision): `fetch`, files, dialogs, clipboard, open, window. Not done:
@@ -467,7 +478,7 @@ ratios. What they say:
   compiles each function when it is first called and its JIT only pays off
   on code that has run a few times. A code cache made at build time would
   help the first; not tried.
-- With `SVELTE_BLITZ_V8_FLAGS=--jitless` V8 lands between the two.
+- With `SEPAL_V8_FLAGS=--jitless` V8 lands between the two.
 
 Not done, and needed before V8 could ship:
 
@@ -508,14 +519,14 @@ DOM layer kept outside the event path; and its startup failed without a word
 Shivam's decisions (22 Nov 2026): V8 stays an opt-in build feature;
 SvelteKit is productised; `<svelte:head>` is rewritten.
 
-Done since: `svelteBlitzKit()` in `@ethercorps/svelte-blitz-vite/sveltekit`
-(`packages/vite/src/sveltekit.js`). It is a SvelteKit adapter (writes
+Done since: `sepalKit()` in `sepal/sveltekit`
+(`packages/sepal/vite/sveltekit.js`). It is a SvelteKit adapter (writes
 `dist/app.js`, `app.css`, `app.json` and the static files) plus the two edits
-to SvelteKit's client, and it reads `app.config.ts` and opens and reloads the
+to SvelteKit's client, and it reads `sepal.config.ts` and opens and reloads the
 dev window like the other preset. `head.js` rewrites `<svelte:head>` for both
 presets. The host resolves `/file` against the app directory.
 
-`create-svelte-blitz` asks which router and has a SvelteKit starter
+`create-sepal` asks which router and has a SvelteKit starter
 (`--router sveltekit`); `pnpm run test:template` creates, checks, builds and
 renders both.
 

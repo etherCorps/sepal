@@ -1,4 +1,4 @@
-//! Runs a Svelte app compiled for the `@ethercorps/svelte-blitz` renderer on top of Blitz.
+//! Runs a Svelte app compiled for the `sepal` renderer on top of Blitz.
 //!
 //! ```text
 //! app.js (Svelte + renderer)  --op batches-->  SvelteDocument  -->  blitz-dom  -->  paint

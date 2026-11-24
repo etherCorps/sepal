@@ -19,8 +19,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use keyboard_types::Modifiers;
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::app::App;
+use sepal::SvelteDocument;
+use sepal::app::App;
 
 /// The tracker with a data directory of its own, removed when dropped.
 struct Tracker {

@@ -7,14 +7,14 @@ contract is `shared/PROTOCOL.md`.
 
 ## Summary
 
-| | svelte-blitz QuickJS / V8 | Tauri 2 | gpuix-svelte |
+| | Sepal QuickJS / V8 | Tauri 2 | gpuix-svelte |
 |---|---|---|---|
 | Svelte source | examples/tracker | **the same files** | a port: same screens, data, store logic (copied), windowing algorithm, ids |
 | Svelte version | 5.59.1 | 5.59.1 | **5.57.2, a pre-release PR build bundled by gpuix** |
 | CSS | Tailwind v4 | **byte-identical app.css** | hand-written classes in gpuix's CSS subset |
 | Widgets | shadcn-svelte / bits-ui | same | gpuix-svelte-ui (Select, Dialog, Toggle, Tabs) |
 | Icons, chart | inline SVG | same | `<svg source>` strings; chart as 3 stacked SVGs |
-| Router | svelte-blitz file router | same route files; router runtime with its 2 renderer lines moved to the DOM | gpuix-svelte-ui Router with an explicit map |
+| Router | Sepal file router | same route files; router runtime with its 2 renderer lines moved to the DOM | gpuix-svelte-ui Router with an explicit map |
 | Fonts | @font-face (woff2) | @font-face (same CSS) | register_font with the same fonts converted to TTF; **Inter only at weight 400** |
 | Viewport | 1200x800 | 1200x800 (frame 1200x832) | 1200x800 |
 | JS engine | QuickJS (interpreter) / V8 | WebKit JSC (JIT) in WebContent | Bun (JSC, JIT) |
@@ -27,17 +27,17 @@ contract is `shared/PROTOCOL.md`.
 | Idle | event-driven | event-driven (WebKit) | **8 ms frame loop runs while idle (by design)** |
 
 Known layout difference at 1200 px with the detail pane open: the list toolbar
-overflows by ~75 px in svelte-blitz and Tauri (same CSS); in gpuix the Select
+overflows by ~75 px in Sepal and Tauri (same CSS); in gpuix the Select
 widgets are wider (min 180 px) so search shrinks and Group/Sort clip. None of
 the controls the scenarios use is covered.
 
 
-## 1. Changes to the Tracker (all builds) and the svelte-blitz builds
+## 1. Changes to the Tracker (all builds) and the Sepal builds
 
 
 What was added to `examples/tracker` for `compare/shared/PROTOCOL.md`. These
 changes are in the shared app source, so they apply to the Tauri build too
-(same files); the gpuix port has to reproduce them. Nothing in svelte-blitz
+(same files); the gpuix port has to reproduce them. Nothing in Sepal
 itself (packages/, crates/) was changed.
 
 
@@ -52,7 +52,7 @@ If it is there, `fixture.json` from the same directory is read and parsed
 
 | File | Change |
 |---|---|
-| `app.config.ts` | window 1280x800 -> **1200x800** (all builds, not only bench) |
+| `sepal.config.ts` | window 1280x800 -> **1200x800** (all builds, not only bench) |
 | `src/lib/bench.ts` (new) | `bench` (null until known), `bench_ready` (promise), `mark(name)`, `rects()`; emits the `start` mark when evaluated |
 | `src/lib/store.svelte.ts` | first import is `./bench` (so `start` is the first app code to run); startup waits for `load()` **and** `bench_ready`; in bench mode it replaces the issues with the fixture (`use_base`, the old body of `reseed`) and ignores edits.json / settings.json (settings stay the defaults: no simulated teammates, group by status); marks `loaded`, `mounted`, `status:<key>:<status>` (in `bulk_update`), `created:<key>` (in `create`) |
 | `src/routes/+layout.svelte` | marks `nav:<path>` (effect on the path), `search:<query>` (effect on `view.search`), `resize:<w>x<h>` (window `resize` event), the clock |
@@ -72,13 +72,13 @@ that has a non-empty box is reported.
 
 ### Where this differs from PROTOCOL.md
 
-1. **Line prefix.** svelte-blitz's host prints `console.log` to **stdout** as
+1. **Line prefix.** Sepal's host prints `console.log` to **stdout** as
    `[js] ...`, and `console.error` to stderr as `[js error] ...`. bench.ts
    calls the host's log at level 2 directly, so lines arrive on **stderr** as
    `[js error] MARK start 1795425748260.0`. The harness should match
    `(MARK|RECT) .*` anywhere in the line. (Not `console.error`: on V8 the
    global `console` is V8's own, which prints nothing without an inspector,
-   so `console.*` output is lost on the V8 host. That is a svelte-blitz bug,
+   so `console.*` output is lost on the V8 host. That is a Sepal bug,
    left alone here.)
 2. **`start` arrives late.** Whether bench mode is on is only known once
    bench.json was read, which is a host call answered on a later turn (and
@@ -102,18 +102,18 @@ that has a non-empty box is reported.
    mounted row, which includes ~300 px below the window). Select items:
    `RECT status-option-<value> ...` for every open Select's items (the gpuix
    name; only the status Select is opened in the scenarios).
-7. **RECT and transforms.** svelte-blitz's `getBoundingClientRect` leaves CSS
+7. **RECT and transforms.** Sepal's `getBoundingClientRect` leaves CSS
    transforms out. Select content is placed by an inline
    `transform: translate(Xpx, Ypx)`; bench.ts adds that back (only on
-   svelte-blitz, only that form). The New issue dialog has no transform, so
+   Sepal, only that form). The New issue dialog has no transform, so
    its rects are right as reported. Checked against CPU screenshots.
 8. **`resize:<w>x<h>`** is the content area (`innerWidth` x `innerHeight`).
    Setting the window to 800x600 through System Events' `size` (the outer
    frame) gives `resize:800x568` on this Mac (32 px title bar).
 9. **Writes are not suppressed.** A status change or a new issue still writes
    edits.json 500 ms later (as the app does); only reading is ignored.
-10. **No `frame:` marks** from svelte-blitz: the harness uses the first
-    `[trace] ... RedrawRequested` line after a mark (`SVELTE_BLITZ_TRACE=1`).
+10. **No `frame:` marks** from Sepal: the harness uses the first
+    `[trace] ... RedrawRequested` line after a mark (`SEPAL_TRACE=1`).
 
 ### Layout at 1200x800
 
@@ -130,15 +130,15 @@ a filter while the pane is open.
 ```sh
 pnpm --filter tracker build
 cargo build --release --features screenshot --manifest-path crates/host/Cargo.toml
-cp crates/host/target/release/svelte-blitz-host compare/builds/hosts/svelte-blitz-host-quickjs
+cp crates/host/target/release/calyx compare/builds/hosts/calyx-quickjs
 cargo build --release --features "screenshot engine-v8" --manifest-path crates/host/Cargo.toml
-cp crates/host/target/release/svelte-blitz-host compare/builds/hosts/svelte-blitz-host-v8
+cp crates/host/target/release/calyx compare/builds/hosts/calyx-v8
 compare/builds/make.sh
 ```
 
 Features: `window` (default; includes blitz-paint, so inline SVG and
 scrollbars draw) plus `screenshot`, as `scripts/build-host-package.js` builds
-the host that ships in `@ethercorps/svelte-blitz-host`. Release profile as in
+the host that ships in `@ethercorps/calyx`. Release profile as in
 `crates/host/Cargo.toml` (thin LTO, stripped). `make.sh` copies
 `examples/tracker/dist` with only `app.json`'s `id` changed
 (`com.compare.tracker.blitz` / `.blitzv8`; the example keeps
@@ -149,7 +149,7 @@ The data directory comes from the bundled `Resources/app.json` id.
 
 #### Added after the first build
 
-- **Bench mode is decided at build time** (`VITE_BENCH=1` for svelte-blitz and Tauri, `bun build.ts --bench` for gpuix). Without it the app seeded and drew 5,000 issues before it knew it was in bench mode, which inflated start-up in svelte-blitz and Tauri only. A bench build starts empty, marks `start` first, and loads `fixture.json`. Non-bench builds are unchanged (tests pass).
+- **Bench mode is decided at build time** (`VITE_BENCH=1` for Sepal and Tauri, `bun build.ts --bench` for gpuix). Without it the app seeded and drew 5,000 issues before it knew it was in bench mode, which inflated start-up in Sepal and Tauri only. A bench build starts empty, marks `start` first, and loads `fixture.json`. Non-bench builds are unchanged (tests pass).
 - **`highlight:<key>`** mark (ui.svelte.ts) and **`shown:all`** mark (store `show_all`), and RECTs for `show-all`/`show-more`: scenarios 1-2 (first accepted input) and 9 (scroll) need them.
 
 #### Added after the dry run (23 Nov, before the quick pass)
@@ -157,7 +157,7 @@ The data directory comes from the bundled `Resources/app.json` id.
 - **`read` and `parsed` marks**, splitting `start -> loaded`: `read` when the
   fixture file's text has been returned (before `JSON.parse`), `parsed` right
   after `JSON.parse`. Same two lines in every build:
-  `src/lib/bench.ts` (svelte-blitz and Tauri, the same file) and
+  `src/lib/bench.ts` (Sepal and Tauri, the same file) and
   `compare/gpuix/src/persist.ts` (`load_fixture`, through `write_mark` from
   `start.ts`). Neither gets a `frame:` mark: `compare/tauri/src/bench-emit.js`
   skips them, as gpuix's `mark()` skips `start` and `loaded` (gpuix calls
@@ -178,7 +178,7 @@ The data directory comes from the bundled `Resources/app.json` id.
   pane and, being in the toolbar's `relative z-10`, was drawn over it (the
   same in a browser: Tauri had it too). Now, beside the pane, the Assignee and
   Project filters show only while they filter something. Same change in
-  `examples/tracker/src/lib/list/{Filters,IssueList}.svelte` (svelte-blitz and
+  `examples/tracker/src/lib/list/{Filters,IssueList}.svelte` (Sepal and
   Tauri) and `compare/gpuix/src/list/{Filters,IssueList}.svelte`; test
   `the_toolbar_stays_out_of_the_pane_at_the_1200px_window`. Scenarios 5 and 7
   open the pane, so they now render two fewer buttons than in the quick pass.
@@ -198,7 +198,7 @@ then `cp -R src-tauri/target/release/bundle/macos/Tracker.app ../builds/Tracker-
   app's own files, bench mode (`src/lib/bench.ts`) included.
 - **CSS: byte-identical.** `compare/tauri/dist/app.css` and
   `examples/tracker/dist/app.css` are the same file (`cmp`, 347,198 bytes,
-  checked against the svelte-blitz build of 14:50 on 23 Nov). Tailwind scans the
+  checked against the Sepal build of 14:50 on 23 Nov). Tailwind scans the
   Vite root, which is why the root is `examples/tracker` and not `compare/tauri`.
 - **Fonts.** The same `@font-face` rules with the same files (Inter Variable,
   Space Grotesk, JetBrains Mono, latin subsets), inlined as data URLs in both.
@@ -217,8 +217,8 @@ then `cp -R src-tauri/target/release/bundle/macos/Tracker.app ../builds/Tracker-
   versions: vite 8.3.8, @sveltejs/vite-plugin-svelte 7.3.1 (its compiler is
   svelte 5.59.1), tailwindcss and @tailwindcss/vite 4.3.5.
 - **Router.** The route table is generated by the preset's own
-  `packages/vite/src/routes.js` (`generate_routes`) and served as
-  `virtual:svelte-blitz/routes`. `Router.svelte`, `RouterError.svelte`,
+  `packages/sepal/vite/routes.js` (`generate_routes`) and served as
+  `virtual:sepal/routes`. `Router.svelte`, `RouterError.svelte`,
   `router.js`, `navigation.js` and `state.js` are the preset's files, used where
   they are. Only the runtime is a copy (`compare/tauri/src/routing.svelte.js`).
   Two lines differ: the import of the renderer is gone, and the link-click
@@ -226,35 +226,35 @@ then `cp -R src-tauri/target/release/bundle/macos/Tracker.app ../builds/Tracker-
   `renderer.addEventListener(root, 'click', …)`. An alias that matches
   `./routing.svelte.js` sends the preset's modules to that copy.
 - **Entry.** `compare/tauri/src/entry.js` is `router-entry.js` with Svelte's
-  `mount(Router, { target: document.body })` in place of svelte-blitz's
+  `mount(Router, { target: document.body })` in place of Sepal's
   `mount(Router)`.
 - **Aliases** as in the preset: `$lib`, `$app/navigation`, `$app/state`,
-  `@ethercorps/svelte-blitz-vite/router`.
+  `sepal/router`.
 
 ### Different, on purpose
 
-| What | svelte-blitz | Tauri | Why |
+| What | Sepal | Tauri | Why |
 |---|---|---|---|
 | Svelte output | custom renderer (`customRenderer`), op buffer to Blitz | Svelte's normal DOM client | that is the comparison |
 | `bind:` on elements | rewritten to attachments by `bindings.js` | compiled by Svelte | Svelte supports it in the DOM; the preprocessor exists only because Svelte refuses it for custom renderers |
 | `<svelte:head>` preprocessor | `head.js` | not used | the app has no `<svelte:head>` |
-| DOM layer (`dom: true`) | `@ethercorps/svelte-blitz/dom` loaded first | none | WebKit is a DOM |
-| Events | `dispatch()` in `renderer.js` bubbles | WebKit's events; Svelte delegates `onclick` and similar to the mount target (`<body>`) | DOM build behaviour. The router's `document` listener still runs after the app's handlers, as with svelte-blitz's root listener |
-| `@ethercorps/svelte-blitz/{fs,dialog,clipboard,window}` | host calls | `compare/tauri/src/desktop.js` on the plugins | see below |
+| DOM layer (`dom: true`) | `sepal/dom` loaded first | none | WebKit is a DOM |
+| Events | `dispatch()` in `renderer.js` bubbles | WebKit's events; Svelte delegates `onclick` and similar to the mount target (`<body>`) | DOM build behaviour. The router's `document` listener still runs after the app's handlers, as with Sepal's root listener |
+| `sepal/{fs,dialog,clipboard,window}` | host calls | `compare/tauri/src/desktop.js` on the plugins | see below |
 | HTML page | the host's base document | `public/index.html`: `<link rel=stylesheet href=app.css>`, `<script src=app.js>` at the end of `<body>` | Tauri needs a page. Nothing else is in it |
-| `app.json`, `static/icon.png` | written and copied | not used; the icon is in `src-tauri/icons` (made from the same `static/icon.png` with `tauri icon`) | Tauri's equivalent is `tauri.conf.json` |
+| `app.json`, `icon.png` | written; the icon is the Sepal one, since the Tracker has none of its own | not used; the icon is in `src-tauri/icons` (made from `assets/brand/sepal-app-icon-1024.png` with `tauri icon`, the icon the Tracker gets from the preset) | Tauri's equivalent is `tauri.conf.json` |
 | App id / data dir | `com.compare.tracker.blitz` | `com.compare.tracker.tauri` (`~/Library/Application Support/com.compare.tracker.tauri`) | PROTOCOL.md |
 
 #### Desktop shims (`compare/tauri/src/desktop.js`)
 
-Only what the Tracker imports, with svelte-blitz's names and signatures:
+Only what the Tracker imports, with Sepal's names and signatures:
 
 - `readTextFile`, `writeTextFile`, `remove`: `@tauri-apps/plugin-fs`; `{ dir: 'data' }`
   becomes `{ baseDir: BaseDirectory.AppData }` (on macOS the same
   `~/Library/Application Support/<id>`). Other `dir` names throw: the app uses none.
-  svelte-blitz creates missing parents on write and plugin-fs does not, so the
+  Sepal creates missing parents on write and plugin-fs does not, so the
   Rust side creates the app data directory at startup (`create_dir_all` in `setup`).
-- `save`: `@tauri-apps/plugin-dialog`. svelte-blitz's `defaultPath` is a directory
+- `save`: `@tauri-apps/plugin-dialog`. Sepal's `defaultPath` is a directory
   and `defaultName` the file name; Tauri has one `defaultPath`, so they are joined.
   The picked path is in plugin-fs's scope because the dialog plugin adds it.
 - `writeText`: `@tauri-apps/plugin-clipboard-manager`.
@@ -275,17 +275,17 @@ CSP is off (`null`), as in Tauri's templates.
 - **IPC latency.** `invoke` is asynchronous (WebKit message handler to the Rust
   core). Measured on this Mac by timestamping lines as they arrive: arrival
   minus `app_ms` was 1.1 to 1.5 ms for `loaded`, `mounted` and the `frame:`
-  marks, which includes `app_ms`'s 1 ms granularity. svelte-blitz writes
+  marks, which includes `app_ms`'s 1 ms granularity. Sepal writes
   stderr synchronously from the JS thread.
 - **`start` arrives late, by design of `bench.ts`:** it is held until
   `bench.json` has been read (about 145 ms after `app_ms`). The same holds for
-  svelte-blitz. Use `app_ms` for `start`, not the arrival time.
+  Sepal. Use `app_ms` for `start`, not the arrival time.
 - **`frame:<name>`** is emitted after every non-`frame` MARK line, from
   `requestAnimationFrame(() => requestAnimationFrame(…))`, as PROTOCOL.md says.
   It is WebKit's nearest "frame presented" signal: the second callback runs at
   the start of the frame after the one that drew the change, so it lands one
   to two frame intervals after the mark. Measured: `clock` to `frame:clock`
-  about 15 ms, startup marks to their `frame:` 35 to 45 ms. svelte-blitz has no `frame:`
+  about 15 ms, startup marks to their `frame:` 35 to 45 ms. Sepal has no `frame:`
   marks: the harness uses its trace repaint lines, a different clock.
   `frame:start` and `frame:loaded` are scheduled when the held lines are
   flushed, so they share the frame of `frame:mounted`.
@@ -296,7 +296,7 @@ CSP is off (`null`), as in Tauri's templates.
   `bench.ts` uses `performance.timeOrigin + performance.now()`, and so do the
   `frame:` marks.
 - **Uncaught errors and unhandled rejections** are also sent to stderr, as
-  `ERROR <stack>` lines, because the svelte-blitz host prints its errors to stderr
+  `ERROR <stack>` lines, because the Sepal host prints its errors to stderr
   and WebKit's console is not visible otherwise. None appeared in any run.
 
 ### Things that render or behave differently (the engine)
@@ -315,7 +315,7 @@ Not adjusted. Here so that screenshots and timings can be read with them in mind
   `overflow-y: auto` (Select content), `position: sticky`, 3D transforms. They
   take effect in Tauri only.
 - **Bits UI.** In WebKit it gets a real `getComputedStyle`, real
-  `animationend`/`getAnimations()` and real layout reads. svelte-blitz's DOM layer
+  `animationend`/`getAnimations()` and real layout reads. Sepal's DOM layer
   answers those from a forced layout and a blank computed style, so exit
   animations (Dialog, Select) can end on different frames.
 - **Processes.** Tauri runs the app process plus WebKit's `WebContent`, `GPU`
@@ -325,8 +325,8 @@ Not adjusted. Here so that screenshots and timings can be read with them in mind
   `tauri.conf.json` gives a **1200x768** viewport here (`innerWidth`/`innerHeight`
   in the page). tao reports inner size = outer size = 2400x1600 physical, and
   System Events gives the window frame as 1200x800. So on macOS 27 Tauri's size
-  includes the 32 px title bar. svelte-blitz's 1200x800 is the content area: its
-  frame is 32 px taller (checked on the running svelte-blitz Tracker: frame
+  includes the 32 px title bar. Sepal's 1200x800 is the content area: its
+  frame is 32 px taller (checked on the running Sepal Tracker: frame
   1280x832 for a 1280x800 window). Left as the brief specified. To get the same
   1200x800 viewport, set `"height": 832`. The AX resize in scenario 11 sets
   frame sizes, so it gives both runtimes the same frame.
@@ -335,7 +335,7 @@ Not adjusted. Here so that screenshots and timings can be read with them in mind
 
 #### Added after the first build
 
-- Window `height` 832: Tauri's size includes the 32 px title bar; svelte-blitz's is the content area. 832 gives the same 1200x800 viewport.
+- Window `height` 832: Tauri's size includes the 32 px title bar; Sepal's is the content area. 832 gives the same 1200x800 viewport.
 - `bench-emit.js` now takes mark names with spaces (`search:deploy cac`).
 
 ## 3. gpuix-svelte
@@ -347,11 +347,11 @@ not listed is meant to be the same: data, routes, sorting, filtering, paging, gr
 key map, toasts, edits and their Undo.
 
 
-| | svelte-blitz Tracker | gpuix port |
+| | Sepal Tracker | gpuix port |
 |---|---|---|
 | Svelte | 5.59.1 (npm), compiled by Vite with the `svelte-custom-renderer` condition | **5.57.2**, the unmerged custom-renderer PR build bundled inside gpuix-svelte (`node_modules/gpuix-svelte/node_modules/svelte`); compiled by gpuix-svelte's own Bun plugin, **with `experimental.async: true`** forced on (compile-core.js) |
 | Runtime | QuickJS-ng (or V8) inside the Rust host | Bun 1.4.5 (JavaScriptCore JIT), compiled into one executable by `Bun.build({ compile })` |
-| Renderer | svelte-blitz → Blitz (Stylo CSS, Taffy layout, Vello) | gpuix-svelte 0.6.0 → @gpuix/native 0.11.0 (napi addon) → GPUI (Zed), Taffy layout, Metal |
+| Renderer | Sepal → Blitz (Stylo CSS, Taffy layout, Vello) | gpuix-svelte 0.6.0 → @gpuix/native 0.11.0 (napi addon) → GPUI (Zed), Taffy layout, Metal |
 | Widgets | bits-ui 2.21 under shadcn-svelte | gpuix-svelte-ui 0.6.0 (Select, Dialog, Toggle, Tabs, Checkbox, Menu, Router) + gpuix-svelte's Portal, dismiss layers |
 | CSS | Tailwind v4 + tw-animate-css, full Stylo cascade | hand-written class rules per component, translated property by property (no CSS engine) |
 | Icons | @lucide/svelte 1.77.0 components | the same Lucide 1.77.0 path data as `<svg source>` strings (`scripts/icons.ts` generated `src/icons.ts`) |
@@ -382,7 +382,7 @@ key map, toasts, edits and their Undo.
 - `nav:<path>` comes from the router's `after` hook (skipping the first screen); `search:<query>`
   from an effect on `view.search` in the shell; `resize:<w>x<h>` from `onlayout` on the root
   element (the window's content box), not a resize event; the clock is in the sidebar's top row,
-  as in the svelte-blitz Tracker.
+  as in the Sepal Tracker.
 - RECT lines: a walk of gpuix-svelte's shadow tree from the root element, boxes from
   `getElementBounds(nativeId)` (last painted frame, window content coordinates, logical px).
   Emitted after `mounted` and every other mark's frame, plus a 250 ms poll that prints only what
@@ -395,7 +395,7 @@ key map, toasts, edits and their Undo.
 ### Runtime behaviour that differs regardless of the app
 
 - **Frame loop:** gpuix-svelte ticks GPUI every 8 ms (`FRAME_MS`) whenever the window is active,
-  even idle; `top` showed ~1.3 % CPU for the idle bench app a few seconds after start. svelte-blitz
+  even idle; `top` showed ~1.3 % CPU for the idle bench app a few seconds after start. Sepal
   has no frame loop.
 - **Escape order:** gpuix-svelte runs Escape through its dismiss-layer stack after every key
   handler. The shell's Escape (close the pane, clear the selection, drop the newest toast) is a
@@ -523,7 +523,7 @@ key map, toasts, edits and their Undo.
   directories only). The button shows an error toast instead of writing a file.
 - Reset confirmation: gpuix-svelte-ui Dialog size sm (340 px) with a close button.
 - Data is saved with Node/Bun `fs` in `~/Library/Application Support/com.compare.tracker.gpuix`
-  (the Tracker uses svelte-blitz's `fs` with `dir: 'data'`): same files, same contents.
+  (the Tracker uses Sepal's `fs` with `dir: 'data'`): same files, same contents.
 
 #### Overlays
 - **Command palette:** built on gpuix-svelte's `Portal` + `dismiss_layer` (the pieces
@@ -556,7 +556,7 @@ the avatar's `color-mix(in oklch, …)` tints were worked out the same way; alph
 
 | API | Tracker | gpuix |
 |---|---|---|
-| fs in the data dir | `@ethercorps/svelte-blitz/fs` | Node/Bun `fs/promises` |
+| fs in the data dir | `sepal/fs` | Node/Bun `fs/promises` |
 | Save dialog (Export CSV) | yes | **not supported** |
 | Clipboard (Copy link) | yes | **not supported** |
 | Window title | `setTitle` | `set_window_title` |

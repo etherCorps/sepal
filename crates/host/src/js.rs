@@ -24,7 +24,7 @@ mod v8_engine;
 #[cfg(feature = "engine-v8")]
 pub use v8_engine::JsEngine;
 
-/// One turn's worth of tree mutations. See `packages/core/src/protocol.js`.
+/// One turn's worth of tree mutations. See `packages/sepal/src/protocol.js`.
 pub struct Batch {
     pub ops: Vec<i32>,
     pub strings: Vec<String>,

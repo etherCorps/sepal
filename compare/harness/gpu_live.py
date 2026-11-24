@@ -1,4 +1,4 @@
-"""Live GPU resources from a SVELTE_BLITZ_GPU_LOG log (wgpu-hal change 2), at the first line matching
+"""Live GPU resources from a SEPAL_GPU_LOG log (wgpu-hal change 2), at the first line matching
 a marker (default: the end). Usage: gpu_live.py log [marker-regex]"""
 import re, sys
 log = open(sys.argv[1]).read().splitlines()
