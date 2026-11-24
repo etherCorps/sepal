@@ -367,6 +367,13 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   rejects (`navigation_route_missing`) and a link changes nothing on
   screen. A catch-all `src/routes/[...path]/+page.ts` that throws a 404
   shows the error page (the Tracker has one).
+- **An error page in a SvelteKit app waits for a host call.** On any page
+  with status 400 or more, SvelteKit runs `updated.check()`: a `fetch` of
+  `/_app/version.json`, which the host refuses on a thread, in real time.
+  Headless, wait for an error page with `until` (`until_shown` in
+  `tests/tracker/main.rs`), not `doc.wait`: under load the answer comes
+  after the virtual time has passed. The same holds for anything else that
+  waits on a host call.
 - **Server code stops a `sepalKit()` build** (`server_files` in
   `sveltekit.js`): `+page.server.*`, `+layout.server.*`, `+server.*`,
   `hooks.server.*`, `*.remote.*`. They need the backend thread; the check

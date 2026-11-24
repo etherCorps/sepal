@@ -287,6 +287,12 @@ Next, each its own job after this branch:
    clip: they would have to scroll their target into view first. Until then
    `sepalKit()` gives SvelteKit's route announcer `pointer-events: none`,
    which is the one place it bit.
+4. **Same-origin requests answered from the app folder** (the `index.html`
+   work). Every SvelteKit error page waits for `updated.check()`, a fetch of
+   `/_app/version.json` that the host refuses today; answered from the app
+   folder, it gets a real answer, as on the web. `convert()` in
+   `sveltekit.js` leaves `_app/version.json` out of `dist` at present, so it
+   has to be copied too.
 
 ## Goal
 

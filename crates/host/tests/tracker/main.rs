@@ -130,6 +130,18 @@ fn until(doc: &mut SvelteDocument, done: impl Fn() -> bool, condition: &str) {
     }
 }
 
+/// Turn until the app is at `path` and `selector` is on the page. An error
+/// page waits for SvelteKit's version check (`updated.check()`), a `fetch`
+/// the host answers on a thread, in real time: `doc.wait` alone races it.
+#[track_caller]
+fn until_shown(doc: &mut SvelteDocument, path: &str, selector: &str) {
+    until(
+        doc,
+        || false,
+        &format!("location.pathname === '{path}' && document.querySelector('{selector}') !== null"),
+    );
+}
+
 /// Turn until the file at `path` contains `contains`, and return it.
 #[track_caller]
 fn until_file(doc: &mut SvelteDocument, path: PathBuf, contains: &str) -> String {
@@ -530,7 +542,7 @@ fn unknown_keys_and_routes_are_404s() {
 
     // Inside the issues layout: the list stays, the pane says what is missing.
     js(&doc, "globalThis.__tracker.goto('/issues/ENG-99999'), ''");
-    doc.wait(0.1);
+    until_shown(&mut doc, "/issues/ENG-99999", "[data-testid=error-message]");
     assert_eq!(
         text(&doc, "[data-testid=error-message]"),
         "No issue ENG-99999."
@@ -549,7 +561,7 @@ fn unknown_keys_and_routes_are_404s() {
     // An unknown project and an unknown route: the root error page, in the shell.
     for href in ["/projects/NOPE", "/nowhere"] {
         js(&doc, &format!("globalThis.__tracker.goto('{href}'), ''"));
-        doc.wait(0.1);
+        until_shown(&mut doc, href, "[data-testid=error-message]");
         assert_eq!(
             text(&doc, "[data-testid=page-title]"),
             "Not found",
