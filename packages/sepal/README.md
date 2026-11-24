@@ -1,12 +1,32 @@
 # sepal
 
+**Native Svelte apps, drawn by Blitz.**
+
 [Sepal](https://github.com/etherCorps/sepal): Svelte apps in a native window, without
 a webview and without Node at run time. Svelte components are compiled with
 Svelte's custom renderer API and drive [Blitz](https://github.com/DioxusLabs/blitz),
 a Rust HTML/CSS engine; the JavaScript runs in an embedded QuickJS.
 
-This one package is the runtime, the Vite preset and the `sepal` command.
-Start a project with the starter rather than by installing it directly:
+An alpha, on macOS (Linux builds and passes its tests headless; its window has
+not been tried yet). Svelte 5 and Tailwind v4 as on the web, pages as files
+(Sepal's router or SvelteKit's), shadcn-svelte components through an opt-in
+DOM layer, desktop APIs behind permissions, macOS `.app` bundles and
+self-update, and no frame loop: an idle app does no work.
+
+![The Tracker example in a Sepal window on macOS](https://raw.githubusercontent.com/etherCorps/sepal/main/docs/tracker.png)
+
+The Tracker example with 1,000 issues, on an Apple M4 Pro (medians of three
+runs; [how they were measured](https://github.com/etherCorps/sepal/blob/main/compare/results/compare.md)):
+
+| | |
+|---|---|
+| Idle CPU, 1,000 issues | 4 ms of CPU time in 20 s, 0.02% of a core |
+| Idle memory, 1,000 issues | 107 MB RAM, 43 MB GPU memory |
+| Memory after wheel-scrolling the whole list, 1,000 issues | 305 MB RAM, 220 MB GPU memory |
+
+This one package is the runtime, the Vite preset and the `sepal` command; the
+prebuilt host comes with it. Start a project with the starter rather than by
+installing it directly:
 
 ```sh
 pnpm create sepal my-app

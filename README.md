@@ -20,11 +20,44 @@ HTML/CSS engine (Stylo for CSS, Taffy for layout, Parley for text, Vello for
 painting). The JavaScript runs in an embedded QuickJS-ng. Styling is ordinary
 CSS, so Tailwind works as it does on the web.
 
-This is a starter covering the first three milestones: static render, events and
-reactivity, Tailwind. It is small enough to read in one sitting (about 700 lines
-of JS and 1,200 of Rust).
+Sepal is an alpha (0.1.0-alpha.1). It runs on macOS; on Linux it builds and
+passes its tests headless, but its window has not been tried yet, and Windows
+is on hold. Today it has:
 
-![The example app rendered by Blitz](screenshot.png)
+- **Svelte 5 and Tailwind v4 as on the web**, with pages as files in
+  `src/routes`: Sepal's own small router, or SvelteKit's as a single-page app.
+- **Component libraries written for the web**: shadcn-svelte's Switch,
+  Checkbox, Tabs, Accordion, Dialog, Select and Tooltip work, mouse and
+  keyboard, through an opt-in DOM layer.
+- **Desktop APIs behind permissions**, off until the app lists them: `fetch`,
+  files, dialogs, clipboard, opening links, the window.
+- **Packaging and updates**: a macOS `.app` from one command, signed with your
+  Developer ID (notarising is written but has not been run yet), and
+  self-update from a signed feed.
+- **No frame loop**: an idle app does no work and draws nothing, and a change
+  repaints only the part of the window that changed.
+- **No Rust needed to use it**: `pnpm create sepal` and a prebuilt host for
+  macOS (arm64, x64) and Linux (x64, arm64).
+
+The Tracker, an issue tracker built with shadcn-svelte, Tailwind and the
+built-in router (`examples/tracker`), in a Sepal window:
+
+![The Tracker example in a Sepal window on macOS](docs/tracker.png)
+
+<!-- CLIP: a short clip of the Tracker goes here. -->
+
+## Numbers
+
+The Tracker with 1,000 issues, on an Apple M4 Pro (macOS 27, window 1200×800
+at 2×). Medians of three runs, with the range in brackets; how they were
+measured, and the same app on Tauri 2 and gpuix-svelte, are in
+[compare.md](compare/results/compare.md).
+
+| | |
+|---|---|
+| Idle CPU, 1,000 issues | 4 ms of CPU time in 20 s (4–5), 0.02% of a core |
+| Idle memory, 1,000 issues | 107 MB RAM (88–107), 43 MB GPU memory (28–43) |
+| Memory after wheel-scrolling the whole list, 1,000 issues | 305 MB RAM (305–306), 220 MB GPU memory (220–221) |
 
 ## Run it
 
@@ -35,7 +68,7 @@ Requires Node 22+, a recent stable Rust (built here with 1.97) and, on Linux, th
 pnpm install
 pnpm test              # type checks, JS renderer test, then the headless end-to-end tests
 pnpm run check         # type checks only (tsc for the package, svelte-check for the examples)
-pnpm run screenshot    # render the example to screenshot.png on the CPU
+pnpm run screenshot    # render examples/counter to screenshot.png on the CPU
 pnpm start             # open the example in a window
 pnpm dev               # the same, reloading on every save
 ```
@@ -901,7 +934,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 |---|---|
 | Renderer against Svelte 5.59.1 in an engine with no DOM globals | `pnpm run test:js` |
 | Real bundle → QuickJS → blitz-dom 0.3.0-beta.4 → style and layout | `tests/counter.rs` |
-| Tailwind 4.3 stylesheet (incl. `oklch()` colours, `@layer`) lays out and paints correctly | layout assertions + `screenshot.png` |
+| Tailwind 4.3 stylesheet (incl. `oklch()` colours, `@layer`) lays out and paints correctly | layout assertions + `screenshot.png`, which `tests/counter.rs` writes |
 | Clicks through Blitz hit testing, bubbling, `{#if}`, keyed `{#each}` reorder | `counter_app` |
 | Inline SVG and Lucide icons in hex and Tailwind colours, recolouring after a click, `<img>` from a data: URL, a file and an import | `tests/icons.rs` (pixels) + `docs/icons-probe.png` |
 | Resources: only data: URLs and files inside the app directory load; bad URLs do not crash | `tests/icons.rs` |
@@ -1058,13 +1091,28 @@ each refresh is also printed to stderr.
 
 ## Next steps
 
-1. Run `pnpm start` on a machine with a display and fix whatever the window turns up.
-2. Type into a real window; then IME.
-3. Windows (on hold; see HANDOVER.md).
-4. State-preserving HMR, if the full reload turns out not to be enough.
-5. A virtual list component (scroll events and `scrollTop` are there), then packaging per OS.
-6. Try compiling the bundle with scriptc and replacing QuickJS. Only `js.rs`
-   should need to change; the protocol is engine-agnostic.
+1. **Real input in a window.** Key presses have only been sent as scripts, at
+   the document; next are presses through winit and AppKit, IME, and
+   clipboard shortcuts in text fields.
+2. **Other platforms.** Open the window on Linux, which builds and passes its
+   tests headless but has never been run with a display. Windows is on hold:
+   the host builds and most tests pass (see HANDOVER.md). Then packaging
+   beyond a macOS `.app`: a `.dmg`, and Windows and Linux bundles, and a real
+   notarisation run.
+3. **Routing through SvelteKit only.** The built-in router, and with it
+   `sepal/router`, `sepal/navigation` and `sepal/state`, gives way to
+   SvelteKit's.
+4. **The native layer.** A JavaScript backend thread (the stem) and native
+   plugins (grafts).
+5. **More desktop APIs**: notifications, menus, a tray icon, global
+   shortcuts, more than one window, a settings store.
+6. **Memory while drawing.** An idle Tracker sits at about 100 MB, but after
+   scrolling 1,000 rows it holds 305 MB of RAM and 220 MB of GPU memory
+   ([compare.md](compare/results/compare.md)); a virtual list, and letting go
+   of GPU memory sooner, are the places to start.
+7. **Later**: state-preserving HMR, if the full reload turns out not to be
+   enough; compiling the bundle with scriptc instead of running QuickJS (only
+   `js.rs` should need to change).
 
 ## Licence
 

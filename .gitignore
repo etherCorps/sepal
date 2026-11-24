@@ -13,3 +13,6 @@ crates/blitz-dom/Cargo.lock
 crates/anyrender_vello_hybrid/Cargo.lock
 crates/vello_gpu/Cargo.lock
 crates/wgpu-hal/Cargo.lock
+
+# written by tests/counter.rs and `pnpm run screenshot`
+/screenshot.png
