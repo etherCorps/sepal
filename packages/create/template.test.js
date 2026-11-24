@@ -69,6 +69,8 @@ try {
 		assert(pkg.name === 'my-app', `package name is ${pkg.name}`);
 		assert(('@sveltejs/kit' in pkg.devDependencies) === (router === 'sveltekit'), `wrong starter for the ${router} router`);
 		assert(/^\^\d/.test(pkg.dependencies.sepal), 'sepal is not a versioned entry in dependencies');
+		// SvelteKit 3 has no `$lib`: the starter declares `#lib` itself.
+		if (router === 'sveltekit') assert(pkg.imports?.['#lib/*'] === './src/lib/*', 'the SvelteKit starter does not declare #lib');
 		assert(readFileSync(join(app, 'sepal.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
 
 		// What is tested is this checkout, not what is published: the overrides stand in for the registry. Its own
