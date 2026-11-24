@@ -2,7 +2,7 @@
 
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
-windows with, with nine changes. `crates/host/Cargo.toml` swaps it in through
+windows with, with ten changes. `crates/host/Cargo.toml` swaps it in through
 `[patch.crates-io]`. All are marked `svelte-blitz patch`.
 
 ## The changes
@@ -159,6 +159,21 @@ each): switching views 61.9 -> 39.4 ms GPU and 382 -> 340 ms CPU; the clock,
 the New issue dialog and scrolling the same within noise. Window captures of
 seven states (list, hover, New issue open and closed, Board, Insights, list
 again) match `SVELTE_BLITZ_DAMAGE=0`.
+
+**10. The kept frame and the depth buffer are let go when idle.**
+`src/window_renderer.rs`, `release_if_idle()` and the start of `render`: after
+two seconds without a frame presented, the kept frame (change 9) and the depth
+buffer (2400x1600 each, 15 MB each) are dropped; the next frame makes them again
+and is drawn in full, as nothing keeps the last frame any more. The renderer
+never wakes for it: the host asks in `about_to_wait`, which winit runs whenever
+anything woke the loop (an event, a timer of the app's, a host call), so a
+window that nothing wakes keeps them.
+
+Measured against the build before it, interleaved (compare harness, 1,000
+issues, 3 runs each): idle, RAM 119 -> 88 MB and GPU memory 59 -> 28 MB at the
+end, RAM 5 s after load 124 -> 94 MB in every scenario; the first wake-up in
+the bench Tracker is its own toast timer, 5 s after start. A window shown again
+after it repaints correctly (captures match `SVELTE_BLITZ_DAMAGE=0`).
 
 ## Updating
 

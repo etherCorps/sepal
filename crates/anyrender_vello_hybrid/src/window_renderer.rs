@@ -250,7 +250,8 @@ struct ActiveRenderState {
     own_textures: FxHashMap<u64, crate::scene::OwnTexture>,
     /// svelte-blitz patch (damage): the last frame, kept for the next one to draw
     /// over, and how it gets to the surface (`SurfaceCopy`).
-    kept: Option<(SurfaceCopy, Kept)>,
+    /// The kept frame is `None` while let go when idle (`release_if_idle`).
+    kept: Option<(SurfaceCopy, Option<Kept>)>,
     render_surface: SurfaceRenderer<'static>,
 }
 
@@ -538,6 +539,10 @@ pub struct VelloHybridWindowRenderer {
     recording: anyrender::Scene,
     /// The last `render` drew nothing: nothing on screen had changed.
     skipped: bool,
+    /// svelte-blitz patch (idle): when a frame was last presented, and whether
+    /// the kept frame and the depth buffer were let go since (`release_if_idle`).
+    presented_at: Option<std::time::Instant>,
+    released: bool,
 }
 impl VelloHybridWindowRenderer {
     #[allow(clippy::new_without_default)]
@@ -560,6 +565,8 @@ impl VelloHybridWindowRenderer {
             damage: crate::damage::enabled().then(Default::default),
             recording: anyrender::Scene::new(),
             skipped: false,
+            presented_at: None,
+            released: false,
         }
     }
 
@@ -577,6 +584,27 @@ impl VelloHybridWindowRenderer {
         if let Some(damage) = &mut self.damage {
             damage.invalidate();
         }
+    }
+
+    /// svelte-blitz patch (idle): if no frame was presented for `after`, let go of
+    /// the kept frame and the depth buffer (15 MB each at 2400x1600); the next
+    /// frame makes them again and is drawn in full. Never on a timer: the caller
+    /// asks when something woke it anyway. Returns whether they were let go.
+    pub fn release_if_idle(&mut self, after: std::time::Duration) -> bool {
+        let RenderState::Active(state) = &mut self.render_state else {
+            return false;
+        };
+        if self.released || self.presented_at.is_none_or(|at| at.elapsed() < after) {
+            return false;
+        }
+        state.depth_texture_view = None;
+        if let Some((_, kept)) = &mut state.kept {
+            *kept = None;
+        }
+        // wgpu frees a texture once no submission still to be cleaned up holds it.
+        let _ = state.render_surface.device().poll(wgpu::PollType::Poll);
+        self.released = true;
+        true
     }
 
     pub fn current_device_handle(&self) -> Option<&DeviceHandle> {
@@ -818,7 +846,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             let kept = crate::damage::enabled().then(|| {
                 let copy = SurfaceCopy::new(render_surface.device(), render_surface.config.format);
                 let kept = copy.kept(render_surface.device(), width, height);
-                (copy, kept)
+                (copy, Some(kept))
             });
 
             let _ = sender.send(InitOutput {
@@ -882,7 +910,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 active.depth_texture_view =
                     depth_texture(active.render_surface.device(), width, height);
                 if let Some((copy, kept)) = &mut active.kept {
-                    *kept = copy.kept(active.render_surface.device(), width, height);
+                    *kept = Some(copy.kept(active.render_surface.device(), width, height));
                 }
             };
         }
@@ -895,6 +923,19 @@ impl WindowRenderer for VelloHybridWindowRenderer {
 
         let render_surface = &mut state.render_surface;
         let (width, height) = (render_surface.config.width, render_surface.config.height);
+
+        // svelte-blitz patch (idle): made again after `release_if_idle`; what the
+        // window shows is no longer kept anywhere, so this frame is drawn in full.
+        if self.released {
+            self.released = false;
+            state.depth_texture_view = depth_texture(render_surface.device(), width, height);
+            if let Some((copy, kept)) = &mut state.kept {
+                *kept = Some(copy.kept(render_surface.device(), width, height));
+            }
+            if let Some(damage) = &mut self.damage {
+                damage.invalidate();
+            }
+        }
 
         debug_timer!(timer, feature = "log_frame_times");
 
@@ -1010,8 +1051,8 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         // svelte-blitz patch (damage): drawn into the kept frame, copied to the
         // surface below.
         let texture_view = match &state.kept {
-            Some((_, kept)) => kept.view.clone(),
-            None => surface_view.clone(),
+            Some((_, Some(kept))) => kept.view.clone(),
+            _ => surface_view.clone(),
         };
 
         // Construct Vello Hybrid TextureBindings
@@ -1047,7 +1088,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 target_init,
             )
             .expect("failed to render to texture");
-        if let Some((copy, kept)) = &state.kept {
+        if let Some((copy, Some(kept))) = &state.kept {
             copy.encode(&mut encoder, kept, &surface_view); // svelte-blitz patch (damage)
         }
         render_surface.queue().submit([encoder.finish()]);
@@ -1078,6 +1119,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             self.scene.reset();
             return;
         }
+        self.presented_at = Some(std::time::Instant::now()); // svelte-blitz patch (idle)
         timer.record_time("present");
 
         render_surface
