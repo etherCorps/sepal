@@ -6,6 +6,7 @@
 //!                                        write <name>.app (default: next to <dist>, in bundle/),
 //!                                        and with a key also the signed update for it
 //! `calyx --updater-keygen <file>`        make an update signing key; prints the public half
+//! `calyx --version`                      the version, the same as the npm package it ships in
 //!
 //! `<dist>` is the directory the Vite preset wrote (`app.js`, `app.css`,
 //! `app.json`). `<app.js> [app.css]` is accepted in its place and runs without
@@ -40,7 +41,7 @@ fn parse_size(size: &str) -> Option<(u32, u32)> {
 }
 
 fn run(args: &[String]) -> Result<(), String> {
-    const USAGE: &str = "usage: calyx [--watch | --screenshot out.png] <dist | app.js [app.css]> [WIDTHxHEIGHT]\n       calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       calyx --updater-keygen <private-key-file>";
+    const USAGE: &str = "usage: calyx [--watch | --screenshot out.png] <dist | app.js [app.css]> [WIDTHxHEIGHT]\n       calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       calyx --updater-keygen <private-key-file>\n       calyx --version";
 
     // Launched from Finder or the Dock: no arguments, the app is inside the bundle.
     if args.is_empty()
@@ -53,6 +54,14 @@ fn run(args: &[String]) -> Result<(), String> {
             .and_then(Path::parent)
             .map(Path::to_owned);
         return window(app, None);
+    }
+
+    if let [flag] = args
+        && flag == "--version"
+    {
+        // scripts/check-versions.js keeps this equal to the npm packages' version.
+        println!("calyx {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
     }
 
     if let [flag, rest @ ..] = args
