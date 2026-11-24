@@ -486,6 +486,16 @@ impl crate::Device for super::Device {
             if let Some(label) = desc.label {
                 raw.setLabel(Some(&NSString::from_str(label)));
             }
+            if super::gpu_log::on() {
+                // svelte-blitz patch
+                super::gpu_log::line(format_args!(
+                    "+ buffer #{:x} {:?}: {} B, {} B allocated",
+                    Retained::as_ptr(&raw) as *const () as usize,
+                    desc.label.unwrap_or(""),
+                    desc.size,
+                    raw.allocatedSize()
+                ));
+            }
             self.counters.buffers.add(1);
             Ok(super::Buffer {
                 raw,
@@ -494,6 +504,14 @@ impl crate::Device for super::Device {
         })
     }
     unsafe fn destroy_buffer(&self, _buffer: super::Buffer) {
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            super::gpu_log::line(format_args!(
+                "- buffer #{:x}: {} B allocated",
+                Retained::as_ptr(&_buffer.raw) as *const () as usize,
+                _buffer.raw.allocatedSize()
+            ));
+        }
         self.counters.buffers.sub(1);
     }
 
@@ -598,6 +616,16 @@ impl crate::Device for super::Device {
             if let Some(label) = desc.label {
                 raw.setLabel(Some(&NSString::from_str(label)));
             }
+            if super::gpu_log::on() {
+                // svelte-blitz patch
+                super::gpu_log::line(format_args!(
+                    "+ texture #{:x} {:?}: {}, {} B allocated",
+                    Retained::as_ptr(&raw) as *const () as usize,
+                    desc.label.unwrap_or(""),
+                    super::gpu_log::texture(&raw),
+                    raw.allocatedSize()
+                ));
+            }
 
             self.counters.textures.add(1);
 
@@ -614,6 +642,15 @@ impl crate::Device for super::Device {
     }
 
     unsafe fn destroy_texture(&self, _texture: super::Texture) {
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            super::gpu_log::line(format_args!(
+                "- texture #{:x}: {}, {} B allocated",
+                Retained::as_ptr(&_texture.raw) as *const () as usize,
+                super::gpu_log::texture(&_texture.raw),
+                _texture.raw.allocatedSize()
+            ));
+        }
         self.counters.textures.sub(1);
     }
 

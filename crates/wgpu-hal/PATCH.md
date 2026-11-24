@@ -51,7 +51,10 @@ its targets' sizes, formats and load/store actions), clear and copy (with its
 size, and whether change 1 draws it in a render pass) is printed on stderr as
 `[gpu] …`, and so is every submit and present. A frame is what lies between two
 presents. Off (the default), it costs one cached check per call. For
-measuring, not for shipping builds to read.
+measuring, not for shipping builds to read. Every texture and buffer made and
+freed is printed too (`+ texture #<address> "<label>": <size> <format>, <n> B
+allocated`, `- texture #<address>`; `src/metal/device.rs`), so
+`compare/harness/gpu_live.py` can list what is alive at any point of a log.
 
 **3. Empty command buffers are not committed.** `src/metal/command.rs`
 (`CommandEncoder::encoded`, set wherever an encoder is opened on the command
