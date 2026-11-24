@@ -165,13 +165,14 @@ seven states (list, hover, New issue open and closed, Board, Insights, list
 again) match `SVELTE_BLITZ_DAMAGE=0`.
 
 **10. The kept frame and the depth buffer are let go when idle.**
-`src/window_renderer.rs`, `release_if_idle()` and the start of `render`: after
-two seconds without a frame presented, the kept frame (change 9) and the depth
-buffer (2400x1600 each, 15 MB each) are dropped; the next frame makes them again
-and is drawn in full, as nothing keeps the last frame any more. The renderer
-never wakes for it: the host asks in `about_to_wait`, which winit runs whenever
-anything woke the loop (an event, a timer of the app's, a host call), so a
-window that nothing wakes keeps them.
+`src/window_renderer.rs`, `release_due()`, `release_if_idle()` and the start of
+`render`: two seconds after the last frame presented, the kept frame (change 9)
+and the depth buffer (2400x1600 each, 15 MB each) are dropped; the next frame
+makes them again and is drawn in full, as nothing keeps the last frame any
+more. The host wakes for it once, with a `ControlFlow::WaitUntil` at
+`release_due()` that every new frame moves on: one wake-up after a burst of
+frames, none after it. (It first released on whatever woke the loop next, so a
+window that nothing woke kept them.)
 
 Measured against the build before it, interleaved (compare harness, 1,000
 issues, 3 runs each): idle, RAM 119 -> 88 MB and GPU memory 59 -> 28 MB at the

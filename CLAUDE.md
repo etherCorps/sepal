@@ -121,10 +121,13 @@ profile while iterating; it is already tuned in `Cargo.toml`.
    host blocks on stdin, it does not watch files. Layout is reported at the
    end of a turn that changed the page and after a frame the shell drew
    anyway, never on a timer. Scroll positions likewise: at the end of the
-   turn that moved them. **One exception:** the performance overlay, while
+   turn that moved them. **Two exceptions:** the performance overlay, while
    it is shown, refreshes once a second through a one-shot deadline that each
    refresh sets again (`hud.rs`). Hidden, it has no nodes and sets none;
-   `the_overlay_wakes_the_loop_only_while_shown` guards that.
+   `the_overlay_wakes_the_loop_only_while_shown` guards that. And two seconds
+   after the last frame presented, one wake-up lets the renderer drop the kept
+   frame and the depth buffer (`window.rs`, `IDLE_RELEASE`): once per burst of
+   frames, never again until something draws.
 8. **`apply_batch` must never panic.** Batches come from app code. Unknown
    nodes and opcodes are logged and skipped. Blitz indexes node storage
    directly (`doc.nodes[id]`), so check `get_node(id).is_some()` first.
@@ -197,8 +200,7 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   layer textures, a depth buffer (15 MB; without it a full repaint is ~2.5 ms
   slower) and two window surfaces (~15 MB each at 1200x800 on a 2x display).
   Two seconds after the last frame, the kept frame and the depth buffer
-  are let go the next time anything wakes the loop (`release_if_idle`,
-  never on a timer of its own).
+  are let go (`release_if_idle`, on one wake-up per burst of frames).
   On the CPU side ~36 MB of live malloc (`MallocStackLogging=1` and
   `malloc_history -allBySize` on the debug build): 12 MB QuickJS's heap, the
   rest spread thin. An unbundled host also holds its Dock icon decoded (16 MB

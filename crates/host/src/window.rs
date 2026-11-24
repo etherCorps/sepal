@@ -31,6 +31,10 @@ use winit::window::{WindowAttributes, WindowId};
 use crate::SvelteDocument;
 use crate::app::App;
 
+/// How long after the last frame the renderer lets go of the kept frame and the
+/// depth buffer (`VelloHybridWindowRenderer::release_if_idle`).
+const IDLE_RELEASE: Duration = Duration::from_secs(2);
+
 /// Loads the app again from wherever it came from. Present in dev only.
 pub type Reload = Box<dyn Fn() -> Result<App, String>>;
 
@@ -446,31 +450,36 @@ impl ApplicationHandler for Host {
 
     fn about_to_wait(&mut self, event_loop: &dyn ActiveEventLoop) {
         self.application.about_to_wait(event_loop);
-        // Two seconds after the last frame, the renderer lets go of the kept frame
-        // and the depth buffer, the first time anything wakes the loop after that.
-        // Never on a deadline of its own: an idle app is not woken for it
-        // (invariant 7), so one left alone keeps them.
+        let now = Instant::now();
+        // One-shot deadlines, each set again only by the next frame: nothing here
+        // wakes an idle loop more than once (invariant 7).
+        let mut wake: Option<Instant> = None;
+        // A redraw put off to the next 60 Hz frame (`defer_redraw`).
+        if let Some((window_id, due)) = self.redraw_at {
+            if now < due {
+                wake = Some(due);
+            } else {
+                self.redraw_at = None;
+                if let Some(view) = self.application.windows.get(&window_id) {
+                    view.request_redraw();
+                }
+            }
+        }
+        // Two seconds after the last frame presented, the renderer lets go of the
+        // kept frame and the depth buffer: one wake-up after a burst of frames.
         for view in self.application.windows.values_mut() {
-            if view.renderer.release_if_idle(Duration::from_secs(2)) {
+            let Some(due) = view.renderer.release_due(IDLE_RELEASE) else {
+                continue;
+            };
+            if now < due {
+                wake = Some(wake.map_or(due, |w| w.min(due)));
+            } else if view.renderer.release_if_idle(IDLE_RELEASE) {
                 if let Some(trace) = &self.trace {
                     trace.note("released the kept frame and the depth buffer (no frame for 2 s)");
                 }
             }
         }
-        // A one-shot deadline, set again only by the next skipped frame: nothing
-        // here wakes the loop on its own (invariant 7).
-        let flow = match self.redraw_at {
-            Some((_, due)) if Instant::now() < due => ControlFlow::WaitUntil(due),
-            Some((window_id, _)) => {
-                self.redraw_at = None;
-                if let Some(view) = self.application.windows.get(&window_id) {
-                    view.request_redraw();
-                }
-                ControlFlow::Wait
-            }
-            None => ControlFlow::Wait,
-        };
-        event_loop.set_control_flow(flow);
+        event_loop.set_control_flow(wake.map_or(ControlFlow::Wait, ControlFlow::WaitUntil));
     }
 
     fn proxy_wake_up(&mut self, event_loop: &dyn ActiveEventLoop) {
