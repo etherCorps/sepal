@@ -1,0 +1,182 @@
+[js error] MARK start 1795491271148.0
+[trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   clear buffer: 524288 B of 524288 B (render pass)
+[gpu]   copy buffer to buffer: 208 B in 1 region(s), into a 208 B buffer (render pass)
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[trace] +0.119s first frame took 0.0ms
+[trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+[trace] damage: full repaint (first frame, or the target is new)
+[trace] damage: Full
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   upload to texture 4096x1 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 18312 B in 1 region(s), into a 18316 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 1024x1024 RGBA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 1024x1024 RGBA8Unorm clear/store
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 1x1 RGBA8Unorm clear/store
+[gpu]   upload to texture 4096x1 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   upload to texture 4096x1 RGBA8Unorm: 4096x1 (a render pass each)
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   upload to texture 4096x5 RGBA32Uint: 4096x5 (a render pass each)
+[gpu]   upload to texture 4096x1 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 49632 B in 1 region(s), into a 421060 B buffer (render pass)
+[gpu]   copy buffer to buffer: 371424 B in 1 region(s), into a 421060 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 2400x1600 BGRA8Unorm clear/store, depth 2400x1600 Depth32Float clear/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 2400x1600 BGRA8Unorm load/store, depth 2400x1600 Depth32Float load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu] submit: 6 command buffer(s)
+[gpu] command buffer "wgpu::util::TextureBlitter::pass"
+[gpu]   render pass "wgpu::util::TextureBlitter::pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 2400x1600 BGRA8Unorm clear/store
+[gpu] command buffer "(wgpu internal) Present"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu] submit: 1 command buffer(s)
+[gpu] present (1 command buffer)
+[trace] +0.160s poll took 17.8ms
+[js error] MARK read 1795491271374.0
+[js error] MARK parsed 1795491271375.0
+[js error] MARK loaded 1795491271376.0
+[js error] MARK mounted 1795491271384.0
+[trace] the app changed the page: 2651 ops, 1 layouts in 3.5ms
+[trace] +0.180s poll took 14.9ms
+[trace] damage: full repaint (over 500 commands changed of 743)
+[trace] damage: Full
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   upload to texture 4096x5 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 27240 B in 1 region(s), into a 421060 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 1024x1024 RGBA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   upload to texture 4096x16 RGBA32Uint: 4096x16 (a render pass each)
+[gpu]   upload to texture 4096x1 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 59088 B in 1 region(s), into a 842116 B buffer (render pass)
+[gpu]   copy buffer to buffer: 3072 B in 1 region(s), into a 842116 B buffer (render pass)
+[gpu]   copy buffer to buffer: 765240 B in 1 region(s), into a 842116 B buffer (render pass)
+[gpu]   copy buffer to buffer: 224 B in 1 region(s), into a 228 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 2400x1600 BGRA8Unorm clear/store, depth 2400x1600 Depth32Float clear/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 512x512 RGBA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 2400x1600 BGRA8Unorm load/store, depth 2400x1600 Depth32Float load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "Clear Rects"
+[gpu]   render pass "Clear Rects": color 512x512 RGBA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 512x512 RGBA8Unorm clear/store
+[gpu] submit: 10 command buffer(s)
+[gpu] command buffer "wgpu::util::TextureBlitter::pass"
+[gpu]   render pass "wgpu::util::TextureBlitter::pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 2400x1600 BGRA8Unorm clear/store
+[gpu] command buffer "(wgpu internal) Present"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu] submit: 1 command buffer(s)
+[gpu] present (1 command buffer)
+[trace] +0.196s RedrawRequested took 12.3ms
+[js error] MARK clock 1795491272381.0
+[trace] the app changed the page: 1 ops, 1 layouts in 0.6ms
+[trace] damage: 1 of 743 commands gone, 1 new
+[trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   upload to texture 4096x16 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   upload to texture 4096x1 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 14184 B in 1 region(s), into a 842116 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "wgpu::util::TextureBlitter::pass"
+[gpu]   render pass "wgpu::util::TextureBlitter::pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 2400x1600 BGRA8Unorm clear/store
+[gpu] command buffer "(wgpu internal) Present"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu] submit: 1 command buffer(s)
+[gpu] present (1 command buffer)
+[trace] +1.188s RedrawRequested took 4.7ms
+[js error] MARK clock 1795491273381.0
+[trace] the app changed the page: 1 ops, 1 layouts in 0.8ms
+[trace] damage: 1 of 743 commands gone, 1 new
+[trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   upload to texture 4096x16 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   upload to texture 4096x1 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 14232 B in 1 region(s), into a 842116 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "wgpu::util::TextureBlitter::pass"
+[gpu]   render pass "wgpu::util::TextureBlitter::pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 2400x1600 BGRA8Unorm clear/store
+[gpu] command buffer "(wgpu internal) Present"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu] submit: 1 command buffer(s)
+[gpu] present (1 command buffer)
+[trace] +2.189s RedrawRequested took 9.5ms
+[js error] MARK clock 1795491274386.0
+[trace] the app changed the page: 1 ops, 1 layouts in 0.5ms
+[trace] damage: 1 of 743 commands gone, 1 new
+[trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   upload to texture 4096x16 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 120 B in 1 region(s), into a 842116 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 1024x1024 RGBA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu]   copy buffer to buffer: 32 B in 1 region(s), into a 32 B buffer (render pass)
+[gpu]   upload to texture 4096x16 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   upload to texture 4096x1 RGBA32Uint: 4096x1 (a render pass each)
+[gpu]   copy buffer to buffer: 14184 B in 1 region(s), into a 842116 B buffer (render pass)
+[gpu] command buffer "Render to Texture Pass"
+[gpu]   render pass "Render to Texture Pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "wgpu::util::TextureBlitter::pass"
+[gpu]   render pass "wgpu::util::TextureBlitter::pass": color 2400x1600 BGRA8Unorm load/store
+[gpu] command buffer "(wgpu internal) Pre Pass"
+[gpu] command buffer "(wgpu internal) Transit"
+[gpu]   render pass "(wgpu internal) clear_texture clear pass": color 2400x1600 BGRA8Unorm clear/store
+[gpu] command buffer "(wgpu internal) Present"
+[gpu] submit: 4 command buffer(s)
+[gpu] command buffer "(wgpu internal) PendingWrites"
+[gpu] submit: 1 command buffer(s)
+[gpu] present (1 command buffer)
+[trace] +3.193s RedrawRequested took 7.5ms

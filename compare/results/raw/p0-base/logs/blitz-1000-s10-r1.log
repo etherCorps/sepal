@@ -1,0 +1,207 @@
+253045040958228.5 2 [js error] MARK start 1795491734541.0
+253045059802270.5 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+253045180406603.5 2 [trace] +0.096s first frame took 0.0ms
+253045180424895.5 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+253045210778061.5 2 [trace] damage: full repaint (first frame, or the target is new)
+253045210780478.5 2 [trace] damage: Full
+253045218534686.5 2 [js error] MARK read 1795491734718.0
+253045219876520.5 2 [js error] MARK parsed 1795491734720.0
+253045220523645.5 2 [js error] MARK loaded 1795491734720.0
+253045228638936.5 2 [js error] MARK mounted 1795491734728.0
+253045232678395.5 2 [trace] the app changed the page: 2644 ops, 1 layouts in 3.3ms
+253045232687061.5 2 [trace] +0.133s poll took 14.6ms
+253045233959603.5 2 [trace] damage: full repaint (over 500 commands changed of 741)
+253045233963811.5 2 [trace] damage: Full
+253045251648353.5 2 [trace] +0.148s RedrawRequested took 18.9ms
+253050339120228.5 2 [trace] damage: 0 of 741 commands gone, 0 new
+253050339137561.5 2 [trace] damage: None
+253050339137811.5 2 [trace] +5.253s RedrawRequested took 1.1ms
+253050339731311.5 2 [trace] damage: 0 of 741 commands gone, 1 new
+253050339746728.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253050345944020.5 2 [trace] +5.254s RedrawRequested took 6.8ms
+253050346741686.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253050346757895.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253050347929936.5 2 [trace] +5.261s RedrawRequested took 2.0ms
+253050352112436.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253050352124103.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253050360609686.5 2 [trace] +5.267s RedrawRequested took 9.4ms
+253050361052770.5 2 [trace] +5.276s PointerButton took 0.1ms
+253050361953103.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253050361967686.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253050373851645.5 2 [trace] +5.276s RedrawRequested took 12.7ms
+253050374644603.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253050374664853.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253050388153353.5 2 [trace] +5.289s RedrawRequested took 14.3ms
+253050389015061.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253050389030936.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253050400656478.5 2 [trace] +5.304s RedrawRequested took 12.4ms
+253050467485520.5 2 [js error] MARK nav:/board 1795491739967.0
+253050492973561.5 2 [trace] the app was told the layout: 1 boxes changed, window 1200 x 800
+253050492994603.5 2 [trace] the app changed the page: 19242 ops, 1 layouts in 19.6ms
+253050492995103.5 2 [trace] +5.316s PointerButton took 92.2ms
+253050496109353.5 2 [trace] damage: full repaint (over 500 commands changed of 750)
+253050496133145.5 2 [trace] damage: Full
+253050502030686.5 2 [trace] +5.409s RedrawRequested took 7.9ms
+253050502913895.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253050502931228.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253050520587061.5 2 [trace] +5.417s RedrawRequested took 18.5ms
+253050521483478.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253050521497645.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253050535235020.5 2 [trace] +5.436s RedrawRequested took 14.6ms
+253050536224520.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253050536234311.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253050560700895.5 2 [trace] +5.451s RedrawRequested took 25.4ms
+253050561639895.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253050561661020.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253050587332395.5 2 [trace] +5.476s RedrawRequested took 26.6ms
+253050588213645.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253050588231436.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253050613989145.5 2 [trace] +5.503s RedrawRequested took 26.6ms
+253050614826270.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253050614840228.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253050627360436.5 2 [trace] +5.529s RedrawRequested took 13.3ms
+253050628214436.5 2 [trace] damage: 1 of 750 commands gone, 0 new
+253050628228478.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253050640369520.5 2 [trace] +5.543s RedrawRequested took 13.0ms
+253052403013061.5 2 [trace] damage: 0 of 749 commands gone, 0 new
+253052403050061.5 2 [trace] damage: None
+253052403050561.5 2 [trace] +7.316s RedrawRequested took 2.0ms
+253052404217478.5 2 [trace] damage: 0 of 749 commands gone, 1 new
+253052404241978.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253052414896936.5 2 [trace] +7.318s RedrawRequested took 11.7ms
+253052416196061.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253052416219895.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253052429081728.5 2 [trace] +7.330s RedrawRequested took 14.1ms
+253052429432145.5 2 [trace] +7.345s PointerButton took 0.1ms
+253052430588561.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253052430605186.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253052441907978.5 2 [trace] +7.345s RedrawRequested took 12.3ms
+253052442974103.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253052442987895.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253052455503103.5 2 [trace] +7.357s RedrawRequested took 13.6ms
+253052456448270.5 2 [trace] damage: 1 of 750 commands gone, 1 new
+253052456459686.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253052468286186.5 2 [trace] +7.371s RedrawRequested took 12.7ms
+253052495669936.5 2 [js error] MARK nav:/insights 1795491741995.0
+253052501401728.5 2 [trace] the app changed the page: 3090 ops, 1 layouts in 3.6ms
+253052501425436.5 2 [trace] +7.384s PointerButton took 32.9ms
+253052504239895.5 2 [trace] damage: full repaint (over 500 commands changed of 467)
+253052504253145.5 2 [trace] damage: Full
+253052510585353.5 2 [trace] +7.418s RedrawRequested took 7.6ms
+253052511242061.5 2 [trace] damage: 2 of 467 commands gone, 2 new
+253052511258311.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 456.0 })
+253052521423770.5 2 [trace] +7.426s RedrawRequested took 10.8ms
+253052521945978.5 2 [trace] damage: 2 of 467 commands gone, 2 new
+253052521959811.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 456.0 })
+253052548219020.5 2 [trace] +7.437s RedrawRequested took 26.7ms
+253052548961228.5 2 [trace] damage: 2 of 467 commands gone, 2 new
+253052548980895.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 456.0 })
+253052563724728.5 2 [trace] +7.464s RedrawRequested took 15.5ms
+253052564303811.5 2 [trace] damage: 2 of 467 commands gone, 2 new
+253052564317770.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 456.0 })
+253052588190770.5 2 [trace] +7.479s RedrawRequested took 24.4ms
+253052588744561.5 2 [trace] damage: 1 of 467 commands gone, 1 new
+253052588758228.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253052615001186.5 2 [trace] +7.504s RedrawRequested took 26.7ms
+253052615539311.5 2 [trace] damage: 1 of 467 commands gone, 1 new
+253052615549353.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253052641658020.5 2 [trace] +7.530s RedrawRequested took 26.6ms
+253052642190395.5 2 [trace] damage: 1 of 467 commands gone, 1 new
+253052642205353.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253052654795436.5 2 [trace] +7.557s RedrawRequested took 13.1ms
+253052655289186.5 2 [trace] damage: 1 of 467 commands gone, 0 new
+253052655301145.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 324.0, x1: 512.0, y1: 392.0 })
+253052668069311.5 2 [trace] +7.570s RedrawRequested took 13.2ms
+253054467279395.5 2 [trace] damage: 0 of 466 commands gone, 0 new
+253054467296395.5 2 [trace] damage: None
+253054467316853.5 2 [trace] +9.380s RedrawRequested took 2.3ms
+253054468466978.5 2 [trace] damage: 0 of 466 commands gone, 1 new
+253054468499103.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253054480672353.5 2 [trace] +9.383s RedrawRequested took 13.3ms
+253054482094936.5 2 [trace] damage: 1 of 467 commands gone, 1 new
+253054482113853.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253054495829936.5 2 [trace] +9.396s RedrawRequested took 15.1ms
+253054496061270.5 2 [trace] +9.411s PointerButton took 0.0ms
+253054496676145.5 2 [trace] damage: 1 of 467 commands gone, 1 new
+253054496690520.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253054522086770.5 2 [trace] +9.411s RedrawRequested took 25.9ms
+253054533774311.5 2 [js error] MARK nav:/settings 1795491744034.0
+253054535963103.5 2 [trace] the app changed the page: 1041 ops, 1 layouts in 1.3ms
+253054535975895.5 2 [trace] +9.438s PointerButton took 13.7ms
+253054537457895.5 2 [trace] damage: 363 of 467 commands gone, 77 new
+253054537469395.5 2 [trace] damage: Full
+253054544764228.5 2 [trace] +9.452s RedrawRequested took 8.0ms
+253054545211645.5 2 [trace] damage: 2 of 181 commands gone, 2 new
+253054545221228.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 1504.0 })
+253054562486645.5 2 [trace] +9.460s RedrawRequested took 17.6ms
+253054562876770.5 2 [trace] damage: 2 of 181 commands gone, 2 new
+253054562883103.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 1504.0 })
+253054588870728.5 2 [trace] +9.478s RedrawRequested took 26.3ms
+253054589296936.5 2 [trace] damage: 2 of 181 commands gone, 2 new
+253054589302186.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 1504.0 })
+253054615681978.5 2 [trace] +9.504s RedrawRequested took 26.8ms
+253054616080811.5 2 [trace] damage: 2 of 181 commands gone, 2 new
+253054616086770.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 1504.0 })
+253054642401061.5 2 [trace] +9.531s RedrawRequested took 26.7ms
+253054642721061.5 2 [trace] damage: 1 of 181 commands gone, 1 new
+253054642726186.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253054655550603.5 2 [trace] +9.558s RedrawRequested took 13.1ms
+253054655855853.5 2 [trace] damage: 1 of 181 commands gone, 1 new
+253054655860561.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253054668977270.5 2 [trace] +9.571s RedrawRequested took 13.4ms
+253054669266061.5 2 [trace] damage: 1 of 181 commands gone, 1 new
+253054669271936.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253054682269811.5 2 [trace] +9.584s RedrawRequested took 13.3ms
+253054682579061.5 2 [trace] damage: 1 of 181 commands gone, 1 new
+253054682584853.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253054695457311.5 2 [trace] +9.598s RedrawRequested took 13.1ms
+253054695784186.5 2 [trace] damage: 1 of 181 commands gone, 0 new
+253054695785145.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 388.0, x1: 512.0, y1: 456.0 })
+253054709002686.5 2 [trace] +9.611s RedrawRequested took 13.5ms
+253056518497061.5 2 [trace] damage: 0 of 180 commands gone, 0 new
+253056518508228.5 2 [trace] damage: None
+253056518508686.5 2 [trace] +11.433s RedrawRequested took 0.5ms
+253056518902811.5 2 [trace] damage: 0 of 180 commands gone, 1 new
+253056518917020.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253056524448395.5 2 [trace] +11.434s RedrawRequested took 5.9ms
+253056524883395.5 2 [trace] damage: 1 of 181 commands gone, 1 new
+253056524891478.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253056549832770.5 2 [trace] +11.440s RedrawRequested took 25.2ms
+253056550067311.5 2 [trace] +11.465s PointerButton took 0.0ms
+253056550490853.5 2 [trace] damage: 1 of 181 commands gone, 1 new
+253056550499353.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 264.0 })
+253056576619895.5 2 [trace] +11.465s RedrawRequested took 26.5ms
+253056596829311.5 2 [js error] MARK nav:/issues 1795491746097.0
+253056603578936.5 2 [trace] the app was told the layout: 1 boxes changed, window 1200 x 800
+253056604065228.5 2 [trace] the app changed the page: 4529 ops, 2 layouts in 5.4ms
+253056604071520.5 2 [trace] +11.492s PointerButton took 27.3ms
+253056605941686.5 2 [trace] damage: full repaint (over 500 commands changed of 742)
+253056605959145.5 2 [trace] damage: Full
+253056613332770.5 2 [trace] +11.520s RedrawRequested took 8.4ms
+253056614255520.5 2 [trace] damage: 2 of 742 commands gone, 2 new
+253056614267811.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 1504.0 })
+253056629664978.5 2 [trace] +11.529s RedrawRequested took 16.3ms
+253056630623353.5 2 [trace] damage: 2 of 742 commands gone, 2 new
+253056630639436.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 1504.0 })
+253056656345436.5 2 [trace] +11.545s RedrawRequested took 26.6ms
+253056657246603.5 2 [trace] damage: 2 of 742 commands gone, 2 new
+253056657257645.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 1504.0 })
+253056683007645.5 2 [trace] +11.572s RedrawRequested took 26.6ms
+253056683944853.5 2 [trace] damage: 2 of 742 commands gone, 2 new
+253056683954228.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 196.0, x1: 512.0, y1: 1504.0 })
+253056696452061.5 2 [trace] +11.598s RedrawRequested took 13.4ms
+253056697398561.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253056697409978.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253056709855186.5 2 [trace] +11.612s RedrawRequested took 13.3ms
+253056712989686.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253056713006561.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253056723105020.5 2 [trace] +11.627s RedrawRequested took 11.0ms
+253056724085478.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253056724106811.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253056736294770.5 2 [trace] +11.639s RedrawRequested took 13.1ms
+253056737273895.5 2 [trace] damage: 1 of 742 commands gone, 1 new
+253056737290103.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253056749763603.5 2 [trace] +11.652s RedrawRequested took 13.4ms
+253056750703853.5 2 [trace] damage: 1 of 742 commands gone, 0 new
+253056750724186.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 1436.0, x1: 512.0, y1: 1504.0 })
+253056763043936.5 2 [trace] +11.665s RedrawRequested took 13.2ms
