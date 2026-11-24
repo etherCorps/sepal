@@ -586,10 +586,20 @@ impl VelloHybridWindowRenderer {
         }
     }
 
+    /// svelte-blitz patch (idle): when `release_if_idle(after)` will let go of the
+    /// kept frame and the depth buffer: `after` past the last frame presented, if
+    /// they are still held. The caller wakes then, once per burst of frames.
+    pub fn release_due(&self, after: std::time::Duration) -> Option<std::time::Instant> {
+        if self.released || !matches!(self.render_state, RenderState::Active(_)) {
+            return None;
+        }
+        self.presented_at.map(|at| at + after)
+    }
+
     /// svelte-blitz patch (idle): if no frame was presented for `after`, let go of
     /// the kept frame and the depth buffer (15 MB each at 2400x1600); the next
-    /// frame makes them again and is drawn in full. Never on a timer: the caller
-    /// asks when something woke it anyway. Returns whether they were let go.
+    /// frame makes them again and is drawn in full. Returns whether they were
+    /// let go.
     pub fn release_if_idle(&mut self, after: std::time::Duration) -> bool {
         let RenderState::Active(state) = &mut self.render_state else {
             return false;
