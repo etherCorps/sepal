@@ -73,9 +73,12 @@ only the commands that touch the region whose commands changed are drawn, moved
 so the region's corner is the scene's origin and placed with vello_gpu's root
 offset (its PATCH.md, change 2), over the last frame kept in the surface's
 intermediate texture (`TargetInit::SrcOver`). A frame that changes nothing on
-screen draws nothing; it waits out a 60 Hz frame instead, as presenting is what
-paced the redraw loop and something animating without changing pixels asks for
-a redraw after every frame. Full repaints: first frame, resize, new surface,
+screen draws nothing and returns at once; `skipped_last_frame()` says so.
+Presenting is what paced the redraw loop (it waits for a drawable), and
+something animating without changing pixels asks for a redraw after every
+frame, so the caller has to put the next redraw off itself: the host does, to
+the next 60 Hz frame, waiting in the OS (`defer_redraw` in its `window.rs`).
+Waiting here instead held up input behind every skipped frame. Full repaints: first frame, resize, new surface,
 over 500 changed commands, or a region over half the window. Commands drawn
 from an app-registered texture count as changed every frame. Commands with an
 empty box are left out (blitz-paint emits border paths whose points are all

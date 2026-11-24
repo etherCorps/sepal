@@ -287,7 +287,10 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   commands are diffed with the last frame's and only the changed region is
   repainted, over the last frame kept in an intermediate texture
   (`SVELTE_BLITZ_DAMAGE=0` turns it off, `SVELTE_BLITZ_TRACE=1` prints each
-  frame's damage). See its `PATCH.md`. Same rules as below.
+  frame's damage). A frame with nothing to draw presents nothing, so nothing
+  paces the next one; the host puts that redraw off to the next 60 Hz frame
+  (`defer_redraw` in `window.rs`). Never sleep in the renderer for it: input
+  waits behind the sleep. See its `PATCH.md`. Same rules as below.
 - **`crates/vello_gpu` is a patched copy as well**: its layer textures shrink
   again once a large layer (a Dialog's backdrop) is gone, and a scene can be
   drawn at an offset (`set_root_offset`, for damage tracking). See its
