@@ -145,12 +145,12 @@ npm needs Rust, and nobody downloads the other platforms' binaries.
 that fits. The Vite preset and the CLI ask `@ethercorps/calyx` for the path;
 `SEPAL_HOST` overrides it with a host you built yourself.
 
-| Package | Binary |
-|---|---|
-| `@ethercorps/calyx-darwin-arm64` | 25.4 MB |
-| `@ethercorps/calyx-darwin-x64` | 26.3 MB |
-| `@ethercorps/calyx-linux-arm64-gnu` | 29.3 MB |
-| `@ethercorps/calyx-linux-x64-gnu` (glibc 2.35 and newer) | 32.3 MB |
+| Package | Binary | Download |
+|---|---|---|
+| `@ethercorps/calyx-darwin-arm64` | 25.4 MB | 11.3 MB |
+| `@ethercorps/calyx-darwin-x64` | 26.3 MB | 12.0 MB |
+| `@ethercorps/calyx-linux-arm64-gnu` | 29.3 MB | 13.1 MB |
+| `@ethercorps/calyx-linux-x64-gnu` (glibc 2.35 and newer) | 32.3 MB | 13.9 MB |
 
 Windows is not built yet. The release workflow
 (`.github/workflows/release.yml`) builds each on its own runner;
