@@ -1,65 +1,53 @@
-// The Tracker built for the DOM (WKWebView), from the app's own source.
+// The Tracker built for the DOM (WKWebView): SvelteKit as a single-page app,
+// from the app's own source and with the app's own toolchain.
 //
-// Mirrors packages/sepal/vite/vite.js (the Sepal preset) with the
+// Mirrors sepalKit() (packages/sepal/vite/sveltekit.js) with the
 // renderer-specific parts taken out: no `customRenderer`, no
-// `svelte-custom-renderer` condition, no `bind:`/`<svelte:head>` preprocessors
-// (Svelte handles both for the DOM), no DOM layer. Same root, same library
-// build (one IIFE `app.js`, one `app.css`, assets inlined, es2022), so the
-// Tailwind scan and the CSS are the Sepal build's.
+// `svelte-custom-renderer` condition, no `bind:`/`<svelte:head>`
+// preprocessors (Svelte handles both for the DOM), no DOM layer, and
+// adapter-static in place of Sepal's adapter. The SvelteKit options are
+// sepalKit()'s: one bundle, nothing prerendered, no version polling.
+//
+// `pnpm run build:web` runs it from examples/tracker, so Vite's root,
+// SvelteKit's project and Tailwind's scan are the app's. Vite, SvelteKit,
+// vite-plugin-svelte and Tailwind are the installs the app's own build uses:
+// both builds run one copy of SvelteKit's router.
 
 import { fileURLToPath } from 'node:url';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import adapter from '@sveltejs/adapter-static';
+// Linked from examples/tracker/node_modules (package.json): the app's installs.
+import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
-import { generate_routes } from '../../packages/sepal/vite/routes.js';
 
 const here = (file) => fileURLToPath(new URL(file, import.meta.url));
-const app = here('../../examples/tracker');
-const preset = here('../../packages/sepal/vite');
-const desktop = here('./src/desktop.js');
-const ROUTES_ID = 'virtual:sepal/routes';
 
-export default defineConfig({
-	// Tailwind scans the Vite root: it must be the app's, as in its own build.
-	root: app,
+const dist = here('./dist');
+const bench_emit = here('./src/bench-emit.js');
+
+export default {
 	// Keep Vite's cache out of examples/tracker.
 	cacheDir: here('./node_modules/.vite'),
-	// index.html, copied into dist as it is.
-	publicDir: here('./public'),
 	plugins: [
 		tailwindcss(),
-		svelte({ emitCss: true, compilerOptions: { css: 'external' } }),
 		{
-			name: 'tracker-tauri:routes',
-			resolveId: (id) => (id === ROUTES_ID ? '\0' + ROUTES_ID : undefined),
-			load: (id) => (id === '\0' + ROUTES_ID ? generate_routes(`${app}/src/routes`).code : undefined)
-		}
+			// First in SvelteKit's single-bundle entry, where sepalKit() puts the
+			// DOM layer: `__bench_emit` has to exist before bench.ts marks `start`.
+			name: 'tracker-tauri:bench-emit',
+			transform: (code, id) =>
+				id.endsWith('/kit/src/runtime/client/bundle.js') ? { code: `import ${JSON.stringify(bench_emit)};\n${code}`, map: null } : undefined
+		},
+		await sveltekit({
+			adapter: adapter({ pages: dist, assets: dist, fallback: 'index.html' }),
+			// Keep SvelteKit's generated files apart from the Sepal build's.
+			outDir: here('./.svelte-kit'),
+			output: { bundleStrategy: 'single' },
+			prerender: { entries: [] },
+			version: { pollInterval: 0 }
+		})
 	],
 	resolve: {
-		// Sepal's list minus `svelte-custom-renderer`.
+		// sepalKit()'s list minus `svelte-custom-renderer`.
 		conditions: ['browser', 'svelte', 'module', 'import', 'default'],
-		alias: [
-			// The preset's router modules import their runtime by this name; give
-			// them the DOM copy. Nothing in the app has a file of this name.
-			{ find: /^\.\/routing\.svelte\.js$/, replacement: here('./src/routing.svelte.js') },
-			{ find: '$lib', replacement: `${app}/src/lib` },
-			{ find: '$app/navigation', replacement: `${preset}/navigation.js` },
-			{ find: '$app/state', replacement: `${preset}/state.js` },
-			{ find: 'sepal/router', replacement: `${preset}/router.js` },
-			{ find: /^sepal\/(fs|dialog|clipboard|window)$/, replacement: desktop }
-		]
-	},
-	build: {
-		outDir: here('./dist'),
-		emptyOutDir: true,
-		target: 'es2022',
-		cssCodeSplit: false,
-		lib: {
-			entry: here('./src/entry.js'),
-			name: 'app',
-			formats: ['iife'],
-			fileName: () => 'app.js',
-			cssFileName: 'app'
-		}
+		alias: [{ find: /^sepal\/(fs|dialog|clipboard|window)$/, replacement: here('./src/desktop.js') }]
 	}
-});
+};

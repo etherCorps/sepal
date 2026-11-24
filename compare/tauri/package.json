@@ -3,21 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:web": "vite build",
+    "build:web": "pnpm --dir ../../examples/tracker exec vite build --config ../../compare/tauri/vite.config.js",
     "build": "tauri build --bundles app"
   },
   "dependencies": {
     "@tauri-apps/api": "2.12.5",
     "@tauri-apps/plugin-clipboard-manager": "2.5.0",
     "@tauri-apps/plugin-dialog": "2.8.4",
-    "@tauri-apps/plugin-fs": "2.7.1",
-    "svelte": "5.59.1"
+    "@tauri-apps/plugin-fs": "2.7.1"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "7.3.1",
-    "@tailwindcss/vite": "4.3.5",
-    "@tauri-apps/cli": "2.12.6",
-    "tailwindcss": "4.3.5",
-    "vite": "8.3.8"
+    "@sveltejs/adapter-static": "4.0.1",
+    "@sveltejs/kit": "link:../../examples/tracker/node_modules/@sveltejs/kit",
+    "@tailwindcss/vite": "link:../../examples/tracker/node_modules/@tailwindcss/vite",
+    "@tauri-apps/cli": "2.12.6"
   }
 }

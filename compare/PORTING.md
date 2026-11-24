@@ -11,10 +11,10 @@ contract is `shared/PROTOCOL.md`.
 |---|---|---|---|
 | Svelte source | examples/tracker | **the same files** | a port: same screens, data, store logic (copied), windowing algorithm, ids |
 | Svelte version | 5.59.1 | 5.59.1 | **5.57.2, a pre-release PR build bundled by gpuix** |
-| CSS | Tailwind v4 | **byte-identical app.css** | hand-written classes in gpuix's CSS subset |
+| CSS | Tailwind v4 | **byte-identical stylesheet** (SvelteKit's `bundle.*.css`) | hand-written classes in gpuix's CSS subset |
 | Widgets | shadcn-svelte / bits-ui | same | gpuix-svelte-ui (Select, Dialog, Toggle, Tabs) |
 | Icons, chart | inline SVG | same | `<svg source>` strings; chart as 3 stacked SVGs |
-| Router | Sepal file router | same route files; router runtime with its 2 renderer lines moved to the DOM | gpuix-svelte-ui Router with an explicit map |
+| Router | SvelteKit 3.4.0, a single-page app in one bundle (since 24 Nov; Sepal's built-in file router before) | **the same SvelteKit install**, with adapter-static | gpuix-svelte-ui Router with an explicit map |
 | Fonts | @font-face (woff2) | @font-face (same CSS) | register_font with the same fonts converted to TTF; **Inter only at weight 400** |
 | Viewport | 1200x800 | 1200x800 (frame 1200x832) | 1200x800 |
 | JS engine | QuickJS (interpreter) / V8 | WebKit JSC (JIT) in WebContent | Bun (JSC, JIT) |
@@ -55,7 +55,7 @@ If it is there, `fixture.json` from the same directory is read and parsed
 | `sepal.config.ts` | window 1280x800 -> **1200x800** (all builds, not only bench) |
 | `src/lib/bench.ts` (new) | `bench` (null until known), `bench_ready` (promise), `mark(name)`, `rects()`; emits the `start` mark when evaluated |
 | `src/lib/store.svelte.ts` | first import is `./bench` (so `start` is the first app code to run); startup waits for `load()` **and** `bench_ready`; in bench mode it replaces the issues with the fixture (`use_base`, the old body of `reseed`) and ignores edits.json / settings.json (settings stay the defaults: no simulated teammates, group by status); marks `loaded`, `mounted`, `status:<key>:<status>` (in `bulk_update`), `created:<key>` (in `create`) |
-| `src/routes/+layout.svelte` | marks `nav:<path>` (effect on the path), `search:<query>` (effect on `view.search`), `resize:<w>x<h>` (window `resize` event), the clock |
+| `src/routes/+layout.svelte` | marks `nav:<path>` (`afterNavigate`, once per change of path; an effect on the path before 24 Nov), `search:<query>` (effect on `view.search`), `resize:<w>x<h>` (window `resize` event), the clock |
 | `compare/shared/make-fixtures.ts` (new) | writes `fixtures/issues-1000.json` and `issues-10000.json` from `seed(n)`, shape `{ n, issues }` |
 
 Marks are written after the DOM update: each one waits for Svelte's `tick()`
@@ -188,48 +188,62 @@ The data directory comes from the bundled `Resources/app.json` id.
 ## 2. Tauri 2
 
 
-Build: `cd compare/tauri && pnpm install --ignore-workspace && pnpm exec tauri build --bundles app`,
+Build: `cd compare/tauri && pnpm install --ignore-workspace && VITE_BENCH=1 pnpm exec tauri build --bundles app`,
 then `cp -R src-tauri/target/release/bundle/macos/Tracker.app ../builds/Tracker-tauri.app`.
-`beforeBuildCommand` runs `vite build` (compare/tauri/vite.config.js) first.
+`beforeBuildCommand` runs `pnpm run build:web` first: `vite build` in
+`examples/tracker` with `compare/tauri/vite.config.js` as its config. The
+repository's `pnpm install` has to have run, for the linked toolchain below.
+
+**Since 24 Nov (branch `sveltekit-only`) both builds run SvelteKit.** Results
+from before that date ran Sepal's built-in router on both sides (its runtime
+copied for the DOM, as this section used to describe).
 
 
-- **Source.** No component, route or CSS file is copied. Vite's root is
-  `examples/tracker`, so `.svelte`, `.ts`, `src/routes` and `src/app.css` are the
-  app's own files, bench mode (`src/lib/bench.ts`) included.
-- **CSS: byte-identical.** `compare/tauri/dist/app.css` and
-  `examples/tracker/dist/app.css` are the same file (`cmp`, 347,198 bytes,
-  checked against the Sepal build of 14:50 on 23 Nov). Tailwind scans the
-  Vite root, which is why the root is `examples/tracker` and not `compare/tauri`.
+- **Source.** No component, route or CSS file is copied. The build runs in
+  `examples/tracker`, so Vite's root and SvelteKit's project are the app's:
+  `src/routes`, `src/lib` (through `#lib`), `src/app.html` and `src/app.css`
+  are its own files, bench mode (`src/lib/bench.ts`) included.
+- **CSS: byte-identical.** SvelteKit's stylesheet,
+  `_app/immutable/assets/bundle.Bs749d7n.css`, is the same file in
+  `compare/tauri/dist` and in the Sepal build's `.svelte-kit/output/client`
+  (`cmp`, 67,814 bytes, 24 Nov). Sepal's adapter then moves it into
+  `app.css` and rebases its font URLs; Tauri links it as it is. Tailwind scans
+  the Vite root, which is why the build runs in `examples/tracker`.
 - **Fonts.** The same `@font-face` rules with the same files (Inter Variable,
-  Space Grotesk, JetBrains Mono, latin subsets), inlined as data URLs in both.
-- **Bundle shape.** Same Vite library build as the preset: one IIFE `app.js`,
-  one `app.css`, `target: 'es2022'`, `cssCodeSplit: false`, assets inlined,
-  Vite's default minification. Resolve conditions are the preset's minus
+  Space Grotesk, JetBrains Mono, latin subsets), as files in
+  `_app/immutable/assets` in both (data URLs before 24 Nov).
+- **Bundle shape.** SvelteKit's single bundle (`output.bundleStrategy:
+  'single'`), nothing prerendered, version polling off: the options
+  `sepalKit()` sets. One ES module and one stylesheet; Sepal's adapter turns
+  the module into the `app.js` script, adapter-static writes the page that
+  imports it (`index.html`, from `src/app.html`). Vite's default
+  minification. Resolve conditions are `sepalKit()`'s minus
   `svelte-custom-renderer`: `browser, svelte, module, import, default`.
 - **Package versions.** App files import their packages from where Node
   resolution finds them, the repo's workspace install that
   `examples/tracker` uses: svelte 5.59.1, bits-ui 2.21.0, @lucide/svelte 1.77.0,
   tailwind-variants 3.3.1, cn 0.5.2, @internationalized/date 3.12.4,
   tw-animate-css 1.4.0, shadcn-svelte 1.8.1, @fontsource* 5.3.0. These are the same
-  files, not just the same versions. Svelte is deduped by vite-plugin-svelte, so
-  the bundle has one Svelte runtime (checked in an unminified build). The
-  toolchain comes from `compare/tauri/node_modules`, pinned to the tracker's
-  versions: vite 8.3.8, @sveltejs/vite-plugin-svelte 7.3.1 (its compiler is
-  svelte 5.59.1), tailwindcss and @tailwindcss/vite 4.3.5.
-- **Router.** The route table is generated by the preset's own
-  `packages/sepal/vite/routes.js` (`generate_routes`) and served as
-  `virtual:sepal/routes`. `Router.svelte`, `RouterError.svelte`,
-  `router.js`, `navigation.js` and `state.js` are the preset's files, used where
-  they are. Only the runtime is a copy (`compare/tauri/src/routing.svelte.js`).
-  Two lines differ: the import of the renderer is gone, and the link-click
-  listener is `document.addEventListener('click', …)` instead of
-  `renderer.addEventListener(root, 'click', …)`. An alias that matches
-  `./routing.svelte.js` sends the preset's modules to that copy.
-- **Entry.** `compare/tauri/src/entry.js` is `router-entry.js` with Svelte's
-  `mount(Router, { target: document.body })` in place of Sepal's
-  `mount(Router)`.
-- **Aliases** as in the preset: `$lib`, `$app/navigation`, `$app/state`,
-  `sepal/router`.
+  files, not just the same versions. The toolchain is the app's too:
+  `vite build` runs from `examples/tracker`, and `compare/tauri/package.json`
+  links `@sveltejs/kit` and `@tailwindcss/vite` from
+  `examples/tracker/node_modules`, so vite 8.3.8, @sveltejs/kit 3.4.0,
+  @sveltejs/vite-plugin-svelte 7.3.1 (its compiler is svelte 5.59.1),
+  tailwindcss and @tailwindcss/vite 4.3.5 are the Sepal build's installs.
+  Only `@sveltejs/adapter-static` 4.0.1 is Tauri's own. One Svelte runtime and
+  one SvelteKit runtime in the bundle (the same counts of their error codes as
+  in the Sepal bundle).
+- **Router.** SvelteKit's client router, from the one install both builds use:
+  `$app/navigation`, `$app/state`, `afterNavigate`, `error` and `redirect`
+  from `@sveltejs/kit`, link clicks heard on `<html>`. Both builds take the
+  same unknown-address route (`src/routes/[...path]`, a 404). In both, a link
+  click waits a `requestAnimationFrame` and a `setTimeout(0)` before
+  navigating (SvelteKit lets the page repaint first).
+- **Entry.** SvelteKit's single-bundle entry
+  (`@sveltejs/kit/src/runtime/client/bundle.js`), with
+  `compare/tauri/src/bench-emit.js` imported first, where `sepalKit()` puts the
+  DOM layer and the runtime.
+- **Aliases:** only `sepal/{fs,dialog,clipboard,window}`.
 
 ### Different, on purpose
 
@@ -238,10 +252,10 @@ then `cp -R src-tauri/target/release/bundle/macos/Tracker.app ../builds/Tracker-
 | Svelte output | custom renderer (`customRenderer`), op buffer to Blitz | Svelte's normal DOM client | that is the comparison |
 | `bind:` on elements | rewritten to attachments by `bindings.js` | compiled by Svelte | Svelte supports it in the DOM; the preprocessor exists only because Svelte refuses it for custom renderers |
 | `<svelte:head>` preprocessor | `head.js` | not used | the app has no `<svelte:head>` |
-| DOM layer (`dom: true`) | `sepal/dom` loaded first | none | WebKit is a DOM |
-| Events | `dispatch()` in `renderer.js` bubbles | WebKit's events; Svelte delegates `onclick` and similar to the mount target (`<body>`) | DOM build behaviour. The router's `document` listener still runs after the app's handlers, as with Sepal's root listener |
+| DOM layer | `sepal/dom` loaded first (`sepalKit()` always loads it) | none | WebKit is a DOM |
+| Events | `dispatch()` in `renderer.js` bubbles | WebKit's events; Svelte delegates `onclick` and similar to the mount target | DOM build behaviour. SvelteKit's click listener on `<html>` runs after the app's handlers in both |
 | `sepal/{fs,dialog,clipboard,window}` | host calls | `compare/tauri/src/desktop.js` on the plugins | see below |
-| HTML page | the host's base document | `public/index.html`: `<link rel=stylesheet href=app.css>`, `<script src=app.js>` at the end of `<body>` | Tauri needs a page. Nothing else is in it |
+| HTML page | the host's base document; `sepalKit()` takes SvelteKit's start script out of the page it generates | adapter-static's `index.html`, from `src/app.html`: the stylesheet, a `modulepreload` of the bundle, and SvelteKit's start script in `<body>` | Tauri needs a page. Nothing else is in it |
 | `app.json`, `icon.png` | written; the icon is the Sepal one, since the Tracker has none of its own | not used; the icon is in `src-tauri/icons` (made from `assets/brand/sepal-app-icon-1024.png` with `tauri icon`, the icon the Tracker gets from the preset) | Tauri's equivalent is `tauri.conf.json` |
 | App id / data dir | `com.compare.tracker.blitz` | `com.compare.tracker.tauri` (`~/Library/Application Support/com.compare.tracker.tauri`) | PROTOCOL.md |
 
@@ -269,8 +283,9 @@ CSP is off (`null`), as in Tauri's templates.
 
 #### Marks (`compare/tauri/src/bench-emit.js`)
 
-- Imported first by the entry, so `globalThis.__bench_emit` exists before the
-  route table imports `bench.ts`. Each line goes to the `mark` command
+- Imported first in SvelteKit's entry (the `tracker-tauri:bench-emit` plugin in
+  `vite.config.js`), so `globalThis.__bench_emit` exists before `bench.ts`
+  marks `start`. Each line goes to the `mark` command
   (`invoke('mark', { line })`), which `eprintln!`s it.
 - **IPC latency.** `invoke` is asynchronous (WebKit message handler to the Rust
   core). Measured on this Mac by timestamping lines as they arrive: arrival
