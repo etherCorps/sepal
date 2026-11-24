@@ -1,0 +1,17 @@
+267422597154729 2 [js error] MARK start 1795506112149.0
+267422615645645 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+267422716396437 2 [trace] +0.084s first frame took 0.0ms
+267422716411729 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+267422752754062 2 [trace] damage: full repaint (first frame, or the target is new)
+267422752759395 2 [trace] damage: Full
+267422762729729 2 [trace] +0.120s poll took 10.2ms
+267422764379645 2 [js error] MARK read 1795506112317.0
+267422765711270 2 [js error] MARK parsed 1795506112318.0
+267422766349520 2 [js error] MARK loaded 1795506112319.0
+267422774274604 2 [js error] MARK mounted 1795506112326.0
+267422778343729 2 [trace] the app changed the page: 2644 ops, 1 layouts in 3.3ms
+267422778356187 2 [trace] +0.131s poll took 14.3ms
+267422780218354 2 [trace] damage: full repaint (over 500 commands changed of 741)
+267422780224312 2 [trace] damage: Full
+267422786400729 2 [trace] +0.147s RedrawRequested took 7.3ms
+267424785875937 2 [trace] +2.153s released the kept frame and the depth buffer (no frame for 2 s)

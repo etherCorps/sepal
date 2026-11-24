@@ -1,0 +1,354 @@
+{
+	"build": "blitzd",
+	"size": 1000,
+	"wall": "2026-11-24T07:11:18.978Z",
+	"states": {
+		"start": {
+			"list": {
+				"x": 240,
+				"y": 92,
+				"w": 960,
+				"h": 708
+			},
+			"search": {
+				"x": 256,
+				"y": 56,
+				"w": 260,
+				"h": 28
+			},
+			"nav-new": {
+				"x": 12,
+				"y": 52,
+				"w": 215,
+				"h": 32
+			},
+			"nav-issues": {
+				"x": 12,
+				"y": 100,
+				"w": 215,
+				"h": 30
+			},
+			"nav-board": {
+				"x": 12,
+				"y": 164,
+				"w": 215,
+				"h": 30
+			},
+			"nav-insights": {
+				"x": 12,
+				"y": 196,
+				"w": 215,
+				"h": 30
+			},
+			"nav-settings": {
+				"x": 12,
+				"y": 720,
+				"w": 215,
+				"h": 30
+			},
+			"nav-my": {
+				"x": 12,
+				"y": 132,
+				"w": 215,
+				"h": 30
+			},
+			"show-all": {
+				"x": 384,
+				"y": 7360,
+				"w": 119,
+				"h": 28
+			},
+			"show-more": {
+				"x": 252,
+				"y": 7360,
+				"w": 128,
+				"h": 28
+			},
+			"row:WEB-180": {
+				"x": 240,
+				"y": 124,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-175": {
+				"x": 240,
+				"y": 160,
+				"w": 960,
+				"h": 36
+			},
+			"row:OPS-9": {
+				"x": 240,
+				"y": 196,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-5": {
+				"x": 240,
+				"y": 232,
+				"w": 960,
+				"h": 36
+			},
+			"row:WEB-94": {
+				"x": 240,
+				"y": 268,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-170": {
+				"x": 240,
+				"y": 304,
+				"w": 960,
+				"h": 36
+			},
+			"row:OPS-34": {
+				"x": 240,
+				"y": 340,
+				"w": 960,
+				"h": 36
+			},
+			"row:ENG-270": {
+				"x": 240,
+				"y": 376,
+				"w": 960,
+				"h": 36
+			},
+			"row:WEB-164": {
+				"x": 240,
+				"y": 412,
+				"w": 960,
+				"h": 36
+			},
+			"row:ENG-107": {
+				"x": 240,
+				"y": 448,
+				"w": 960,
+				"h": 36
+			},
+			"row:OPS-12": {
+				"x": 240,
+				"y": 484,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-81": {
+				"x": 240,
+				"y": 520,
+				"w": 960,
+				"h": 36
+			},
+			"row:ENG-225": {
+				"x": 240,
+				"y": 556,
+				"w": 960,
+				"h": 36
+			},
+			"row:ENG-221": {
+				"x": 240,
+				"y": 592,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-68": {
+				"x": 240,
+				"y": 628,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-35": {
+				"x": 240,
+				"y": 664,
+				"w": 960,
+				"h": 36
+			},
+			"row:ENG-285": {
+				"x": 240,
+				"y": 700,
+				"w": 960,
+				"h": 36
+			},
+			"row:WEB-252": {
+				"x": 240,
+				"y": 736,
+				"w": 960,
+				"h": 36
+			},
+			"row:WEB-139": {
+				"x": 240,
+				"y": 772,
+				"w": 960,
+				"h": 36
+			},
+			"row:WEB-107": {
+				"x": 240,
+				"y": 808,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-36": {
+				"x": 240,
+				"y": 844,
+				"w": 960,
+				"h": 36
+			},
+			"row:WEB-176": {
+				"x": 240,
+				"y": 880,
+				"w": 960,
+				"h": 36
+			},
+			"row:DES-56": {
+				"x": 240,
+				"y": 916,
+				"w": 960,
+				"h": 36
+			},
+			"row:OPS-128": {
+				"x": 240,
+				"y": 952,
+				"w": 960,
+				"h": 36
+			},
+			"row:ENG-79": {
+				"x": 240,
+				"y": 988,
+				"w": 960,
+				"h": 36
+			},
+			"row:WEB-144": {
+				"x": 240,
+				"y": 1024,
+				"w": 960,
+				"h": 36
+			},
+			"row:OPS-10": {
+				"x": 240,
+				"y": 1060,
+				"w": 960,
+				"h": 36
+			},
+			"row:API-182": {
+				"x": 240,
+				"y": 1096,
+				"w": 960,
+				"h": 36
+			}
+		}
+	},
+	"missing": [],
+	"window": {
+		"alpha": 1,
+		"h": 832,
+		"id": 16699,
+		"name": "Issues · Tracker",
+		"onscreen": true,
+		"w": 1200,
+		"x": 680,
+		"y": 175,
+		"t": 265589674219728.5,
+		"stable_t": 265589808279478.5,
+		"parked": false
+	},
+	"titlebar": 32,
+	"titlebar_standard": 32,
+	"triggers": {},
+	"aborted": "window moved or resized: {\"alpha\":1,\"h\":121,\"id\":16699,\"name\":\"Issues · Tracker\",\"onscreen\":true,\"w\":108,\"x\":-296,\"y\":1116} vs {\"alpha\":1,\"h\":832,\"id\":16699,\"name\":\"Issues · Tracker\",\"onscreen\":true,\"w\":1200,\"x\":680,\"y\":175,\"t\":265589674219728.5,\"stable_t\":265589808279478.5,\"parked\":false}",
+	"log": [
+		"265589516033020.5 2 [js error] MARK start 1795504279063.0",
+		"265589534340853.5 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms",
+		"265589639906478.5 2 [trace] +0.085s first frame took 0.0ms",
+		"265589639922686.5 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800",
+		"265589655443478.5 2 [trace] +0.101s KeyboardInput took 0.1ms",
+		"265589673979228.5 2 [trace] damage: full repaint (first frame, or the target is new)",
+		"265589673983561.5 2 [trace] damage: Full",
+		"265589676532311.5 2 [js error] MARK read 1795504279223.0",
+		"265589677814645.5 2 [js error] MARK parsed 1795504279225.0",
+		"265589678540978.5 2 [js error] MARK loaded 1795504279225.0",
+		"265589686956103.5 2 [js error] MARK mounted 1795504279234.0",
+		"265589691957186.5 2 [js error] RECT list 240 92 960 708",
+		"265589692566520.5 2 [js error] RECT search 256 56 260 28",
+		"265589694986561.5 2 [js error] RECT nav-new 12 52 215 32",
+		"265589696442645.5 2 [js error] RECT nav-issues 12 100 215 30",
+		"265589696938728.5 2 [js error] RECT nav-board 12 164 215 30",
+		"265589697418686.5 2 [js error] RECT nav-insights 12 196 215 30",
+		"265589697893478.5 2 [js error] RECT nav-settings 12 720 215 30",
+		"265589698385020.5 2 [js error] RECT nav-my 12 132 215 30",
+		"265589699813811.5 2 [js error] RECT show-all 384 7360 119 28",
+		"265589700310520.5 2 [js error] RECT show-more 252 7360 128 28",
+		"265589700821853.5 2 [js error] RECT row:WEB-180 240 124 960 36",
+		"265589700826186.5 2 [js error] RECT row:API-175 240 160 960 36",
+		"265589700829228.5 2 [js error] RECT row:OPS-9 240 196 960 36",
+		"265589700839561.5 2 [js error] RECT row:API-5 240 232 960 36",
+		"265589700872061.5 2 [js error] RECT row:WEB-94 240 268 960 36",
+		"265589700877103.5 2 [js error] RECT row:API-170 240 304 960 36",
+		"265589700877478.5 2 [js error] RECT row:OPS-34 240 340 960 36",
+		"265589700877895.5 2 [js error] RECT row:ENG-270 240 376 960 36",
+		"265589700884728.5 2 [js error] RECT row:WEB-164 240 412 960 36",
+		"265589700898728.5 2 [js error] RECT row:ENG-107 240 448 960 36",
+		"265589700899228.5 2 [js error] RECT row:OPS-12 240 484 960 36",
+		"265589700899436.5 2 [js error] RECT row:API-81 240 520 960 36",
+		"265589700904020.5 2 [js error] RECT row:ENG-225 240 556 960 36",
+		"265589700907270.5 2 [js error] RECT row:ENG-221 240 592 960 36",
+		"265589700914895.5 2 [js error] RECT row:API-68 240 628 960 36",
+		"265589700926978.5 2 [js error] RECT row:API-35 240 664 960 36",
+		"265589700929561.5 2 [js error] RECT row:ENG-285 240 700 960 36",
+		"265589700936603.5 2 [js error] RECT row:WEB-252 240 736 960 36",
+		"265589700943228.5 2 [js error] RECT row:WEB-139 240 772 960 36",
+		"265589700951520.5 2 [js error] RECT row:WEB-107 240 808 960 36",
+		"265589700958561.5 2 [js error] RECT row:API-36 240 844 960 36",
+		"265589700964770.5 2 [js error] RECT row:WEB-176 240 880 960 36",
+		"265589700972728.5 2 [js error] RECT row:DES-56 240 916 960 36",
+		"265589700980436.5 2 [js error] RECT row:OPS-128 240 952 960 36",
+		"265589700987895.5 2 [js error] RECT row:ENG-79 240 988 960 36",
+		"265589701043645.5 2 [js error] RECT row:WEB-144 240 1024 960 36",
+		"265589701046561.5 2 [js error] RECT row:OPS-10 240 1060 960 36",
+		"265589701059645.5 2 [js error] RECT row:API-182 240 1096 960 36",
+		"265589701560020.5 2 [trace] the app was told the layout: 37 boxes changed, window 1200 x 800",
+		"265589701659520.5 2 [trace] the app changed the page: 2681 ops, 1 layouts in 3.5ms",
+		"265589701665228.5 2 [trace] +0.122s poll took 25.6ms",
+		"265589702662645.5 2 [trace] damage: full repaint (first frame, or the target is new)",
+		"265589702677061.5 2 [trace] damage: Full",
+		"265589716927811.5 2 [trace] +0.147s RedrawRequested took 15.0ms",
+		"265589801115020.5 2 [trace] +0.246s KeyboardInput took 0.0ms",
+		"265590745243353.5 2 [trace] +1.190s KeyboardInput took 0.2ms",
+		"265590862576311.5 2 [trace] +1.307s KeyboardInput took 0.1ms",
+		"265591150945520.5 2 [js error] RECT list 240 92 960 708",
+		"265591154034353.5 2 [js error] RECT search 256 56 260 28",
+		"265591164288936.5 2 [js error] RECT nav-new 12 52 215 32",
+		"265591168651395.5 2 [js error] RECT nav-issues 12 100 215 30",
+		"265591170702061.5 2 [js error] RECT nav-board 12 164 215 30",
+		"265591172064478.5 2 [js error] RECT nav-insights 12 196 215 30",
+		"265591174034645.5 2 [js error] RECT nav-settings 12 720 215 30",
+		"265591175608103.5 2 [js error] RECT nav-my 12 132 215 30",
+		"265591179571353.5 2 [js error] RECT show-all 384 7360 119 28",
+		"265591180917478.5 2 [js error] RECT show-more 252 7360 128 28",
+		"265591182242895.5 2 [js error] RECT row:WEB-180 240 124 960 36",
+		"265591182256853.5 2 [js error] RECT row:API-175 240 160 960 36",
+		"265591182265561.5 2 [js error] RECT row:OPS-9 240 196 960 36",
+		"265591182272270.5 2 [js error] RECT row:API-5 240 232 960 36",
+		"265591182296353.5 2 [js error] RECT row:WEB-94 240 268 960 36",
+		"265591182315145.5 2 [js error] RECT row:API-170 240 304 960 36",
+		"265591182331770.5 2 [js error] RECT row:OPS-34 240 340 960 36",
+		"265591182348520.5 2 [js error] RECT row:ENG-270 240 376 960 36",
+		"265591182364311.5 2 [js error] RECT row:WEB-164 240 412 960 36",
+		"265591182382895.5 2 [js error] RECT row:ENG-107 240 448 960 36",
+		"265591182400145.5 2 [js error] RECT row:OPS-12 240 484 960 36",
+		"265591182417436.5 2 [js error] RECT row:API-81 240 520 960 36",
+		"265591182436520.5 2 [js error] RECT row:ENG-225 240 556 960 36",
+		"265591182451811.5 2 [js error] RECT row:ENG-221 240 592 960 36",
+		"265591182468228.5 2 [js error] RECT row:API-68 240 628 960 36",
+		"265591182483853.5 2 [js error] RECT row:API-35 240 664 960 36",
+		"265591182501103.5 2 [js error] RECT row:ENG-285 240 700 960 36",
+		"265591182516145.5 2 [js error] RECT row:WEB-252 240 736 960 36",
+		"265591182531811.5 2 [js error] RECT row:WEB-139 240 772 960 36",
+		"265591182547186.5 2 [js error] RECT row:WEB-107 240 808 960 36",
+		"265591182562686.5 2 [js error] RECT row:API-36 240 844 960 36",
+		"265591182578478.5 2 [js error] RECT row:WEB-176 240 880 960 36",
+		"265591182594436.5 2 [js error] RECT row:DES-56 240 916 960 36",
+		"265591182611436.5 2 [js error] RECT row:OPS-128 240 952 960 36",
+		"265591182628020.5 2 [js error] RECT row:ENG-79 240 988 960 36",
+		"265591182645103.5 2 [js error] RECT row:WEB-144 240 1024 960 36",
+		"265591182659978.5 2 [js error] RECT row:OPS-10 240 1060 960 36",
+		"265591182676395.5 2 [js error] RECT row:API-182 240 1096 960 36",
+		"265591183759645.5 2 [trace] +1.593s poll took 36.2ms"
+	]
+}
