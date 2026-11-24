@@ -18,7 +18,7 @@
 //
 // Runs in Node.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, posix, relative, resolve } from 'node:path';
 import { dev_window, load_config, manifest } from './app.js';
 import { element_bindings } from './bindings.js';
@@ -170,8 +170,9 @@ export async function sepalKit(inline = {}) {
 		async adapt(builder) {
 			const staging = builder.getBuildDirectory('sepal');
 			const to = resolve(root, out);
-			builder.rimraf(staging);
-			builder.rimraf(to);
+			// `builder.rimraf` is deprecated in SvelteKit 3.
+			rmSync(staging, { force: true, recursive: true });
+			rmSync(to, { force: true, recursive: true });
 			builder.writeClient(staging);
 			// The page SvelteKit serves for a route it did not prerender: nothing
 			// in it but the script that starts the app.
