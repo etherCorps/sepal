@@ -125,7 +125,7 @@ export function main(root, args) {
 	return `Committed "Release ${target}" (from ${current}). Push it to main to publish it.`;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 	try {
 		console.log(main(process.cwd(), process.argv.slice(2)));
 	} catch (error) {

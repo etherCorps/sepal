@@ -28,6 +28,11 @@ name: Release
 #     npm trust github "$p" --file release.yml --repo etherCorps/sepal --env npm --allow-publish
 #   done
 #
+# then, on npmjs.com, each package's trusted publisher with "Allow npm
+# dist-tag" turned on: `npm trust` has no flag for it, and without it npm
+# publishes but refuses to move `latest` ("This trusted publisher cannot
+# manage dist-tags").
+#
 # npm trusts a package that exists, so a brand-new one (a Windows calyx,
 # sepal-secrets) is published once by hand, then trusted, before this can
 # publish it.

@@ -666,6 +666,12 @@ for p in sepal create-sepal @ethercorps/calyx \
 done
 ```
 
+Then, on npmjs.com, each package's trusted publisher needs "Allow npm
+dist-tag" turned on. `npm trust` has no flag for it (npm 12.2.3), and without
+it npm publishes but refuses to move `latest`: "This trusted publisher cannot
+manage dist-tags". 0.1.0-alpha.2's first run stopped there, after one
+package.
+
 npm only trusts a package that exists. A brand-new package (a Windows calyx,
 `sepal-secrets`) is published once by hand, then given the same `npm trust`
 line, before CI can publish it. The publish job updates npm to 11.21 or
@@ -676,7 +682,12 @@ Do not fetch a tarball's URL before it is published: the registry's CDN
 caches the 404 for five minutes (`max-age=300`), and installs at that edge
 fail until it expires. On 24 Nov a check made a second before `sepal`
 0.1.0-alpha.1's tarball existed did exactly that. Add a query string
-(`?probe=…`) to anything that probes; `scripts/publish.js` does.
+(`?probe=…`) to anything that probes; `scripts/publish.js` does. And do not
+trust a package's listing right after a publish either: during 0.1.0-alpha.2
+the CDN edge near the runner served @ethercorps/calyx-darwin-x64's listing
+from before its publish for over 15 minutes, while the tarball itself was
+there. `scripts/publish.js` asks for each tarball directly, and treats npm's
+"cannot publish over the previously published version" as published.
 
 ## What only Shivam can do
 

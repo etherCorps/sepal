@@ -21,7 +21,7 @@
 // `pnpm add sepal` get it. Once a stable release exists, prereleases leave
 // `latest` alone.
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -55,18 +55,35 @@ function view(args) {
 	}
 }
 
+/** Where npm serves a version's tarball. @param {string} name @param {string} version */
+export function tarball_url(name, version) {
+	return `https://registry.npmjs.org/${name}/-/${name.split('/').pop()}-${version}.tgz`;
+}
+
+/**
+ * The tarball's HTTP status, from the registry itself, not from what a CDN edge
+ * remembers. Asked for directly, not through the package's listing: on 24 Nov
+ * the edge near a runner served @ethercorps/calyx-darwin-x64's listing from
+ * before its publish for over 15 minutes. The query keeps the probe out of the
+ * CDN's cache both ways: it reads nothing stale, and it leaves nothing behind (a
+ * request for the plain URL before the tarball exists caches a 404 there for
+ * five minutes, for everyone).
+ * @param {string} name @param {string} version
+ */
+async function tarball_status(name, version) {
+	const response = await fetch(`${tarball_url(name, version)}?probe=${Date.now()}`, { method: 'HEAD' }).catch(() => null);
+	return response?.status ?? null;
+}
+
 /** Wait until each of these tarballs downloads. @param {{ name: string, version: string }[]} packages */
 async function downloadable(packages) {
 	const deadline = Date.now() + 20 * 60 * 1000;
 	for (const { name, version } of packages) {
-		const url = view([`${name}@${version}`, 'dist.tarball']);
 		while (true) {
-			// The query keeps this probe out of the CDN's cache: a request for the plain URL
-			// before the tarball exists leaves a 404 there for five minutes, for everyone.
-			const status = url ? (await fetch(`${url}?probe=${Date.now()}`, { method: 'HEAD' }).catch(() => null))?.status : null;
+			const status = await tarball_status(name, version);
 			if (status === 200) break;
-			if (Date.now() > deadline) throw new Error(`${name}@${version} still does not download (${url}: ${status})`);
-			console.log(`  waiting for ${name}@${version} to download (${status ?? 'no tarball yet'})`);
+			if (Date.now() > deadline) throw new Error(`${name}@${version} still does not download (${tarball_url(name, version)}: ${status})`);
+			console.log(`  waiting for ${name}@${version} to download (${status ?? 'no answer'})`);
 			await new Promise((done) => setTimeout(done, 15_000));
 		}
 		console.log(`  ${name}@${version} downloads`);
@@ -101,16 +118,32 @@ async function main() {
 		if (!dry) execFileSync('npm', args, { stdio: 'inherit' });
 	};
 
+	/**
+	 * `npm publish`, where a version npm already has counts as published: what
+	 * the registry says about a package can lag behind its tarballs.
+	 * @param {string} name @param {string} tarball
+	 */
+	const publish = (name, tarball) => {
+		const args = ['publish', tarball, '--access', 'public', '--tag', tag];
+		console.log(`  npm ${args.join(' ')}`);
+		if (dry) return;
+		const run = spawnSync('npm', args, { stdio: ['inherit', 'inherit', 'pipe'], encoding: 'utf8' });
+		process.stderr.write(run.stderr ?? '');
+		if (run.status === 0) return;
+		if (/previously published versions|EPUBLISHCONFLICT/.test(run.stderr ?? '')) console.log(`  ${name}@${version} was published already`);
+		else throw new Error(`npm publish failed for ${name}@${version}`);
+	};
+
 	for (let n = 0; n <= 3; n++) {
 		const these = packages.filter((pkg) => stage(pkg.name) === n);
 		if (n > 0 && !dry) await downloadable(packages.filter((pkg) => stage(pkg.name) === n - 1));
 		for (const { name, tarball } of these) {
-			if (view([`${name}@${version}`, 'version']) === version) console.log(`  ${name}@${version} is already published`);
-			else npm(['publish', tarball, '--access', 'public', '--tag', tag]);
+			if ((await tarball_status(name, version)) === 200) console.log(`  ${name}@${version} is already published`);
+			else publish(name, tarball);
 			for (const extra of more) npm(['dist-tag', 'add', `${name}@${version}`, extra]);
 		}
 	}
 	if (!dry) await downloadable(packages.filter((pkg) => stage(pkg.name) === 3));
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();
