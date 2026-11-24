@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.0-alpha.1
+
+**The host comes in one package per platform.** `@ethercorps/calyx` no longer
+carries every platform's binary (50 MB to download, whatever the machine).
+Each binary is its own package, and the package manager installs only the one
+that fits:
+
+- `@ethercorps/calyx-darwin-arm64`, `@ethercorps/calyx-darwin-x64`,
+  `@ethercorps/calyx-linux-x64-gnu`, `@ethercorps/calyx-linux-arm64-gnu`
+  (`os`, `cpu` and, on Linux, `libc` set), listed by `@ethercorps/calyx` as
+  optional dependencies.
+- Versions are pinned exactly from `sepal` down to the binary, and the
+  `sepal` command refuses a calyx binary of another version than its own
+  unless `SEPAL_HOST` is set.
+- A missing platform package is named in the error, with the usual causes:
+  optional dependencies turned off, or `node_modules` copied from another OS
+  or CPU.
+- `find_host()` from `@ethercorps/calyx` returns `{ path, version }` and
+  throws when there is no binary, instead of returning `null`.
+
+**Dist-tags.** Until there is a stable release, every prerelease moves
+`latest` as well as its own tag (`alpha`), so `pnpm create sepal` and
+`pnpm add sepal` get the newest alpha. 0.1.0-alpha.0 stays `latest` only
+until this release.
+
+The host binary is unchanged.
+
 ## 0.1.0-alpha.0 as Sepal (24 Nov 2026)
 
 **Renamed from svelte-blitz to Sepal.** Published as `sepal`, `create-sepal`

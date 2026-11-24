@@ -96,7 +96,7 @@ The starter comes with one of two routers. Both have pages as files in
 In a terminal you are asked which. To say so ahead of time:
 `pnpm create sepal my-app --router sveltekit`.
 
-The packages are on npm as `0.1.0-alpha.0`, an alpha: expect rough edges and
+The packages are on npm as `0.1.0-alpha.1`, an alpha: expect rough edges and
 changes between versions. Prebuilt hosts exist for macOS (arm64, x64) and
 Linux (x64, arm64, glibc 2.35 or newer); on anything else, build the host
 from `crates/host` and point `SEPAL_HOST` at it.
