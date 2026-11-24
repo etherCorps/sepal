@@ -339,9 +339,14 @@ pub(crate) fn unmatched<T: PartialEq>(
 
 /// A layer with a CSS filter: blitz-paint widens its clip by how far the filter
 /// reaches (blur, drop-shadow offsets), and what it draws anywhere in there can
-/// depend on any command inside it.
+/// depend on any command inside it. A backdrop filter counts only when this
+/// renderer draws it (`filters::BACKDROP_FILTERS_DRAWN`): until then the layer
+/// draws as if it had none, and a dialog overlay with one made every change
+/// while the dialog was open a full repaint.
 fn is_filter_layer(command: &RenderCommand) -> bool {
-    matches!(command, RenderCommand::PushLayer(c) if c.filter.is_some() || c.backdrop_filter.is_some())
+    matches!(command, RenderCommand::PushLayer(c)
+        if c.filter.is_some()
+            || (crate::filters::BACKDROP_FILTERS_DRAWN && c.backdrop_filter.is_some()))
 }
 
 /// Where each command can change pixels, in device space: its shape's box (grown

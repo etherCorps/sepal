@@ -84,14 +84,18 @@ window comes on screen: macOS drops a frame presented before that), over 500
 changed commands, or a region over half the window. Commands drawn
 from an app-registered texture count as changed every frame. Commands with an
 empty box are left out (blitz-paint emits border paths whose points are all
-NaN; they draw nothing and never compare equal). A layer with a filter or a
-backdrop filter is one unit: blitz-paint widens its clip by how far the filter
+NaN; they draw nothing and never compare equal). A layer with a filter is
+one unit: blitz-paint widens its clip by how far the filter
 reaches, and every command inside takes that clip as its box, since a change to
 any of them changes the filter's output past their own boxes (a drop shadow
 whose colour changed left its old shadow behind). A region that touches such a
 layer grows to all of it, since drawing part of a filter's input gives a
 different output at the cut (a hover next to a shadow erased the part of the
-shadow inside the region).
+shadow inside the region). A backdrop filter counts only while this renderer
+draws backdrop filters, which it does not (`filters::BACKDROP_FILTERS_DRAWN`):
+until then such a layer draws as if it had no filter, and counting it made
+every change under the Tracker's dialog overlay (`backdrop-blur-xs` over the
+whole window) a full repaint.
 
 Partial frames rely on an opaque base colour: the region is drawn
 `SrcOver` the last frame, starting with the base colour's fill, which covers
@@ -183,6 +187,9 @@ vello_gpu sizes its layer texture for the largest layer of a frame: the
 Tracker's dialog overlay, a layer only because it has `backdrop-filter`, made
 it 2400x1600 (15 MB) for as long as the dialog was open. Window captures with
 the dialog open are identical before and after (0 pixels differ).
+
+This and change 6's rule for backdrop filters rely on one check,
+`filters::BACKDROP_FILTERS_DRAWN`; both go away when backdrop filters are drawn.
 
 Measured against the code before it, interleaved (compare harness, 1,000
 issues, 3 runs each): New issue dialog 123 -> 78 ms GPU, 350 -> 326 ms CPU;
