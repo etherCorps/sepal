@@ -219,6 +219,15 @@ impl VelloHybridWindowRenderer {
         self.skipped
     }
 
+    /// svelte-blitz patch (damage): draw all of the next frame. For when what the
+    /// window shows may not be the last frame presented: macOS drops a frame
+    /// presented before the window is first on screen.
+    pub fn repaint_all(&mut self) {
+        if let Some(damage) = &mut self.damage {
+            damage.invalidate();
+        }
+    }
+
     pub fn current_device_handle(&self) -> Option<&DeviceHandle> {
         match &self.render_state {
             RenderState::Active(active) => Some(&active.render_surface.device_handle),
