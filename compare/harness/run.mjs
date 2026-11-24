@@ -12,6 +12,7 @@
 //   node compare/harness/run.mjs run --preset quick|full [--session <name>] [--builds a,b]
 //        [--sizes 1000,10000] [--scenarios 1,5] [--runs n] [--warmup n] [--config plan.json]
 //        [--versions file.json] [--no-record] [--idle seconds] [--focus-ax]
+//        [--env K=V,...]                                    more environment for svelte-blitz
 //   node compare/harness/run.mjs memwatch <build> [size] [--clock] [--secs 70] [--every 5]
 //                                                           launch, then footprint (with categories)
 //                                                           every few seconds while left alone
@@ -955,7 +956,16 @@ async function run_one(build, size, n, { calib, record_dir, key, log_dir, breakd
 			rec.footprint = await footprint(rec.procs_after.map((p) => p.pid));
 			if (breakdown_dir) rec.breakdown_end = await breakdown(rec.procs_after, breakdown_dir, `${key}-end`);
 			if (build.kind === 'blitz') {
-				rec.trace_redraws = app.lines.slice(index).filter((e) => e.t <= to && /RedrawRequested|first frame/.test(e.s)).length;
+				const lines = app.lines.slice(index).filter((e) => e.t <= to);
+				rec.trace_redraws = lines.filter((e) => /RedrawRequested|first frame/.test(e.s)).length;
+				// Damage tracking's verdict on each frame it drew: all of it, part of it, or
+				// nothing (nothing changed on screen; nothing presented). None with it off.
+				const kinds = { Full: 0, Rect: 0, None: 0 };
+				for (const e of lines) {
+					const m = /\[trace\] damage: (Full|Rect|None)\b/.exec(e.s);
+					if (m) kinds[m[1]]++;
+				}
+				rec.trace_damage = { full: kinds.Full, partial: kinds.Rect, none: kinds.None };
 			} else {
 				rec.frame_marks = app.lines.slice(index).filter((e) => e.t <= to && parse_mark(e.s)?.name.startsWith('frame:')).length;
 			}
@@ -1214,6 +1224,13 @@ async function check_permissions(need_screen) {
 	return perm;
 }
 
+/** `--env K=V,K2=V2`: more environment for the svelte-blitz builds (SVELTE_BLITZ_DAMAGE=0). */
+function apply_env(builds, spec) {
+	if (!spec) return;
+	const extra = Object.fromEntries(String(spec).split(',').map((kv) => kv.split('=')));
+	for (const b of Object.values(builds)) if (b.kind === 'blitz') Object.assign(b.env, extra);
+}
+
 function args_of(argv) {
 	const out = { _: [] };
 	for (let i = 0; i < argv.length; i++) {
@@ -1241,6 +1258,7 @@ async function session(opts, builds) {
 	if (opts.sizes) plan.sizes = list_of(opts.sizes);
 	if (opts.scenarios) plan.scenarios = list_of(opts.scenarios);
 	if (opts.record === false) plan.record = false;
+	if (opts.env) plan.env = opts.env;
 	plan.builds = list_of(opts.builds, String) ?? plan.builds ?? ['blitz', 'blitzv8', 'tauri', 'gpuix'].filter((b) => builds[b]);
 	for (const b of plan.builds) if (!builds[b]) throw new Error(`no build ${b} (found: ${Object.keys(builds).join(', ')})`);
 	for (const s of plan.sizes) if (!fs.existsSync(path.join(FIXTURES, `issues-${s}.json`))) throw new Error(`no fixture for ${s}`);
@@ -1326,6 +1344,7 @@ async function main() {
 	const opts = args_of(process.argv.slice(2));
 	const [cmd, ...rest] = opts._;
 	const builds = await find_builds();
+	apply_env(builds, opts.env);
 	const need_screen = cmd === 'run' ? opts.record !== false : cmd === 'scenario' && opts.record === true;
 	const perm = await check_permissions(need_screen);
 	drive = new Drive();
