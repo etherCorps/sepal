@@ -302,13 +302,25 @@ impl PaintScene for VelloHybridScenePainter<'_> {
             return r.push_layer(fill, blend, alpha, transform, clip, filter, _backdrop_filter);
         }
         let filter = filter.and_then(crate::filters::convert_filter);
+        let blend: BlendMode = blend.into();
         self.scene.set_transform(transform);
         self.scene.set_fill_rule(fill);
+        // svelte-blitz patch: a layer that only groups (opaque, normal blending,
+        // no filter this renderer draws: backdrop filters are not drawn at all)
+        // composites exactly as its contents drawn directly, so it is drawn as a
+        // clip, without a layer texture. A dialog overlay is such a layer only
+        // because it has a backdrop-filter, and its texture is window-sized.
+        if alpha == 1.0 && blend == BlendMode::default() && filter.is_none() {
+            self.layer_stack.push(LayerKind::Clip);
+            self.scene
+                .push_clip_path(&clip.into_path(DEFAULT_TOLERANCE));
+            return;
+        }
         self.layer_stack.push(LayerKind::Layer);
         self.scene
             .push_clip_path(&clip.into_path(DEFAULT_TOLERANCE));
         self.scene
-            .push_layer(None, Some(blend.into()), Some(alpha), None, filter);
+            .push_layer(None, Some(blend), Some(alpha), None, filter);
     }
 
     fn push_clip_layer(&mut self, fill: Fill, transform: Affine, clip: &impl Shape) {
