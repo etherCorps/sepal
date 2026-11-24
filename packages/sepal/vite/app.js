@@ -86,9 +86,11 @@ export function dev_window(project) {
 			return;
 		}
 
-		let bin = find_host();
-		if (bin === null) {
-			console.warn('sepal: no calyx (host binary) found, so the app will not open. Set SEPAL_HOST.');
+		let bin;
+		try {
+			bin = find_host().path;
+		} catch (error) {
+			console.warn(`sepal: the app will not open: ${/** @type {Error} */ (error).message}`);
 			gave_up = true;
 			return;
 		}

@@ -1,7 +1,7 @@
 {
   "name": "@ethercorps/calyx",
   "version": "0.1.0-alpha.0",
-  "description": "Calyx, the Sepal host: its prebuilt binaries, and the lookup that picks the one for this machine",
+  "description": "Calyx, the Sepal host: finds the binary for this machine, which comes in a package of its own",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,10 +22,14 @@
   },
   "files": [
     "index.js",
-    "types",
-    "bin",
-    "THIRD-PARTY-LICENSES.txt"
+    "types"
   ],
+  "optionalDependencies": {
+    "@ethercorps/calyx-darwin-arm64": "workspace:*",
+    "@ethercorps/calyx-darwin-x64": "workspace:*",
+    "@ethercorps/calyx-linux-x64-gnu": "workspace:*",
+    "@ethercorps/calyx-linux-arm64-gnu": "workspace:*"
+  },
   "scripts": {
     "check": "tsc",
     "prepare": "tsc"

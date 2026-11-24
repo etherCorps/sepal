@@ -3,7 +3,10 @@
 // Building is Vite's job (`vite build`, and `vite build --watch` for dev).
 
 import { spawnSync } from 'node:child_process';
-import { find_host, platform } from '@ethercorps/calyx';
+import { readFileSync } from 'node:fs';
+import { find_host, platform_package } from '@ethercorps/calyx';
+
+const own = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 const USAGE = `usage:
   sepal run [dist]                          open the built app in a window
@@ -25,15 +28,25 @@ function fail(message) {
 
 /** Run the host with these arguments and exit with its status. @param {string[]} args @returns {never} */
 function host(args) {
-	const bin = find_host();
-	if (bin === null) {
+	/** @type {ReturnType<typeof find_host>} */
+	let found;
+	try {
+		found = find_host();
+	} catch (error) {
+		fail(`sepal: ${/** @type {Error} */ (error).message}`);
+	}
+	// The pins are exact (sepal -> calyx -> the platform package), so this only
+	// happens to a node_modules put together by hand or half updated. A
+	// calyx from SEPAL_HOST is the user's choice and is not checked.
+	if (found.version !== null && found.version !== own.version) {
 		fail(
-			`sepal: no calyx (host binary) for ${platform()}.\n` +
-				'Build one from crates/host and point SEPAL_HOST at it.'
+			`sepal: this is sepal ${own.version}, but its calyx binary (${platform_package()}) is ${found.version}.\n` +
+				`They have to be the same version. Reinstall sepal@${own.version} (or remove node_modules and install\n` +
+				'again). To run a different calyx on purpose, point SEPAL_HOST at it.'
 		);
 	}
-	const { status, error } = spawnSync(bin, args, { stdio: 'inherit' });
-	if (error) fail(`sepal: cannot start ${bin}: ${error.message}`);
+	const { status, error } = spawnSync(found.path, args, { stdio: 'inherit' });
+	if (error) fail(`sepal: cannot start ${found.path}: ${error.message}`);
 	process.exit(status ?? 1);
 }
 

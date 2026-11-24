@@ -53,14 +53,14 @@ pnpm run build              # builds examples/counter -> dist/app.js + dist/app.
 pnpm run test:js            # renderer against a JS mock host (fast, no Rust)
 pnpm run test:host          # end-to-end headless tests (QuickJS + blitz-dom)
 pnpm run check              # tsc on the package, svelte-check on the examples
-pnpm run build:host         # release host -> packages/host/bin/<platform>/, and its THIRD-PARTY-LICENSES.txt
+pnpm run build:host         # release host -> packages/calyx-<platform>/bin/calyx, and its THIRD-PARTY-LICENSES.txt
 pnpm run test:template      # pack the packages, create a project from the template, build and render it
 pnpm test                   # check + all test suites
 pnpm run screenshot         # CPU-render examples/counter to screenshot.png
 pnpm start                  # open examples/counter in a window (needs a display)
 pnpm dev                    # same, with reload on save (debug host + vite build --watch)
 pnpm dev:tracker            # the same for examples/tracker. A plain `vite build --watch` in
-                            # an example runs packages/host/bin's binary, which is stale
+                            # an example runs packages/calyx-<platform>'s binary, which is stale
                             # until `pnpm run build:host`: new host features are missing
 pnpm run bundle             # examples/counter/bundle/Counter.app (release host)
 
@@ -102,12 +102,24 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   (`template-sveltekit/`), and the script that copies them and asks which.
   A change to a page in `template/` reaches both starters;
   `pnpm run test:template` builds both.
-- `packages/host/` — `@ethercorps/calyx`: `index.js` finds the
-  host binary, `bin/<platform>/` holds the binaries
-  (`scripts/build-host-package.js` fills it). A stale binary there is used by
-  anything that does not set `SEPAL_HOST`; the root scripts set it or
-  call cargo directly.
-- All three packages share one version; `scripts/check-versions.js` enforces it.
+- `packages/host/` — `@ethercorps/calyx`: no binaries, only `index.js`,
+  which finds this machine's (`SEPAL_HOST` first, then the platform package
+  resolved from calyx's own location) and throws, naming the package, when it
+  is missing. It lists the platform packages as optionalDependencies.
+- `packages/calyx-<platform>/` — `@ethercorps/calyx-darwin-arm64`,
+  `-darwin-x64`, `-linux-x64-gnu`, `-linux-arm64-gnu`: `bin/calyx`, `LICENSE`
+  and `THIRD-PARTY-LICENSES.txt`, with `os`/`cpu`/`libc` so only the
+  matching one installs. `scripts/build-host-package.js` fills this
+  machine's; the release builds each on its own runner. A stale binary there
+  is used by anything that does not set `SEPAL_HOST`; the root scripts set it
+  or call cargo directly.
+- All seven packages share one version; `scripts/check-versions.js` enforces
+  it. Pins are exact all the way down (sepal -> calyx -> platform package),
+  and the CLI refuses a calyx binary of another version than sepal's unless
+  `SEPAL_HOST` is set (`test/cli.test.js`).
+- `scripts/publish.js` publishes the packed tarballs: order, waiting for
+  tarballs to download, skipping what is already up, dist-tags. See the top
+  of the file and `release.yml`.
 - `crates/host/` — the Rust host: crate `sepal`, binary `calyx`. `app.rs` (app directory, `app.json`
   manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
   data: URLs and the app directory only), `updater.rs` (self-update and the

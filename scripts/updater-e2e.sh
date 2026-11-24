@@ -7,7 +7,7 @@
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-host="$root/packages/host/bin/darwin-arm64/calyx"
+host="$root/packages/calyx-darwin-arm64/bin/calyx"
 [ -x "$host" ] || { echo "no host binary; run: pnpm run build:host" >&2; exit 1; }
 
 work=$(mktemp -d /tmp/sepal-updater-XXXXXX)

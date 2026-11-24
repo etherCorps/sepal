@@ -372,6 +372,27 @@ metadata was.
 The registry took about four minutes to show the new packages; a 404 right
 after publishing a new name means nothing.
 
+**Releases from 0.1.0-alpha.1 (24 Nov 2026).** The host is split by platform
+(see "Package layout"), so a run packs seven packages, and publishing is
+`node scripts/publish.js packs`, the same by hand as on a `v*` tag:
+
+- Order: the four `@ethercorps/calyx-<platform>` packages, then
+  `@ethercorps/calyx`, `sepal`, `create-sepal`. Before each stage it waits
+  until the previous stage's tarballs download from the registry, for up to
+  20 minutes.
+- A package already at the version is skipped (its dist-tags are still set),
+  so a run that failed halfway is simply repeated.
+- `--dry-run` prints what it would run; the release workflow does that on
+  every run without a tag.
+
+**The dist-tag rule.** A stable release is `latest`. A prerelease goes out
+under its own tag (`0.1.0-alpha.1` as `alpha`) and, as long as `sepal` has
+no stable release, also moves `latest`, on every package: otherwise
+`pnpm create sepal` and `pnpm add sepal` keep getting the first alpha. Once
+a stable release exists, prereleases leave `latest` alone.
+`scripts/publish.js` applies it and says so at the top; `release.yml` repeats
+it.
+
 ## What only Shivam can do
 
 - Choose the licence, the repo location and the first version.
@@ -391,16 +412,18 @@ runtime, the Vite preset and the CLI became one package.
 |---|---|
 | `sepal`: the runtime; the Vite preset and router (`sepal/vite`, `sepal/sveltekit`, `sepal/router`, with a `router` option for custom routers); the `sepal` command | `packages/sepal` |
 | `create-sepal`: the seeds | `packages/create` |
-| `@ethercorps/calyx`: calyx, the host (all platform binaries in one package) | `packages/host` |
+| `@ethercorps/calyx`: calyx, the host; finds this machine's binary | `packages/host` |
+| `@ethercorps/calyx-darwin-arm64`, `-darwin-x64`, `-linux-x64-gnu`, `-linux-arm64-gnu`: one binary each | `packages/calyx-<platform>` |
 
-One version for all of them. The host package holds every platform's binary
-under `bin/<platform>/`; the per-platform optional-dependency packages are
-gone. Shivam's alternative was "the way Prisma does it" (download the matching
-binary); that needs release hosting, which does not exist yet, and can be
-adopted later inside `packages/host` alone. A release now has to collect all
-platform binaries into `packages/host/bin` before packing it. If the
-binaries are ever split per platform again, those packages are
-`@ethercorps/calyx-<os>-<arch>`.
+One version for all of them, pinned exactly: sepal -> calyx -> the platform
+package. Until 0.1.0-alpha.0 the host package held every platform's binary,
+so every install downloaded all four (50 MB). From 0.1.0-alpha.1 each
+platform's binary is its own package (the esbuild pattern again), listed by
+calyx as optionalDependencies with `os`, `cpu` and, on Linux, `libc`, so
+only the matching one installs. `find_host()` looks for it next to calyx and,
+if it is missing, names the package this machine needs. Shivam's alternative,
+"the way Prisma does it" (download the matching binary on first use), still
+needs release hosting.
 
 ## Added outside the original brief (22 Nov 2026)
 

@@ -1,0 +1,23 @@
+{
+  "name": "@ethercorps/calyx-darwin-x64",
+  "version": "0.1.0-alpha.0",
+  "description": "The calyx binary, Sepal's host, for macOS on Intel. Installed by @ethercorps/calyx; not used directly.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etherCorps/sepal.git",
+    "directory": "packages/calyx-darwin-x64"
+  },
+  "homepage": "https://github.com/etherCorps/sepal#readme",
+  "bugs": "https://github.com/etherCorps/sepal/issues",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin",
+    "THIRD-PARTY-LICENSES.txt"
+  ]
+}

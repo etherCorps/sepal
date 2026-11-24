@@ -14,8 +14,7 @@ import { find_host } from '@ethercorps/calyx';
 import { sepal } from 'sepal/vite';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
-const host = find_host();
-if (!host) throw new Error('no host binary');
+const host = find_host().path;
 const out = join(root, 'dist-probe');
 rmSync(out, { recursive: true, force: true });
 mkdirSync(join(root, 'src/probes/.entries'), { recursive: true });

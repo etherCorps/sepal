@@ -1,0 +1,26 @@
+{
+  "name": "@ethercorps/calyx-linux-x64-gnu",
+  "version": "0.1.0-alpha.0",
+  "description": "The calyx binary, Sepal's host, for Linux on x64 (glibc 2.35 or newer). Installed by @ethercorps/calyx; not used directly.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/etherCorps/sepal.git",
+    "directory": "packages/calyx-linux-x64-gnu"
+  },
+  "homepage": "https://github.com/etherCorps/sepal#readme",
+  "bugs": "https://github.com/etherCorps/sepal/issues",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "glibc"
+  ],
+  "files": [
+    "bin",
+    "THIRD-PARTY-LICENSES.txt"
+  ]
+}

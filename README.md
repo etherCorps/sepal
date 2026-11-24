@@ -91,7 +91,8 @@ Permissions, sidecars, adapters and Vite plugins keep their usual names.
 |---|---|---|
 | `sepal` | The runtime (`mount`, the renderer, the op protocol, the desktop APIs), the Vite preset and the file-based router (`sepal/vite`, `sepal/sveltekit`, `sepal/router`), and the `sepal` command. The runtime has no Node code. | `packages/sepal` |
 | `create-sepal` | The seeds: the starter templates. | `packages/create` |
-| `@ethercorps/calyx` | Calyx, the host: its binaries, and the lookup that picks one. | `packages/host` |
+| `@ethercorps/calyx` | Calyx, the host: the lookup that finds this machine's binary. | `packages/host` |
+| `@ethercorps/calyx-<platform>` | The binary for one platform; only the matching one installs. | `packages/calyx-<platform>` |
 
 They are released together under one version (`pnpm run check` fails if they
 drift). An app depends on `sepal`; calyx comes with it.
@@ -104,29 +105,33 @@ sepal screenshot <out.png> [dist] [WIDTHxHEIGHT]
 
 ### Where calyx, the host binary, comes from
 
-One package, `@ethercorps/calyx`, holds the binary for every
-platform under `bin/<platform>/`, so nobody who installs from npm needs Rust.
-The Vite preset and the CLI ask that package for the path;
+Each platform's binary is a package of its own, so nobody who installs from
+npm needs Rust, and nobody downloads the other platforms' binaries.
+`@ethercorps/calyx` lists them as optional dependencies; each sets `os` and
+`cpu` (and `libc` on Linux), so the package manager installs only the one
+that fits. The Vite preset and the CLI ask `@ethercorps/calyx` for the path;
 `SEPAL_HOST` overrides it with a host you built yourself.
 
-The release workflow (`.github/workflows/release.yml`) builds it on each
-platform and collects the binaries into the package:
-
-| Platform | Binary |
+| Package | Binary |
 |---|---|
-| `darwin-arm64` | 25.2 MB |
-| `darwin-x64` | 26.3 MB |
-| `linux-arm64-gnu` | 29.3 MB |
-| `linux-x64-gnu` (glibc 2.35 and newer) | 32.3 MB |
+| `@ethercorps/calyx-darwin-arm64` | 25.4 MB |
+| `@ethercorps/calyx-darwin-x64` | 26.3 MB |
+| `@ethercorps/calyx-linux-arm64-gnu` | 29.3 MB |
+| `@ethercorps/calyx-linux-x64-gnu` (glibc 2.35 and newer) | 32.3 MB |
 
-Windows is not built yet. Together they are 113 MB installed and 49 MB to
-download, for every user, whatever their machine. If that grows
-uncomfortable, the package can switch to fetching only the matching binary on
-first use; nothing outside it would change. `pnpm run build:host` builds the
-one for this machine into `packages/host/bin/<platform>`.
+Windows is not built yet. The release workflow
+(`.github/workflows/release.yml`) builds each on its own runner;
+`pnpm run build:host` builds the one for this machine into
+`packages/calyx-<platform>/bin/calyx`.
 
-The package also carries `THIRD-PARTY-LICENSES.txt`: the licences of the
-Rust crates and of QuickJS, which are compiled into the binary
+The versions are pinned exactly, from `sepal` down to the binary, and
+`sepal run` refuses a binary whose version is not `sepal`'s. If the
+platform package is missing, the error names it: usually optional
+dependencies were turned off, or `node_modules` was copied from another OS
+or CPU.
+
+Each platform package also carries `THIRD-PARTY-LICENSES.txt`: the licences
+of the Rust crates and of QuickJS, which are compiled into the binary
 (`scripts/third-party-licenses.js` collects them from the crates themselves).
 
 ## Dev: reload on save
@@ -811,10 +816,12 @@ packages/sepal/           sepal: the runtime, the preset and the command
 packages/create/          create-sepal
   template/               the seed it copies
 packages/host/            @ethercorps/calyx
-  index.js                finds the host binary
-  bin/<platform>/         the binaries (built, not committed)
-scripts/build-host-package.js   builds the host into packages/host/bin
+  index.js                finds this machine's binary
+packages/calyx-<platform>/  @ethercorps/calyx-<platform>
+  bin/calyx               the binary (built, not committed)
+scripts/build-host-package.js   builds the host into packages/calyx-<platform>/bin
 scripts/check-versions.js       all packages must share one version
+scripts/publish.js              publishes the packed tarballs: order, dist-tags
 crates/host/              the `sepal` crate; its binary is calyx
   src/js.rs               QuickJS embedding
   src/ops.rs              applies op batches to blitz-dom

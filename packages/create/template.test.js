@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bundled_host, platform } from '../host/index.js';
+import { platform } from '../host/index.js';
 
 const packages = fileURLToPath(new URL('..', import.meta.url));
 const scratch = mkdtempSync(join(tmpdir(), 'sepal-template-'));
@@ -80,6 +80,13 @@ try {
 		writeFileSync(join(app, 'pnpm-workspace.yaml'), `packages: []\noverrides:\n${overrides.join('')}`);
 		run('pnpm', ['install', '--prefer-offline'], app);
 
+		// Every Sepal package came from the tarballs, none from the registry, and of
+		// the four platform packages only this machine's was installed.
+		const ours = readdirSync(join(app, 'node_modules/.pnpm')).filter((entry) => /^(sepal|@ethercorps\+calyx[a-z0-9-]*)@/.test(entry));
+		for (const entry of ours) assert(entry.includes('@file+'), `${entry} was not installed from a local tarball`);
+		const platforms = ours.filter((entry) => entry.startsWith('@ethercorps+calyx-')).map((entry) => entry.split('@')[1]);
+		assert(platforms.length === 1 && platforms[0] === `ethercorps+calyx-${platform()}`, `platform packages installed: ${platforms.join(', ') || 'none'}`);
+
 		run('pnpm', ['run', 'check'], app);
 		run('pnpm', ['run', 'build'], app);
 		const manifest = JSON.parse(readFileSync(join(app, 'dist/app.json'), 'utf8'));
@@ -96,7 +103,7 @@ try {
 		assert(bundle.includes('__sveltekit') === (router === 'sveltekit'), `not built with the ${router} router`);
 		assert(readFileSync(join(app, 'dist/app.css'), 'utf8').includes('.bg-indigo-600'), 'Tailwind classes are missing from app.css');
 
-		if (existsSync(bundled_host())) {
+		if (existsSync(join(packages, `calyx-${platform()}`, 'bin'))) {
 			const shot = join(scratch, `${router}.png`);
 			run('pnpm', ['exec', 'sepal', 'screenshot', shot], app);
 			assert(existsSync(shot), 'the CLI did not render a screenshot');

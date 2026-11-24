@@ -1,5 +1,6 @@
 // Write the licences of everything compiled into the host binary to
-// packages/host/THIRD-PARTY-LICENSES.txt, which ships next to it.
+// THIRD-PARTY-LICENSES.txt in this machine's platform package
+// (packages/calyx-<platform>), which ships it next to the binary.
 //
 // The binary is our code plus several hundred Rust crates (and QuickJS, which
 // comes inside one). Their licences ask for their notices to travel with the
@@ -15,10 +16,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { platform } from '../packages/host/index.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const manifest = join(root, 'crates/host/Cargo.toml');
-const out = join(root, 'packages/host/THIRD-PARTY-LICENSES.txt');
+const out = join(root, 'packages', `calyx-${platform()}`, 'THIRD-PARTY-LICENSES.txt');
 
 // The features the shipped binary is built with (see build-host-package.js).
 // All platforms at once: a superset is fine for a list of notices.

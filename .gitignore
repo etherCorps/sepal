@@ -4,8 +4,8 @@ target
 packages/*/types
 bundle
 # built by scripts/build-host-package.js
-packages/host/bin/
-packages/host/THIRD-PARTY-LICENSES.txt
+packages/calyx-*/bin/
+packages/calyx-*/THIRD-PARTY-LICENSES.txt
 .DS_Store
 
 # cargo writes this when a tool is run inside the vendored crate; the host has the real one

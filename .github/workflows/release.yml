@@ -1,12 +1,18 @@
 name: Release
 
-# Builds the host on every platform it ships for, collects the binaries into
-# the host package, and packs the three packages.
+# Builds the host on every platform it ships for, each into its own platform
+# package (packages/calyx-<platform>), and packs all seven packages.
 #
 # Started by hand (Actions -> Release -> Run workflow) it stops there: the
-# tarballs are attached to the run, to look at or to install from, and nothing
-# is published. Pushing a `v<version>` tag publishes them to npm, which needs
+# tarballs are attached to the run, to look at or to install from, and
+# nothing is published; the run prints what publishing would do. Pushing a
+# `v<version>` tag publishes them to npm with scripts/publish.js, which needs
 # the `NPM_TOKEN` secret.
+#
+# Dist-tags (scripts/publish.js): a stable release is `latest`. A prerelease
+# goes out under its own tag (`0.1.0-alpha.1` as `alpha`) and, until sepal has
+# a stable release, also moves `latest`, on every package. Once a stable
+# release exists, prereleases leave `latest` alone.
 
 on:
   workflow_dispatch:
@@ -37,16 +43,16 @@ jobs:
       # The path a user without Rust takes, with the binary just built: both
       # starters created from the packed packages, built and rendered.
       - run: pnpm run test:template
-      - name: The binary is where the package looks for it
+      - name: The binary is where its platform package ships it
         shell: bash
-        run: test -s packages/host/bin/${{ matrix.platform }}/calyx
+        run: test -s packages/calyx-${{ matrix.platform }}/bin/calyx
       - uses: actions/upload-artifact@v4
         with:
-          name: host-${{ matrix.platform }}
-          # Both under packages/host, so the artifact unpacks onto it.
+          # Named after the package's directory, so the pack job unpacks it there.
+          name: calyx-${{ matrix.platform }}
           path: |
-            packages/host/bin
-            packages/host/THIRD-PARTY-LICENSES.txt
+            packages/calyx-${{ matrix.platform }}/bin
+            packages/calyx-${{ matrix.platform }}/THIRD-PARTY-LICENSES.txt
           if-no-files-found: error
 
   pack:
@@ -72,20 +78,20 @@ jobs:
           registry-url: https://registry.npmjs.org
       # Also emits each package's types (`prepare`).
       - run: pnpm install --frozen-lockfile
+      # One artifact per platform, each unpacked into packages/<its name>.
       - uses: actions/download-artifact@v4
         with:
-          pattern: host-*
-          path: packages/host
-          merge-multiple: true
-      - name: Every platform's binary is there
+          pattern: calyx-*
+          path: packages
+      - name: Every platform package has its binary and licences
         run: |
           for platform in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu; do
-            test -s packages/host/bin/$platform/calyx || { echo "::error::no host binary for $platform"; exit 1; }
+            test -s packages/calyx-$platform/bin/calyx || { echo "::error::no binary in packages/calyx-$platform"; exit 1; }
+            test -s packages/calyx-$platform/THIRD-PARTY-LICENSES.txt || { echo "::error::no licences in packages/calyx-$platform"; exit 1; }
           done
-          test -s packages/host/THIRD-PARTY-LICENSES.txt
           # Artifacts do not keep the executable bit.
-          chmod +x packages/host/bin/*/calyx
-          ls -l packages/host/bin/*
+          chmod +x packages/calyx-*/bin/calyx
+          ls -l packages/calyx-*/bin
       - name: Pack
         run: |
           mkdir packs
@@ -95,15 +101,18 @@ jobs:
         with:
           name: packages
           path: packs
-      # The tarballs that were just packed, not a second build of them.
-      # A prerelease goes out under its own dist-tag (`0.1.0-alpha.0` as
-      # `alpha`), so that `latest` only ever names a full release.
+      # What a tag would publish, and under which dist-tags. Reads the
+      # registry, writes nothing.
+      - name: Publish (dry run)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: node scripts/publish.js packs --dry-run
+      # The tarballs that were just packed, not a second build of them:
+      # platform packages first, each stage only once the last one's tarballs
+      # download, anything already at this version skipped, so a failed run
+      # can be repeated. The dist-tag rule is at the top of this file.
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          tag=$(node -p "('$GITHUB_REF_NAME'.match(/-([a-z]+)/) || [0, 'latest'])[1]")
-          for tarball in packs/*.tgz; do
-            npm publish "$tarball" --access public --provenance --tag "$tag"
-          done
+          NPM_CONFIG_PROVENANCE: true
+        run: node scripts/publish.js packs

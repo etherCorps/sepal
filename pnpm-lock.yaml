@@ -513,6 +513,14 @@ importers:
         specifier: ^8.3.8
         version: 8.3.8(@types/node@26.6.6)(jiti@2.7.0)
 
+  packages/calyx-darwin-arm64: {}
+
+  packages/calyx-darwin-x64: {}
+
+  packages/calyx-linux-arm64-gnu: {}
+
+  packages/calyx-linux-x64-gnu: {}
+
   packages/create:
     devDependencies:
       '@types/node':
@@ -530,6 +538,19 @@ importers:
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+    optionalDependencies:
+      '@ethercorps/calyx-darwin-arm64':
+        specifier: workspace:*
+        version: link:../calyx-darwin-arm64
+      '@ethercorps/calyx-darwin-x64':
+        specifier: workspace:*
+        version: link:../calyx-darwin-x64
+      '@ethercorps/calyx-linux-arm64-gnu':
+        specifier: workspace:*
+        version: link:../calyx-linux-arm64-gnu
+      '@ethercorps/calyx-linux-x64-gnu':
+        specifier: workspace:*
+        version: link:../calyx-linux-x64-gnu
 
   packages/sepal:
     dependencies:
