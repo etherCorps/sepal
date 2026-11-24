@@ -1,7 +1,7 @@
 # Patched copy of wgpu-hal 30.0.2
 
 This is the crates.io source of `wgpu-hal` 30.0.2 (MIT OR Apache-2.0,
-https://github.com/gfx-rs/wgpu), with two changes, in its Metal backend only.
+https://github.com/gfx-rs/wgpu), with three changes, in its Metal backend only.
 `crates/host/Cargo.toml` swaps it in through `[patch.crates-io]`. All of it is
 marked `svelte-blitz patch`.
 
@@ -52,6 +52,32 @@ size, and whether change 1 draws it in a render pass) is printed on stderr as
 `[gpu] …`, and so is every submit and present. A frame is what lies between two
 presents. Off (the default), it costs one cached check per call. For
 measuring, not for shipping builds to read.
+
+**3. Empty command buffers are not committed.** `src/metal/command.rs`
+(`CommandEncoder::encoded`, set wherever an encoder is opened on the command
+buffer, and `end_encoding`), `src/metal/device.rs` (`create_command_encoder`)
+and `src/metal/mod.rs` (`CommandBuffer::empty`, `Queue::submit`). wgpu-core
+encodes a "Pre Pass" command buffer before every pass, a "Transit" one per
+submit and a "PendingWrites" one when there are queued writes; on Metal,
+where transitions do nothing, most of these hold nothing, and every committed
+command buffer costs GPU time (about 0.15 ms each at the clocks an idle app
+runs at). A command buffer nothing was encoded into is now dropped instead of
+committed; the fence's signal goes on the last one that is committed, or on a
+command buffer of its own when none is, as for an empty submit upstream. It is
+counted out of `command_buffer_created_not_submitted` when it is dropped (the
+existing `Drop for CommandBuffer`; counting it at submit too wrapped the
+counter, and the next `begin_encoding` reported the device lost). A command
+buffer handed out through `raw_command_buffer()` counts as used, and with
+strict event sync every one does (its relay wait is work).
+
+A clock tick on the Tracker commits 6 command buffers instead of 10. Measured
+against the code without it in one interleaved session (compare harness,
+1,000 issues, 3 runs each): GPU time the same within noise (clock 14.1 -> 13.4
+ms, New issue dialog 67.1 -> 65.8, view switches 62.6 -> 61.9, scrolling 518 ->
+546 with runs spread 364-555), CPU time 268 -> 250 ms for the dialog and
+unchanged elsewhere. Empty command buffers turned out cheap; it is kept for
+the CPU it saves and because change 9 of anyrender_vello_hybrid was measured
+on top of it.
 
 ## Updating
 

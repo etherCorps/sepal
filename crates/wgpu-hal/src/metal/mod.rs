@@ -704,7 +704,11 @@ impl crate::Queue for Queue {
     ) -> Result<(), crate::DeviceError> {
         if gpu_log::on() {
             // svelte-blitz patch
-            gpu_log::line(format_args!("submit: {} command buffer(s)", command_buffers.len()));
+            let empty = command_buffers.iter().filter(|c| c.empty).count();
+            gpu_log::line(format_args!(
+                "submit: {} command buffer(s), {empty} of them empty (not committed)",
+                command_buffers.len()
+            ));
         }
         autoreleasepool(|_| {
             // Drain caller-staged waits onto a dedicated command buffer
@@ -763,7 +767,9 @@ impl crate::Queue for Queue {
                     fence_sync.1.notify_all();
                 });
 
-                let raw = match command_buffers.last() {
+                // svelte-blitz patch: the last command buffer that will be committed.
+                let last = command_buffers.iter().rev().find(|c| !c.empty);
+                let raw = match last {
                     Some(&cmd_buf) => cmd_buf.raw.clone(),
                     None => {
                         // We do not bother adjusting `command_buffer_created_not_submitted`
@@ -797,13 +803,19 @@ impl crate::Queue for Queue {
                 }
 
                 // only return an extra one if it's extra
-                match command_buffers.last() {
+                match last {
                     Some(_) => None,
                     None => Some(raw),
                 }
             };
 
             for cmd_buffer in command_buffers {
+                // svelte-blitz patch: an empty one is dropped, not committed
+                // (the fence's signal went on the last one that is not empty),
+                // and counted out when it is dropped (`Drop for CommandBuffer`).
+                if cmd_buffer.empty {
+                    continue;
+                }
                 cmd_buffer.raw.commit();
                 // One command buffer per `end_encoding` call moves from the
                 // "created but not yet submitted" bucket into the submitted
@@ -1380,6 +1392,9 @@ pub struct CommandEncoder {
     shared: Arc<AdapterShared>,
     queue_shared: Arc<QueueShared>,
     raw_cmd_buf: Option<Retained<ProtocolObject<dyn MTLCommandBuffer>>>,
+    /// svelte-blitz patch: whether anything was encoded into `raw_cmd_buf`
+    /// (`CommandBuffer::empty`).
+    encoded: bool,
     state: CommandState,
     temp: Temp,
     counters: Arc<wgt::HalCounters>,
@@ -1400,6 +1415,11 @@ unsafe impl Sync for CommandEncoder {}
 pub struct CommandBuffer {
     raw: Retained<ProtocolObject<dyn MTLCommandBuffer>>,
     queue_shared: Arc<QueueShared>,
+    /// svelte-blitz patch: nothing was encoded into it, so `Queue::submit`
+    /// does not commit it. wgpu makes several such per frame (a "Pre Pass" for
+    /// every pass, "Transit", "PendingWrites"; transitions are no-ops on
+    /// Metal), and each committed command buffer costs GPU time.
+    empty: bool,
 }
 
 impl crate::DynCommandBuffer for CommandBuffer {}
