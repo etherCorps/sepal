@@ -306,11 +306,14 @@ impl PaintScene for VelloHybridScenePainter<'_> {
         self.scene.set_transform(transform);
         self.scene.set_fill_rule(fill);
         // svelte-blitz patch: a layer that only groups (opaque, normal blending,
-        // no filter this renderer draws: backdrop filters are not drawn at all)
-        // composites exactly as its contents drawn directly, so it is drawn as a
-        // clip, without a layer texture. A dialog overlay is such a layer only
-        // because it has a backdrop-filter, and its texture is window-sized.
-        if alpha == 1.0 && blend == BlendMode::default() && filter.is_none() {
+        // no filter this renderer draws: backdrop filters are not drawn at all,
+        // `filters::BACKDROP_FILTERS_DRAWN`) composites exactly as its contents
+        // drawn directly, so it is drawn as a clip, without a layer texture. A
+        // dialog overlay is such a layer only because it has a backdrop-filter,
+        // and its texture is window-sized.
+        let backdrop_drawn =
+            crate::filters::BACKDROP_FILTERS_DRAWN && _backdrop_filter.is_some();
+        if alpha == 1.0 && blend == BlendMode::default() && filter.is_none() && !backdrop_drawn {
             self.layer_stack.push(LayerKind::Clip);
             self.scene
                 .push_clip_path(&clip.into_path(DEFAULT_TOLERANCE));
