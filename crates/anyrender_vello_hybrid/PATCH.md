@@ -2,7 +2,7 @@
 
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
-windows with, with six changes. `crates/host/Cargo.toml` swaps it in through
+windows with, with eight changes. `crates/host/Cargo.toml` swaps it in through
 `[patch.crates-io]`. All are marked `svelte-blitz patch`.
 
 ## The changes
@@ -116,6 +116,17 @@ MB less GPU memory and ~14 MB less RAM in every scenario; GPU time the same
 within noise for the clock, the New issue dialog and view switches (mostly
 partial frames), but Show all + scrolling 533 -> 768 ms (+44%, ~0.6 ms more
 per full repaint). Kept on until scrolling stops being full repaints.
+
+**8. A check mode for damage tracking.** `src/window_renderer.rs`,
+`verify_frame` and `draw_region`, and `damage::verify()`:
+`SVELTE_BLITZ_DAMAGE=verify` draws every frame that was not drawn in full a
+second time, in full, into a texture of its own (the window's renderer, so the
+same glyph atlas and settings), reads both back and prints a `[verify]` line
+per frame: `same as a full repaint (largest difference N/255)`, or `DIFFERS`
+with how many pixels differ by more than 2/255, the rectangle they are in, and
+every command drawn there. The kept frame gets `COPY_SRC` for it. Reading back
+is a blit, so this mode costs the driver memory change 1 of wgpu-hal avoids,
+and a frame takes tens of milliseconds more: for checking, never for measuring.
 
 ## Updating
 

@@ -52,6 +52,193 @@ fn depth_texture(device: &wgpu::Device, width: u32, height: u32) -> Option<Textu
     ))
 }
 
+/// svelte-blitz patch (damage): draws `region` of the recorded frame (in device
+/// pixels) into `target` over what is there, or, with `full` (a texture and its
+/// depth buffer), all of it into that texture instead.
+#[allow(clippy::too_many_arguments)]
+fn draw_region(
+    state: &mut ActiveRenderState,
+    scene: &mut VelloHybridScene,
+    cache: &mut FxHashMap<u64, ImageId>,
+    atlas_page: (u16, u16),
+    commands: &[anyrender::recording::RenderCommand],
+    bounds: &[kurbo::Rect],
+    region: kurbo::Rect,
+    target: &TextureView,
+    bindings: &TextureBindings,
+    full: Option<&TextureView>,
+) {
+    let device = state.render_surface.device().clone();
+    let queue = state.render_surface.queue().clone();
+    let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
+        label: Some("Render region"),
+    });
+    scene.reset_and_resize(region.width() as u16, region.height() as u16);
+    {
+        let image_manager = ImageManager {
+            renderer: &mut state.renderer,
+            resources: &mut state.resources,
+            device: &device,
+            queue: &queue,
+            encoder: &mut encoder,
+            cache,
+            own_textures: &mut state.own_textures,
+            atlas_page,
+        };
+        let mut painter = VelloHybridScenePainter {
+            recorder: None,
+            scene,
+            layer_stack: Vec::new(),
+            image_manager,
+            texture_bindings: &mut state.texture_bindings,
+            device_handle: &state.render_surface.device_handle,
+        };
+        crate::damage::replay(&mut painter, commands, bounds, region);
+    }
+    state
+        .renderer
+        .set_root_offset([region.x0 as i32, region.y0 as i32]);
+    let size = RenderSize {
+        width: state.render_surface.config.width as u16,
+        height: state.render_surface.config.height as u16,
+    };
+    state
+        .renderer
+        .render(
+            scene,
+            &mut state.resources,
+            &device,
+            &queue,
+            &mut encoder,
+            &size,
+            full.unwrap_or(target),
+            full.and(state.depth_texture_view.as_ref()),
+            bindings,
+            if full.is_some() {
+                TargetInit::Clear(ClearSettings::default())
+            } else {
+                TargetInit::SrcOver
+            },
+        )
+        .expect("failed to render to texture");
+    queue.submit([encoder.finish()]);
+    scene.reset();
+}
+
+/// svelte-blitz patch (damage, `SVELTE_BLITZ_DAMAGE=verify`): draws the frame just
+/// drawn in part again in full, into a texture of its own, reads both back and
+/// prints where they differ by more than 2/255, with the commands drawn there.
+#[allow(clippy::too_many_arguments)]
+fn verify_frame(
+    state: &mut ActiveRenderState,
+    scene: &mut VelloHybridScene,
+    cache: &mut FxHashMap<u64, ImageId>,
+    atlas_page: (u16, u16),
+    commands: &[anyrender::recording::RenderCommand],
+    bounds: &[kurbo::Rect],
+    kept: &TextureView,
+    bindings: &TextureBindings,
+) {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static FRAME: AtomicU64 = AtomicU64::new(0);
+    let frame = FRAME.fetch_add(1, Ordering::Relaxed);
+    let device = state.render_surface.device().clone();
+    let queue = state.render_surface.queue().clone();
+    let (width, height) = (state.render_surface.config.width, state.render_surface.config.height);
+    let full = device.create_texture(&wgpu::TextureDescriptor {
+        label: Some("verify: the frame in full"),
+        size: wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: DEFAULT_TEXTURE_FORMAT,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+        view_formats: &[],
+    });
+    let full_view = full.create_view(&TextureViewDescriptor::default());
+    let everything = kurbo::Rect::new(0.0, 0.0, f64::from(width), f64::from(height));
+    draw_region(
+        state, scene, cache, atlas_page, commands, bounds, everything, kept, bindings,
+        Some(&full_view),
+    );
+    let row = width as usize * 4;
+    let padded = row.div_ceil(256) * 256;
+    let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
+        label: Some("verify: read back"),
+    });
+    let read = |texture: &Texture, encoder: &mut wgpu::CommandEncoder| {
+        let buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("verify: read back"),
+            size: (padded * height as usize) as u64,
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+        encoder.copy_texture_to_buffer(
+            texture.as_image_copy(),
+            wgpu::TexelCopyBufferInfo {
+                buffer: &buffer,
+                layout: wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(padded as u32),
+                    rows_per_image: None,
+                },
+            },
+            wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+        );
+        buffer
+    };
+    let (a, b) = (read(kept.texture(), &mut encoder), read(&full, &mut encoder));
+    queue.submit([encoder.finish()]);
+    for buffer in [&a, &b] {
+        buffer.slice(..).map_async(wgpu::MapMode::Read, |_| {});
+    }
+    if device.poll(wgpu::PollType::wait_indefinitely()).is_err() {
+        eprintln!("[verify] frame {frame}: could not read the frame back");
+        return;
+    }
+    let (Ok(a), Ok(b)) = (a.slice(..).get_mapped_range(), b.slice(..).get_mapped_range()) else {
+        eprintln!("[verify] frame {frame}: could not read the frame back");
+        return;
+    };
+    let (mut count, mut worst, mut first) = (0usize, 0u8, None);
+    let mut area = kurbo::Rect::ZERO;
+    for y in 0..height as usize {
+        for x in 0..width as usize {
+            let at = y * padded + x * 4;
+            let d = (0..3).map(|c| a[at + c].abs_diff(b[at + c])).max().unwrap();
+            worst = worst.max(d);
+            if d > 2 {
+                count += 1;
+                let px = kurbo::Rect::new(x as f64, y as f64, x as f64 + 1.0, y as f64 + 1.0);
+                area = if count == 1 { px } else { area.union(px) };
+                first.get_or_insert((x, y));
+            }
+        }
+    }
+    if count == 0 {
+        eprintln!("[verify] frame {frame}: same as a full repaint (largest difference {worst}/255)");
+        return;
+    }
+    eprintln!(
+        "[verify] frame {frame}: DIFFERS from a full repaint: {count} px by more than 2/255 (up to {worst}/255), within {area:?}, first at {first:?}"
+    );
+    for (k, (command, r)) in commands.iter().zip(bounds).enumerate() {
+        if r.intersect(area).area() > 0.0 {
+            let name = format!("{command:?}");
+            let name: String = name.chars().take_while(|c| c.is_alphanumeric()).collect();
+            eprintln!("[verify]   command {k}: {name} at {r:?}");
+        }
+    }
+}
+
 struct ActiveRenderState {
     renderer: VelloHybridRenderer,
     resources: Resources,
@@ -457,8 +644,14 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             // (`damage.rs`), and copied to the surface.
             let intermediate_texture = intermediate_texture.or_else(|| {
                 crate::damage::enabled().then(|| wgpu_context::TextureConfiguration {
+                    // Verify mode reads the kept frame back.
                     usage: wgpu::TextureUsages::RENDER_ATTACHMENT
-                        | wgpu::TextureUsages::TEXTURE_BINDING,
+                        | wgpu::TextureUsages::TEXTURE_BINDING
+                        | if crate::damage::verify() {
+                            wgpu::TextureUsages::COPY_SRC
+                        } else {
+                            wgpu::TextureUsages::empty()
+                        },
                     format: DEFAULT_TEXTURE_FORMAT,
                     alpha_conversion: None,
                 })
@@ -614,6 +807,8 @@ impl WindowRenderer for VelloHybridWindowRenderer {
 
         let mut root_offset = [0, 0];
         let mut target_init = TargetInit::Clear(ClearSettings::default());
+        // svelte-blitz patch (damage): whether to check the frame.
+        let mut verify = false;
         if let (Some(tracker), Some(mut recording)) = (self.damage.as_mut(), recording) {
             let commands = std::mem::take(&mut recording.commands);
             self.recording = recording;
@@ -632,6 +827,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 crate::damage::Damage::Full => kurbo::Rect::new(0., 0., width as f64, height as f64),
                 crate::damage::Damage::Rect(region) => {
                     target_init = TargetInit::SrcOver;
+                    verify = crate::damage::verify();
                     region
                 }
             };
@@ -705,6 +901,24 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             )
             .expect("failed to render to texture");
         render_surface.queue().submit([encoder.finish()]);
+        // svelte-blitz patch (damage): check a frame not drawn in full.
+        let atlas_page = self.config.render_settings.memory_settings.image_atlas_config.atlas_size;
+        if let Some(tracker) = &self.damage {
+            let (commands, bounds) = tracker.current();
+            if verify {
+                verify_frame(
+                    state,
+                    &mut self.scene,
+                    &mut self.cached_images,
+                    atlas_page,
+                    commands,
+                    bounds,
+                    &texture_view,
+                    &texture_bindings,
+                );
+            }
+        }
+        let render_surface = &mut state.render_surface;
         timer.record_time("render");
 
         drop(texture_view);
