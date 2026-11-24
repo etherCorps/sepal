@@ -26,6 +26,14 @@ pub(crate) fn enabled() -> bool {
     *ON.get_or_init(|| std::env::var("SVELTE_BLITZ_DAMAGE").as_deref() != Ok("0"))
 }
 
+/// `SVELTE_BLITZ_DAMAGE=verify`: after every frame that was not drawn in full,
+/// also draw it in full and compare (`window_renderer`, `verify_frame`). Slow;
+/// for checking, never for measuring.
+pub(crate) fn verify() -> bool {
+    static ON: OnceLock<bool> = OnceLock::new();
+    *ON.get_or_init(|| std::env::var("SVELTE_BLITZ_DAMAGE").as_deref() == Ok("verify"))
+}
+
 /// `SVELTE_BLITZ_TRACE=1` prints each frame's damage.
 pub(crate) fn trace() -> bool {
     static ON: OnceLock<bool> = OnceLock::new();
