@@ -65,9 +65,11 @@ jobs:
       run: ${{ steps.check.outputs.run }}
     steps:
       - uses: actions/checkout@v5
+      # No pnpm here, so setup-node must not cache for the `packageManager` in package.json.
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          package-manager-cache: false
       - name: Is this version on npm yet?
         id: check
         run: |
@@ -229,9 +231,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       # No registry-url: it would set NODE_AUTH_TOKEN, and there is no token.
+      # No pnpm, so no caching for package.json's `packageManager`.
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          package-manager-cache: false
       # Trusted publishing needs npm 11.5.1 for `publish` and 11.21.0 for
       # `dist-tag`, which moves `latest`. Node 24 ships 11.19.
       - name: An npm that can set dist-tags with OIDC
