@@ -179,10 +179,20 @@ end, RAM 5 s after load 124 -> 94 MB in every scenario; the first wake-up in
 the bench Tracker is its own toast timer, 5 s after start. A window shown again
 after it repaints correctly (captures match `SVELTE_BLITZ_DAMAGE=0`).
 
-**11. A layer that only groups is drawn as a clip.** `src/scene.rs`,
-`push_layer`: a layer with alpha 1, normal blending and no filter this renderer
-draws (backdrop filters are not drawn at all) composites exactly like its
-contents drawn directly, so it is pushed as a clip path, without a layer.
+**11. A layer that only groups is drawn as a clip.** `src/damage.rs`,
+`grouping_only`, used by `replay`: a layer with alpha 1, normal blending, no
+filter this renderer draws (backdrop filters are not drawn at all) and nothing
+inside it blended other than normally composites exactly like its contents
+drawn directly, so it is pushed as a clip path, without a layer. A child with a
+blend mode is what makes the difference: in a group it blends with what the
+group drew, without one with everything beneath (`a_group_with_a_blended_child_
+keeps_its_layer`: a multiply child over a coloured page, 1,024 of 1,024 pixels
+different when its group became a clip; now the group stays a layer and the
+pixels match). Deciding that needs the whole frame, so it is done when a
+recorded frame is replayed, that is with damage tracking (change 6); without it
+every layer is drawn as a layer, as upstream. blitz-paint never emits a blend
+mode (CSS `mix-blend-mode` is not implemented), so in a Blitz page the case
+does not arise today.
 vello_gpu sizes its layer texture for the largest layer of a frame: the
 Tracker's dialog overlay, a layer only because it has `backdrop-filter`, made
 it 2400x1600 (15 MB) for as long as the dialog was open. Window captures with

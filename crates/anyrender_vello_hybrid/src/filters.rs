@@ -6,8 +6,9 @@ use vello_common::filter_effects::FilterPrimitive;
 /// svelte-blitz patch: whether this renderer draws CSS backdrop filters. It does
 /// not (`VelloHybridScenePainter::push_layer` ignores them), so a layer whose only
 /// filter is a backdrop filter draws exactly like one without. Damage tracking
-/// (`damage::is_filter_layer`) and drawing such a layer as a clip (`scene.rs`)
-/// rely on it; both have to change when backdrop filters are drawn.
+/// (`damage::is_filter_layer`) and drawing such a layer as a clip
+/// (`damage::grouping_only`) rely on it; both have to change when backdrop
+/// filters are drawn.
 pub(crate) const BACKDROP_FILTERS_DRAWN: bool = false;
 
 pub(crate) fn convert_filter(filter: Arc<Filter>) -> Option<vello_common::filter_effects::Filter> {

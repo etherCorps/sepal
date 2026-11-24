@@ -171,14 +171,19 @@ pub(crate) fn replay(
     region: Rect,
 ) {
     let to_region = Affine::translate((-region.x0, -region.y0));
+    let as_clip = grouping_only(commands);
     // Layers that miss the region, with everything in them, are left out.
     let mut skipped = 0usize;
-    for (command, r) in commands.iter().zip(bounds) {
+    for (i, (command, r)) in commands.iter().zip(bounds).enumerate() {
         let hits = r.intersect(region).area() > 0.0;
         match command {
             RenderCommand::PushLayer(c) => {
                 if skipped > 0 || !hits {
                     skipped += 1;
+                    continue;
+                }
+                if as_clip[i] {
+                    painter.push_clip_layer(c.fill, to_region * c.transform, &c.clip);
                     continue;
                 }
                 painter.push_layer(
@@ -242,6 +247,43 @@ pub(crate) fn replay(
             ),
         }
     }
+}
+
+/// For each command, whether it is a layer that only groups, which `replay`
+/// draws as a clip, without a layer texture (change 11): opaque, normal
+/// blending, no filter this renderer draws (a backdrop filter is not drawn,
+/// `filters::BACKDROP_FILTERS_DRAWN`), and nothing inside it blended other than
+/// normally. Such a group composites exactly like its contents drawn directly,
+/// except for a blended child, which blends with what the group drew if there
+/// is a group and with everything beneath if there is not. vello_gpu sizes its
+/// layer texture for the largest layer of a frame; a dialog overlay, a layer
+/// only because of its backdrop filter, made it window-sized.
+fn grouping_only(commands: &[RenderCommand]) -> Vec<bool> {
+    let normal = peniko::BlendMode::default();
+    let mut out = vec![false; commands.len()];
+    let mut open: Vec<usize> = Vec::new();
+    for (i, command) in commands.iter().enumerate() {
+        match command {
+            RenderCommand::PushLayer(c) => {
+                if c.blend != normal {
+                    for &k in &open {
+                        out[k] = false;
+                    }
+                }
+                out[i] = c.alpha == 1.0
+                    && c.blend == normal
+                    && c.filter.is_none()
+                    && !(crate::filters::BACKDROP_FILTERS_DRAWN && c.backdrop_filter.is_some());
+                open.push(i);
+            }
+            RenderCommand::PushClipLayer(_) => open.push(i),
+            RenderCommand::PopLayer => {
+                open.pop();
+            }
+            _ => {}
+        }
+    }
+    out
 }
 
 fn brush(paint: &Paint) -> PaintRef<'_> {
@@ -450,5 +492,50 @@ mod tests {
     fn sorted(mut v: Vec<usize>) -> Vec<usize> {
         v.sort();
         v
+    }
+
+    /// A layer that only groups is drawn as a clip (change 11), except where
+    /// that would change pixels: a child blended with something other than
+    /// normal blends with whatever is beneath, and inside a layer that is only
+    /// what the layer itself drew. Drawn on the GPU (`render_to_rgba`); skipped
+    /// without one.
+    #[test]
+    fn a_group_with_a_blended_child_keeps_its_layer() {
+        use anyrender::PaintScene;
+        use anyrender::filters::{Filter, FilterEffect};
+        use kurbo::{Affine, Rect};
+        use peniko::{BlendMode, Color, Fill, Mix};
+        use std::sync::Arc;
+
+        // Over a yellow page, a group (the outer layer, with a backdrop filter
+        // as a dialog overlay has) holding a blue square blended with multiply.
+        let draw = |group_alpha: f32, child_blend: BlendMode| {
+            let mut scene = anyrender::Scene::new();
+            let backdrop = Arc::new(Filter::linear_list([FilterEffect::blur(2.0)].into_iter()));
+            scene.fill(Fill::NonZero, Affine::IDENTITY, Color::from_rgb8(250, 200, 0), None, &Rect::new(0.0, 0.0, 64.0, 64.0));
+            scene.push_layer(Fill::NonZero, BlendMode::default(), group_alpha, Affine::IDENTITY, &Rect::new(8.0, 8.0, 56.0, 56.0), None, Some(backdrop));
+            scene.push_layer(Fill::NonZero, child_blend, 1.0, Affine::IDENTITY, &Rect::new(16.0, 16.0, 48.0, 48.0), None, None);
+            scene.fill(Fill::NonZero, Affine::IDENTITY, Color::from_rgb8(40, 80, 220), None, &Rect::new(16.0, 16.0, 48.0, 48.0));
+            scene.pop_layer();
+            scene.pop_layer();
+            let commands = scene.commands;
+            let bounds = super::visible_bounds(&commands);
+            let region = Rect::new(0.0, 0.0, 64.0, 64.0);
+            crate::render_to_rgba(64, 64, |painter| super::replay(painter, &commands, &bounds, region))
+        };
+        // The group kept as a layer: alpha just under 1, which nothing draws as a clip.
+        let kept = 1.0 - f32::EPSILON;
+        for (name, blend) in [("normal", BlendMode::default()), ("multiply", BlendMode::from(Mix::Multiply))] {
+            let (Ok(as_drawn), Ok(as_layer)) = (draw(1.0, blend), draw(kept, blend)) else {
+                eprintln!("no GPU: skipped");
+                return;
+            };
+            let differ = as_drawn
+                .chunks(4)
+                .zip(as_layer.chunks(4))
+                .filter(|(a, b)| a.iter().zip(*b).any(|(x, y)| x.abs_diff(*y) > 1))
+                .count();
+            assert_eq!(differ, 0, "{name} child: {differ} pixels differ from the group drawn as a layer");
+        }
     }
 }
