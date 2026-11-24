@@ -2,7 +2,7 @@
 
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
-windows with, with ten changes. `crates/host/Cargo.toml` swaps it in through
+windows with, with eleven changes. `crates/host/Cargo.toml` swaps it in through
 `[patch.crates-io]`. All are marked `svelte-blitz patch`.
 
 ## The changes
@@ -174,6 +174,21 @@ issues, 3 runs each): idle, RAM 119 -> 88 MB and GPU memory 59 -> 28 MB at the
 end, RAM 5 s after load 124 -> 94 MB in every scenario; the first wake-up in
 the bench Tracker is its own toast timer, 5 s after start. A window shown again
 after it repaints correctly (captures match `SVELTE_BLITZ_DAMAGE=0`).
+
+**11. A layer that only groups is drawn as a clip.** `src/scene.rs`,
+`push_layer`: a layer with alpha 1, normal blending and no filter this renderer
+draws (backdrop filters are not drawn at all) composites exactly like its
+contents drawn directly, so it is pushed as a clip path, without a layer.
+vello_gpu sizes its layer texture for the largest layer of a frame: the
+Tracker's dialog overlay, a layer only because it has `backdrop-filter`, made
+it 2400x1600 (15 MB) for as long as the dialog was open. Window captures with
+the dialog open are identical before and after (0 pixels differ).
+
+Measured against the code before it, interleaved (compare harness, 1,000
+issues, 3 runs each): New issue dialog 123 -> 78 ms GPU, 350 -> 326 ms CPU;
+scrolling 622 -> 574 ms GPU; the clock and view switches the same within
+noise. With the dialog open, wgpu's textures and buffers 53.6 -> 39.6 MB
+(`compare/results/dialog-memory.md`).
 
 ## Updating
 
