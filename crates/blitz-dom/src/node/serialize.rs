@@ -122,7 +122,7 @@ impl Node {
             .then(|| self.primary_styles())
             .flatten()
             .map(|style| style.clone_color())
-            // svelte-blitz patch: usvg only parses sRGB colour syntax. A colour
+            // sepal patch: usvg only parses sRGB colour syntax. A colour
             // computed in another space (Tailwind v4's palette is lab()/oklch())
             // would serialise as `lab(...)`, which usvg drops: strokes vanish and
             // fills fall back to black.

@@ -59,7 +59,7 @@ use style_dom::ElementState;
 
 use style::values::computed::text::TextAlign as StyloTextAlign;
 
-// svelte-blitz patch: whether any element has been matched against a selector
+// sepal patch: whether any element has been matched against a selector
 // with `:has()`, and whether any such selector looked at siblings
 // (`:has(+ x)`, `:has(~ x)`). Process-wide and never cleared: they only decide
 // how much work a change to the page has to do.
@@ -69,7 +69,7 @@ pub(crate) static HAS_SIBLING_ANCHORS: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
 impl crate::document::BaseDocument {
-    // svelte-blitz patch: upstream never restyles an element styled with
+    // sepal patch: upstream never restyles an element styled with
     // `:has()` when what it looks for changes (and, without the preference
     // set in `document.rs`, does not parse `:has()` at all).
     //
@@ -551,7 +551,7 @@ impl selectors::Element for BlitzNode<'_> {
             NonTSPseudoClass::Enabled => self.element_state().contains(ElementState::ENABLED),
             NonTSPseudoClass::Focus => self.element_state().contains(ElementState::FOCUS),
             NonTSPseudoClass::FocusWithin => false,
-            // svelte-blitz patch: upstream answers `false`, so nothing styled
+            // sepal patch: upstream answers `false`, so nothing styled
             // with `:focus-visible` (every Tailwind focus ring) ever shows.
             NonTSPseudoClass::FocusVisible => {
                 self.element_state().contains(ElementState::FOCUSRING)
@@ -607,7 +607,7 @@ impl selectors::Element for BlitzNode<'_> {
     }
 
     fn apply_selector_flags(&self, flags: ElementSelectorFlags) {
-        // svelte-blitz patch: note that `:has()` is in use, so that changes
+        // sepal patch: note that `:has()` is in use, so that changes
         // to the page know whether there are anchors to look for. See
         // `BaseDocument::restyle_has_anchors`.
         if flags.intersects(
@@ -1582,7 +1582,7 @@ fn needs_style_image_flush(node: &Node, style: &ComputedValues) -> bool {
     })
 }
 
-// svelte-blitz patch: upstream has no way to ask what is animating. The host
+// sepal patch: upstream has no way to ask what is animating. The host
 // needs it to answer `element.getAnimations()`, which component libraries use
 // to wait for an exit animation before they remove an element.
 impl crate::document::BaseDocument {

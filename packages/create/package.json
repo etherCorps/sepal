@@ -1,21 +1,21 @@
 {
-  "name": "@ethercorps/create-svelte-blitz",
+  "name": "create-sepal",
   "version": "0.1.0-alpha.0",
-  "description": "Start a svelte-blitz project: pnpm create @ethercorps/svelte-blitz my-app",
+  "description": "Start a Sepal project: pnpm create sepal my-app",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/etherCorps/svelte-blitz.git",
+    "url": "git+https://github.com/etherCorps/sepal.git",
     "directory": "packages/create"
   },
-  "homepage": "https://github.com/etherCorps/svelte-blitz#readme",
-  "bugs": "https://github.com/etherCorps/svelte-blitz/issues",
+  "homepage": "https://github.com/etherCorps/sepal#readme",
+  "bugs": "https://github.com/etherCorps/sepal/issues",
   "engines": {
     "node": ">=22"
   },
   "type": "module",
   "bin": {
-    "create-svelte-blitz": "./index.js"
+    "create-sepal": "./index.js"
   },
   "files": [
     "index.js",

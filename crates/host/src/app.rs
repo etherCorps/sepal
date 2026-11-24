@@ -96,7 +96,7 @@ impl Manifest {
         self.id.clone().or_else(|| {
             self.name
                 .as_deref()
-                .map(|name| format!("app.svelte-blitz.{}", crate::bundle::slug(name)))
+                .map(|name| format!("app.sepal.{}", crate::bundle::slug(name)))
         })
     }
 

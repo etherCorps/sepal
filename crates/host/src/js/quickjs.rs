@@ -385,7 +385,7 @@ fn take_batch_in(ctx: &Ctx<'_>) -> rquickjs::Result<Option<Batch>> {
     Ok(Some(Batch { ops, strings }))
 }
 
-/// `globalThis.__sb`, installed by the `@ethercorps/svelte-blitz` package.
+/// `globalThis.__sb`, installed by the `sepal` package.
 fn entry<'js>(ctx: &Ctx<'js>) -> rquickjs::Result<Object<'js>> {
     ctx.globals().get("__sb")
 }

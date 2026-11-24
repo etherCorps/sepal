@@ -466,7 +466,7 @@ fn collect_layout_children_with_wrap(
                 doc.nodes[id].remove_damage(CONSTRUCT_BOX | CONSTRUCT_DESCENDENT | CONSTRUCT_FC);
             });
 
-            // svelte-blitz patch: upstream parses the drawing again whenever
+            // sepal patch: upstream parses the drawing again whenever
             // anything in the subtree was restyled. `pointer-events: none` on
             // `<body>` (a modal opening) restyles every element, and a page
             // of 10,000 icons spent 60 ms parsing them. The drawing comes from

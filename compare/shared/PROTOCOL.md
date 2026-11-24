@@ -1,14 +1,14 @@
 # Bench protocol (shared by the three apps and the harness)
 
-Every app (svelte-blitz QuickJS, svelte-blitz V8, Tauri 2, gpuix-svelte) follows this
+Every app (Sepal QuickJS, Sepal V8, Tauri 2, gpuix-svelte) follows this
 exactly. Anything an app cannot follow goes in `compare/PORTING.md`.
 
 ## Identity and data directory
 
 | Column | App id (data dir under `~/Library/Application Support/`) |
 |---|---|
-| svelte-blitz QuickJS | `com.compare.tracker.blitz` |
-| svelte-blitz V8 | `com.compare.tracker.blitzv8` |
+| Sepal QuickJS | `com.compare.tracker.blitz` |
+| Sepal V8 | `com.compare.tracker.blitzv8` |
 | Tauri 2 | `com.compare.tracker.tauri` |
 | gpuix-svelte | `com.compare.tracker.gpuix` |
 
@@ -47,7 +47,7 @@ RECT <testid> <x> <y> <w> <h>        (calibration launch only; logical px,
 whatever resolution the runtime gives: 1 ms in WKWebView).
 
 How each runtime writes a line:
-- svelte-blitz: `console.log(line)` (the host prints it to stderr).
+- Sepal: `console.log(line)` (the host prints it to stderr).
 - Tauri: `invoke('mark', { line })` to a Rust command that `eprintln!`s it
   (async IPC: the line arrives later than JS ran; the report says so).
 - gpuix: `process.stderr.write(line + '\n')`.
@@ -72,7 +72,7 @@ How each runtime writes a line:
 | `frame:<name>` | the runtime's "frame presented" signal after mark `<name>` |
 
 Frame signals (three different clocks; the report labels them):
-- svelte-blitz: the host's `SVELTE_BLITZ_TRACE=1` repaint lines on stderr; the
+- Sepal: the host's `SEPAL_TRACE=1` repaint lines on stderr; the
   harness takes the first repaint after a mark. The app does not emit `frame:`.
 - Tauri: `requestAnimationFrame(() => requestAnimationFrame(() => mark('frame:<name>')))`.
 - gpuix: `next_frame().then(() => mark('frame:<name>'))`.

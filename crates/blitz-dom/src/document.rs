@@ -248,7 +248,7 @@ pub struct BaseDocument {
     /// every node is treated as damaged on every `resolve`, so the same damage
     /// pipeline reconstructs and relays out the whole tree.
     pub(crate) incremental_layout: bool,
-    // svelte-blitz patch: the space the root was last laid out in (see
+    // sepal patch: the space the root was last laid out in (see
     // `resolve_layout`).
     pub(crate) laid_out_in: Option<taffy::Size<taffy::AvailableSpace>>,
     /// How deeply this document is nested within other documents
@@ -430,7 +430,7 @@ impl BaseDocument {
 
         // Make sure we turn on stylo features *before* creating the Stylist
         style_config::set_pref!("layout.grid.enabled", true);
-        // svelte-blitz patch: without this Stylo drops every rule that uses
+        // sepal patch: without this Stylo drops every rule that uses
         // `:has()` while parsing the stylesheet.
         style_config::set_pref!("layout.css.has-selector.enabled", true);
         style_config::set_pref!("layout.flexbox.balance", true);
@@ -1102,7 +1102,7 @@ impl BaseDocument {
     }
 
     pub(crate) fn resolve_url(&self, raw: &str) -> url::Url {
-        // svelte-blitz patch: upstream panics here. URLs come from app content
+        // sepal patch: upstream panics here. URLs come from app content
         // (`<img src>`, CSS `url()`), and a malformed one, or a relative one in a
         // document without a hierarchical base URL, must not take the host down.
         // `about:invalid` reaches the net provider, which reports it and moves on.
@@ -1582,7 +1582,7 @@ impl BaseDocument {
             self.snapshot_node_state_only(node_id);
         }
         cb(&mut self.nodes[node_id]);
-        // svelte-blitz patch: `:has(:checked)`, `:has(:focus)` and the like.
+        // sepal patch: `:has(:checked)`, `:has(:focus)` and the like.
         self.restyle_has_anchors(node_id);
     }
 

@@ -5,8 +5,8 @@
 
 use std::path::Path;
 
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::app::App;
+use sepal::SvelteDocument;
+use sepal::app::App;
 
 fn load() -> SvelteDocument {
     let dist = Path::new(concat!(

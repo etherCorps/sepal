@@ -1,12 +1,12 @@
-//! SvelteKit itself, built with `svelteBlitzKit()` (`examples/sveltekit`),
+//! SvelteKit itself, built with `sepalKit()` (`examples/sveltekit`),
 //! with its own client router running in the host.
 //!
 //! Build the bundle first: `pnpm run build` in the repository root.
 
 use std::path::Path;
 
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::app::App;
+use sepal::SvelteDocument;
+use sepal::app::App;
 
 fn load() -> SvelteDocument {
     let dist = Path::new(concat!(
@@ -47,7 +47,7 @@ fn sveltekit_routes_between_pages() {
     // A static file, written the way SvelteKit apps write it: from the root.
     let logo = doc.query("#logo").unwrap();
     assert_eq!(doc.attr(logo, "src").as_deref(), Some("/logo.svg"));
-    let (pixels, width, _) = svelte_blitz_host::screenshot::render_rgba(&mut doc, 800, 600, 1.0);
+    let (pixels, width, _) = sepal::screenshot::render_rgba(&mut doc, 800, 600, 1.0);
     let (x, y, w, h) = doc.rect(logo).unwrap();
     let at = ((y + h / 2.0) as usize * width as usize + (x + w / 2.0) as usize) * 4;
     assert!(

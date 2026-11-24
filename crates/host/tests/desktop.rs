@@ -13,12 +13,12 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use blitz_traits::net::Url;
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::api::{Api, Permissions, Scope, named_dir, open_target, url_allowed};
-use svelte_blitz_host::app::{App, Manifest};
+use sepal::SvelteDocument;
+use sepal::api::{Api, Permissions, Scope, named_dir, open_target, url_allowed};
+use sepal::app::{App, Manifest};
 
 fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("svelte-blitz-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sepal-{}-{name}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     if cfg!(windows) {
@@ -344,7 +344,7 @@ fn fetch_from_javascript() {
     assert_eq!(
         refused,
         format!(
-            "ERROR: a request to {elsewhere} is not allowed: add it to `permissions.http` in app.config"
+            "ERROR: a request to {elsewhere} is not allowed: add it to `permissions.http` in sepal.config"
         )
     );
     assert!(run(&mut doc, &format!("fetch('{origin}/leave')")).contains("is not allowed"));

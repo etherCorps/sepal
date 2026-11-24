@@ -2,7 +2,7 @@
 
 Apple M4 Pro (Mac16,11), Version 27.0.1 (Build 26A434), 5120x2880 display at 75 Hz, AC Power. The Tracker app, window 1200x800, issues from the shared fixtures. Sessions: mem-1000, mem-10000 (2026-11-23T14:40 UTC). 74 measured runs, 0 aborted and retried. Cells: **median (min–max) of 3 runs** after 1 discarded warm-up.
 
-svelte-blitz is at commit 9375147 (the memory work: small atlas pages, shrinking layer textures, uploads in render passes). **† gpuix-svelte is a port** (its own widgets, a CSS subset, a pre-release Svelte 5.57.2); Tauri runs the same components and CSS as svelte-blitz.
+Sepal is at commit 9375147 (the memory work: small atlas pages, shrinking layer textures, uploads in render passes). **† gpuix-svelte is a port** (its own widgets, a CSS subset, a pre-release Svelte 5.57.2); Tauri runs the same components and CSS as Sepal.
 
 **What is measured**
 - **RAM**: physical footprint (`footprint`, what Activity Monitor calls Memory) summed over every process the app owns: for Tauri its WebKit WebContent, GPU and Networking processes. Two macOS helpers every app gets are left out. "Peak" is each process's lifetime peak, summed.
@@ -13,18 +13,18 @@ svelte-blitz is at commit 9375147 (the memory work: small atlas pages, shrinking
 
 ## App size
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | `.app` on disk | 25.3 MB | 64.7 MB | 10.8 MB | 109.2 MB |
 | zipped (`ditto -c -k`) | 10.6 MB | 24.5 MB | 3.9 MB | 48.2 MB |
 
-Tauri is small because the web engine is the system's WKWebView, not in the app; svelte-blitz V8 carries V8 (~40 MB); gpuix carries the Bun runtime.
+Tauri is small because the web engine is the system's WKWebView, not in the app; Sepal V8 carries V8 (~40 MB); gpuix carries the Bun runtime.
 
 ## 1,000 issues
 
 ### idle (nothing on screen changes) (20 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 107 (107–107) | 117 (117–117) | 144 (144–144) | 107 (107–109) |
 | RAM at the end, MB | 101 (101–140) | 111 (111–111) | 132 (132–132) | 103 (103–105) |
@@ -37,7 +37,7 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ### a clock ticking once a second (20 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 262 (261–264) | 278 (271–278) | — | 222 (222–222) |
 | RAM at the end, MB | 262 (260–266) | 272 (270–275) | — | 222 (222–223) |
@@ -50,7 +50,7 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ### create an issue (New issue dialog) (1 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 108 (108–108) | 117 (116–117) | — | 108 (107–108) |
 | RAM at the end, MB | 358 (353–358) | 367 (363–367) | — | 245 (244–245) |
@@ -62,7 +62,7 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ### Show all, then wheel-scroll the whole list (9 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 108 (107–123) | 116 (116–117) | — | 108 (108–108) |
 | RAM at the end, MB | 142 (141–146) | 146 (145–149) | — | 263 (262–264) |
@@ -74,7 +74,7 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ### switch views: Board, Insights, Settings, Issues (8 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 108 (107–122) | 118 (117–131) | — | 107 (107–108) |
 | RAM at the end, MB | 159 (159–161) | 180 (176–183) | — | 199 (197–202) |
@@ -88,7 +88,7 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ### idle (nothing on screen changes) (20 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 123 (123–125) | 136 (134–151) | — | 113 (112–113) |
 | RAM at the end, MB | 117 (117–120) | 130 (128–145) | — | 106 (105–106) |
@@ -101,7 +101,7 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ### a clock ticking once a second (20 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 285 (278–286) | 288 (288–288) | — | 229 (228–230) |
 | RAM at the end, MB | 282 (278–284) | 291 (288–291) | — | 226 (225–227) |
@@ -114,7 +114,7 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ### Show all, then wheel-scroll the whole list (63 s)
 
-| | svelte-blitz (QuickJS) | svelte-blitz (V8) | Tauri 2 | gpuix-svelte † |
+| | Sepal (QuickJS) | Sepal (V8) | Tauri 2 | gpuix-svelte † |
 |---|---|---|---|---|
 | RAM 5 s after load, MB | 123 (123–140) | 134 (134–151) | — | 113 (112–113) |
 | RAM at the end, MB | 176 (176–177) | 172 (172–173) | — | 263 (262–264) |
@@ -126,8 +126,8 @@ Tauri is small because the web engine is the system's WKWebView, not in the app;
 
 ## Where the RAM is (clock ticking, 1,000 issues, one run, MB at the end; GPU memory in brackets)
 
-- **svelte-blitz (QuickJS)**: Tracker 260 (194)
-- **svelte-blitz (V8)**: Tracker 270 (194)
+- **Sepal (QuickJS)**: Tracker 260 (194)
+- **Sepal (V8)**: Tracker 270 (194)
 - **gpuix-svelte †**: tracker 222 (151)
 
 ## Aborted runs (all retried)

@@ -8,11 +8,10 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@ethercorps/svelte-blitz": "workspace:*",
+    "sepal": "workspace:*",
     "svelte": "^5.59.1"
   },
   "devDependencies": {
-    "@ethercorps/svelte-blitz-vite": "workspace:*",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tailwindcss/vite": "^4.3.5",
     "svelte-check": "^4.7.8",

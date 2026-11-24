@@ -1,4 +1,4 @@
-import { error } from '@ethercorps/svelte-blitz-vite/router';
+import { error } from 'sepal/router';
 import { project_by_key } from '$lib/seed';
 
 export function load({ params }: { params: { key: string } }) {

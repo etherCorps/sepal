@@ -80,7 +80,7 @@ pub struct SvgImageData {
     pub tree: Arc<usvg::Tree>,
     /// The dimensions declared on the root `<svg>` element.
     pub intrinsic_dimensions: SvgIntrinsicDimensions,
-    // svelte-blitz patch: for an inline `<svg>`, the source it was parsed
+    // sepal patch: for an inline `<svg>`, the source it was parsed
     // from (see `collect_layout_children` in `layout/construct.rs`).
     pub(crate) inline_source: Option<String>,
 }

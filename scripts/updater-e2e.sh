@@ -7,10 +7,10 @@
 set -eu
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-host="$root/packages/host/bin/darwin-arm64/svelte-blitz-host"
+host="$root/packages/host/bin/darwin-arm64/calyx"
 [ -x "$host" ] || { echo "no host binary; run: pnpm run build:host" >&2; exit 1; }
 
-work=$(mktemp -d /tmp/svelte-blitz-updater-XXXXXX)
+work=$(mktemp -d /tmp/sepal-updater-XXXXXX)
 port=8617
 app="$work/installed/Updater Demo.app"
 server_pid=""

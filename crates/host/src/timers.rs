@@ -58,7 +58,7 @@ impl TimerWaker {
             self.started = true;
             let shared = self.shared.clone();
             thread::Builder::new()
-                .name("svelte-blitz-timers".into())
+                .name("sepal-timers".into())
                 .spawn(move || run(shared))
                 .expect("failed to spawn timer thread");
         }

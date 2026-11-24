@@ -179,7 +179,7 @@ toolbar landed on a row scrolled up under it; the header and toolbar are
 ## Not measured here
 
 - Painting and the GPU: headless has none. Scrolling the 5,000-row list with a
-  wheel, and idle CPU in a real window, need a window pass (`SVELTE_BLITZ_TRACE=1`
+  wheel, and idle CPU in a real window, need a window pass (`SEPAL_TRACE=1`
   and `top -stats cpu,idlew`).
 - Compact rows (P12): the switch is on Settings, where no rows are mounted.
 

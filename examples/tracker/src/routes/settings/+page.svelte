@@ -5,8 +5,8 @@
 	click, and tests never press it.
 -->
 <script lang="ts">
-	import { save } from '@ethercorps/svelte-blitz/dialog';
-	import { writeTextFile } from '@ethercorps/svelte-blitz/fs';
+	import { save } from 'sepal/dialog';
+	import { writeTextFile } from 'sepal/fs';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '$lib/components/ui/dialog/index.js';

@@ -1,7 +1,7 @@
 name: Release
 
 # Builds the host on every platform it ships for, collects the binaries into
-# the host package, and packs the five packages.
+# the host package, and packs the three packages.
 #
 # Started by hand (Actions -> Release -> Run workflow) it stops there: the
 # tarballs are attached to the run, to look at or to install from, and nothing
@@ -39,7 +39,7 @@ jobs:
       - run: pnpm run test:template
       - name: The binary is where the package looks for it
         shell: bash
-        run: test -s packages/host/bin/${{ matrix.platform }}/svelte-blitz-host
+        run: test -s packages/host/bin/${{ matrix.platform }}/calyx
       - uses: actions/upload-artifact@v4
         with:
           name: host-${{ matrix.platform }}
@@ -62,7 +62,7 @@ jobs:
       - name: The tag is the packages' version
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          version=$(node -p "require('./packages/core/package.json').version")
+          version=$(node -p "require('./packages/sepal/package.json').version")
           [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "::error::tag $GITHUB_REF_NAME, but the packages are at $version"; exit 1; }
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
@@ -80,11 +80,11 @@ jobs:
       - name: Every platform's binary is there
         run: |
           for platform in darwin-arm64 darwin-x64 linux-x64-gnu linux-arm64-gnu; do
-            test -s packages/host/bin/$platform/svelte-blitz-host || { echo "::error::no host binary for $platform"; exit 1; }
+            test -s packages/host/bin/$platform/calyx || { echo "::error::no host binary for $platform"; exit 1; }
           done
           test -s packages/host/THIRD-PARTY-LICENSES.txt
           # Artifacts do not keep the executable bit.
-          chmod +x packages/host/bin/*/svelte-blitz-host
+          chmod +x packages/host/bin/*/calyx
           ls -l packages/host/bin/*
       - name: Pack
         run: |

@@ -1,4 +1,4 @@
-"""Per-tick breakdown of scenario 4 (idle with the clock) on a diagnostic svelte-blitz build.
+"""Per-tick breakdown of scenario 4 (idle with the clock) on a diagnostic Sepal build.
 
     python3 compare/results/diag_ticks.py compare/results/raw/diag/blitzdiag-s4.json \
         compare/results/raw/diag/blitzdiag-1000-s4.log
@@ -6,7 +6,7 @@
 The diagnostic hosts (Tracker-blitz-diag.app, -blitzv8-diag) are built with blitz-dom's
 `log-phase-times`: every resolve prints `Resolve(<doc>): <total> (style: …, damage: …,
 construct: …, pconstruct: …, layout: …, transform: …, paint_tree: …, c_damage: …, subdocs: …)`
-on stdout. With SVELTE_BLITZ_TRACE=1 the host adds, on stderr: `the app changed the page: N
+on stdout. With SEPAL_TRACE=1 the host adds, on stderr: `the app changed the page: N
 ops, L layouts in X ms` at the end of a turn that changed something visible, and
 `+t RedrawRequested took X ms` for every repaint (Blitz's resolve + paint + present).
 

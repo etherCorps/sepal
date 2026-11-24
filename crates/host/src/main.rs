@@ -1,11 +1,11 @@
-//! `svelte-blitz-host <dist>`                         open the app in a window
-//! `svelte-blitz-host --watch <dist>`                 same, and reload on every line read from stdin
-//! `svelte-blitz-host --screenshot out.png <dist> [WIDTHxHEIGHT]`
-//! `svelte-blitz-host --bundle <dist> [out-dir] [--sign <identity>] [--notarize <profile>]
-//!                    [--update-key <file>] [--update-notes <text>]`
-//!                                                    write <name>.app (default: next to <dist>, in bundle/),
-//!                                                    and with a key also the signed update for it
-//! `svelte-blitz-host --updater-keygen <file>`        make an update signing key; prints the public half
+//! `calyx <dist>`                         open the app in a window
+//! `calyx --watch <dist>`                 same, and reload on every line read from stdin
+//! `calyx --screenshot out.png <dist> [WIDTHxHEIGHT]`
+//! `calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <profile>]
+//!        [--update-key <file>] [--update-notes <text>]`
+//!                                        write <name>.app (default: next to <dist>, in bundle/),
+//!                                        and with a key also the signed update for it
+//! `calyx --updater-keygen <file>`        make an update signing key; prints the public half
 //!
 //! `<dist>` is the directory the Vite preset wrote (`app.js`, `app.css`,
 //! `app.json`). `<app.js> [app.css]` is accepted in its place and runs without
@@ -15,9 +15,9 @@
 use std::path::{Path, PathBuf};
 use std::{env, fs, process::ExitCode};
 
-use svelte_blitz_host::app::{App, Manifest};
-use svelte_blitz_host::bundle::bundle_macos;
-use svelte_blitz_host::updater;
+use sepal::app::{App, Manifest};
+use sepal::bundle::bundle_macos;
+use sepal::updater;
 
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -40,7 +40,7 @@ fn parse_size(size: &str) -> Option<(u32, u32)> {
 }
 
 fn run(args: &[String]) -> Result<(), String> {
-    const USAGE: &str = "usage: svelte-blitz-host [--watch | --screenshot out.png] <dist | app.js [app.css]> [WIDTHxHEIGHT]\n       svelte-blitz-host --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       svelte-blitz-host --updater-keygen <private-key-file>";
+    const USAGE: &str = "usage: calyx [--watch | --screenshot out.png] <dist | app.js [app.css]> [WIDTHxHEIGHT]\n       calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       calyx --updater-keygen <private-key-file>";
 
     // Launched from Finder or the Dock: no arguments, the app is inside the bundle.
     if args.is_empty()
@@ -132,7 +132,7 @@ fn bundle(args: &[String]) -> Result<Option<()>, String> {
     // The key comes from a file, or from the environment for CI secrets.
     let private_key = match update_key {
         Some(file) => Some(read(file)?),
-        None => env::var("SVELTE_BLITZ_UPDATER_KEY").ok(),
+        None => env::var("SEPAL_UPDATER_KEY").ok(),
     };
     if let Some(private_key) = private_key {
         let manifest = App::from_dir(dist)?.manifest;
@@ -303,8 +303,8 @@ fn load(args: &[String]) -> Result<Option<(App, &[String])>, String> {
 }
 
 #[cfg(feature = "window")]
-fn window(app: App, reload: Option<svelte_blitz_host::window::Reload>) -> Result<(), String> {
-    svelte_blitz_host::window::run(app, reload)
+fn window(app: App, reload: Option<sepal::window::Reload>) -> Result<(), String> {
+    sepal::window::run(app, reload)
 }
 
 #[cfg(not(feature = "window"))]
@@ -314,7 +314,7 @@ fn window(_app: App, _reload: Option<Box<dyn Fn() -> Result<App, String>>>) -> R
 
 #[cfg(feature = "screenshot")]
 fn screenshot(out: &str, app: &App, (width, height): (u32, u32)) -> Result<(), String> {
-    use svelte_blitz_host::{SvelteDocument, screenshot::render_png};
+    use sepal::{SvelteDocument, screenshot::render_png};
 
     let mut doc = SvelteDocument::for_app(app)?;
     let png = render_png(&mut doc, width, height, 1.0);

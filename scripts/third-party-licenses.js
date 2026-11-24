@@ -98,7 +98,7 @@ const sections = [...texts.values()]
 
 writeFileSync(
 	out,
-	`Third-party software in the svelte-blitz host binary
+	`Third-party software in the Sepal host binary
 
 The host is built from the crates listed below. Each is the work of its
 authors and is used under the licence named beside it; the source of each is

@@ -165,4 +165,4 @@ and `src/document.rs` (`laid_out_in`):
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
 directory with that version's source and reapply the thirteen changes (search for
-`svelte-blitz patch`).
+`sepal patch`).

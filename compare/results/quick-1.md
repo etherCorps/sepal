@@ -2,7 +2,7 @@
 
 176 runs ok, 13 aborted (all retried; see Flaky). 1,000 issues. Mac16,11 (Apple M4 Pro), Version 27.0.1 (Build 26A434), display 5120x2880 at 75 Hz, AC Power, Stage Manager on. Window content 1200x800.
 
-**Clocks.** Input events and every app line are stamped by the harness with `mach_absolute_time` (0.04 µs), app lines on arrival over stderr. App-side clocks are 1 ms. Treat latency differences under 2 ms as noise. "→ frame" uses each runtime's own signal (svelte-blitz: host repaint trace; Tauri: double rAF, mark over async IPC; gpuix: `next_frame()`), three different things. "Screen" is the independent check: first changed window frame in a 75 Hz ScreenCaptureKit recording, one recorded run per scenario, so ±13.3 ms (one frame) and a single value, not a median.
+**Clocks.** Input events and every app line are stamped by the harness with `mach_absolute_time` (0.04 µs), app lines on arrival over stderr. App-side clocks are 1 ms. Treat latency differences under 2 ms as noise. "→ frame" uses each runtime's own signal (Sepal: host repaint trace; Tauri: double rAF, mark over async IPC; gpuix: `next_frame()`), three different things. "Screen" is the independent check: first changed window frame in a 75 Hz ScreenCaptureKit recording, one recorded run per scenario, so ±13.3 ms (one frame) and a single value, not a median.
 
 **Energy.** powermetrics was not running during this pass (its log ends 16:55, the pass ran 17:16-18:30), so energy is **top's `power` column** (Apple's unitless "energy impact" score, summed over the app's processes, mean over 1 s samples). It is a relative score, not joules.
 
@@ -10,7 +10,7 @@
 
 ### Scenario 1: first launch after quit (no reboot or cache purge, so not a cold start)
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | window on screen | 279.5 / 293.3 | 254.6 / 265.7 | 231.9 / 237.6 | 328.4 / 337.9 |
 | `start` mark | 81.1 / 82.6 | 64.0 / 64.4 | 305.6 / 311.4 | 44.5 / 45.5 |
@@ -28,7 +28,7 @@
 
 ### Scenario 2: warm start (relaunch right after quitting)
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | window on screen | 247.1 / 248.6 | 226.2 / 226.4 | 227.1 / 241.3 | 324.6 / 326.1 |
 | `start` mark | 72.5 / 73.2 | 59.0 / 59.3 | 245.9 / 256.8 | 40.1 / 40.6 |
@@ -50,7 +50,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 5: open an issue, then go back
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | click row → mark | 19.3 / 20.1 | 11.6 / 13.6 | 11.1 / 11.2 | 35.4 / 35.9 |
 | click row → frame | 33.9 / 37.8 | 22.1 / 24.2 | 24.9 / 26.0 | 36.7 / 37.0 |
@@ -64,7 +64,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 7: change an issue's status
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | click row → mark | 19.5 / 20.0 | 10.3 / 10.8 | 12.5 / 14.1 | 35.7 / 38.4 |
 | click row → frame | 31.7 / 33.3 | 21.0 / 21.4 | 32.0 / 36.5 | 36.9 / 39.7 |
@@ -78,7 +78,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 8: create an issue (Cmd+Enter submits)
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | Cmd+Enter → mark | 25.2 / 26.8 | 30.3 / 37.4 | 15.8 / 21.0 | 68.9 / 72.2 |
 | Cmd+Enter → frame | 45.9 / 46.3 | 51.6 / 53.0 | 36.7 / 37.8 | 74.8 / 78.1 |
@@ -90,7 +90,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 10: switch views, 2 s apart
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | click nav-board → mark | 72.1 / 73.9 | 18.3 / 19.9 | 22.7 / 25.1 | 79.6 / 87.1 |
 | click nav-board → frame | 106.8 / 108.3 | 48.2 / 50.9 | 60.9 / 63.1 | 104.9 / 111.9 |
@@ -108,7 +108,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 11: resize through the Accessibility API (from the AX call)
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | resize 800x600 → mark | 16.1 / 16.9 | 19.3 / 21.3 | 6.9 / 8.1 | 25.4 / 25.4 |
 | resize 800x600 → frame | 25.5 / 26.9 | 24.2 / 26.3 | 27.6 / 27.9 | 30.6 / 30.7 |
@@ -122,7 +122,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 6: type `deploy cac` into search, one key every 100 ms (all 10 keys of every run pooled)
 
-| ms | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| ms | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | key → `search:` mark | 5.2 / 14.4 | 4.0 / 8.6 | 5.0 / 17.6 | 18.8 / 40.9 |
 | key → frame | 16.3 / 26.7 | 14.3 / 21.7 | 15.1 / 26.6 | 19.1 / 41.3 |
@@ -133,7 +133,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 3: idle 60 s, nothing animating
 
-|  | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+|  | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | CPU time (ms per 60 s, all processes) | 6.5 / 6.8 | 27.5 / 48.5 | 15.0 / 15.5 | 772.0 / 823.0 |
 | wake-ups (idle + interrupt, 60 s) | 34 / 34 | 36 / 40 | 172 / 173 | 5,608 / 5,611 |
@@ -147,7 +147,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 4: idle 60 s, a clock ticking once a second
 
-|  | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+|  | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | CPU time (ms per 60 s, all processes) | 536.4 / 540.6 | 599.3 / 630.7 | 728.6 / 738.3 | 1,430.3 / 1,430.5 |
 | wake-ups (idle + interrupt, 60 s) | 178 / 183 | 204 / 215 | 3,738 / 3,817 | 5,786 / 5,795 |
@@ -161,7 +161,7 @@ Clicks act on the mouse **release**, keys on the key **press**, in all four buil
 
 ### Scenario 9: Show all, then wheel-scroll the whole list (391 wheel events at 60 Hz, 100 px each)
 
-|  | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+|  | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | Show all → `shown:all` (ms) | 14.9 / 16.9 | 13.5 / 15.4 | 8.9 / 10.5 | 24.2 / 24.9 |
 | Show all → frame (ms) | 23.4 / 24.0 | 25.3 / 27.2 | 27.0 / 29.0 | 30.4 / 31.1 |
@@ -180,7 +180,7 @@ Counted from the first wheel event to 100 ms after the last. 60 wheel events/s o
 
 Physical footprint over every process the app owns, minus two macOS helpers every app gets. GPU memory is reclaimed ~1-2 s after the last frame, so "at end" depends on how long ago the last frame was (scenario 3: a minute; 4: a second).
 
-| scenario | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| scenario | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | 1. first launch after quit (5 s after mounted → end) | 213 → 223 | 234 → 243 | 148 → 164 | 121 → 124 |
 | 2. warm start (5 s after mounted → end) | 213 → 223 | 233 → 242 | 148 → 149 | 121 → 123 |
@@ -196,7 +196,7 @@ Physical footprint over every process the app owns, minus two macOS helpers ever
 
 ## CPU time per scenario (ms, all processes, median)
 
-| scenario | svelte-blitz QuickJS | svelte-blitz V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
+| scenario | Sepal QuickJS | Sepal V8 | Tauri 2 | gpuix † (Svelte 5.57.2) |
 |---|---|---|---|---|
 | 1. first launch after quit | 382 / 384 | 396 / 398 | 546 / 547 | 492 / 496 |
 | 2. warm start | 389 / 389 | 393 / 395 | 549 / 553 | 505 / 512 |
@@ -239,7 +239,7 @@ Physical footprint over every process the app owns, minus two macOS helpers ever
 - **Resize scenario (11), recorded run, all four builds: 12 aborts, `AX resize failed: -25200`.** Harness bug, not the apps. While a window is screen-captured, macOS adds a 66x20 AX window to the app and lists it first; `drive resize` took the first AX window and the system refused to resize it. Fixed (`drive.swift`: the largest AX window), verified on blitz and Tauri with recording on, and the four recorded runs re-run on resume (attempt 4, all ok). `run.mjs` got `--attempts` for that resume. No measured number changed.
 - **Tauri scenario 4, recorded run, attempt 1: aborted**, Stage Manager shrank the window to a 103x115 thumbnail (focus lost). Attempt 2 ok. Stage Manager stays on (it cannot be turned off on this Mac); a run it touches aborts and is retried, never measured.
 - **The screen-recorded run is excluded from all statistics.** In start-up runs the capture starts before the harness polls for the window, adding ~280 ms to "window on screen" and to the first input in every build; capture also adds ~10-20 MB and a few % CPU. Interaction latencies moved < 1 ms. It now only feeds the screen check. So the quick pass statistics are over **2 runs**. For the full pass: 1 warm-up + 10 measured + 1 recorded.
-- **svelte-blitz scrolls 2× as far per wheel event as Tauri and gpuix (a svelte-blitz bug, measured and found in code).** winit turns a pixel wheel delta into *physical* pixels (×2 on this display, `winit-appkit view.rs` `scrollWheel:`) and Blitz applies it as CSS px (`blitz-dom events/pointer.rs` `handle_wheel`). In scenario 9 svelte-blitz reached the end of the list ~3.0 s into the 6.5 s wheel; Tauri and gpuix at ~6.0 s. Not fixed (no changes to svelte-blitz during the comparison). Consequences: scenario 9 is **not like for like** for svelte-blitz: half the scrolling work, then ~3 s of wheel events at the end of the list; its scroll CPU and frame counts are not comparable as they stand.
+- **Sepal scrolls 2× as far per wheel event as Tauri and gpuix (a Sepal bug, measured and found in code).** winit turns a pixel wheel delta into *physical* pixels (×2 on this display, `winit-appkit view.rs` `scrollWheel:`) and Blitz applies it as CSS px (`blitz-dom events/pointer.rs` `handle_wheel`). In scenario 9 Sepal reached the end of the list ~3.0 s into the 6.5 s wheel; Tauri and gpuix at ~6.0 s. Not fixed (no changes to Sepal during the comparison). Consequences: scenario 9 is **not like for like** for Sepal: half the scrolling work, then ~3 s of wheel events at the end of the list; its scroll CPU and frame counts are not comparable as they stand.
 - **Energy:** powermetrics was not running (log ends 16:55), so the top power score is used, labelled as such.
 - **Screen check:** "first change" is often a press/hover restyle (e.g. a nav link losing its pressed state 1-20 ms after release); "biggest change in 500 ms" is the result, and agrees with each runtime's own frame signal within a frame or two.
 

@@ -9,12 +9,11 @@
     "test": "node --experimental-strip-types test/seed.test.ts && node --experimental-strip-types test/order.test.ts"
   },
   "dependencies": {
-    "@ethercorps/svelte-blitz": "workspace:*",
+    "sepal": "workspace:*",
     "svelte": "^5.59.1"
   },
   "devDependencies": {
-    "@ethercorps/svelte-blitz-host": "workspace:*",
-    "@ethercorps/svelte-blitz-vite": "workspace:*",
+    "@ethercorps/calyx": "workspace:*",
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/space-grotesk": "^5.3.0",

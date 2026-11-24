@@ -11,15 +11,15 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use svelte_blitz_host::SvelteDocument;
-use svelte_blitz_host::app::{App, Manifest};
-use svelte_blitz_host::updater::{
+use sepal::SvelteDocument;
+use sepal::app::{App, Manifest};
+use sepal::updater::{
     self, Config, Updater, generate_keypair, parse_feed, platform, sign, verify, write_update,
 };
 
 /// An empty scratch directory, unique to one test.
 fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("svelte-blitz-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sepal-{}-{name}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir

@@ -1,8 +1,8 @@
-import { svelteBlitzKit } from '@ethercorps/svelte-blitz-vite/sveltekit';
+import { sepalKit } from 'sepal/sveltekit';
 import { defineConfig } from 'vite';
 
-// `svelteBlitzKit()` takes the place of `sveltekit()`. Settings for the app
-// are in app.config.ts.
+// `sepalKit()` takes the place of `sveltekit()`. Settings for the app
+// are in sepal.config.ts.
 export default defineConfig({
-	plugins: [svelteBlitzKit()]
+	plugins: [sepalKit()]
 });

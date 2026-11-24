@@ -1,4 +1,4 @@
-import { error } from '@ethercorps/svelte-blitz-vite/router';
+import { error } from 'sepal/router';
 import { get_issue } from '$lib/store.svelte';
 
 // Runs on every navigation (j/k with the pane open): keep it a lookup.

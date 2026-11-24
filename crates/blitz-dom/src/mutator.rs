@@ -273,7 +273,7 @@ impl DocumentMutator<'_> {
             let node = &mut self.doc.nodes[node_id];
             let only_styles = Self::acts_through_styles_only(node, &name);
             if let Some(mut data) = node.try_stylo_element_data_mut().and_then(|s| s.get_mut()) {
-                // svelte-blitz patch: see `acts_through_styles_only`.
+                // sepal patch: see `acts_through_styles_only`.
                 if only_styles {
                     data.hint |= RestyleHint::RESTYLE_SELF;
                 } else {
@@ -396,7 +396,7 @@ impl DocumentMutator<'_> {
         }
     }
 
-    // svelte-blitz patch: whether a selector that depends on where a child
+    // sepal patch: whether a selector that depends on where a child
     // sits among its siblings (`:first-child`, `:nth-child()`, `a + b`), or
     // on there being children at all (`:empty`), was ever tried on this
     // node's children. Stylo records that on the parent while it matches.
@@ -415,7 +415,7 @@ impl DocumentMutator<'_> {
         })
     }
 
-    // svelte-blitz patch: upstream restyles the element's whole subtree, and
+    // sepal patch: upstream restyles the element's whole subtree, and
     // damages it as if rebuilt, for any attribute that is set or removed.
     // `class`, `style`, `data-*` and `aria-*` on an HTML element change
     // nothing but styles (layout never reads them), and Stylo already follows
@@ -435,7 +435,7 @@ impl DocumentMutator<'_> {
                 .is_some_and(|element| element.name.ns == markup5ever::ns!(html))
     }
 
-    // svelte-blitz patch: upstream restyles the whole subtree of the parent on
+    // sepal patch: upstream restyles the whole subtree of the parent on
     // every attribute that is set (and none of it when one is removed). That
     // is there for selectors that reach from one sibling to another, `a + b`
     // and `a ~ b`, and it makes one class change on a row of a long list
@@ -474,7 +474,7 @@ impl DocumentMutator<'_> {
 
             let only_styles = Self::acts_through_styles_only(node, &name);
             if let Some(mut data) = node.try_stylo_element_data_mut().and_then(|s| s.get_mut()) {
-                // svelte-blitz patch: see `acts_through_styles_only`.
+                // sepal patch: see `acts_through_styles_only`.
                 if only_styles {
                     data.hint |= RestyleHint::RESTYLE_SELF;
                 } else {
@@ -626,7 +626,7 @@ impl DocumentMutator<'_> {
             self.mutations_occurred |= node_is_in_document;
             let parent = &mut self.doc.nodes[parent_id];
             parent.insert_damage(ALL_DAMAGE);
-            // svelte-blitz patch: upstream restyles nothing here, so after a
+            // sepal patch: upstream restyles nothing here, so after a
             // removal `:last-child`, `:nth-child()` and `:empty` keep
             // matching what they matched before.
             if node_is_in_document
@@ -641,7 +641,7 @@ impl DocumentMutator<'_> {
             parent.mark_ancestors_dirty();
             parent.children.retain(|id| *id != node_id);
             self.maybe_record_node(parent_id);
-            // svelte-blitz patch: a `:has()` above may have been looking at it.
+            // sepal patch: a `:has()` above may have been looking at it.
             if node_is_in_document {
                 self.doc.restyle_has_anchors(parent_id);
             }
@@ -685,7 +685,7 @@ impl DocumentMutator<'_> {
 
             parent.children.retain(|id| *id != node_id);
             self.maybe_record_node(parent_id);
-            // svelte-blitz patch
+            // sepal patch
             if parent_is_in_doc {
                 self.doc.restyle_has_anchors(parent_id);
             }
@@ -794,7 +794,7 @@ impl DocumentMutator<'_> {
 
             old_parent.children.retain(|id| *id != child_id);
             self.maybe_record_node(old_parent_id);
-            // svelte-blitz patch
+            // sepal patch
             if child_was_in_doc {
                 self.doc.restyle_has_anchors(old_parent_id);
             }
@@ -803,7 +803,7 @@ impl DocumentMutator<'_> {
         let new_parent = &mut self.doc.nodes[parent_id];
         new_parent.insert_damage(ALL_DAMAGE);
 
-        // svelte-blitz patch: upstream restyles everything under the parent
+        // sepal patch: upstream restyles everything under the parent
         // when a child is added, so a dialog appended to <body> restyles the
         // whole page. That is only needed when a selector that depends on
         // where a child sits among its siblings (`:first-child`,
@@ -823,7 +823,7 @@ impl DocumentMutator<'_> {
         }
 
         insert_children_fn(new_parent, child_ids);
-        // svelte-blitz patch: a `:has()` on or above the parent may match now.
+        // sepal patch: a `:has()` on or above the parent may match now.
         if new_parent_is_in_document {
             self.doc.restyle_has_anchors(parent_id);
         }
@@ -833,7 +833,7 @@ impl DocumentMutator<'_> {
             let child_was_in_doc = child.flags.is_in_document();
             child.parent = Some(parent_id);
 
-            // svelte-blitz patch (see above): the added node itself. One that
+            // sepal patch (see above): the added node itself. One that
             // was styled somewhere else inherits from a new parent now; one
             // that never was is styled when the traversal gets to it, which
             // the dirty bits on the way down make sure of.
@@ -1417,7 +1417,7 @@ impl<'doc> DocumentMutator<'doc> {
 
 /// Set 'checked' state on an input based on given attributevalue
 fn set_input_checked_state(element: &mut ElementData, value: String) {
-    // svelte-blitz patch: a bare `checked` (the value "") means checked, as in
+    // sepal patch: a bare `checked` (the value "") means checked, as in
     // HTML; upstream only accepted "true"/"false" and ignored it.
     let Ok(checked) = (if value.is_empty() { Ok(true) } else { value.parse() }) else {
         return;

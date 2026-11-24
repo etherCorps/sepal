@@ -89,11 +89,11 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     // The renderer draws each glyph once and reuses it (a patch to the vendored
     // anyrender_vello_hybrid). If text ever looks wrong on some GPU, this turns
     // that off and tells us whether the atlas is to blame.
-    if std::env::var_os("SVELTE_BLITZ_GLYPH_CACHE").is_some_and(|value| value == "0") {
+    if std::env::var_os("SEPAL_GLYPH_CACHE").is_some_and(|value| value == "0") {
         anyrender_vello_hybrid::set_glyph_cache(false);
     }
     let mut doc = SvelteDocument::for_window(&app)?;
-    if std::env::var_os("SVELTE_BLITZ_HUD").is_some_and(|value| value == "1") {
+    if std::env::var_os("SEPAL_HUD").is_some_and(|value| value == "1") {
         doc.set_hud(true);
     }
     let manifest = app.manifest;
@@ -107,7 +107,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     if reload.is_some() {
         let wake = event_loop.create_proxy();
         thread::Builder::new()
-            .name("svelte-blitz-dev".into())
+            .name("sepal-dev".into())
             .spawn(move || {
                 // Blocks in read(), so this costs nothing between rebuilds.
                 for line in std::io::stdin().lock().lines() {
@@ -132,7 +132,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     let title = manifest
         .title
         .or(manifest.name)
-        .unwrap_or_else(|| "svelte-blitz".into());
+        .unwrap_or_else(|| "Sepal".into());
     let mut attributes = WindowAttributes::default()
         .with_title(title)
         .with_surface_size(LogicalSize::new(width, height));
@@ -163,7 +163,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             skipped_frame: None,
             input_since_frame: false,
             redraw_at: None,
-            trace: std::env::var_os("SVELTE_BLITZ_TRACE").map(|_| Trace {
+            trace: std::env::var_os("SEPAL_TRACE").map(|_| Trace {
                 started: Instant::now(),
                 first_frame: false,
             }),
@@ -188,7 +188,7 @@ struct Host {
     skipped_frame: Option<Instant>,
     input_since_frame: bool,
     redraw_at: Option<(WindowId, Instant)>,
-    /// Set by `SVELTE_BLITZ_TRACE`: report where the UI thread spends its time.
+    /// Set by `SEPAL_TRACE`: report where the UI thread spends its time.
     trace: Option<Trace>,
 }
 
@@ -552,7 +552,7 @@ pub fn logical_wheel(event: WindowEvent, scale: f64) -> WindowEvent {
 }
 
 /// Give the process the app's name. macOS names an app after its bundle, and an
-/// unbundled binary has none, so the menu bar would say `svelte-blitz-host`.
+/// unbundled binary has none, so the menu bar would say `calyx`.
 #[cfg(target_os = "macos")]
 fn set_app_name(name: &str) {
     use objc2_foundation::{NSProcessInfo, NSString};

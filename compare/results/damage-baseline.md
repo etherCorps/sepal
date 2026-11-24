@@ -1,4 +1,4 @@
-# svelte-blitz, damage tracking on
+# Sepal, damage tracking on
 
 Apple M4 Pro, Version 27.0.1 (Build 26A434), the Tracker (bench build, 1,000 issues), window 1200x800 at 2x. Session `p0-base` (damage tracking on, the default), 0 warm-up + 2 measured runs per scenario. Cells: median (min–max).
 
@@ -85,7 +85,7 @@ None.
 
 ## One frame, command by command
 
-From `SVELTE_BLITZ_GPU_LOG=1` (wgpu-hal change 2) on the same Tracker at 1,000 issues, clock on. Logs: `raw/p0-base/gpu-log-damage-on.log` and `gpu-log-damage-off.log`. Taken on the host at HEAD with the log added; between 31673d9 and HEAD nothing changed in how a drawn frame is encoded.
+From `SEPAL_GPU_LOG=1` (wgpu-hal change 2) on the same Tracker at 1,000 issues, clock on. Logs: `raw/p0-base/gpu-log-damage-on.log` and `gpu-log-damage-off.log`. Taken on the host at HEAD with the log added; between 31673d9 and HEAD nothing changed in how a drawn frame is encoded.
 
 **Partial frame (clock tick, damage on, no new glyphs): 3 submits, 10 command buffers, 6 render passes.**
 
@@ -98,7 +98,7 @@ From `SVELTE_BLITZ_GPU_LOG=1` (wgpu-hal change 2) on the same Tracker at 1,000 i
 
 A tick that rasterises new glyphs adds one submit of 4 command buffers: a 1024x1024 RGBA8Unorm glyph atlas pass (load/store) and its uploads.
 
-**Full frame (clock tick, `SVELTE_BLITZ_DAMAGE=0`): 2 submits, 13 command buffers, 10 render passes.**
+**Full frame (clock tick, `SEPAL_DAMAGE=0`): 2 submits, 13 command buffers, 10 render passes.**
 
 | submit | command buffers | passes and what they write |
 |---|---|---|

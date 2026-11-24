@@ -11,7 +11,7 @@ import { bundled_host, platform } from '../packages/host/index.js';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const target = bundled_host();
 
-// `screenshot` is in the shipped binary: `svelte-blitz screenshot` needs it and it costs about 1.5 MB.
+// `screenshot` is in the shipped binary: `sepal screenshot` needs it and it costs about 1.5 MB.
 execFileSync(
 	'cargo',
 	['build', '--release', '--features', 'screenshot', '--manifest-path', join(root, 'crates/host/Cargo.toml')],

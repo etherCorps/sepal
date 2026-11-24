@@ -3,7 +3,7 @@
 // app's data directory (`permissions.fs: ['data']`). Without that permission,
 // or with no files yet, the app runs on the seed alone.
 
-import { readTextFile, remove, writeTextFile } from '@ethercorps/svelte-blitz/fs';
+import { readTextFile, remove, writeTextFile } from 'sepal/fs';
 import type { Comment, Issue } from './seed';
 
 export interface Overlay {

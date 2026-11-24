@@ -18,18 +18,18 @@ export function platform() {
 
 /** Where this machine's binary is in this package, whether or not it has been built. */
 export function bundled_host() {
-	const file = process.platform === 'win32' ? 'svelte-blitz-host.exe' : 'svelte-blitz-host';
+	const file = process.platform === 'win32' ? 'calyx.exe' : 'calyx';
 	return fileURLToPath(new URL(`./bin/${platform()}/${file}`, import.meta.url));
 }
 
 /**
- * `SVELTE_BLITZ_HOST` wins, for a host you built yourself. Otherwise the
+ * `SEPAL_HOST` wins, for a host you built yourself. Otherwise the
  * binary comes from this package.
  *
  * @returns {string | null} `null` when there is no binary for this platform
  */
 export function find_host() {
-	if (process.env.SVELTE_BLITZ_HOST) return process.env.SVELTE_BLITZ_HOST;
+	if (process.env.SEPAL_HOST) return process.env.SEPAL_HOST;
 	const path = bundled_host();
 	return existsSync(path) ? path : null;
 }

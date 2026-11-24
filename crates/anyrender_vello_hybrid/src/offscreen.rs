@@ -1,4 +1,4 @@
-//! svelte-blitz patch: this whole file. Upstream can only draw into a window.
+//! sepal patch: this whole file. Upstream can only draw into a window.
 //!
 //! Draws a scene with the same renderer the window uses, into a texture, and
 //! reads the pixels back. For looking at what the GPU renderer produces

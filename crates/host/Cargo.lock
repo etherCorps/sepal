@@ -3421,6 +3421,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
 
 [[package]]
+name = "sepal"
+version = "0.1.0"
+dependencies = [
+ "anyrender",
+ "anyrender_vello_cpu",
+ "anyrender_vello_hybrid",
+ "base64",
+ "blitz-dom",
+ "blitz-paint",
+ "blitz-shell",
+ "blitz-traits",
+ "data-url",
+ "ed25519-dalek",
+ "flate2",
+ "getrandom 0.4.3",
+ "image",
+ "keyboard-types",
+ "libc",
+ "objc2 0.6.5",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "png",
+ "rfd",
+ "rquickjs",
+ "semver",
+ "serde_json",
+ "tar",
+ "ureq",
+ "v8",
+ "winit",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3881,39 +3914,6 @@ name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
-
-[[package]]
-name = "svelte-blitz-host"
-version = "0.1.0"
-dependencies = [
- "anyrender",
- "anyrender_vello_cpu",
- "anyrender_vello_hybrid",
- "base64",
- "blitz-dom",
- "blitz-paint",
- "blitz-shell",
- "blitz-traits",
- "data-url",
- "ed25519-dalek",
- "flate2",
- "getrandom 0.4.3",
- "image",
- "keyboard-types",
- "libc",
- "objc2 0.6.5",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "png",
- "rfd",
- "rquickjs",
- "semver",
- "serde_json",
- "tar",
- "ureq",
- "v8",
- "winit",
-]
 
 [[package]]
 name = "svgtypes"

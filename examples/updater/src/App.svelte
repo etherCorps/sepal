@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { check, type Update } from '@ethercorps/svelte-blitz/updater';
+	import { check, type Update } from 'sepal/updater';
 
 	type Status = 'idle' | 'checking' | 'up to date' | 'available' | 'downloading' | 'ready' | 'installing' | 'error';
 

@@ -8,7 +8,7 @@
 //! `pnpm run build` in the repository root.
 
 use blitz_dom::DocumentConfig;
-use svelte_blitz_host::SvelteDocument;
+use sepal::SvelteDocument;
 
 /// A 100px list of 50 rows, 20px each, below a 30px header: row `n` starts at
 /// `n * 20` in what the list scrolls over.
@@ -112,7 +112,7 @@ fn the_wheel_scrolls_a_box_and_the_app_hears_where_to() {
 #[cfg(feature = "window")]
 #[test]
 fn a_trackpad_scrolls_as_far_as_the_fingers_move_at_2x() {
-    use svelte_blitz_host::window::logical_wheel;
+    use sepal::window::logical_wheel;
     use winit::dpi::LogicalPosition;
     use winit::event::{MouseScrollDelta, TouchPhase, WindowEvent};
 
@@ -202,7 +202,7 @@ fn writing_scroll_top_moves_what_is_drawn_and_hit() {
     // 7px further down before. (Left of the scrollbar, whose thumb moves.)
     #[cfg(feature = "screenshot")]
     {
-        use svelte_blitz_host::screenshot::render_rgba;
+        use sepal::screenshot::render_rgba;
         eval(
             &mut doc,
             "document.getElementById('list').scrollTop = 0; ''",

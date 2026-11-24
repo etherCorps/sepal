@@ -15,7 +15,7 @@
 //! `click:` aims at the middle of the element's box before CSS transforms; for
 //! something moved by `translate`, use `clickat:`.
 
-use svelte_blitz_host::{SvelteDocument, app::App};
+use sepal::{SvelteDocument, app::App};
 fn main() {
     let mut args = std::env::args().skip(1);
     let app = App::from_dir(std::path::Path::new(&args.next().unwrap())).unwrap();
@@ -74,7 +74,7 @@ fn main() {
                 println!("  hud {rest}")
             }
             "shot" => {
-                let png = svelte_blitz_host::screenshot::render_png(&mut doc, width, height, 1.0);
+                let png = sepal::screenshot::render_png(&mut doc, width, height, 1.0);
                 std::fs::write(rest, png).unwrap();
                 println!("  shot {rest}")
             }

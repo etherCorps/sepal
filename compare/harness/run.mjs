@@ -12,7 +12,7 @@
 //   node compare/harness/run.mjs run --preset quick|full [--session <name>] [--builds a,b]
 //        [--sizes 1000,10000] [--scenarios 1,5] [--runs n] [--warmup n] [--config plan.json]
 //        [--versions file.json] [--no-record] [--idle seconds] [--focus-ax]
-//        [--env K=V,...]                                    more environment for svelte-blitz
+//        [--env K=V,...]                                    more environment for Sepal
 //        [--interleave]                                     alternate builds run by run (A/B within
 //                                                           one session) instead of build by build
 //   node compare/harness/run.mjs memwatch <build> [size] [--clock] [--secs 70] [--every 5]
@@ -86,7 +86,7 @@ const COLUMNS = {
 	'com.compare.tracker.blitzv8': { name: 'blitzv8', kind: 'blitz' },
 	'com.compare.tracker.tauri': { name: 'tauri', kind: 'tauri' },
 	'com.compare.tracker.gpuix': { name: 'gpuix', kind: 'gpuix' },
-	// More svelte-blitz builds, for comparing changes to it in one session (--interleave).
+	// More Sepal builds, for comparing changes to it in one session (--interleave).
 	'com.compare.tracker.blitzb': { name: 'blitzb', kind: 'blitz' },
 	'com.compare.tracker.blitzc': { name: 'blitzc', kind: 'blitz' },
 	'com.compare.tracker.blitzd': { name: 'blitzd', kind: 'blitz' },
@@ -129,13 +129,13 @@ async function find_builds() {
 		};
 	}
 	const dist = path.join(REPO, 'examples/tracker/dist');
-	const host = path.join(REPO, 'crates/host/target/release/svelte-blitz-host');
+	const host = path.join(REPO, 'crates/host/target/release/calyx');
 	if (fs.existsSync(host) && fs.existsSync(path.join(dist, 'app.json'))) {
 		const id = JSON.parse(fs.readFileSync(path.join(dist, 'app.json'), 'utf8')).id;
 		builds.dev = { name: 'dev', kind: 'blitz', app: null, id, exe: host, args: [dist], version: 'repo' };
 	}
 	for (const b of Object.values(builds)) {
-		b.env = b.kind === 'blitz' ? { SVELTE_BLITZ_TRACE: '1' } : {};
+		b.env = b.kind === 'blitz' ? { SEPAL_TRACE: '1' } : {};
 	}
 	return builds;
 }
@@ -1055,7 +1055,7 @@ async function memwatch(build, size, { clock, secs, every }) {
 		out.aborted = e.message;
 	} finally {
 		await quit(app);
-		// The app's own lines (svelte-blitz: every repaint), to line memory up with frames.
+		// The app's own lines (Sepal: every repaint), to line memory up with frames.
 		out.log = app.lines.map((e) => ({ s: (e.t - (out.mounted_t ?? app.t_exec)) / 1e9, line: e.s }));
 		fs.writeFileSync(file, json(out, '\t'));
 		console.log(file);
@@ -1245,7 +1245,7 @@ async function check_permissions(need_screen) {
 	return perm;
 }
 
-/** `--env K=V,K2=V2`: more environment for the svelte-blitz builds (SVELTE_BLITZ_DAMAGE=0). */
+/** `--env K=V,K2=V2`: more environment for the Sepal builds (SEPAL_DAMAGE=0). */
 function apply_env(builds, spec) {
 	if (!spec) return;
 	const extra = Object.fromEntries(String(spec).split(',').map((kv) => kv.split('=')));

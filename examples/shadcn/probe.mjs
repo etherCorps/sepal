@@ -1,8 +1,8 @@
-// Does each shadcn-svelte component work in svelte-blitz? For every file in
+// Does each shadcn-svelte component work in Sepal? For every file in
 // src/probes: compile it with the preset, run the bundle in the host, and
 // report where it fails, if it does.
 //
-//   node probe.mjs            (needs a host: SVELTE_BLITZ_HOST, or `pnpm run build:host`)
+//   node probe.mjs            (needs a host: SEPAL_HOST, or `pnpm run build:host`)
 
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -10,8 +10,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import { build } from 'vite';
-import { find_host } from '@ethercorps/svelte-blitz-host';
-import { svelteBlitz } from '@ethercorps/svelte-blitz-vite';
+import { find_host } from '@ethercorps/calyx';
+import { sepal } from 'sepal/vite';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const host = find_host();
@@ -26,14 +26,14 @@ const results = [];
 
 for (const name of names.filter((n) => only.length === 0 || only.includes(n))) {
 	const entry = `src/probes/.entries/${name}.ts`;
-	writeFileSync(join(root, entry), `import { mount } from '@ethercorps/svelte-blitz';\nimport '../../app.css';\nimport Probe from '../${name}.svelte';\nmount(Probe);\n`);
+	writeFileSync(join(root, entry), `import { mount } from 'sepal';\nimport '../../app.css';\nimport Probe from '../${name}.svelte';\nmount(Probe);\n`);
 	const dir = join(out, name);
 	let stage = 'compile';
 	let detail = '';
 	try {
 		await build({
 			root, configFile: false, logLevel: 'silent',
-			plugins: [tailwindcss(), svelteBlitz({ router: false, entry, app: {}, dom: true })],
+			plugins: [tailwindcss(), sepal({ router: false, entry, app: {}, dom: true })],
 			// Not minified: a stack trace from a probe should be readable.
 			build: { outDir: dir, emptyOutDir: true, minify: false }
 		});

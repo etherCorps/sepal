@@ -1,14 +1,14 @@
 <!--
 	One button per desktop API. Each needs an entry in `permissions`
-	(app.config.ts); take one out and the call is refused with a
+	(sepal.config.ts); take one out and the call is refused with a
 	message that says what to add.
 -->
 <script lang="ts">
-	import { readText, writeText } from '@ethercorps/svelte-blitz/clipboard';
-	import { confirm, open as openDialog, save } from '@ethercorps/svelte-blitz/dialog';
-	import { dir, readTextFile, writeTextFile } from '@ethercorps/svelte-blitz/fs';
-	import { open } from '@ethercorps/svelte-blitz/shell';
-	import { isMaximized, maximize, minimize, setTitle, unmaximize } from '@ethercorps/svelte-blitz/window';
+	import { readText, writeText } from 'sepal/clipboard';
+	import { confirm, open as openDialog, save } from 'sepal/dialog';
+	import { dir, readTextFile, writeTextFile } from 'sepal/fs';
+	import { open } from 'sepal/shell';
+	import { isMaximized, maximize, minimize, setTitle, unmaximize } from 'sepal/window';
 
 	import { onMount } from 'svelte';
 

@@ -1,5 +1,5 @@
-// `@ethercorps/svelte-blitz/{fs,dialog,clipboard,window}`, the parts the Tracker
-// uses, on Tauri's plugins. Same names and signatures as packages/core/src.
+// `sepal/{fs,dialog,clipboard,window}`, the parts the Tracker
+// uses, on Tauri's plugins. Same names and signatures as packages/sepal/src.
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import * as clipboard from '@tauri-apps/plugin-clipboard-manager';
 import * as dialog from '@tauri-apps/plugin-dialog';
@@ -22,7 +22,7 @@ export const writeTextFile = (path, text, options = {}) => fs.writeTextFile(path
 /** @param {string} path @param {{ dir?: string, recursive?: boolean }} [options] */
 export const remove = (path, options = {}) => fs.remove(path, { ...base(options), recursive: options.recursive });
 
-/** svelte-blitz's `defaultPath` is the directory, `defaultName` the file name. */
+/** Sepal's `defaultPath` is the directory, `defaultName` the file name. */
 export function save(options = {}) {
 	const { defaultName, defaultPath, ...rest } = options;
 	const path = defaultPath && defaultName ? `${defaultPath}/${defaultName}` : (defaultName ?? defaultPath);

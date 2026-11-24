@@ -446,7 +446,7 @@ fn bench() {
     println!("written to {}", out.display());
 }
 
-/// For a profiler (`sample <pid>`, `SVELTE_BLITZ_TRACE=1`, or
+/// For a profiler (`sample <pid>`, `SEPAL_TRACE=1`, or
 /// `--features blitz-dom/log-phase-times` for Blitz's own phases): every row
 /// shown, then `j` and the Status filter in a loop, then the styles Bits UI
 /// puts on `<body>` while a Select is open, one at a time.

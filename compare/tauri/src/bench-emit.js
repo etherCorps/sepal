@@ -17,7 +17,7 @@ globalThis.__bench_emit = (line) => {
 	);
 };
 
-// The svelte-blitz host prints uncaught errors to stderr; so does this.
+// The Sepal host prints uncaught errors to stderr; so does this.
 const error = (what) => invoke('mark', { line: `ERROR ${what}` });
 addEventListener('error', (event) => error(event.error?.stack ?? event.message));
 addEventListener('unhandledrejection', (event) => error(event.reason?.stack ?? event.reason));

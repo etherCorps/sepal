@@ -3,7 +3,7 @@
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
 windows with, with eleven changes. `crates/host/Cargo.toml` swaps it in through
-`[patch.crates-io]`. All are marked `svelte-blitz patch`.
+`[patch.crates-io]`. All are marked `sepal patch`.
 
 ## The changes
 
@@ -20,7 +20,7 @@ Measured on the shadcn example while its Skeleton pulses, 4 s sampled at
 The text is not pixel-identical: about 5500 pixels of a 900 × 700 page differ
 by more than 8/255, none by more than 64, all on glyph edges. Enlarged, the
 two cannot be told apart. If text looks wrong on some machine, run the host
-with `SVELTE_BLITZ_GLYPH_CACHE=0`, which calls `set_glyph_cache(false)`.
+with `SEPAL_GLYPH_CACHE=0`, which calls `set_glyph_cache(false)`.
 
 **2. Drawing without a window.** `src/offscreen.rs`, exported as
 `render_to_rgba`: draws a scene into a texture with the same renderer and
@@ -102,8 +102,8 @@ Partial frames rely on an opaque base colour: the region is drawn
 what was there. A window with a transparent base colour would blend the new
 region over the old one; it would have to clear the region first. Partial frames draw without
 the depth buffer (clearing and storing a window-sized one costs more than the
-overdraw it saves there). `SVELTE_BLITZ_DAMAGE=0` turns it off;
-`SVELTE_BLITZ_TRACE=1` prints each frame's damage.
+overdraw it saves there). `SEPAL_DAMAGE=0` turns it off;
+`SEPAL_TRACE=1` prints each frame's damage.
 
 Measured on the Tracker (release, 1200x800 at 2x, GPU time from the driver's
 per-client `accumulatedGPUTime`): a clock repainting once a second 29 -> 18 ms
@@ -121,7 +121,7 @@ five a frame (pending writes, two for the passes, the copy to the surface,
 transitions). That, not drawing, is most of what a partial frame still costs.
 
 **7. A switch for the depth buffer.** `src/window_renderer.rs`,
-`depth_texture()`: `SVELTE_BLITZ_DEPTH=0` draws without vello_gpu's depth
+`depth_texture()`: `SEPAL_DEPTH=0` draws without vello_gpu's depth
 buffer (Depth32Float on Apple GPUs, 15 MB at 2400x1600), in paint order. On by
 default. It cannot be memoryless (which would cost no memory): vello_gpu draws
 all opaque strips first, in a pass of their own, and later passes load that
@@ -135,7 +135,7 @@ per full repaint). Kept on until scrolling stops being full repaints.
 
 **8. A check mode for damage tracking.** `src/window_renderer.rs`,
 `verify_frame` and `draw_region`, and `damage::verify()`:
-`SVELTE_BLITZ_DAMAGE=verify` draws every frame that was not drawn in full a
+`SEPAL_DAMAGE=verify` draws every frame that was not drawn in full a
 second time, in full, into a texture of its own (the window's renderer, so the
 same glyph atlas and settings), reads both back and prints a `[verify]` line
 per frame: `same as a full repaint (largest difference N/255)`, or `DIFFERS`
@@ -162,7 +162,7 @@ before it in one interleaved session (compare harness, 1,000 issues, 3 runs
 each): switching views 61.9 -> 39.4 ms GPU and 382 -> 340 ms CPU; the clock,
 the New issue dialog and scrolling the same within noise. Window captures of
 seven states (list, hover, New issue open and closed, Board, Insights, list
-again) match `SVELTE_BLITZ_DAMAGE=0`.
+again) match `SEPAL_DAMAGE=0`.
 
 **10. The kept frame and the depth buffer are let go when idle.**
 `src/window_renderer.rs`, `release_due()`, `release_if_idle()` and the start of
@@ -178,7 +178,7 @@ Measured against the build before it, interleaved (compare harness, 1,000
 issues, 3 runs each): idle, RAM 119 -> 88 MB and GPU memory 59 -> 28 MB at the
 end, RAM 5 s after load 124 -> 94 MB in every scenario; the first wake-up in
 the bench Tracker is its own toast timer, 5 s after start. A window shown again
-after it repaints correctly (captures match `SVELTE_BLITZ_DAMAGE=0`).
+after it repaints correctly (captures match `SEPAL_DAMAGE=0`).
 
 **11. A layer that only groups is drawn as a clip.** `src/damage.rs`,
 `grouping_only`, used by `replay`: a layer with alpha 1, normal blending, no
@@ -212,4 +212,4 @@ noise. With the dialog open, wgpu's textures and buffers 53.6 -> 39.6 MB
 
 Do not edit anything else here. To move to a new version, replace the
 directory with that version's source and reapply the six changes (search for
-`svelte-blitz patch`; `offscreen.rs` is new as a whole).
+`sepal patch`; `offscreen.rs` is new as a whole).

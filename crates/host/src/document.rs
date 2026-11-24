@@ -242,10 +242,10 @@ pub fn animation_clock() -> std::time::Instant {
     *ORIGIN.get_or_init(std::time::Instant::now)
 }
 
-/// `SVELTE_BLITZ_TRACE` is set: report what the UI thread does (see `window.rs`).
+/// `SEPAL_TRACE` is set: report what the UI thread does (see `window.rs`).
 pub(crate) fn trace_enabled() -> bool {
     static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ENABLED.get_or_init(|| std::env::var_os("SVELTE_BLITZ_TRACE").is_some())
+    *ENABLED.get_or_init(|| std::env::var_os("SEPAL_TRACE").is_some())
 }
 
 fn html(name: &str) -> QualName {
@@ -723,7 +723,7 @@ impl SvelteDocument {
             };
             let (answers, waker) = (self.answers.0.clone(), self.waker.clone());
             let spawned = std::thread::Builder::new()
-                .name(format!("svelte-blitz-{}", call.name))
+                .name(format!("sepal-{}", call.name))
                 .spawn(move || {
                     // Whatever happens in there, the promise has to settle.
                     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(work))

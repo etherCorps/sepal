@@ -34,13 +34,13 @@ fn spawn_init<F: Future<Output = ()>>(f: F) {
     pollster::block_on(f);
 }
 
-/// svelte-blitz patch: the window-sized depth buffer vello_gpu draws opaque
+/// sepal patch: the window-sized depth buffer vello_gpu draws opaque
 /// strips against (Depth32Float on Apple GPUs: 15 MB at 2400x1600). It has to
 /// outlive single passes (opaque strips are drawn in a pass of their own, and
 /// later passes test against them), so it cannot be memoryless.
-/// `SVELTE_BLITZ_DEPTH=0` draws without it, in paint order.
+/// `SEPAL_DEPTH=0` draws without it, in paint order.
 fn depth_texture(device: &wgpu::Device, width: u32, height: u32) -> Option<TextureView> {
-    if std::env::var_os("SVELTE_BLITZ_DEPTH").is_some_and(|v| v == "0") {
+    if std::env::var_os("SEPAL_DEPTH").is_some_and(|v| v == "0") {
         return None;
     }
     Some(VelloHybridRenderer::create_depth_texture_view(
@@ -52,7 +52,7 @@ fn depth_texture(device: &wgpu::Device, width: u32, height: u32) -> Option<Textu
     ))
 }
 
-/// svelte-blitz patch (damage): draws `region` of the recorded frame (in device
+/// sepal patch (damage): draws `region` of the recorded frame (in device
 /// pixels) into `target` over what is there, or, with `full` (a texture and its
 /// depth buffer), all of it into that texture instead.
 #[allow(clippy::too_many_arguments)]
@@ -125,7 +125,7 @@ fn draw_region(
     scene.reset();
 }
 
-/// svelte-blitz patch (damage, `SVELTE_BLITZ_DAMAGE=verify`): draws the frame just
+/// sepal patch (damage, `SEPAL_DAMAGE=verify`): draws the frame just
 /// drawn in part again in full, into a texture of its own, reads both back and
 /// prints where they differ by more than 2/255, with the commands drawn there.
 #[allow(clippy::too_many_arguments)]
@@ -242,20 +242,20 @@ fn verify_frame(
 struct ActiveRenderState {
     renderer: VelloHybridRenderer,
     resources: Resources,
-    /// svelte-blitz patch: `None` with `SVELTE_BLITZ_DEPTH=0` (`depth_texture`).
+    /// sepal patch: `None` with `SEPAL_DEPTH=0` (`depth_texture`).
     depth_texture_view: Option<TextureView>,
     texture_bindings: FxHashMap<ResourceId, TextureView>,
-    /// svelte-blitz patch: images too large for an atlas page (`scene.rs`). Per
+    /// sepal patch: images too large for an atlas page (`scene.rs`). Per
     /// device, so they go with it.
     own_textures: FxHashMap<u64, crate::scene::OwnTexture>,
-    /// svelte-blitz patch (damage): the last frame, kept for the next one to draw
+    /// sepal patch (damage): the last frame, kept for the next one to draw
     /// over, and how it gets to the surface (`SurfaceCopy`).
     /// The kept frame is `None` while let go when idle (`release_if_idle`).
     kept: Option<(SurfaceCopy, Option<Kept>)>,
     render_surface: SurfaceRenderer<'static>,
 }
 
-/// svelte-blitz patch (damage): copies the kept frame to the surface texture in
+/// sepal patch (damage): copies the kept frame to the surface texture in
 /// the frame's own submit, in a pass that clears the surface texture rather
 /// than loads it. wgpu_context's intermediate texture did it with wgpu's
 /// `TextureBlitter`, which loads, so wgpu first cleared every new surface
@@ -266,7 +266,7 @@ struct SurfaceCopy {
     layout: wgpu::BindGroupLayout,
 }
 
-/// svelte-blitz patch (damage): the kept frame, and its binding for `SurfaceCopy`.
+/// sepal patch (damage): the kept frame, and its binding for `SurfaceCopy`.
 struct Kept {
     view: TextureView,
     group: wgpu::BindGroup,
@@ -290,11 +290,11 @@ fn fs(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
 impl SurfaceCopy {
     fn new(device: &wgpu::Device, format: TextureFormat) -> Self {
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("svelte-blitz surface copy"),
+            label: Some("sepal surface copy"),
             source: wgpu::ShaderSource::Wgsl(SURFACE_COPY_SHADER.into()),
         });
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("svelte-blitz surface copy"),
+            label: Some("sepal surface copy"),
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
                 visibility: wgpu::ShaderStages::FRAGMENT,
@@ -307,12 +307,12 @@ impl SurfaceCopy {
             }],
         });
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("svelte-blitz surface copy"),
+            label: Some("sepal surface copy"),
             bind_group_layouts: &[Some(&layout)],
             immediate_size: 0,
         });
         let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("svelte-blitz surface copy"),
+            label: Some("sepal surface copy"),
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &module,
@@ -342,7 +342,7 @@ impl SurfaceCopy {
     /// The kept frame for a window of this size.
     fn kept(&self, device: &wgpu::Device, width: u32, height: u32) -> Kept {
         let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("svelte-blitz kept frame"),
+            label: Some("sepal kept frame"),
             size: wgpu::Extent3d {
                 width,
                 height,
@@ -364,7 +364,7 @@ impl SurfaceCopy {
         });
         let view = texture.create_view(&TextureViewDescriptor::default());
         let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("svelte-blitz kept frame"),
+            label: Some("sepal kept frame"),
             layout: &self.layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
@@ -376,7 +376,7 @@ impl SurfaceCopy {
 
     fn encode(&self, encoder: &mut wgpu::CommandEncoder, kept: &Kept, target: &TextureView) {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: Some("svelte-blitz surface copy"),
+            label: Some("sepal surface copy"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: target,
                 depth_slice: None,
@@ -428,13 +428,13 @@ pub struct VelloHybridRendererOptions {
     pub desired_maximum_frame_latency: u32,
 }
 
-// svelte-blitz patch (layers): vello_gpu caps the textures it draws layers into at
+// sepal patch (layers): vello_gpu caps the textures it draws layers into at
 // 4096 px, and a layer as large as the window (a Dialog's dimmed backdrop, any
 // clip or opacity over the whole page) is wider than that on a 5K display at
 // 2x: the frame fails and `render` below panics. `u16::MAX` lets vello_gpu clamp
 // the cap to the device's own limit instead (`MemorySettings::normalize`).
 //
-// svelte-blitz patch (atlas): the atlas holding glyphs and images defaults to
+// sepal patch (atlas): the atlas holding glyphs and images defaults to
 // pages of 4096 x 4096, 64 MB each, the first one allocated with the first
 // cached glyph: most of it empty, as a page of text needs a few hundred glyphs.
 // Pages of 1024 x 1024 (4 MB) are added as they fill; 128 of them hold as much
@@ -532,14 +532,14 @@ pub struct VelloHybridWindowRenderer {
     scene: VelloHybridScene,
     config: VelloHybridRendererOptions,
     cached_images: FxHashMap<u64, ImageId>,
-    /// svelte-blitz patch (damage): the window's size (the scene's is the damaged
+    /// sepal patch (damage): the window's size (the scene's is the damaged
     /// region's), the last frame's commands, and the recording reused each frame.
     size: (u32, u32),
     damage: Option<crate::damage::DamageTracker>,
     recording: anyrender::Scene,
     /// The last `render` drew nothing: nothing on screen had changed.
     skipped: bool,
-    /// svelte-blitz patch (idle): when a frame was last presented, and whether
+    /// sepal patch (idle): when a frame was last presented, and whether
     /// the kept frame and the depth buffer were let go since (`release_if_idle`).
     presented_at: Option<std::time::Instant>,
     released: bool,
@@ -570,14 +570,14 @@ impl VelloHybridWindowRenderer {
         }
     }
 
-    /// svelte-blitz patch (damage): whether the last frame was skipped because
+    /// sepal patch (damage): whether the last frame was skipped because
     /// nothing on screen changed. Nothing was presented, so nothing waited for
     /// the display either; a caller that redraws again at once spins.
     pub fn skipped_last_frame(&self) -> bool {
         self.skipped
     }
 
-    /// svelte-blitz patch (damage): draw all of the next frame. For when what the
+    /// sepal patch (damage): draw all of the next frame. For when what the
     /// window shows may not be the last frame presented: macOS drops a frame
     /// presented before the window is first on screen.
     pub fn repaint_all(&mut self) {
@@ -586,7 +586,7 @@ impl VelloHybridWindowRenderer {
         }
     }
 
-    /// svelte-blitz patch (idle): when `release_if_idle(after)` will let go of the
+    /// sepal patch (idle): when `release_if_idle(after)` will let go of the
     /// kept frame and the depth buffer: `after` past the last frame presented, if
     /// they are still held. The caller wakes then, once per burst of frames.
     pub fn release_due(&self, after: std::time::Duration) -> Option<std::time::Instant> {
@@ -596,7 +596,7 @@ impl VelloHybridWindowRenderer {
         self.presented_at.map(|at| at + after)
     }
 
-    /// svelte-blitz patch (idle): if no frame was presented for `after`, let go of
+    /// sepal patch (idle): if no frame was presented for `after`, let go of
     /// the kept frame and the depth buffer (15 MB each at 2400x1600); the next
     /// frame makes them again and is drawn in full. Returns whether they were
     /// let go.
@@ -726,7 +726,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         // query scene size (e.g. `set_size`) see consistent state.
         let render_settings = self.config.render_settings;
         self.scene = VelloHybridScene::new_with(width as u16, height as u16, render_settings.level);
-        self.size = (width, height); // svelte-blitz patch (damage)
+        self.size = (width, height); // sepal patch (damage)
 
         let surface = self
             .wgpu_context
@@ -822,7 +822,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             #[cfg(target_vendor = "apple")]
             let intermediate_texture = None;
 
-            // svelte-blitz patch (damage): frames are drawn into a texture of our
+            // sepal patch (damage): frames are drawn into a texture of our
             // own, which keeps the last frame for the next one to draw over
             // (`damage.rs`), and copied to the surface (`SurfaceCopy`).
 
@@ -882,7 +882,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 Ok(Some(InitOutput { active })) => {
                     let device_handle = active.render_surface.device_handle.clone();
                     self.wgpu_context.device_pool.push(device_handle);
-                    // svelte-blitz patch (damage): a new surface, nothing kept.
+                    // sepal patch (damage): a new surface, nothing kept.
                     self.size = (active.render_surface.config.width, active.render_surface.config.height);
                     if let Some(damage) = &mut self.damage {
                         damage.invalidate();
@@ -903,7 +903,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
     }
 
     fn set_size(&mut self, width: u32, height: u32) {
-        // svelte-blitz patch (damage): compared with the window's size, as the
+        // sepal patch (damage): compared with the window's size, as the
         // scene is resized to the damaged region every frame.
         if (width, height) != self.size {
             self.size = (width, height);
@@ -934,7 +934,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         let render_surface = &mut state.render_surface;
         let (width, height) = (render_surface.config.width, render_surface.config.height);
 
-        // svelte-blitz patch (idle): made again after `release_if_idle`; what the
+        // sepal patch (idle): made again after `release_if_idle`; what the
         // window shows is no longer kept anywhere, so this frame is drawn in full.
         if self.released {
             self.released = false;
@@ -956,7 +956,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                     label: Some("Render scene"),
                 });
 
-        // svelte-blitz patch (damage): with damage tracking on, the frame is recorded
+        // sepal patch (damage): with damage tracking on, the frame is recorded
         // here, compared with the last one, and only what changed is drawn below.
         let mut recording = self
             .damage
@@ -998,7 +998,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
 
         let mut root_offset = [0, 0];
         let mut target_init = TargetInit::Clear(ClearSettings::default());
-        // svelte-blitz patch (damage): whether to check the frame.
+        // sepal patch (damage): whether to check the frame.
         let mut verify = false;
         if let (Some(tracker), Some(mut recording)) = (self.damage.as_mut(), recording) {
             let commands = std::mem::take(&mut recording.commands);
@@ -1058,7 +1058,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             return;
         };
 
-        // svelte-blitz patch (damage): drawn into the kept frame, copied to the
+        // sepal patch (damage): drawn into the kept frame, copied to the
         // surface below.
         let texture_view = match &state.kept {
             Some((_, Some(kept))) => kept.view.clone(),
@@ -1071,7 +1071,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             texture_bindings.insert(TextureId(resource_id.into_ffi()), texture_view.clone());
         }
         for own in state.own_textures.values() {
-            texture_bindings.insert(own.id, own.view.clone()); // svelte-blitz patch
+            texture_bindings.insert(own.id, own.view.clone()); // sepal patch
         }
 
         state
@@ -1087,7 +1087,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                     height: render_surface.config.height as u16,
                 },
                 &texture_view,
-                // svelte-blitz patch (damage): a damaged region is small enough that the
+                // sepal patch (damage): a damaged region is small enough that the
                 // depth buffer's saving (less overdraw) is worth less than clearing and
                 // storing a window-sized depth texture.
                 state
@@ -1099,10 +1099,10 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             )
             .expect("failed to render to texture");
         if let Some((copy, Some(kept))) = &state.kept {
-            copy.encode(&mut encoder, kept, &surface_view); // svelte-blitz patch (damage)
+            copy.encode(&mut encoder, kept, &surface_view); // sepal patch (damage)
         }
         render_surface.queue().submit([encoder.finish()]);
-        // svelte-blitz patch (damage): check a frame not drawn in full.
+        // sepal patch (damage): check a frame not drawn in full.
         let atlas_page = self.config.render_settings.memory_settings.image_atlas_config.atlas_size;
         if let Some(tracker) = &self.damage {
             let (commands, bounds) = tracker.current();
@@ -1129,7 +1129,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             self.scene.reset();
             return;
         }
-        self.presented_at = Some(std::time::Instant::now()); // svelte-blitz patch (idle)
+        self.presented_at = Some(std::time::Instant::now()); // sepal patch (idle)
         timer.record_time("present");
 
         render_surface
