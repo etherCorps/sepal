@@ -9,7 +9,7 @@ a Rust HTML/CSS engine; the JavaScript runs in an embedded QuickJS.
 
 An alpha, on macOS (Linux builds and passes its tests headless; its window has
 not been tried yet). Svelte 5 and Tailwind v4 as on the web, pages as files
-(Sepal's router or SvelteKit's), shadcn-svelte components through an opt-in
+run by SvelteKit's router, shadcn-svelte components through an opt-in
 DOM layer, desktop APIs behind permissions, macOS `.app` bundles and
 self-update, and no frame loop: an idle app does no work.
 
@@ -24,7 +24,7 @@ runs; [how they were measured](https://github.com/etherCorps/sepal/blob/main/com
 | Idle memory, 1,000 issues | 107 MB RAM, 43 MB GPU memory |
 | Memory after wheel-scrolling the whole list, 1,000 issues | 305 MB RAM, 220 MB GPU memory |
 
-This one package is the runtime, the Vite preset and the `sepal` command; the
+This one package is the runtime, the Vite presets and the `sepal` command; the
 prebuilt host comes with it. Start a project with the starter rather than by
 installing it directly:
 
@@ -41,10 +41,8 @@ What is in here:
 | `sepal/updater` | self-update |
 | `sepal/dom` | a small DOM for component libraries written for the web (`dom: true`) |
 | `sepal/renderer`, `sepal/protocol` | what the Vite preset and the host are built against |
-| `sepal/vite` | the Vite preset, `sepal()`, and `defineConfig` for `sepal.config.ts` |
-| `sepal/sveltekit` | `sepalKit()`, which takes the place of both `sveltekit()` and the adapter |
-| `sepal/router`, `sepal/navigation`, `sepal/state` | the file-based router (`src/routes`, `$app/navigation`, `$app/state`) |
-| `sepal/ambient` | types for `$app/*`; add it to `types` in tsconfig.json |
+| `sepal/vite` | the Vite preset for apps without routes, `sepal()`, and `defineConfig` for `sepal.config.ts` |
+| `sepal/sveltekit` | `sepalKit()`, for apps with pages in `src/routes`: it takes the place of both `sveltekit()` and the adapter |
 
 The preset compiles Svelte for the Blitz renderer, writes the one `app.js` and
 `app.css` the host loads, reads `sepal.config.ts`, and in `vite build --watch`

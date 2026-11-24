@@ -86,23 +86,19 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `shell.js`, `window.js` (desktop APIs; public names are camelCase),
   `dom.js` (the opt-in DOM layer for web component libraries). Runs in
   QuickJS: no Node code belongs here.
-- `packages/sepal/vite/` — the preset and router (`sepal/vite`,
-  `sepal/sveltekit`, `sepal/router`, …). `vite.js` (the preset),
+- `packages/sepal/vite/` — the two presets (`sepal/vite`,
+  `sepal/sveltekit`). `vite.js` (`sepal()`, for apps without routes),
   `sveltekit.js` (`sepalKit()`: SvelteKit on this renderer, as an
   adapter plus two edits to SvelteKit's client; see the `patch` table there
   before touching a SvelteKit version), `app.js` (config file, manifest and
   dev window, shared by both presets), `head.js` and `bindings.js`
-  (preprocessors for what Svelte refuses), `routes.js` (build-time scan of
-  `src/routes`), `routing.svelte.js` +
-  `Router.svelte` (the in-memory router; `$app/navigation` and `$app/state`
-  alias to it), `router.js` (its public API). `vite.js`, `sveltekit.js`,
-  `app.js`, `head.js`, `bindings.js` and `routes.js` run in Node; the rest
-  runs in the engine. `icon.png` is the Sepal icon for apps without one.
+  (preprocessors for what Svelte refuses). All of it runs in Node.
+  `icon.png` is the Sepal icon for apps without one. Pages in `src/routes`
+  are always a SvelteKit app: Sepal has no router of its own.
 - `packages/sepal/cli.js` — the `sepal` command. `packages/create/` —
-  `create-sepal`: the starter (`template/`), what differs for the SvelteKit one laid over it
-  (`template-sveltekit/`), and the script that copies them and asks which.
-  A change to a page in `template/` reaches both starters;
-  `pnpm run test:template` builds both.
+  `create-sepal`: the starter (`template/`, a SvelteKit app) and the
+  script that copies it. `pnpm run test:template` creates, checks, builds
+  and renders it.
 - `packages/host/` — `@ethercorps/calyx`: no binaries, only `index.js`,
   which finds this machine's (`SEPAL_HOST` first, then the platform package
   resolved from calyx's own location) and throws, naming the package, when it
@@ -132,10 +128,12 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `document.rs` (`SvelteDocument`), `timers.rs`, `window.rs`, `screenshot.rs`,
   `testing.rs`, `hud.rs` (the performance overlay).
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
-  `examples/routing/` — file-based routing. `examples/shadcn/` — the DOM
-  layer under a real component library. `examples/sveltekit/` — a SvelteKit
-  app, built with `sepalKit()`. `examples/quakes/` — a SvelteKit app made
-  with `pnpm create sepal --router sveltekit`: live USGS feeds over `fetch`,
+  `examples/shadcn/` — the DOM layer under a real component library.
+  `examples/sveltekit/` — a SvelteKit app, built with `sepalKit()`.
+  `examples/router-dom-probe/` — SvelteKit's router and Bits UI together.
+  `examples/tracker/` — the benchmark app, a SvelteKit app (docs/tracker-plan.md,
+  `compare/`). `examples/quakes/` — a SvelteKit app made
+  with `pnpm create sepal`: live USGS feeds over `fetch`,
   a d3-geo world map, shadcn-svelte. It needs the network, so no test runs
   it; `drive … real:4` does.
 
@@ -336,10 +334,43 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **SvelteKit 3 has no `$lib`.** It is `#lib`, declared in package.json's
   `imports` (the SvelteKit starter does), and imports through it need the
   file's extension: `'#lib/format.ts'`, `'#lib/components/ui/card/index.ts'`.
-  Components copied from an app on Sepal's own router import `$lib/…` and
-  have to be changed.
+  Components from the shadcn CLI or a SvelteKit 2 app import `$lib/…` and
+  have to be changed. `sepal()` still aliases `$lib`, for apps without routes.
 - **No `URL`, `URLSearchParams`, `location` or `history` in QuickJS.** The
-  router keeps its own location; do not reach for those.
+  DOM layer provides them (`dom: true`, and every SvelteKit app); code that
+  runs without it must not reach for them.
+- **The app bundle runs in strict mode, and must stay that way.** Its
+  sources are ES modules, which are always strict. `sepal()` asks Rolldown
+  for `output.strict`; `sepalKit()`'s `convert()` puts `'use strict'` at the
+  top of the script it wraps SvelteKit's module in. Run as a sloppy script,
+  the minified Tracker broke on V8 only (a renderer method missing on
+  Insights), and QuickJS hid it.
+- **`version.pollInterval` is 0 under `sepalKit()`, and must stay so.**
+  SvelteKit 3 polls for a new app version every hour by default: a wake-up
+  on a timer, which breaks invariant 7, and a request to `app.localhost`
+  that nothing answers. Updates come through `sepal/updater`.
+- **SvelteKit follows a link a frame later.** Its click handler waits a
+  `requestAnimationFrame`, then a `setTimeout(0)`, before it navigates. In
+  Sepal that is a 16 ms timer (`shims.js`) and one more turn (a timer
+  queued from a timer runs in the next round). Headless, a link click needs
+  `doc.wait(0.04)` after it settles; the Tracker's and router_dom's
+  `click()` do that. `goto` does not wait.
+- **SvelteKit's route announcer** (`#svelte-announcer`) is a 1px
+  `overflow: hidden` box at the top left whose text overflows it, and Blitz
+  hit-tests overflowing content. `sepalKit()` gives it `pointer-events:
+  none` in `app.css`; without that it took clicks at the top left after
+  the first navigation. The real fix is a Blitz patch that clips hit
+  testing to `overflow: hidden`, which also changes what the Tracker tests
+  can click (they click rows far below the window).
+- **An unknown address needs a route in a SvelteKit app.** SvelteKit
+  answers it with a page load from the server; an app has none, so `goto`
+  rejects (`navigation_route_missing`) and a link changes nothing on
+  screen. A catch-all `src/routes/[...path]/+page.ts` that throws a 404
+  shows the error page (the Tracker has one).
+- **Server code stops a `sepalKit()` build** (`server_files` in
+  `sveltekit.js`): `+page.server.*`, `+layout.server.*`, `+server.*`,
+  `hooks.server.*`, `*.remote.*`. They need the backend thread; the check
+  comes out when it lands.
 - **Resolve condition.** Svelte's custom-renderer build is selected with the
   `svelte-custom-renderer` export condition (set in `vite.js`). Without it
   `svelte/renderer` resolves to a stub that throws.
@@ -450,7 +481,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   not. For a translated element, use `click_at`.
 - Renderer-only changes: extend `packages/sepal/test/mock-host.test.js`.
   DOM layer changes: `packages/sepal/test/dom.test.js`, and `tests/shadcn.rs`.
-- Preset and router changes: `packages/sepal/test/`, and `tests/routing.rs`.
+- Preset changes: `packages/sepal/test/`. `sepalKit()` changes: also
+  `tests/sveltekit.rs`, `tests/router_dom.rs` and the Tracker's tests
+  (`tests/tracker/`), on both engines.
 - Linux CI needs no display for any of the tests.
 - CI runs Node 22, the oldest the packages support; this Mac has 26. A test
   that compares against Node's own behaviour (`url.test.js`) has to hold on
@@ -483,10 +516,10 @@ in the window have not been confirmed by eye yet.
   (matching Svelte's own source), JSDoc types. `tsc` type-checks it
   (`checkJs`, `strict`) and emits `.d.ts` into each package's `types/`
   (generated by `prepare`, git-ignored). Do not convert the source to `.ts`.
-- `packages/sepal`'s `tsconfig.json` (the runtime) and `tsconfig.vite.json`
-  (the router) have no `dom` lib on purpose: it turns `window`/`document` use
-  in code that runs in QuickJS into a type error. Node-side files (the
-  preset, the CLI) are checked separately by `tsconfig.node.json`.
+- `packages/sepal`'s `tsconfig.json` (the runtime) has no `dom` lib on
+  purpose: it turns `window`/`document` use in code that runs in QuickJS
+  into a type error. Node-side files (the presets, the CLI) are checked
+  separately by `tsconfig.node.json`.
 - Examples are TypeScript (`main.ts`, `lang="ts"`, `vite.config.ts`).
 - TypeScript stays on 6.x until `svelte-check` supports 7.
 - Rust: `cargo fmt`, no warnings, errors as `Result<_, String>` at the edges.

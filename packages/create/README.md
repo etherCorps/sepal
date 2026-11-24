@@ -11,10 +11,8 @@ pnpm dev        # opens the app, reloads on save
 pnpm bundle     # my-app.app
 ```
 
-TypeScript, Tailwind, pages as files in `src/routes`, an icon and a
-`static/` directory. You are asked which router to use; to say so ahead of
-time, `--router built-in` (Sepal's own, the default) or
-`--router sveltekit` (SvelteKit as a single-page app).
+A SvelteKit app, as a single-page app in a native window: TypeScript,
+Tailwind, pages as files in `src/routes`, and a `static/` directory.
 
 [Documentation](https://github.com/etherCorps/sepal#readme).
 

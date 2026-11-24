@@ -1,5 +1,62 @@
 # Changelog
 
+## Unreleased
+
+### Breaking: SvelteKit is the only router
+
+Sepal's built-in router is gone, and with it `sepal/router`,
+`sepal/navigation`, `sepal/state`, `sepal/ambient`, `virtual:sepal/routes`
+and the preset's `router` option. Pages in `src/routes` are now always a
+SvelteKit app, built with `sepalKit()`. `create-sepal` makes only the
+SvelteKit starter, and its `--router` option is gone. An app with
+`src/routes` and no `src/main` that still uses `sepal()` stops at build
+time and says what to do.
+
+To move an app from the built-in router:
+
+| Before | Now |
+|---|---|
+| `sepal()` in `vite.config.ts` | `sepalKit()` from `sepal/sveltekit`, with `@sveltejs/kit` 3.4 or later in `devDependencies` |
+| nothing | `src/routes/+layout.ts` with `export const ssr = false;`, and SvelteKit's `src/app.html` (copy the starter's) |
+| `import { error, redirect } from 'sepal/router'` | `import { error, redirect } from '@sveltejs/kit'` |
+| `$app/navigation` and `$app/state` from Sepal (`sepal/navigation`, `sepal/state`) | SvelteKit's own `$app/navigation` and `$app/state`; `page.url` is a real `URL` |
+| `back()` and `forward()` from `$app/navigation` | `history.back()` and `history.forward()` |
+| `"types": ["sepal/ambient"]` and `paths` in `tsconfig.json` | `"extends": "$app/tsconfig"`, and `svelte-kit sync` before `svelte-check` |
+| `$lib/…` | `#lib/…` with the file's extension (`'#lib/format.ts'`), declared in `package.json`: `"imports": { "#lib/*": "./src/lib/*" }` |
+| `dom: true` in `sepal.config.ts` | not needed: `sepalKit()` always loads the DOM layer |
+| an unknown path showed the root `+error.svelte` | add `src/routes/[...path]/+page.ts` that throws `error(404, …)`; without it `goto` rejects and a link does nothing |
+| `router: { entry }`, your own router over `virtual:sepal/routes` | `entry` in `sepal.config.ts` with `sepal()`; there is no generated route table |
+| `router: false`, `router: { dir }` | gone: `sepal()` no longer reads `src/routes` |
+| `pnpm create sepal --router …` | `pnpm create sepal` |
+
+Apps without routes (`src/main.ts`, `sepal()`) do not change; the `$lib`
+alias stays for them.
+
+### Also in this release
+
+- **Server code stops a SvelteKit build.** `+page.server.*`,
+  `+layout.server.*`, `+server.*`, `hooks.server.*` and `*.remote.*` files
+  used to build and then never run. They need the backend thread, which
+  Sepal does not have yet, and the build now says so.
+- **No hourly version check.** SvelteKit 3 polls for a new version every
+  hour by default: a wake-up on a timer in an idle app, and a request
+  nothing answers. `sepalKit()` sets `version.pollInterval` to 0 unless the
+  app sets it.
+- **`app.js` runs in strict mode** under `sepalKit()`, as the ES module it
+  was built from. As a sloppy script, a minified app could break on V8.
+- **SvelteKit's route announcer no longer takes clicks.** It is a 1px box at
+  the top left whose text overflows it, and Blitz hit-tests overflowing
+  text. After the first navigation it took clicks on whatever was drawn
+  under it.
+- **The SvelteKit starter starts in a browser too.** The comment in its
+  `src/app.html` named SvelteKit's body placeholder, so SvelteKit put its
+  start script into the comment. Sepal found it anyway; a browser would not.
+- **`sepalKit()` no longer uses `builder.rimraf`**, which SvelteKit 3.4
+  deprecates.
+- **The Tracker** (`examples/tracker`) is a SvelteKit app, and so is the
+  Tauri build in `compare/`, from the same source. Its bundle is 30 KB
+  smaller: `tailwind-variants/lite` leaves the class merging to `cn()`.
+
 ## 0.1.0-alpha.2 (24 Nov 2026)
 
 - **`fetch` in SvelteKit apps.** `Request`, `Headers` and `Response` are
