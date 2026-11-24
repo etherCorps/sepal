@@ -186,7 +186,10 @@ export function sepal(inline = {}) {
 							formats: ['iife'],
 							fileName: () => 'app.js',
 							cssFileName: 'app'
-						}
+						},
+						// The sources are modules, and module code is strict; the IIFE
+						// keeps it so. Rolldown's default only keeps directives it finds.
+						rolldownOptions: { output: { strict: true } }
 					}
 				};
 			},
