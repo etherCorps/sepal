@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.2 (24 Nov 2026)
 
 - **`fetch` in SvelteKit apps.** `Request`, `Headers` and `Response` are
   globals now, next to `fetch`, which also takes a `Request`. SvelteKit's
