@@ -89,6 +89,8 @@ const COLUMNS = {
 	// More svelte-blitz builds, for comparing changes to it in one session (--interleave).
 	'com.compare.tracker.blitzb': { name: 'blitzb', kind: 'blitz' },
 	'com.compare.tracker.blitzc': { name: 'blitzc', kind: 'blitz' },
+	'com.compare.tracker.blitzd': { name: 'blitzd', kind: 'blitz' },
+	'com.compare.tracker.blitze': { name: 'blitze', kind: 'blitz' },
 	// Diagnostic only (blitz-dom's log-phase-times): never measured.
 	'com.compare.tracker.blitzdiag': { name: 'blitzdiag', kind: 'blitz' },
 	'com.compare.tracker.blitzv8diag': { name: 'blitzv8diag', kind: 'blitz' }
@@ -475,6 +477,16 @@ async function gpu_time(pids) {
 	}
 	return ns;
 }
+/** WindowServer's pid: it composites every window, so it does GPU work for every app on screen. */
+let windowserver = null;
+async function windowserver_pid() {
+	if (!windowserver) {
+		const { stdout } = await exec('pgrep', ['-x', 'WindowServer']);
+		windowserver = Number(stdout.trim().split('\n')[0]);
+	}
+	return windowserver;
+}
+
 function usage_delta(a, b) {
 	const out = {};
 	for (const e of b) {
@@ -946,6 +958,7 @@ async function run_one(build, size, n, { calib, record_dir, key, log_dir, breakd
 			sampler = top_sampler(pids);
 			const u0 = await usage(pids);
 			const g0 = await gpu_time(pids);
+			const ws0 = await gpu_time([await windowserver_pid()]);
 			const from = now();
 			const index = app.index;
 			result = await sc.run(run, size);
@@ -953,6 +966,9 @@ async function run_one(build, size, n, { calib, record_dir, key, log_dir, breakd
 			const u1 = await usage(pids);
 			// Processes started during the scenario (a WebKit helper) count from zero.
 			rec.gpu_ns = (await gpu_time((await owned(app)).map((p) => p.pid))) - g0;
+			// WindowServer's GPU time over the same span: composing this window (and
+			// anything else on screen), work the app causes but is not billed for.
+			rec.windowserver_gpu_ns = (await gpu_time([await windowserver_pid()])) - ws0;
 			rec.measured = { from, to, seconds: (to - from) / 1e9 };
 			rec.usage = usage_delta(u0, u1);
 			rec.extra = result ?? null;
