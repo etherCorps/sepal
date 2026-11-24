@@ -34,7 +34,7 @@ jobs:
           - { os: ubuntu-22.04, platform: linux-x64-gnu }
           - { os: ubuntu-22.04-arm, platform: linux-arm64-gnu }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
         with:
           cache-key: release
@@ -46,7 +46,7 @@ jobs:
       - name: The binary is where its platform package ships it
         shell: bash
         run: test -s packages/calyx-${{ matrix.platform }}/bin/calyx
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           # Named after the package's directory, so the pack job unpacks it there.
           name: calyx-${{ matrix.platform }}
@@ -64,14 +64,14 @@ jobs:
       # For npm to record which run built the packages.
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: The tag is the packages' version
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           version=$(node -p "require('./packages/sepal/package.json').version")
           [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "::error::tag $GITHUB_REF_NAME, but the packages are at $version"; exit 1; }
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: pnpm
@@ -79,7 +79,7 @@ jobs:
       # Also emits each package's types (`prepare`).
       - run: pnpm install --frozen-lockfile
       # One artifact per platform, each unpacked into packages/<its name>.
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           pattern: calyx-*
           path: packages
@@ -97,7 +97,7 @@ jobs:
           mkdir packs
           pnpm -r --filter "./packages/*" exec pnpm pack --pack-destination "$PWD/packs"
           ls -l packs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: packages
           path: packs

@@ -20,9 +20,9 @@ runs:
           libx11-dev libxcursor-dev libxi-dev libxrandr-dev
 
     # Version comes from `packageManager` in package.json.
-    - uses: pnpm/action-setup@v4
+    - uses: pnpm/action-setup@v5
     # The oldest Node the packages say they support.
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v5
       with:
         node-version: 22
         cache: pnpm
