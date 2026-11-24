@@ -7,6 +7,246 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## Native layer: backend, OS APIs and per-app host builds (24 Nov 2026)
+
+Names follow the 24 Nov rename: the project is Sepal, the crate is `sepal`, and
+the prebuilt host is calyx (binary `calyx`; npm `@ethercorps/calyx`, which since
+0.1.0-alpha.1 installs one of four `@ethercorps/calyx-<platform>` packages).
+This is the current work; the prompt to start it is at the end of this section.
+
+The question: Electron apps have Node, Electrobun apps have Bun, Tauri apps
+have Rust. What does a Sepal app write its "backend" in, and how does it
+reach the OS beyond what the host ships today (`fetch`, files, dialogs,
+clipboard, open, window, updater)?
+
+### Decisions (Shivam, 24 Nov 2026)
+
+- **One permissions manifest for everything:** the UI, the JS backend (see
+  "Later") and native plugins. Default-deny, as today. Each plugin declares the
+  key that gates it, and the app grants that key in `permissions` in
+  `sepal.config.ts`.
+- **The Tauri way for native code.** An app that needs more than the prebuilt
+  host gets a `native/` Cargo crate and builds its own host from source, with
+  its plugins and commands linked in.
+- **No plugins loaded at runtime over a C ABI.** This was considered and
+  rejected, for four reasons:
+  - a plugin crash takes the app down with it
+  - the C interface would have to stay stable forever
+  - every plugin carries its own copy of Rust's standard library
+  - plugins that start their own threads would undo the idle-CPU numbers
+- **The prebuilt host (calyx, the four platform packages) stays** for apps
+  without `native/`, and those apps never need Rust or cargo. It gets a few
+  more commonly used APIs (Shivam picks them, see below). Everything else
+  becomes a plugin.
+- **The patches stay patches.** All four patched crates remain in this repo:
+  `crates/blitz-dom` and `crates/anyrender_vello_hybrid` (Blitz's), and
+  `crates/vello_gpu` and `crates/wgpu-hal` (the GPU memory fixes). Apps get
+  them through `[patch.crates-io]` lines that the CLI writes into
+  `native/Cargo.toml`, the same four lines `crates/host/Cargo.toml` has.
+- **The JS engine stays** (decided 22 Nov). With per-app builds, V8 becomes a
+  per-app choice: `features = ["engine-v8"]` in `native/Cargo.toml`. The
+  prebuilt host stays on QuickJS.
+
+### Open decisions: ask Shivam, do not guess
+
+**Which APIs join the prebuilt host.** Candidates, cheapest first:
+
+- `process`: standard library only
+- settings store: JSON in the data directory (on the "not done" list)
+- OS info, environment variables, locale: `sys-locale`
+- notifications (on the "not done" list)
+- secrets: `keyring` 3
+- file watching: `notify`
+
+Measured on 24 Nov: secrets built as a standalone Linux library came to
+1.0 MB. About 300 KB of that is its own copy of Rust's standard library and
+serde_json, which the host already has, so expect less inside the host. The
+rest is keyring, its D-Bus client (vendored libdbus) and crypto. If both
+notifications and secrets go in, use one D-Bus stack on Linux for both.
+
+These stay out of the prebuilt host and become plugins:
+
+- tray and menus: `tray-icon` and `muda` need GTK on Linux
+- global shortcuts
+- autostart
+- SQLite
+
+**A size budget for the prebuilt host.** At 0.1.0-alpha.1 calyx is 25.4 MB
+on darwin-arm64 (25,437,456 bytes), 26.3 MB on darwin-x64, 29.3 MB on
+linux-arm64-gnu and 32.3 MB on linux-x64-gnu (the V8 spike measured 24.0 MB
+on 22 Nov).
+
+**The JS backend thread** (see "Later"). Two questions:
+
+- Confirm it.
+- Decide whether it stops when the window closes or keeps running. Tray apps
+  need it to keep running.
+
+**Publishing the `sepal` crate.** To crates.io, or only through git? `sepal`
+was still free on crates.io on 24 Nov, after the npm packages were published.
+Publishing works: the crate depends on `blitz-dom =0.3.0-beta.4`, and each
+app's patch lines replace that. Either way step 4 needs something to pin to,
+and no release has been tagged yet (publishing has been by hand, see
+"Releases from 0.1.0-alpha.1"): tag releases from now on (`v0.1.0-alpha.1`
+would be the first), or pin to a commit.
+
+### Why the patches need care now
+
+Cargo applies `[patch]` only in the workspace being built. Until now that was
+always `crates/host`, so the patches always applied.
+
+With per-app builds, the top level is the app's `native/` crate. Without the
+patch lines, it compiles against the stock crates and quietly loses what each
+`PATCH.md` lists: the thirteen changes to `blitz-dom`, the eleven to
+`anyrender_vello_hybrid` (the glyph atlas, damage tracking), and the GPU
+memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
+first blit costs about 80 MB of driver memory). Step 1 makes that
+impossible.
+
+### Order of work
+
+Do these in order. Each ends with something Shivam can check.
+
+#### 1. Make an unpatched build fail
+
+Add a marker to each of the four patched crates, `pub const SEPAL_PATCHED: u32`,
+set to the number of changes its `PATCH.md` lists: 13 in `blitz-dom`, 11 in
+`anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`. Refer to all four
+from the host. A build against a stock crate then fails to compile, with an
+error that names the missing `[patch.crates-io]` line.
+
+Document the marker in each `PATCH.md`, as a `sepal patch` like the others.
+When a patched crate is upgraded or a change is added, the marker changes
+along with the patches.
+
+**Check:** removing the patch lines from `crates/host/Cargo.toml` fails the
+build with that message.
+
+#### 2. The host as a library
+
+`crates/host`, already the `sepal` crate with the `calyx` binary, becomes a
+library plus a thin binary. `lib.rs` already exists and `main.rs` already uses
+`sepal::app::App`. What's missing is a public builder:
+
+```rust
+sepal::App::new()
+    .plugin(sepal_secrets::init())
+    .command("tracker.import", import_repo)
+    .run();
+```
+
+- **`command(name, fn)`:** takes `fn(T) -> Result<U, String>`, where
+  `T: Deserialize` and `U: Serialize`.
+  - By default it runs on a worker thread, the same way `Api::call` returns
+    `Work` today (`Plan::Later` in `host_work`).
+  - A main-thread variant (`Plan::Now`, like `window_call`) is for anything
+    that needs the window or AppKit.
+- **`Plugin`:** a name, the permission key that gates it, its commands, and
+  setup and teardown hooks.
+  - The built-ins (`fs`, `http`, `dialog`, `open`, `window`, `clipboard`,
+    `updater`) stay as they are.
+  - Plugin calls are routed after the built-ins in `host_work`.
+- **`Permissions` becomes extensible,** so plugin keys are read from the
+  manifest too. An unknown key is an error unless a registered plugin claims
+  it. This is the rule `Permissions::parse` already follows: a typo must not
+  turn into "allowed" or "not allowed".
+- **The prebuilt binary** is `App::new().run()` plus whichever built-ins
+  Shivam picks.
+
+**Check:** the prebuilt release binary stays the same size, within a few KB.
+All host tests pass on both engines.
+
+#### 3. Events from Rust to JS
+
+- Add `emit(name, json)`, callable from any thread. It delivers to JS listeners
+  registered with `on(name, fn)` in `sepal`.
+- Wake the event loop the way call answers do today (the `answers` channel plus
+  the waker), never by polling.
+- Tray clicks, shortcuts and file watching all need this.
+
+**Check:** `idle_turns_do_no_work` still passes. An event sent from another
+thread, with no window activity, reaches JS with one wake-up.
+
+#### 4. `native/` in the CLI
+
+- **`sepal native init`** writes `native/Cargo.toml`, with the four
+  `[patch.crates-io]` lines pinned to this release (a git tag or a commit; see
+  "Publishing the `sepal` crate"), and `native/src/main.rs`.
+- **`sepal add <plugin>`** adds four things: the crate, the npm package,
+  the `.plugin()` line and the `permissions` entry.
+- **When `native/Cargo.toml` exists,** dev and `--bundle` build it with cargo
+  and hand the binary over through `SEPAL_HOST`. `find_host` in
+  `packages/host/index.js` already takes that variable first, and the CLI
+  skips its version check for it, as a per-app build needs. Apps without
+  `native/` don't change.
+- **One shared `CARGO_TARGET_DIR` per machine,** in the OS cache directory.
+  Stylo, wgpu and Vello then compile once, and later apps mostly just relink.
+- **JS edits still reload without cargo.** Only changes under `native/`
+  trigger a rebuild. Dev uses the dev profile, which is already tuned.
+- **Missing toolchain:** print one clear message with the install steps:
+  rustup, plus Xcode Command Line Tools on macOS or a C compiler on Linux.
+  Windows is on hold.
+- **Licences:** a per-app binary needs its own `THIRD-PARTY-LICENSES.txt`,
+  because Stylo is MPL-2.0. `--bundle` runs `scripts/third-party-licenses.js`
+  against `native/Cargo.toml`. Today that script always reads
+  `crates/host/Cargo.toml` and writes into this machine's
+  `packages/calyx-<platform>/`; both paths become arguments.
+
+**Check:** `examples/native`, with one command plus the secrets plugin, builds
+and runs through the CLI. Record two times: the cold build, and the build of a
+second app with the same versions on the shared target directory.
+
+#### 5. First plugin end to end: secrets
+
+- **Crate `sepal-secrets`,** using `keyring` 3: Keychain on macOS,
+  Credential Manager on Windows, Secret Service on Linux.
+- **npm package `sepal-secrets`,** with `getSecret`, `setSecret` and
+  `deleteSecret`. Both packages live in this repo.
+- **Gated by `permissions.secrets`.**
+- **A plugin template** whose `Cargo.toml` carries the patch lines, so plugin
+  authors can run their own tests.
+
+**Check:**
+
+- A headless test covers the permission refusal and the argument handling.
+- Set and get work on macOS in a bundled, signed app.
+
+#### 6. Prebuilt additions
+
+Once Shivam has picked them, add each one separately. Measure the release size
+before and after each, and stay within the budget.
+
+### Later, as separate work
+
+- **The JS backend thread:** a second QuickJS runtime on its own thread.
+  - Code in `src/backend/` is called from the UI through `$backend` stubs.
+  - With the SvelteKit preset, remote functions run there, with same-origin
+    `fetch` routed to that thread.
+- **A GitHub Actions workflow** that apps can copy to build on each OS.
+- **Merging update feeds across CI machines,** which per-OS builds now make
+  necessary.
+
+### Rules
+
+- The CLAUDE.md invariants still hold, especially no. 7 (no frame loop, no
+  polling). A plugin must never start a thread that wakes on an interval, and
+  idle wake-ups stay at today's level with plugins loaded.
+- Commands never run inside a JS turn. They are queued, the same way
+  `host_call` is today.
+- Default-deny: a plugin command whose permission isn't granted is refused with
+  the same "add it to `permissions.<key>`" message the built-ins give.
+- Do not bump the pinned Blitz versions in this work.
+
+### Suggested prompt for Claude Code
+
+```
+Read CLAUDE.md, then the "Native layer" section of HANDOVER.md.
+Do steps 1 to 5 in order. After each step, run the check it names
+and show me the result before starting the next one. Anything under
+"Open decisions" is mine: ask, do not guess. Keep the invariants
+in CLAUDE.md.
+```
+
 ## Goal
 
 1. **Icons**, in both senses:
