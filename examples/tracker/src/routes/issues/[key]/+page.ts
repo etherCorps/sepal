@@ -1,5 +1,5 @@
-import { error } from 'sepal/router';
-import { get_issue } from '$lib/store.svelte';
+import { error } from '@sveltejs/kit';
+import { get_issue } from '#lib/store.svelte.ts';
 
 // Runs on every navigation (j/k with the pane open): keep it a lookup.
 export function load({ params }: { params: { key: string } }) {

@@ -4,13 +4,13 @@
 	an Undo toast.
 -->
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-	import { LabelDot } from '$lib/glyphs';
-	import Pick from '$lib/list/Pick.svelte';
-	import { edit, estimate_items, label_items, people_items, priority_items, project_items, status_items } from '$lib/list/edit';
-	import { label_by_id, type Issue, type PriorityId, type StatusId } from '$lib/seed';
+	import { Badge } from '#lib/components/ui/badge/index.ts';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.ts';
+	import { LabelDot } from '#lib/glyphs/index.ts';
+	import Pick from '#lib/list/Pick.svelte';
+	import { edit, estimate_items, label_items, people_items, priority_items, project_items, status_items } from '#lib/list/edit.ts';
+	import { label_by_id, type Issue, type PriorityId, type StatusId } from '#lib/seed.ts';
 
 	let { issue }: { issue: Issue } = $props();
 

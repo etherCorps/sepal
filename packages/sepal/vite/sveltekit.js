@@ -98,13 +98,16 @@ export function convert(from, to) {
 	writeFileSync(
 		join(to, 'app.js'),
 		`(() => {
+// The bundle was a module, and module code is strict. Run as a sloppy script,
+// the minified Tracker broke on V8 (a renderer method missing on Insights).
+'use strict';
 const __module_url = ${JSON.stringify(`http://app.localhost/${bundle}`)};
 ${code}
 globalThis.${payload}
 // Where SvelteKit puts the app: the element its start script sat in.
-const element = document.createElement('div');
-document.body.appendChild(element);
-${start}(element);
+const __sepal_target = document.createElement('div');
+document.body.appendChild(__sepal_target);
+${start}(__sepal_target);
 })();
 `
 	);
@@ -221,6 +224,10 @@ export async function sepalKit(inline = {}) {
 			output: { ...kit.output, bundleStrategy: 'single' },
 			// Nothing is rendered ahead of time. There is no server to send it.
 			prerender: { ...kit.prerender, entries: kit.prerender?.entries ?? [] },
+			// SvelteKit 3 asks the server for a new version every hour by default:
+			// a wake-up on a timer, and a request nothing answers. An app updates
+			// through `sepal/updater` instead.
+			version: { ...kit.version, pollInterval: kit.version?.pollInterval ?? 0 },
 			// Ours first: they have to see `bind:` on elements and `<svelte:head>`
 			// before Svelte refuses them.
 			preprocess: [element_bindings(), head(), ...[kit.preprocess ?? []].flat()],

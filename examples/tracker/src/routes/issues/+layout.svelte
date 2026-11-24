@@ -5,7 +5,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import IssueList from '$lib/list/IssueList.svelte';
+	import IssueList from '#lib/list/IssueList.svelte';
 
 	let { children }: { children: Snippet } = $props();
 

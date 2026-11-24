@@ -7,19 +7,19 @@
 <script lang="ts">
 	import { save } from 'sepal/dialog';
 	import { writeTextFile } from 'sepal/fs';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '$lib/components/ui/dialog/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select/index.js';
-	import { Separator } from '$lib/components/ui/separator/index.js';
-	import { Switch } from '$lib/components/ui/switch/index.js';
-	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs/index.js';
-	import { count, plural } from '$lib/format';
-	import { persist_stats } from '$lib/persist';
-	import { data, reset_edits, set_simulate, settings, store_settings, to_csv, view, type GroupBy } from '$lib/store.svelte';
-	import { push } from '$lib/ui.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '#lib/components/ui/dialog/index.ts';
+	import { Input } from '#lib/components/ui/input/index.ts';
+	import { Label } from '#lib/components/ui/label/index.ts';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '#lib/components/ui/select/index.ts';
+	import { Separator } from '#lib/components/ui/separator/index.ts';
+	import { Switch } from '#lib/components/ui/switch/index.ts';
+	import { Tabs, TabsContent, TabsList, TabsTrigger } from '#lib/components/ui/tabs/index.ts';
+	import { count, plural } from '#lib/format.ts';
+	import { persist_stats } from '#lib/persist.ts';
+	import { data, reset_edits, set_simulate, settings, store_settings, to_csv, view, type GroupBy } from '#lib/store.svelte.ts';
+	import { push } from '#lib/ui.svelte.ts';
 
 	const NAME_MAX = 40;
 	const GROUPINGS: { id: GroupBy; name: string }[] = [

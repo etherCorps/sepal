@@ -209,9 +209,7 @@ fn board_links_open_the_issue_and_the_list() {
     let mut doc = board();
     let card = doc.query("[data-testid=card]").unwrap();
     let key = doc.attr(card, "data-key").unwrap();
-    doc.click(card);
-    doc.settle();
-    doc.resolve();
+    click_node(&mut doc, card);
     assert!(
         doc.query("[data-testid=pane]").is_some(),
         "a card opens the issue"
@@ -348,8 +346,6 @@ fn insights_chart_draws_bars_and_links_weeks() {
     // A week is a link to the list of issues created in it.
     let last = *weeks.last().unwrap();
     assert_eq!(doc.attr(last, "href").as_deref(), Some("/issues?week=0"));
-    doc.click(last);
-    doc.settle();
-    doc.resolve();
+    click_node(&mut doc, last);
     assert_eq!(text(&doc, "[data-testid=page-title]"), "Issues");
 }

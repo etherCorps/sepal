@@ -5,8 +5,8 @@
 	between tags.
 -->
 <script lang="ts">
-	import { PRIORITY_GLYPH, avatar } from '$lib/glyphs';
-	import { label_by_id, type Issue } from '$lib/seed';
+	import { PRIORITY_GLYPH, avatar } from '#lib/glyphs/index.ts';
+	import { label_by_id, type Issue } from '#lib/seed.ts';
 
 	let { issue, focused }: { issue: Issue; focused: boolean } = $props();
 

@@ -17,12 +17,12 @@
 	import KeyboardIcon from '@lucide/svelte/icons/keyboard';
 	import UndoIcon from '@lucide/svelte/icons/undo-2';
 	import RowsIcon from '@lucide/svelte/icons/rows-3';
-	import { Dialog, DialogContent, DialogTitle } from '$lib/components/ui/dialog/index.js';
-	import { ProjectSquare, StatusIcon } from '$lib/glyphs';
-	import { PROJECTS, type Issue, type StatusId } from '$lib/seed';
-	import { data, history, settings, store_settings, undo } from '$lib/store.svelte';
-	import { count } from '$lib/format';
-	import { key_label, push, ui } from '$lib/ui.svelte';
+	import { Dialog, DialogContent, DialogTitle } from '#lib/components/ui/dialog/index.ts';
+	import { ProjectSquare, StatusIcon } from '#lib/glyphs/index.ts';
+	import { PROJECTS, type Issue, type StatusId } from '#lib/seed.ts';
+	import { data, history, settings, store_settings, undo } from '#lib/store.svelte.ts';
+	import { count } from '#lib/format.ts';
+	import { key_label, push, ui } from '#lib/ui.svelte.ts';
 
 	const ISSUE_LIMIT = 8;
 

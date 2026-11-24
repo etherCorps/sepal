@@ -1,7 +1,7 @@
 <!-- A label's 6px colour dot. -->
 <script lang="ts">
-	import { cn } from '$lib/utils';
-	import { label_by_id } from '$lib/seed';
+	import { cn } from '#lib/utils.ts';
+	import { label_by_id } from '#lib/seed.ts';
 
 	let { label, class: className = '' }: { label: string; class?: string } = $props();
 </script>

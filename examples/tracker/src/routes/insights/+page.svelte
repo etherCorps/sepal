@@ -3,16 +3,16 @@
 	(`data.insights`, driven by `insights_view`). docs/tracker-design.md, Insights.
 -->
 <script lang="ts">
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select/index.js';
-	import { Tabs, TabsList, TabsTrigger } from '$lib/components/ui/tabs/index.js';
-	import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '$lib/components/ui/tooltip/index.js';
-	import Chart from '$lib/insights/Chart.svelte';
-	import Row from '$lib/list/Row.svelte';
-	import { count, delta, short_date } from '$lib/format';
-	import { Avatar, PriorityIcon, ProjectSquare } from '$lib/glyphs';
-	import { EPOCH, PROJECTS, WEEK, priority_by_id, project_by_key } from '$lib/seed';
-	import { data, insights_view, person } from '$lib/store.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '#lib/components/ui/select/index.ts';
+	import { Tabs, TabsList, TabsTrigger } from '#lib/components/ui/tabs/index.ts';
+	import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '#lib/components/ui/tooltip/index.ts';
+	import Chart from '#lib/insights/Chart.svelte';
+	import Row from '#lib/list/Row.svelte';
+	import { count, delta, short_date } from '#lib/format.ts';
+	import { Avatar, PriorityIcon, ProjectSquare } from '#lib/glyphs/index.ts';
+	import { EPOCH, PROJECTS, WEEK, priority_by_id, project_by_key } from '#lib/seed.ts';
+	import { data, insights_view, person } from '#lib/store.svelte.ts';
 
 	const stats = $derived(data.insights);
 	const range = $derived(insights_view.range);

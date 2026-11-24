@@ -1,10 +1,10 @@
 // Edits made from the list, the bulk bar and the detail pane: change the
 // store, then say what happened in a toast with Undo.
 
-import { LABELS, PEOPLE, PRIORITIES, PROJECTS, STATUSES, label_by_id, priority_by_id, project_by_key, status_by_id } from '$lib/seed';
-import { bulk_update, delete_issues, person, undo_action, view, type Patch } from '$lib/store.svelte';
-import { push } from '$lib/ui.svelte';
-import { plural } from '$lib/format';
+import { LABELS, PEOPLE, PRIORITIES, PROJECTS, STATUSES, label_by_id, priority_by_id, project_by_key, status_by_id } from '#lib/seed.ts';
+import { bulk_update, delete_issues, person, undo_action, view, type Patch } from '#lib/store.svelte.ts';
+import { push } from '#lib/ui.svelte.ts';
+import { plural } from '#lib/format.ts';
 
 export interface Item {
 	value: string;

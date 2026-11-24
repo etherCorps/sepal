@@ -155,9 +155,16 @@ fn click(doc: &mut SvelteDocument, selector: &str) {
     let node = doc
         .query(selector)
         .unwrap_or_else(|| panic!("nothing matches {selector}"));
+    click_node(doc, node);
+}
+
+fn click_node(doc: &mut SvelteDocument, node: blitz_dom::NodeId) {
     doc.click(node);
     doc.settle();
     doc.resolve();
+    // SvelteKit lets the page repaint before it follows a link: a
+    // `requestAnimationFrame`, then a `setTimeout(0)`, which runs a turn later.
+    doc.wait(0.04);
 }
 
 fn count(doc: &SvelteDocument, selector: &str) -> usize {

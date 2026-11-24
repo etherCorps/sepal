@@ -10,13 +10,13 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import { writeText } from 'sepal/clipboard';
 	import { goto } from '$app/navigation';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import Properties from '$lib/detail/Properties.svelte';
-	import Thread from '$lib/detail/Thread.svelte';
-	import { edit, list_href } from '$lib/list/edit';
-	import { get_issue, neighbor, thread } from '$lib/store.svelte';
-	import { push, ui } from '$lib/ui.svelte';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { Input } from '#lib/components/ui/input/index.ts';
+	import Properties from '#lib/detail/Properties.svelte';
+	import Thread from '#lib/detail/Thread.svelte';
+	import { edit, list_href } from '#lib/list/edit.ts';
+	import { get_issue, neighbor, thread } from '#lib/store.svelte.ts';
+	import { push, ui } from '#lib/ui.svelte.ts';
 
 	let { data }: { data: { key: string } } = $props();
 

@@ -1,6 +1,6 @@
 <!-- Initials in a circle tinted with the person's hue. `id` null is unassigned: a dashed ring. -->
 <script module lang="ts">
-	import { person } from '$lib/store.svelte';
+	import { person } from '#lib/store.svelte.ts';
 
 	/** The avatar as one span's attributes: rows and cards write the span inline. Reactive (the user's name). */
 	export function avatar(id: string | null, size: 20 | 24 = 20) {
@@ -17,7 +17,7 @@
 </script>
 
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn } from '#lib/utils.ts';
 
 	let { id, size = 20, class: className = '' }: { id: string | null; size?: 20 | 24; class?: string } = $props();
 

@@ -4,13 +4,13 @@
 	An <input>, not a <textarea>: typing into a textarea is untested in Blitz.
 -->
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Tabs, TabsContent, TabsList, TabsTrigger } from '$lib/components/ui/tabs/index.js';
-	import { long_date, short_date } from '$lib/format';
-	import { Avatar, StatusIcon } from '$lib/glyphs';
-	import { add_comment, person, thread, undo_action } from '$lib/store.svelte';
-	import { push } from '$lib/ui.svelte';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { Input } from '#lib/components/ui/input/index.ts';
+	import { Tabs, TabsContent, TabsList, TabsTrigger } from '#lib/components/ui/tabs/index.ts';
+	import { long_date, short_date } from '#lib/format.ts';
+	import { Avatar, StatusIcon } from '#lib/glyphs/index.ts';
+	import { add_comment, person, thread, undo_action } from '#lib/store.svelte.ts';
+	import { push } from '#lib/ui.svelte.ts';
 
 	let { key }: { key: string } = $props();
 

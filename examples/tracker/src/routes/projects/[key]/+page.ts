@@ -1,5 +1,5 @@
-import { error } from 'sepal/router';
-import { project_by_key } from '$lib/seed';
+import { error } from '@sveltejs/kit';
+import { project_by_key } from '#lib/seed.ts';
 
 export function load({ params }: { params: { key: string } }) {
 	const project = project_by_key[params.key];

@@ -6,8 +6,8 @@
 	(preserveAspectRatio none); its height matches the box, so hairlines stay 1px.
 -->
 <script lang="ts">
-	import { count, short_date } from '$lib/format';
-	import type { Week } from '$lib/store.svelte';
+	import { count, short_date } from '#lib/format.ts';
+	import type { Week } from '#lib/store.svelte.ts';
 
 	let { weeks }: { weeks: Week[] } = $props();
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import IssueList from '$lib/list/IssueList.svelte';
-	import type { Project } from '$lib/seed';
+	import IssueList from '#lib/list/IssueList.svelte';
+	import type { Project } from '#lib/seed.ts';
 
 	let { data }: { data: { project: Project } } = $props();
 </script>

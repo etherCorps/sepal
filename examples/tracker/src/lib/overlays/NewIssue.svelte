@@ -10,13 +10,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-	import { Dialog, DialogContent, DialogFooter, DialogTitle } from '$lib/components/ui/dialog/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select/index.js';
-	import { Avatar, LabelDot, PriorityIcon, ProjectSquare, StatusIcon } from '$lib/glyphs';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { Checkbox } from '#lib/components/ui/checkbox/index.ts';
+	import { Dialog, DialogContent, DialogFooter, DialogTitle } from '#lib/components/ui/dialog/index.ts';
+	import { Input } from '#lib/components/ui/input/index.ts';
+	import { Label } from '#lib/components/ui/label/index.ts';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '#lib/components/ui/select/index.ts';
+	import { Avatar, LabelDot, PriorityIcon, ProjectSquare, StatusIcon } from '#lib/glyphs/index.ts';
 	import {
 		LABELS,
 		PEOPLE,
@@ -28,9 +28,9 @@
 		status_by_id,
 		type PriorityId,
 		type StatusId
-	} from '$lib/seed';
-	import { create, person } from '$lib/store.svelte';
-	import { push, ui } from '$lib/ui.svelte';
+	} from '#lib/seed.ts';
+	import { create, person } from '#lib/store.svelte.ts';
+	import { push, ui } from '#lib/ui.svelte.ts';
 
 	const MIN = 3;
 	const MAX = 200;

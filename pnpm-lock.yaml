@@ -524,6 +524,9 @@ importers:
       '@lucide/svelte':
         specifier: ^1.77.0
         version: 1.77.0(svelte@5.59.1)
+      '@sveltejs/kit':
+        specifier: ^3.4.0
+        version: 3.4.0(@sveltejs/vite-plugin-svelte@7.3.1(svelte@5.59.1)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0)))(svelte@5.59.1)(typescript@6.0.3)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.59.1)(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0))
