@@ -1,0 +1,162 @@
+260892100168458 2 [js error] MARK start 1795499581631.0
+260892117704125 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+260892225998125 2 [trace] +0.088s first frame took 0.0ms
+260892226008208 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+260892254620375 2 [trace] damage: full repaint (first frame, or the target is new)
+260892254622083 2 [trace] damage: Full
+260892265840416 2 [js error] MARK read 1795499581797.0
+260892267029291 2 [js error] MARK parsed 1795499581798.0
+260892267690708 2 [js error] MARK loaded 1795499581798.0
+260892275659708 2 [js error] MARK mounted 1795499581806.0
+260892279339166 2 [trace] the app changed the page: 2644 ops, 1 layouts in 3.0ms
+260892279343583 2 [trace] +0.127s poll took 14.0ms
+260892280010125 2 [trace] damage: full repaint (first frame, or the target is new)
+260892280013583 2 [trace] damage: Full
+260892307328666 2 [trace] +0.141s RedrawRequested took 27.9ms
+260897186330250 2 [trace] +5.048s released the kept frame and the depth buffer (no frame for 2 s)
+260897394208875 2 [trace] damage: full repaint (first frame, or the target is new)
+260897394250333 2 [trace] damage: Full
+260897403063875 2 [trace] +5.254s RedrawRequested took 10.4ms
+260897408310916 2 [trace] damage: 1 of 741 commands gone, 1 new
+260897408330416 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 104.0, x1: 512.0, y1: 168.0 })
+260897410006000 2 [trace] +5.269s RedrawRequested took 2.8ms
+260897410788250 2 [trace] damage: 1 of 741 commands gone, 1 new
+260897410812166 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 104.0, x1: 512.0, y1: 168.0 })
+260897417312875 2 [trace] +5.272s RedrawRequested took 7.3ms
+260897417791750 2 [trace] +5.279s PointerButton took 0.2ms
+260897419092833 2 [trace] damage: 1 of 741 commands gone, 1 new
+260897419116000 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 104.0, x1: 512.0, y1: 168.0 })
+260897430891041 2 [trace] +5.280s RedrawRequested took 13.0ms
+260897431682625 2 [trace] damage: 8 of 741 commands gone, 8 new
+260897431700458 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 100.0, x1: 512.0, y1: 176.0 })
+260897444335083 2 [trace] +5.293s RedrawRequested took 13.4ms
+260897468634833 2 [trace] the app changed the page: 1800 ops, 1 layouts in 3.8ms
+260897468647875 2 [trace] +5.306s PointerButton took 24.2ms
+260897470466625 2 [trace] damage: 8 of 741 commands gone, 243 new
+260897470481791 2 [trace] damage: Full
+260897493133458 2 [trace] +5.331s RedrawRequested took 24.2ms
+260897494209458 2 [trace] the app changed the page: 1 ops, 2 layouts in 0.6ms
+260897495293333 2 [trace] damage: 10 of 976 commands gone, 10 new
+260897495308708 2 [trace] damage: Full
+260897509736458 2 [trace] +5.356s RedrawRequested took 15.5ms
+260897511318083 2 [trace] damage: 10 of 976 commands gone, 10 new
+260897511334000 2 [trace] damage: Full
+260897526977958 2 [trace] +5.372s RedrawRequested took 16.7ms
+260897528445458 2 [trace] damage: 10 of 976 commands gone, 10 new
+260897528458916 2 [trace] damage: Full
+260897549510500 2 [trace] +5.389s RedrawRequested took 22.5ms
+260897550811583 2 [trace] damage: 3 of 976 commands gone, 3 new
+260897550825500 2 [trace] damage: Full
+260897561318250 2 [trace] +5.411s RedrawRequested took 11.8ms
+260897562593208 2 [trace] damage: 3 of 976 commands gone, 3 new
+260897562627333 2 [trace] damage: Full
+260897575928458 2 [trace] +5.423s RedrawRequested took 14.5ms
+260897577166000 2 [trace] damage: 1 of 976 commands gone, 1 new
+260897577192000 2 [trace] damage: Full
+260897592183625 2 [trace] +5.438s RedrawRequested took 16.1ms
+260897593456250 2 [trace] damage: 3 of 976 commands gone, 3 new
+260897593474166 2 [trace] damage: Full
+260897616333166 2 [trace] +5.454s RedrawRequested took 24.1ms
+260897617494375 2 [trace] damage: 2 of 976 commands gone, 2 new
+260897617513041 2 [trace] damage: Full
+260897629995541 2 [trace] +5.478s RedrawRequested took 13.6ms
+260897631143291 2 [trace] damage: 2 of 976 commands gone, 2 new
+260897631161125 2 [trace] damage: Full
+260897642539333 2 [trace] +5.492s RedrawRequested took 12.5ms
+260897643680541 2 [trace] damage: 2 of 976 commands gone, 2 new
+260897643696458 2 [trace] damage: Full
+260897662962916 2 [trace] +5.504s RedrawRequested took 20.4ms
+260897664100375 2 [trace] damage: 2 of 976 commands gone, 2 new
+260897664117625 2 [trace] damage: Full
+260897682820166 2 [trace] +5.525s RedrawRequested took 19.8ms
+260897684023541 2 [trace] damage: 5 of 976 commands gone, 1 new
+260897684042541 2 [trace] damage: Full
+260897694218625 2 [trace] +5.545s RedrawRequested took 11.4ms
+260897947336750 2 [trace] +5.809s KeyboardInput took 0.2ms
+260897958821166 2 [trace] the app changed the page: 1 ops, 2 layouts in 0.7ms
+260897958824458 2 [trace] +5.820s KeyboardInput took 0.7ms
+260897960439041 2 [trace] damage: 3 of 972 commands gone, 2 new
+260897960462083 2 [trace] damage: Full
+260897971215458 2 [trace] +5.821s RedrawRequested took 12.0ms
+260897971364166 2 [trace] +5.833s KeyboardInput took 0.0ms
+260897971412375 2 [trace] +5.833s KeyboardInput took 0.0ms
+260898000023500 2 [trace] +5.861s KeyboardInput took 0.4ms
+260898001412083 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898001436958 2 [trace] damage: Full
+260898015834500 2 [trace] +5.862s RedrawRequested took 15.7ms
+260898016421333 2 [trace] +5.878s KeyboardInput took 0.0ms
+260898057194291 2 [trace] +5.918s KeyboardInput took 0.5ms
+260898058946666 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898058969833 2 [trace] damage: Full
+260898069212625 2 [trace] +5.919s RedrawRequested took 11.9ms
+260898069823208 2 [trace] +5.932s KeyboardInput took 0.0ms
+260898103364875 2 [trace] +5.965s KeyboardInput took 0.5ms
+260898105134541 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898105160458 2 [trace] damage: Full
+260898120905541 2 [trace] +5.965s RedrawRequested took 17.4ms
+260898121112416 2 [trace] +5.983s KeyboardInput took 0.0ms
+260898147804375 2 [trace] +6.009s KeyboardInput took 0.6ms
+260898149667666 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898149693708 2 [trace] damage: Full
+260898160106791 2 [trace] +6.010s RedrawRequested took 12.2ms
+260898160262916 2 [trace] +6.022s KeyboardInput took 0.0ms
+260898203852625 2 [trace] +6.065s KeyboardInput took 0.5ms
+260898205820833 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898205851791 2 [trace] damage: Full
+260898216307666 2 [trace] +6.066s RedrawRequested took 12.4ms
+260898216522291 2 [trace] +6.078s KeyboardInput took 0.0ms
+260898252855041 2 [trace] +6.114s KeyboardInput took 0.6ms
+260898254903583 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898254939458 2 [trace] damage: Full
+260898266860500 2 [trace] +6.115s RedrawRequested took 13.9ms
+260898267043541 2 [trace] +6.129s KeyboardInput took 0.0ms
+260898305401791 2 [trace] +6.167s KeyboardInput took 0.6ms
+260898307599208 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898307643625 2 [trace] damage: Full
+260898323930125 2 [trace] +6.167s RedrawRequested took 18.3ms
+260898324148416 2 [trace] +6.186s KeyboardInput took 0.0ms
+260898357725416 2 [trace] +6.219s KeyboardInput took 0.6ms
+260898359855000 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898359877791 2 [trace] damage: Full
+260898373083333 2 [trace] +6.220s RedrawRequested took 15.2ms
+260898373336375 2 [trace] +6.235s KeyboardInput took 0.1ms
+260898401222500 2 [trace] +6.262s KeyboardInput took 0.6ms
+260898403147666 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898403183208 2 [trace] damage: Full
+260898417053875 2 [trace] +6.263s RedrawRequested took 15.7ms
+260898417212125 2 [trace] +6.279s KeyboardInput took 0.0ms
+260898450689291 2 [trace] +6.312s KeyboardInput took 0.3ms
+260898451828916 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898451842416 2 [trace] damage: Full
+260898458391375 2 [trace] +6.313s RedrawRequested took 7.6ms
+260898463881291 2 [trace] +6.326s KeyboardInput took 0.0ms
+260898517363875 2 [trace] +6.379s KeyboardInput took 0.4ms
+260898518582666 2 [trace] damage: 2 of 971 commands gone, 2 new
+260898518604583 2 [trace] damage: Full
+260898526920666 2 [trace] +6.379s RedrawRequested took 9.5ms
+260898527051833 2 [trace] +6.389s KeyboardInput took 0.0ms
+260898716739541 2 [trace] +6.578s KeyboardInput took 0.2ms
+260898740129708 2 [js error] MARK created:ENG-300 1795499588271.0
+260898740161958 2 [js error] MARK highlight:ENG-300 1795499588271.0
+260898742106041 2 [trace] the app changed the page: 176 ops, 1 layouts in 1.8ms
+260898742124708 2 [trace] +6.599s KeyboardInput took 5.0ms
+260898742519833 2 [trace] +6.604s KeyboardInput took 0.0ms
+260898742559500 2 [trace] +6.604s KeyboardInput took 0.0ms
+260898745710000 2 [trace] damage: full repaint (over 500 commands changed of 998)
+260898745732916 2 [trace] damage: Full
+260898760792416 2 [trace] +6.604s RedrawRequested took 18.1ms
+260898763830541 2 [trace] damage: 18 of 998 commands gone, 19 new
+260898763852708 2 [trace] damage: Full
+260898775533208 2 [trace] +6.624s RedrawRequested took 13.5ms
+260898777552791 2 [trace] damage: 19 of 999 commands gone, 19 new
+260898777570958 2 [trace] damage: Full
+260898791271791 2 [trace] +6.637s RedrawRequested took 15.7ms
+260898793273875 2 [trace] damage: 19 of 999 commands gone, 19 new
+260898793282708 2 [trace] damage: Full
+260898817527291 2 [trace] +6.653s RedrawRequested took 26.2ms
+260898819171208 2 [trace] damage: 19 of 999 commands gone, 19 new
+260898819181916 2 [trace] damage: Full
+260898841160500 2 [trace] +6.679s RedrawRequested took 23.6ms
+260898842032791 2 [trace] the app changed the page: 5 ops, 2 layouts in 1.7ms
+260898843251791 2 [trace] damage: 22 of 999 commands gone, 18 new
+260898843269250 2 [trace] damage: Full

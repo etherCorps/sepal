@@ -446,6 +446,17 @@ impl ApplicationHandler for Host {
 
     fn about_to_wait(&mut self, event_loop: &dyn ActiveEventLoop) {
         self.application.about_to_wait(event_loop);
+        // Two seconds after the last frame, the renderer lets go of the kept frame
+        // and the depth buffer, the first time anything wakes the loop after that.
+        // Never on a deadline of its own: an idle app is not woken for it
+        // (invariant 7), so one left alone keeps them.
+        for view in self.application.windows.values_mut() {
+            if view.renderer.release_if_idle(Duration::from_secs(2)) {
+                if let Some(trace) = &self.trace {
+                    trace.note("released the kept frame and the depth buffer (no frame for 2 s)");
+                }
+            }
+        }
         // A one-shot deadline, set again only by the next skipped frame: nothing
         // here wakes the loop on its own (invariant 7).
         let flow = match self.redraw_at {

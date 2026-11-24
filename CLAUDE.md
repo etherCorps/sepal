@@ -196,6 +196,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   without how long ago the last frame was. What is ours: the atlas pages,
   layer textures, a depth buffer (15 MB; without it a full repaint is ~2.5 ms
   slower) and two window surfaces (~15 MB each at 1200x800 on a 2x display).
+  Two seconds after the last frame, the kept frame and the depth buffer
+  are let go the next time anything wakes the loop (`release_if_idle`,
+  never on a timer of its own).
   On the CPU side ~36 MB of live malloc (`MallocStackLogging=1` and
   `malloc_history -allBySize` on the debug build): 12 MB QuickJS's heap, the
   rest spread thin. An unbundled host also holds its Dock icon decoded (16 MB
