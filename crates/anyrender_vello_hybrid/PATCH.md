@@ -104,6 +104,19 @@ the clocks an idle app runs at), not per pixel or per pass; wgpu submits about
 five a frame (pending writes, two for the passes, the copy to the surface,
 transitions). That, not drawing, is most of what a partial frame still costs.
 
+**7. A switch for the depth buffer.** `src/window_renderer.rs`,
+`depth_texture()`: `SVELTE_BLITZ_DEPTH=0` draws without vello_gpu's depth
+buffer (Depth32Float on Apple GPUs, 15 MB at 2400x1600), in paint order. On by
+default. It cannot be memoryless (which would cost no memory): vello_gpu draws
+all opaque strips first, in a pass of their own, and later passes load that
+depth to keep alpha strips hidden behind them, so it has to outlive a pass.
+Partial frames (change 6) already draw without it. Measured on the Tracker
+(release, 1,000 issues, 2 runs each, the compare harness): without it, 15-17
+MB less GPU memory and ~14 MB less RAM in every scenario; GPU time the same
+within noise for the clock, the New issue dialog and view switches (mostly
+partial frames), but Show all + scrolling 533 -> 768 ms (+44%, ~0.6 ms more
+per full repaint). Kept on until scrolling stops being full repaints.
+
 ## Updating
 
 Do not edit anything else here. To move to a new version, replace the

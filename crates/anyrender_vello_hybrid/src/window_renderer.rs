@@ -34,10 +34,29 @@ fn spawn_init<F: Future<Output = ()>>(f: F) {
     pollster::block_on(f);
 }
 
+/// svelte-blitz patch: the window-sized depth buffer vello_gpu draws opaque
+/// strips against (Depth32Float on Apple GPUs: 15 MB at 2400x1600). It has to
+/// outlive single passes (opaque strips are drawn in a pass of their own, and
+/// later passes test against them), so it cannot be memoryless.
+/// `SVELTE_BLITZ_DEPTH=0` draws without it, in paint order.
+fn depth_texture(device: &wgpu::Device, width: u32, height: u32) -> Option<TextureView> {
+    if std::env::var_os("SVELTE_BLITZ_DEPTH").is_some_and(|v| v == "0") {
+        return None;
+    }
+    Some(VelloHybridRenderer::create_depth_texture_view(
+        device,
+        &RenderSize {
+            width: width as u16,
+            height: height as u16,
+        },
+    ))
+}
+
 struct ActiveRenderState {
     renderer: VelloHybridRenderer,
     resources: Resources,
-    depth_texture_view: TextureView,
+    /// svelte-blitz patch: `None` with `SVELTE_BLITZ_DEPTH=0` (`depth_texture`).
+    depth_texture_view: Option<TextureView>,
     texture_bindings: FxHashMap<ResourceId, TextureView>,
     /// svelte-blitz patch: images too large for an atlas page (`scene.rs`). Per
     /// device, so they go with it.
@@ -471,13 +490,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 },
                 render_settings,
             );
-            let depth_texture_view = VelloHybridRenderer::create_depth_texture_view(
-                render_surface.device(),
-                &RenderSize {
-                    width: width as u16,
-                    height: height as u16,
-                },
-            );
+            let depth_texture_view = depth_texture(render_surface.device(), width, height);
 
             let _ = sender.send(InitOutput {
                 active: ActiveRenderState {
@@ -536,13 +549,8 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             );
             if let RenderState::Active(active) = &mut self.render_state {
                 active.render_surface.resize(width, height);
-                active.depth_texture_view = VelloHybridRenderer::create_depth_texture_view(
-                    active.render_surface.device(),
-                    &RenderSize {
-                        width: width as u16,
-                        height: height as u16,
-                    },
-                );
+                active.depth_texture_view =
+                    depth_texture(active.render_surface.device(), width, height);
             };
         }
     }
@@ -688,7 +696,10 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 // svelte-blitz patch (damage): a damaged region is small enough that the
                 // depth buffer's saving (less overdraw) is worth less than clearing and
                 // storing a window-sized depth texture.
-                matches!(target_init, TargetInit::Clear(_)).then_some(&state.depth_texture_view),
+                state
+                    .depth_texture_view
+                    .as_ref()
+                    .filter(|_| matches!(target_init, TargetInit::Clear(_))),
                 &texture_bindings,
                 target_init,
             )
