@@ -358,8 +358,16 @@ No git tag was pushed. A `v*` tag makes the workflow publish, which needs an
 still never run. For the next release either set the secret up and tag, or
 repeat what was done here: bump the three versions, push, `gh workflow run
 release.yml`, download the `packages` artifact, publish `@ethercorps/calyx`
-first, then `sepal`, then `create-sepal`. The Sepal names have not been
-published yet; until they are, `pnpm create sepal` does not work.
+first, then `sepal`, then `create-sepal`.
+
+**Sepal: 0.1.0-alpha.0 (24 Nov 2026).** Published that way under the new
+names (release run 45367543845, commit `1654633`), and the five old packages
+deprecated with "Renamed to sepal: github.com/etherCorps/sepal". Checked from
+the registry: `pnpm create sepal@alpha`, installed, built, and rendered by the
+calyx that came with it. Two things that cost time: an expired `npm login`
+makes publishing fail with `404 Not Found`, not 401 (`npm whoami` tells), and
+calyx's 50 MB tarball was not downloadable for about five minutes after its
+metadata was.
 
 The registry took about four minutes to show the new packages; a 404 right
 after publishing a new name means nothing.

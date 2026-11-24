@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.0 as Sepal (24 Nov 2026)
 
-**Renamed from svelte-blitz to Sepal.** 0.1.0-alpha.0 was published as
-`@ethercorps/svelte-blitz*`; nothing has been published under the new names
-yet. There are no aliases. To move an app across:
+**Renamed from svelte-blitz to Sepal.** Published as `sepal`, `create-sepal`
+and `@ethercorps/calyx`; the five `@ethercorps/svelte-blitz*` packages, which
+first published 0.1.0-alpha.0, are deprecated. There are no aliases. To move
+an app across:
 
 | svelte-blitz | Sepal |
 |---|---|
