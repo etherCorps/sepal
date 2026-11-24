@@ -523,6 +523,10 @@ impl crate::CommandEncoder for super::CommandEncoder {
             if let Some(label) = label {
                 cmd_buf_ref.setLabel(Some(&NSString::from_str(label)));
             }
+            if super::gpu_log::on() {
+                // svelte-blitz patch
+                super::gpu_log::line(format_args!("command buffer {:?}", label.unwrap_or("")));
+            }
             // If strict event sync is enabled on this queue, gate the
             // CB on the relay event at the value the next submit will
             // signal. The CB pauses at the start until the relay fires.
@@ -605,6 +609,15 @@ impl crate::CommandEncoder for super::CommandEncoder {
     }
 
     unsafe fn clear_buffer(&mut self, buffer: &super::Buffer, range: crate::MemoryRange) {
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            super::gpu_log::line(format_args!(
+                "  clear buffer: {} B of {} B{}",
+                range.end - range.start,
+                buffer.raw.length(),
+                if self.shared.render_copy_wanted { " (render pass)" } else { " (blit)" }
+            ));
+        }
         // svelte-blitz patch: in a render pass where possible (`render_copy.rs`).
         if let Some(cmd_buf) = self.render_copy_encoder() {
             if let Some(copier) = self.shared.render_copy() {
@@ -624,6 +637,18 @@ impl crate::CommandEncoder for super::CommandEncoder {
     ) where
         T: Iterator<Item = crate::BufferCopy>,
     {
+        let regions: SmallVec<[crate::BufferCopy; 4]> = regions.collect();
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            let bytes: u64 = regions.iter().map(|copy| copy.size.get()).sum();
+            super::gpu_log::line(format_args!(
+                "  copy buffer to buffer: {bytes} B in {} region(s), into a {} B buffer{}",
+                regions.len(),
+                dst.raw.length(),
+                if self.shared.render_copy_wanted { " (render pass)" } else { " (blit)" }
+            ));
+        }
+        let regions = regions.into_iter();
         // svelte-blitz patch: in a render pass where possible (`render_copy.rs`).
         if let Some(cmd_buf) = self.render_copy_encoder() {
             if let Some(copier) = self.shared.render_copy() {
@@ -665,6 +690,20 @@ impl crate::CommandEncoder for super::CommandEncoder {
         } else {
             Cow::Borrowed(&dst.raw)
         };
+        let regions: SmallVec<[crate::TextureCopy; 4]> = regions.collect();
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            let sizes: Vec<alloc::string::String> = regions
+                .iter()
+                .map(|copy| format!("{}x{}", copy.size.width, copy.size.height))
+                .collect();
+            super::gpu_log::line(format_args!(
+                "  copy texture {} to texture {}: {} (blit)",
+                super::gpu_log::texture(&src.raw),
+                super::gpu_log::texture(&dst.raw),
+                sizes.join(", ")
+            ));
+        }
         let encoder = self.enter_blit();
         for copy in regions {
             let src_origin = conv::map_origin(&copy.src_base.origin);
@@ -709,6 +748,20 @@ impl crate::CommandEncoder for super::CommandEncoder {
                 copy.buffer_layout.offset % 4 == 0
                     && copy.buffer_layout.bytes_per_row.unwrap_or(0) % 4 == 0
             });
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            let sizes: Vec<alloc::string::String> = regions
+                .iter()
+                .map(|copy| format!("{}x{}", copy.size.width, copy.size.height))
+                .collect();
+            let drawn = drawable && aligned && self.shared.render_copy_wanted;
+            super::gpu_log::line(format_args!(
+                "  upload to texture {}: {}{}",
+                super::gpu_log::texture(&dst.raw),
+                sizes.join(", "),
+                if drawn { " (a render pass each)" } else { " (blit)" }
+            ));
+        }
         if drawable && aligned {
             if let Some(cmd_buf) = self.render_copy_encoder() {
                 if let Some(copier) = self.shared.render_copy() {
@@ -792,6 +845,19 @@ impl crate::CommandEncoder for super::CommandEncoder {
     ) where
         T: Iterator<Item = crate::BufferTextureCopy>,
     {
+        let regions: SmallVec<[crate::BufferTextureCopy; 4]> = regions.collect();
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            let sizes: Vec<alloc::string::String> = regions
+                .iter()
+                .map(|copy| format!("{}x{}", copy.size.width, copy.size.height))
+                .collect();
+            super::gpu_log::line(format_args!(
+                "  read back texture {}: {} (blit)",
+                super::gpu_log::texture(&src.raw),
+                sizes.join(", ")
+            ));
+        }
         let encoder = self.enter_blit();
         for copy in regions {
             let src_origin = conv::map_origin(&copy.texture_base.origin);
@@ -1067,6 +1133,36 @@ impl crate::CommandEncoder for super::CommandEncoder {
                     at_descriptor.setLoadAction(load_action);
                     at_descriptor.setStoreAction(store_action);
                 }
+            }
+
+            if super::gpu_log::on() {
+                // svelte-blitz patch
+                let mut targets = Vec::new();
+                for i in 0..desc.color_attachments.len() {
+                    let at = unsafe { descriptor.colorAttachments().objectAtIndexedSubscript(i) };
+                    if let Some(texture) = at.texture() {
+                        targets.push(format!(
+                            "color {} {}/{}",
+                            super::gpu_log::texture(&texture),
+                            super::gpu_log::load(at.loadAction()),
+                            super::gpu_log::store(at.storeAction())
+                        ));
+                    }
+                }
+                let depth = descriptor.depthAttachment();
+                if let Some(texture) = depth.texture() {
+                    targets.push(format!(
+                        "depth {} {}/{}",
+                        super::gpu_log::texture(&texture),
+                        super::gpu_log::load(depth.loadAction()),
+                        super::gpu_log::store(depth.storeAction())
+                    ));
+                }
+                super::gpu_log::line(format_args!(
+                    "  render pass {:?}: {}",
+                    desc.label.unwrap_or(""),
+                    targets.join(", ")
+                ));
             }
 
             let mut sba_index = 0;
@@ -1762,6 +1858,10 @@ impl crate::CommandEncoder for super::CommandEncoder {
     // compute
 
     unsafe fn begin_compute_pass(&mut self, desc: &crate::ComputePassDescriptor<super::QuerySet>) {
+        if super::gpu_log::on() {
+            // svelte-blitz patch
+            super::gpu_log::line(format_args!("  compute pass {:?}", desc.label.unwrap_or("")));
+        }
         self.begin_pass();
 
         debug_assert!(self.state.blit.is_none());
