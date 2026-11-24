@@ -1,0 +1,141 @@
+256640270801249.5 2 [js error] MARK start 1795495329788.0
+256640290027582.5 2 [trace] the app changed the page: 1918 ops, 0 layouts in 0.0ms
+256640426109416.5 2 [trace] +0.108s first frame took 0.0ms
+256640426127166.5 2 [trace] the app was told the layout: 2 boxes changed, window 1200 x 800
+256640455537249.5 2 [trace] damage: full repaint (first frame, or the target is new)
+256640455543082.5 2 [trace] damage: Full
+256640465436832.5 2 [trace] +0.137s poll took 10.2ms
+256640467000707.5 2 [js error] MARK read 1795495329985.0
+256640468258249.5 2 [js error] MARK parsed 1795495329986.0
+256640468866291.5 2 [js error] MARK loaded 1795495329987.0
+256640477093332.5 2 [js error] MARK mounted 1795495329995.0
+256640481213874.5 2 [trace] the app changed the page: 2651 ops, 1 layouts in 3.3ms
+256640481220457.5 2 [trace] +0.148s poll took 14.6ms
+256640483414666.5 2 [trace] damage: full repaint (over 500 commands changed of 743)
+256640483417916.5 2 [trace] damage: Full
+256640500063999.5 2 [trace] +0.164s RedrawRequested took 17.9ms
+256641473310582.5 2 [js error] MARK clock 1795495330991.0
+256641473780374.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.5ms
+256641475549874.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256641475583457.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256641480046041.5 2 [trace] +1.155s RedrawRequested took 6.2ms
+256642477377457.5 2 [js error] MARK clock 1795495331995.0
+256642477719416.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+256642479556249.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256642479912374.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256642483070666.5 2 [trace] +2.159s RedrawRequested took 5.3ms
+256643482586499.5 2 [js error] MARK clock 1795495333000.0
+256643483290291.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.7ms
+256643486552624.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256643486577499.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256643490510332.5 2 [trace] +3.165s RedrawRequested took 7.1ms
+256644487644832.5 2 [js error] MARK clock 1795495334005.0
+256644488037332.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+256644489647124.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256644489687082.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256644499927166.5 2 [trace] +4.170s RedrawRequested took 11.7ms
+256645490518791.5 2 [js error] MARK clock 1795495335008.0
+256645490822874.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256645492077457.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256645492101291.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256645498916874.5 2 [trace] +5.172s RedrawRequested took 8.0ms
+256646492191957.5 2 [js error] MARK clock 1795495336010.0
+256646492504082.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256646493923666.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256646493957874.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256646498206249.5 2 [trace] +6.174s RedrawRequested took 5.7ms
+256647497248207.5 2 [js error] MARK clock 1795495337015.0
+256647497513249.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256647498923874.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256647498963999.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256647503188999.5 2 [trace] +7.179s RedrawRequested took 5.7ms
+256648502260124.5 2 [js error] MARK clock 1795495338020.0
+256648502461416.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+256648503542999.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256648503574707.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256648509108374.5 2 [trace] +8.184s RedrawRequested took 6.6ms
+256649507461541.5 2 [js error] MARK clock 1795495339025.0
+256649507779999.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256649509116707.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256649509149207.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256649526207082.5 2 [trace] +9.189s RedrawRequested took 18.4ms
+256650512653207.5 2 [js error] MARK clock 1795495340030.0
+256650512934207.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256650514125874.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256650514156291.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256650525643624.5 2 [trace] +10.194s RedrawRequested took 12.7ms
+256651517578332.5 2 [js error] MARK clock 1795495341035.0
+256651517768207.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+256651518744582.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256651518773332.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256651520355582.5 2 [trace] +11.199s RedrawRequested took 2.6ms
+256652522668416.5 2 [js error] MARK clock 1795495342040.0
+256652522832707.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+256652523652624.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256652523671624.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256652528099999.5 2 [trace] +12.204s RedrawRequested took 5.3ms
+256653527746832.5 2 [js error] MARK clock 1795495343045.0
+256653527916166.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+256653528836499.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256653528862874.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256653530105332.5 2 [trace] +13.209s RedrawRequested took 2.2ms
+256654533065499.5 2 [js error] MARK clock 1795495344051.0
+256654533428541.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+256654534990374.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256654535033124.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256654539001207.5 2 [trace] +14.215s RedrawRequested took 5.5ms
+256655538085624.5 2 [js error] MARK clock 1795495345056.0
+256655538417957.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256655539923332.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256655539963332.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256655541971582.5 2 [trace] +15.220s RedrawRequested took 3.5ms
+256656543179749.5 2 [js error] MARK clock 1795495346061.0
+256656543462082.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256656545007332.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256656545052707.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256656547589916.5 2 [trace] +16.225s RedrawRequested took 4.1ms
+256657546406082.5 2 [js error] MARK clock 1795495347064.0
+256657546792374.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+256657548435207.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256657548475624.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256657556158999.5 2 [trace] +17.228s RedrawRequested took 9.3ms
+256658551620374.5 2 [js error] MARK clock 1795495348069.0
+256658551928457.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256658553292957.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256658553317416.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256658556919791.5 2 [trace] +18.233s RedrawRequested took 5.0ms
+256659555078999.5 2 [js error] MARK clock 1795495349073.0
+256659555360166.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256659557013582.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256659557066957.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256659558996957.5 2 [trace] +19.237s RedrawRequested took 3.6ms
+256660560270541.5 2 [js error] MARK clock 1795495350078.0
+256660560606207.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.4ms
+256660562074957.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256660562113249.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256660565863249.5 2 [trace] +20.242s RedrawRequested took 5.2ms
+256661565260582.5 2 [js error] MARK clock 1795495351083.0
+256661565591332.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256661567073666.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256661567110332.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256661568715624.5 2 [trace] +21.247s RedrawRequested took 3.1ms
+256662570353332.5 2 [js error] MARK clock 1795495352088.0
+256662570638916.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256662572139874.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256662572179832.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256662574046749.5 2 [trace] +22.252s RedrawRequested took 3.4ms
+256663572703874.5 2 [js error] MARK clock 1795495353090.0
+256663573000499.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.3ms
+256663574477582.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256663574523624.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256663576413916.5 2 [trace] +23.254s RedrawRequested took 3.4ms
+256664576334957.5 2 [js error] MARK clock 1795495354094.0
+256664576532832.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+256664577614957.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256664577646041.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256664579072832.5 2 [trace] +24.258s RedrawRequested took 2.5ms
+256665580553749.5 2 [js error] MARK clock 1795495355098.0
+256665580580541.5 2 [trace] the app changed the page: 1 ops, 1 layouts in 0.2ms
+256665581517124.5 2 [trace] damage: 1 of 743 commands gone, 1 new
+256665581536082.5 2 [trace] damage: Rect(Rect { x0: 0.0, y0: 24.0, x1: 512.0, y1: 84.0 })
+256665582711249.5 2 [trace] +25.262s RedrawRequested took 2.1ms

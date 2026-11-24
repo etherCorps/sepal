@@ -1,0 +1,151 @@
+{
+	"started": "2026-11-24T04:34:24.263Z",
+	"resumed": [],
+	"machine": {
+		"hw_model": "Mac16,11",
+		"cpu": "Apple M4 Pro",
+		"ncpu": "14",
+		"memsize": "68719476736",
+		"sw_vers": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434",
+		"drive": {
+			"displays": [
+				{
+					"id": 1,
+					"main": true,
+					"pixels": [
+						5120,
+						2880
+					],
+					"points": [
+						2560,
+						1440
+					],
+					"refresh_hz": 75
+				}
+			],
+			"os": "Version 27.0.1 (Build 26A434)",
+			"timebase": [
+				125,
+				3
+			],
+			"titlebar": 32
+		},
+		"power": "Now drawing from 'AC Power'",
+		"low_power_mode": null,
+		"stage_manager": "1",
+		"node": "v26.13.1",
+		"uv": "1.52.1",
+		"versions": {
+			"svelte-blitz": {
+				"repo_commit": "d3d4b07 + uncommitted bench mode",
+				"rquickjs": "0.14.0",
+				"v8": "152.2.0",
+				"blitz-dom": "0.3.0-beta.4 (13 patches)",
+				"host_features": "window + screenshot (as the packaged host)",
+				"profile": "release (lto thin, strip)"
+			},
+			"app": {
+				"svelte": "5.59.1",
+				"vite": "8.3.8",
+				"@sveltejs/vite-plugin-svelte": "7.3.1",
+				"tailwindcss": "4.3.5",
+				"@tailwindcss/vite": "4.3.5",
+				"bits-ui": "2.21.0",
+				"@lucide/svelte": "1.77.0",
+				"typescript": "6.0.3"
+			},
+			"tauri": {
+				"tauri": "2.12.7",
+				"tauri-build": "2.7.6",
+				"tauri-runtime-wry": "2.12.5",
+				"wry": "0.57.3",
+				"tao": "0.37.3",
+				"@tauri-apps/cli": "2.12.6",
+				"@tauri-apps/api": "2.12.5",
+				"plugin-fs": "2.7.1",
+				"plugin-dialog": "2.8.4",
+				"plugin-clipboard-manager": "2.5.0",
+				"profile": "cargo default release"
+			},
+			"gpuix": {
+				"gpuix-svelte": "0.6.0",
+				"gpuix-svelte-ui": "0.6.0",
+				"@gpuix/native": "0.11.0",
+				"bundled_svelte": "5.57.2 (pre-release custom-renderer PR build)",
+				"bun": "1.4.5",
+				"build": "build() defaults, no aot/trim"
+			},
+			"toolchain": {
+				"rustc": "1.95.0",
+				"cargo": "1.95.0",
+				"node": "26.13.1",
+				"bun": "1.4.5",
+				"xcode": "27.0",
+				"swiftc": "6.4"
+			}
+		},
+		"versions_file": "<repo>/compare/shared/versions.json"
+	},
+	"plan": {
+		"scenarios": [
+			4,
+			8,
+			9,
+			10
+		],
+		"record": false,
+		"attempts": 3,
+		"settle_s": 5,
+		"idle_s": 20,
+		"mark_timeout_ms": 5000,
+		"content": {
+			"w": 1200,
+			"h": 800
+		},
+		"resize_to": {
+			"w": 800,
+			"h": 600
+		},
+		"wheel": {
+			"dy": 100,
+			"hz": 60,
+			"down_sign": -1
+		},
+		"first_input_mark": "^(highlight|nav:)",
+		"focus_ax": false,
+		"show_all_mark": "^(show-all|shown)",
+		"title": "Bench task 1",
+		"search": "deploy cac",
+		"sizes": [
+			1000
+		],
+		"warmup": 0,
+		"runs": 2,
+		"cooldown": {
+			"long": 5,
+			"short": 5
+		},
+		"builds": [
+			"blitz"
+		]
+	},
+	"builds": {
+		"blitz": {
+			"name": "blitz",
+			"kind": "blitz",
+			"app": "<repo>/compare/builds/Tracker-blitz.app",
+			"id": "com.compare.tracker.blitz",
+			"exe": "<repo>/compare/builds/Tracker-blitz.app/Contents/MacOS/Tracker",
+			"args": [],
+			"version": "0.1.0",
+			"env": {
+				"SVELTE_BLITZ_TRACE": "1"
+			},
+			"sizes": {
+				"du_kb": 26008,
+				"zip_bytes": 11231541
+			}
+		}
+	},
+	"finished": "2026-11-24T04:37:33.104Z"
+}

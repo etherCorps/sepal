@@ -2,7 +2,7 @@
 //!
 //! Each frame's drawing commands are recorded, compared with the last frame's, and
 //! only the region whose commands differ is drawn again, over the last frame kept in
-//! the surface's intermediate texture. The comparison needs no knowledge of the
+//! a texture of its own (`window_renderer`, `Kept`). The comparison needs no knowledge of the
 //! document: whatever changes pixels (a hover, a caret, an animation, a loaded image)
 //! changes a command. Commands are matched in order (Myers' diff), so a change in one
 //! place does not mark everything painted after it.

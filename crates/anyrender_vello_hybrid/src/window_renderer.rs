@@ -248,7 +248,152 @@ struct ActiveRenderState {
     /// svelte-blitz patch: images too large for an atlas page (`scene.rs`). Per
     /// device, so they go with it.
     own_textures: FxHashMap<u64, crate::scene::OwnTexture>,
+    /// svelte-blitz patch (damage): the last frame, kept for the next one to draw
+    /// over, and how it gets to the surface (`SurfaceCopy`).
+    kept: Option<(SurfaceCopy, Kept)>,
     render_surface: SurfaceRenderer<'static>,
+}
+
+/// svelte-blitz patch (damage): copies the kept frame to the surface texture in
+/// the frame's own submit, in a pass that clears the surface texture rather
+/// than loads it. wgpu_context's intermediate texture did it with wgpu's
+/// `TextureBlitter`, which loads, so wgpu first cleared every new surface
+/// texture in a pass of its own (a full-window clear per frame), and in a
+/// submit of its own.
+struct SurfaceCopy {
+    pipeline: wgpu::RenderPipeline,
+    layout: wgpu::BindGroupLayout,
+}
+
+/// svelte-blitz patch (damage): the kept frame, and its binding for `SurfaceCopy`.
+struct Kept {
+    view: TextureView,
+    group: wgpu::BindGroup,
+}
+
+const SURFACE_COPY_SHADER: &str = r"
+@group(0) @binding(0) var src: texture_2d<f32>;
+
+@vertex
+fn vs(@builtin(vertex_index) i: u32) -> @builtin(position) vec4<f32> {
+    let p = vec2<f32>(f32((i << 1u) & 2u), f32(i & 2u));
+    return vec4<f32>(p * 2.0 - 1.0, 0.0, 1.0);
+}
+
+@fragment
+fn fs(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
+    return textureLoad(src, vec2<i32>(floor(pos.xy)), 0);
+}
+";
+
+impl SurfaceCopy {
+    fn new(device: &wgpu::Device, format: TextureFormat) -> Self {
+        let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("svelte-blitz surface copy"),
+            source: wgpu::ShaderSource::Wgsl(SURFACE_COPY_SHADER.into()),
+        });
+        let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("svelte-blitz surface copy"),
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Texture {
+                    sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                    view_dimension: wgpu::TextureViewDimension::D2,
+                    multisampled: false,
+                },
+                count: None,
+            }],
+        });
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("svelte-blitz surface copy"),
+            bind_group_layouts: &[Some(&layout)],
+            immediate_size: 0,
+        });
+        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("svelte-blitz surface copy"),
+            layout: Some(&pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &module,
+                entry_point: Some("vs"),
+                buffers: &[],
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &module,
+                entry_point: Some("fs"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        Self { pipeline, layout }
+    }
+
+    /// The kept frame for a window of this size.
+    fn kept(&self, device: &wgpu::Device, width: u32, height: u32) -> Kept {
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("svelte-blitz kept frame"),
+            size: wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: DEFAULT_TEXTURE_FORMAT,
+            // Verify mode reads it back.
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::TEXTURE_BINDING
+                | if crate::damage::verify() {
+                    wgpu::TextureUsages::COPY_SRC
+                } else {
+                    wgpu::TextureUsages::empty()
+                },
+            view_formats: &[],
+        });
+        let view = texture.create_view(&TextureViewDescriptor::default());
+        let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("svelte-blitz kept frame"),
+            layout: &self.layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view),
+            }],
+        });
+        Kept { view, group }
+    }
+
+    fn encode(&self, encoder: &mut wgpu::CommandEncoder, kept: &Kept, target: &TextureView) {
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("svelte-blitz surface copy"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: target,
+                depth_slice: None,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment: None,
+            occlusion_query_set: None,
+            timestamp_writes: None,
+            multiview_mask: None,
+        });
+        pass.set_pipeline(&self.pipeline);
+        pass.set_bind_group(0, &kept.group, &[]);
+        pass.draw(0..3, 0..1);
+    }
 }
 
 /// Result of a successful asynchronous resume; both the active state and the
@@ -639,23 +784,9 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             #[cfg(target_vendor = "apple")]
             let intermediate_texture = None;
 
-            // svelte-blitz patch (damage): frames are drawn into an intermediate
-            // texture, which keeps the last frame for the next one to draw over
-            // (`damage.rs`), and copied to the surface.
-            let intermediate_texture = intermediate_texture.or_else(|| {
-                crate::damage::enabled().then(|| wgpu_context::TextureConfiguration {
-                    // Verify mode reads the kept frame back.
-                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT
-                        | wgpu::TextureUsages::TEXTURE_BINDING
-                        | if crate::damage::verify() {
-                            wgpu::TextureUsages::COPY_SRC
-                        } else {
-                            wgpu::TextureUsages::empty()
-                        },
-                    format: DEFAULT_TEXTURE_FORMAT,
-                    alpha_conversion: None,
-                })
-            });
+            // svelte-blitz patch (damage): frames are drawn into a texture of our
+            // own, which keeps the last frame for the next one to draw over
+            // (`damage.rs`), and copied to the surface (`SurfaceCopy`).
 
             let render_surface = SurfaceRenderer::new(
                 surface,
@@ -684,12 +815,18 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 render_settings,
             );
             let depth_texture_view = depth_texture(render_surface.device(), width, height);
+            let kept = crate::damage::enabled().then(|| {
+                let copy = SurfaceCopy::new(render_surface.device(), render_surface.config.format);
+                let kept = copy.kept(render_surface.device(), width, height);
+                (copy, kept)
+            });
 
             let _ = sender.send(InitOutput {
                 active: ActiveRenderState {
                     renderer,
                     resources,
                     depth_texture_view,
+                    kept,
                     render_surface,
                     texture_bindings: FxHashMap::default(),
                     own_textures: FxHashMap::default(),
@@ -744,6 +881,9 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 active.render_surface.resize(width, height);
                 active.depth_texture_view =
                     depth_texture(active.render_surface.device(), width, height);
+                if let Some((copy, kept)) = &mut active.kept {
+                    *kept = copy.kept(active.render_surface.device(), width, height);
+                }
             };
         }
     }
@@ -857,7 +997,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         }
         state.renderer.set_root_offset(root_offset);
 
-        let Ok(texture_view) = render_surface.target_texture_view() else {
+        let Ok(surface_view) = render_surface.target_texture_view() else {
             // Skip frame in case of error getting surface texture
             render_surface.clear_surface_texture();
             self.scene.reset();
@@ -865,6 +1005,13 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 damage.invalidate();
             }
             return;
+        };
+
+        // svelte-blitz patch (damage): drawn into the kept frame, copied to the
+        // surface below.
+        let texture_view = match &state.kept {
+            Some((_, kept)) => kept.view.clone(),
+            None => surface_view.clone(),
         };
 
         // Construct Vello Hybrid TextureBindings
@@ -900,6 +1047,9 @@ impl WindowRenderer for VelloHybridWindowRenderer {
                 target_init,
             )
             .expect("failed to render to texture");
+        if let Some((copy, kept)) = &state.kept {
+            copy.encode(&mut encoder, kept, &surface_view); // svelte-blitz patch (damage)
+        }
         render_surface.queue().submit([encoder.finish()]);
         // svelte-blitz patch (damage): check a frame not drawn in full.
         let atlas_page = self.config.render_settings.memory_settings.image_atlas_config.atlas_size;
@@ -922,6 +1072,7 @@ impl WindowRenderer for VelloHybridWindowRenderer {
         timer.record_time("render");
 
         drop(texture_view);
+        drop(surface_view);
 
         if render_surface.maybe_blit_and_present().is_err() {
             self.scene.reset();
