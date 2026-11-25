@@ -179,7 +179,7 @@ fn a_timeout_from_a_frame_wakes_the_loop_at_once() {
 }
 
 #[test]
-fn a_chain_of_zero_timeouts_wakes_the_loop_about_250_times_a_second() {
+fn a_chain_of_zero_timeouts_wakes_the_loop_at_most_250_times_a_second() {
     let (mut doc, waker, woken) = windowed();
     run(
         &doc,
@@ -200,8 +200,12 @@ fn a_chain_of_zero_timeouts_wakes_the_loop_about_250_times_a_second() {
     run(&doc, "globalThis.tick = null; ''");
     let ran: u32 = run(&doc, "String(n)").parse().unwrap();
     println!("{wakes} wake-ups and {ran} callbacks in a second");
+    // The ceiling is ours, the floor the OS's: macOS coalesces the timers of a
+    // process it runs at a lower priority. Here, from a terminal in front,
+    // ~206; under `taskpolicy -c utility` ~70, under `taskpolicy -b` ~20.
+    // Ten says only that the chain keeps going.
     assert!(
-        (100..=300).contains(&wakes),
+        (10..=300).contains(&wakes),
         "{wakes} wake-ups in a second: from the sixth nested timer on, each waits 4 ms"
     );
 }
