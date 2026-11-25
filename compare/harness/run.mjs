@@ -883,6 +883,16 @@ const SCENARIOS = {
 			await sleep(1000);
 		}
 		run.win = run.current; // back to the original size; check_window compares against this
+	} },
+	// Not one of PLAN.md's: the New issue dialog's animation (100 ms in, 100 ms out) and
+	// nothing else, so that the counters (CPU, GPU, frames) over the span are what it costs.
+	12: { name: 'open and close the New issue dialog ten times', async run(run) {
+		for (let i = 0; i < 10; i++) {
+			await run.click('nav-new');
+			await sleep(400);
+			await run.key('escape');
+			await sleep(400);
+		}
 	} }
 };
 
