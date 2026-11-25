@@ -34,6 +34,19 @@ alias stays for them.
 
 ### Also in this release
 
+- **`requestAnimationFrame` runs on the window's frames.** It was a 16 ms
+  timer. Callbacks now run when the window draws its next frame, before it
+  lays out and paints, all with that frame's timestamp; a window draws
+  frames for them only while one is queued, and none while it is hidden or
+  minimised, when they wait. A SvelteKit link, which waits for a frame and
+  then a `setTimeout(0)`, follows sooner: opening an issue in the Tracker
+  takes 19 ms instead of 35.
+- **`performance.now()` is on the same clock as timers and frame
+  timestamps**, on both engines. In QuickJS it was a clock of its own.
+- **A timer that is already due runs in the next turn**, without waiting
+  for the timer thread. From the sixth nested timer on, `setTimeout` and
+  `setInterval` wait at least 4 ms, as in browsers: a chain of
+  `setTimeout(fn, 0)` no longer runs as fast as the host can turn.
 - **Server code stops a SvelteKit build.** `+page.server.*`,
   `+layout.server.*`, `+server.*`, `hooks.server.*` and `*.remote.*` files
   used to build and then never run. They need the backend thread, which
