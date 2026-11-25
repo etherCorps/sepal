@@ -279,6 +279,11 @@ the display's rate for about 280 ms after each open and each Escape,
 though its animation is 100 ms. Something else animates on (a transition, or
 Blitz holding an animation). Worth a look of its own.
 
+Also found, also its own job: keys reach the app 21-35 ms after `drive`
+posts them, on both builds (the traces of scenarios 5 and 8). Measure each
+hop (event posted, winit event, blitz-shell dispatch, the document's
+handler) and compare with Tauri.
+
 ## SvelteKit as the only router (24 Nov 2026, branch `sveltekit-only`)
 
 Phase 1 of the bigger plan. Sepal's own router is gone, with its modules,
