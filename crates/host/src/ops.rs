@@ -25,9 +25,6 @@ pub const FOCUS: i32 = 13; // node (0 = none)
 pub const SCROLL: i32 = 14; // node, left, top
 pub const SCROLL_INTO_VIEW: i32 = 15; // node, block, inline (0 start, 1 center, 2 end, 3 nearest)
 
-/// The JS id of the mount target, mapped to `<body>`.
-pub const ROOT_ID: u32 = 1;
-
 pub const DISPATCH_PREVENT_DEFAULT: u32 = 1;
 pub const DISPATCH_STOP_PROPAGATION: u32 = 2;
 
@@ -109,6 +106,9 @@ pub struct NodeMap {
     /// Scrolls the app asked for in this batch, applied after it, once the
     /// page is laid out (`Page::apply` in `document.rs`).
     pub scrolls: Vec<scroll::Request>,
+    /// JS ids of the `<link>` elements the app put on the page since it was
+    /// last told whether their stylesheets loaded (`report_links` in `document.rs`).
+    pub links: Vec<u32>,
 }
 
 impl NodeMap {
@@ -309,6 +309,15 @@ pub fn apply_batch(
                 match anchor {
                     Some(anchor) => mutator.insert_nodes_before(anchor, &[child]),
                     None => mutator.append_children(parent, &[child]),
+                }
+                // A stylesheet the app adds waits for its `load` event (Vite
+                // does, for the styles of a chunk it imports). Blitz has
+                // asked for the file by now.
+                if mutator
+                    .element_name(child)
+                    .is_some_and(|name| name.local == *"link")
+                {
+                    nodes.links.push(o[1] as u32);
                 }
             }
             REMOVE => {

@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- Written by hand, as Vite and SvelteKit write theirs: crates/host/tests/page.rs loads it. -->
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>  A page </title>
+		<link rel="stylesheet" href="/style.css" />
+		<link rel="modulepreload" href="/lib/dep.js" />
+		<style>
+			p.inline { height: 23px; margin: 0 }
+		</style>
+		<script type="module" src="/main.js"></script>
+		<script type="module">
+			globalThis.order.push('inline module ' + import.meta.url);
+		</script>
+		<script src="https://example.com/classic.js"></script>
+	</head>
+	<body>
+		<p class="linked">linked</p>
+		<p class="inline">inline</p>
+		<div id="holder">
+			<script>
+				globalThis.order = ['classic 1'];
+				globalThis.held = document.currentScript.parentElement;
+				import('./later.js').then((module) => globalThis.order.push('dynamic ' + module.value));
+			</script>
+		</div>
+		<script>
+			throw new Error('a classic script that fails');
+		</script>
+		<script>
+			order.push('classic 3, document is ' + typeof document);
+		</script>
+		<script type="module" src="https://example.com/remote.js"></script>
+	</body>
+</html>

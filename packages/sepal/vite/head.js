@@ -6,8 +6,8 @@
 //   <svelte:head><title>{item.name} - Shop</title></svelte:head>
 //
 // becomes an expression that sets `document.title` whenever what it reads
-// changes. With the DOM layer loaded that is also the window's title (given
-// `permissions.window`); without it the expression does nothing. Anything else
+// changes. With the DOM layer loaded that is the page's <title>, which the
+// window shows; without it the expression does nothing. Anything else
 // in the block (<meta>, <link>, <script>) means nothing in an app and is
 // dropped, with a warning at build time.
 //

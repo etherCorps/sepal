@@ -61,7 +61,8 @@ import { head } from './head.js';
  * - `dialog`: open, save and message dialogs.
  * - `clipboard`: reading and writing the clipboard.
  * - `open`: opening web and mail links, and allowed files, in their default app.
- * - `window`: changing the window: title, minimise, maximise, close, drag.
+ * - `window`: changing the window: minimise, maximise, decorations, close,
+ *   drag. The title needs no permission.
  *
  * @typedef {{
  *   http?: boolean | string[],

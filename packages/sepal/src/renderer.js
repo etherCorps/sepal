@@ -7,7 +7,7 @@
 // JS/Rust boundary while Svelte is rendering.
 
 import { createRenderer } from 'svelte/renderer';
-import { OP, ROOT_ID, DISPATCH_PREVENT_DEFAULT, DISPATCH_STOP_PROPAGATION } from './protocol.js';
+import { OP, DISPATCH_PREVENT_DEFAULT, DISPATCH_STOP_PROPAGATION } from './protocol.js';
 
 const ELEMENT = 'element';
 const TEXT = 'text';
@@ -57,7 +57,17 @@ export function take_batch() {
 // Nodes
 // ---------------------------------------------------------------------------
 
-let next_id = ROOT_ID + 1;
+/**
+ * The page the host parsed from index.html, handed over once, before any
+ * script ran (`page.js` in the host): its nodes as ops in this file's own
+ * vocabulary, numbered from 1, and the first id this side may allocate.
+ * `held` are the nodes a script took before this module loaded.
+ * @type {{ ops: number[], strings: string[], next_id: number, held?: Map<number, object> }}
+ */
+const page = /** @type {any} */ (globalThis).__sb_page;
+if (page === undefined) throw new Error('sepal: there is no page to render into. Apps run in calyx, the Sepal host, which loads them from index.html.');
+
+let next_id = page.next_id;
 
 export class BlitzNode {
 	/**
@@ -275,20 +285,84 @@ export function lookup(id) {
  *
  * @type {{ finalizer: FinalizationRegistry<number> | null, root: BlitzNode | null }}
  */
-export const keep_alive = { finalizer, root: null };
+export const keep_alive = { finalizer, root: /** @type {BlitzNode | null} */ (null) };
 
 /** Counters for tests and leak hunting. */
 export function stats() {
 	let live_elements = 0;
 	for (const id of elements.keys()) if (lookup(id) !== null) live_elements++;
-	return { created: next_id - ROOT_ID - 1, live_elements, pending_ops: ops.length };
+	return { created: next_id - page.next_id, live_elements, pending_ops: ops.length };
 }
 
-/** The mount target. The host maps it to `<body>`. Held strongly forever. */
-export const root = new BlitzNode(ELEMENT, ROOT_ID);
-root.name = 'body';
-elements.set(ROOT_ID, has_weak_refs ? new WeakRef(root) : root);
-keep_alive.root = root;
+/**
+ * Build the mirror of the page from the host's ops, writing none: the host
+ * has these nodes already. Returns the nodes, by id.
+ */
+function seed() {
+	/** @type {Map<number, BlitzNode>} */
+	const made = new Map();
+	const { ops: seeded, strings: text, held } = page;
+	/** @param {'element' | 'text' | 'comment'} type @param {number} id */
+	const make = (type, id) => {
+		let node = /** @type {BlitzNode | undefined} */ (held?.get(id));
+		if (node === undefined) node = new BlitzNode(type, id);
+		else {
+			// A script holds this object already (`document.currentScript`):
+			// it becomes the node, so what the script has is the real thing.
+			Object.setPrototypeOf(node, BlitzNode.prototype);
+			Object.assign(node, new BlitzNode(type, id));
+		}
+		finalizer?.register(node, id);
+		made.set(id, node);
+		return node;
+	};
+	for (let i = 0; i < seeded.length; ) {
+		const [code, a, b, c] = seeded.slice(i, i + 4);
+		switch (code) {
+			case OP.CREATE_ELEMENT: {
+				const node = make(ELEMENT, a);
+				node.name = text[b];
+				elements.set(a, has_weak_refs ? new WeakRef(node) : node);
+				i += 3;
+				break;
+			}
+			case OP.CREATE_TEXT:
+			case OP.CREATE_COMMENT:
+				make(code === OP.CREATE_TEXT ? TEXT : COMMENT, a).data = text[b];
+				i += 3;
+				break;
+			case OP.SET_ATTR: {
+				const node = /** @type {BlitzNode} */ (made.get(a));
+				(node.attrs ??= new Map()).set(text[b], text[c]);
+				if (text[b] === 'value') node.value = text[c];
+				else if (text[b] === 'checked') node.checked = true;
+				i += 4;
+				break;
+			}
+			case OP.INSERT:
+				link(/** @type {BlitzNode} */ (made.get(a)), /** @type {BlitzNode} */ (made.get(b)), null);
+				i += 4;
+				break;
+			default:
+				throw new Error(`sepal: the host sent a page with opcode ${code}`);
+		}
+	}
+	return made;
+}
+
+/** @param {BlitzNode} parent @param {string} name */
+const child_named = (parent, name) => {
+	for (let node = parent.first; node !== null; node = node.next) if (node.name === name) return node;
+	throw new Error(`sepal: the page has no <${name}>`);
+};
+
+/** `<html>`: the page's root element. The parser always makes one, with a head and a body. */
+export const html = [...seed().values()].find((node) => node.parent === null && node.name === 'html') ?? child_named(new BlitzNode(ELEMENT, 0), 'html');
+/** `<head>`. */
+export const head = child_named(html, 'head');
+/** `<body>`: where `mount` puts the app unless told otherwise. */
+export const root = child_named(html, 'body');
+keep_alive.root = html;
 
 // ---------------------------------------------------------------------------
 // Tree bookkeeping

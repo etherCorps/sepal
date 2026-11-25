@@ -410,6 +410,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "blitz-html"
+version = "0.3.0-beta.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eddd638e05f3f3efb9f2d37f0406e7834ea023727e1678524488aa70eb639615"
+dependencies = [
+ "blitz-dom",
+ "blitz-traits",
+ "html5ever",
+ "xml5ever",
+]
+
+[[package]]
 name = "blitz-paint"
 version = "0.3.0-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1550,6 +1562,17 @@ name = "html-escape"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9356095b4b41197bba32173600e1582792cda618f65d12f68e2e77d273413c5"
+
+[[package]]
+name = "html5ever"
+version = "0.40.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "456a1a377e608e555d22ddab27ac0114bc7a7b4199078108e34c2aeae6c9b130"
+dependencies = [
+ "log",
+ "markup5ever",
+ "memchr",
+]
 
 [[package]]
 name = "http"
@@ -3429,6 +3452,7 @@ dependencies = [
  "anyrender_vello_hybrid",
  "base64",
  "blitz-dom",
+ "blitz-html",
  "blitz-paint",
  "blitz-shell",
  "blitz-traits",
@@ -3436,6 +3460,7 @@ dependencies = [
  "ed25519-dalek",
  "flate2",
  "getrandom 0.4.3",
+ "html5ever",
  "image",
  "keyboard-types",
  "libc",
@@ -5568,6 +5593,16 @@ name = "xml-rs"
 version = "0.8.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
+
+[[package]]
+name = "xml5ever"
+version = "0.40.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73290529dc9bc6c6155bf77fdd70ce0061f98ad387586aa3104cddab29206961"
+dependencies = [
+ "log",
+ "markup5ever",
+]
 
 [[package]]
 name = "xmlwriter"

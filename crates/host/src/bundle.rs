@@ -9,7 +9,7 @@
 //!
 //! A bundle is what gives an app its name and icon in the Dock, the app
 //! switcher and Activity Monitor. Started without arguments, the host looks
-//! for `../Resources/app.js` next to itself (see `main.rs`).
+//! for `../Resources/index.html` next to itself (see `main.rs`).
 //!
 //! This only writes files, so it runs (and is tested) on every platform.
 
@@ -66,7 +66,11 @@ pub fn bundle_macos(dist: &Path, out: &Path, host: &Path) -> Result<PathBuf, Str
     if bundle.exists() {
         // `name` comes from a config file and `out` from the command line. Together
         // they can name any application on the machine, so only replace our own.
-        if !resources.join("app.js").is_file() {
+        // ponytail: app.js is a bundle from before index.html; it goes when every build writes index.html.
+        if !["index.html", "app.js"]
+            .iter()
+            .any(|page| resources.join(page).is_file())
+        {
             return Err(format!(
                 "{} exists and was not built by Sepal; not replacing it",
                 bundle.display()

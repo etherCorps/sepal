@@ -602,7 +602,6 @@ fn everything_is_refused_without_permission() {
         ("__api.clipboard.readText()", "clipboard"),
         ("__api.clipboard.writeText('x')", "clipboard"),
         ("__api.shell.open('https://svelte.dev')", "open"),
-        ("__api.window.setTitle('x')", "window"),
         ("__api.window.minimize()", "window"),
         ("__api.window.close()", "window"),
         (read.as_str(), "fs"),
@@ -614,6 +613,9 @@ fn everything_is_refused_without_permission() {
             "{call}: {result}"
         );
     }
+    // Except the title, which is the app's own, as a page's is on the web.
+    let result = run(&mut doc, "__api.window.setTitle('x')");
+    assert!(!result.starts_with("ERROR:"), "setTitle: {result}");
 }
 
 /// With permission, the window and clipboard calls reach the shell. There is

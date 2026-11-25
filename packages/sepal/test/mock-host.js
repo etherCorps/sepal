@@ -2,7 +2,12 @@
 // lets the renderer be tested without Rust, a GPU or a window.
 
 import vm from 'node:vm';
-import { OP, ROOT_ID } from '../src/protocol.js';
+import { OP } from '../src/protocol.js';
+
+// The page the Rust host would have parsed: <html><head></head><body></body></html>.
+const HTML = 1;
+const HEAD = 2;
+const BODY = 3;
 
 const ARITY = {
 	[OP.CREATE_ELEMENT]: 2,
@@ -25,7 +30,13 @@ const ARITY = {
 export class MockHost {
 	constructor() {
 		this.nodes = new Map();
-		this.nodes.set(ROOT_ID, { id: ROOT_ID, kind: 'element', name: 'body', attrs: {}, children: [], parent: null });
+		const html = { id: HTML, kind: 'element', name: 'html', attrs: {}, children: [], parent: null };
+		for (const [id, name] of [[HEAD, 'head'], [BODY, 'body']]) {
+			const node = { id, kind: 'element', name, attrs: {}, children: [], parent: html };
+			html.children.push(node);
+			this.nodes.set(id, node);
+		}
+		this.nodes.set(HTML, html);
 		this.listening = new Set();
 		/** Ids of the nodes the app wants boxes for. */
 		this.measured = new Set();
@@ -40,6 +51,12 @@ export class MockHost {
 
 		// A context with ECMAScript built-ins only: no DOM, no timers, no console.
 		this.context = vm.createContext({
+			// What the Rust host hands over before any script runs (its page.js).
+			__sb_page: {
+				ops: [OP.CREATE_ELEMENT, HTML, 0, OP.CREATE_ELEMENT, HEAD, 1, OP.INSERT, HTML, HEAD, 0, OP.CREATE_ELEMENT, BODY, 2, OP.INSERT, HTML, BODY, 0],
+				strings: ['html', 'head', 'body'],
+				next_id: BODY + 1
+			},
 			__sb_host: {
 				log: (level, message) => this.logs.push([level, message]),
 				now: () => this.time
@@ -47,8 +64,9 @@ export class MockHost {
 		});
 	}
 
+	/** `<body>`, where apps mount. */
 	get root() {
-		return this.nodes.get(ROOT_ID);
+		return this.nodes.get(BODY);
 	}
 
 	eval(code, filename = 'app.js') {
@@ -160,7 +178,7 @@ export class MockHost {
 
 	attached(node) {
 		while (node.parent) node = node.parent;
-		return node.id === ROOT_ID;
+		return node.id === HTML;
 	}
 
 	dispatch(node, type, detail = null, bubbles = true) {

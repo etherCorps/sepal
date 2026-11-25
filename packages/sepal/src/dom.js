@@ -13,10 +13,9 @@
 // The tree is the renderer's own. An element here is a `BlitzNode`, and every
 // write goes through the renderer into the same op buffer as Svelte's.
 
-import { host_call } from './host-call.js';
 import { TextDecoder, TextEncoder } from './text.js';
 import { URL, URLSearchParams } from './url.js';
-import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, host_hooks, lookup, outer_targets, remove_listener, request_focus, request_measure, root, scroll_state } from './renderer.js';
+import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, head, host_hooks, html, lookup, outer_targets, remove_listener, request_focus, request_measure, root, scroll_state } from './renderer.js';
 
 const g = /** @type {any} */ (globalThis);
 const proto = /** @type {any} */ (BlitzNode.prototype);
@@ -608,7 +607,7 @@ define(proto, {
 	ownerDocument: { get: () => document },
 	isConnected: {
 		get() {
-			for (let node = this; node !== null; node = node.parent) if (node === root) return true;
+			for (let node = this; node !== null; node = node.parent) if (node === html) return true;
 			return false;
 		}
 	},
@@ -819,7 +818,7 @@ Object.assign(proto, /** @type {Record<string, any> & ThisType<any>} */ ({
 		if (other.contains(this)) return 8 | 2;
 		/** @type {any[]} */
 		const order = [];
-		walk(root, (node) => void order.push(node));
+		walk(html, (node) => void order.push(node));
 		return order.indexOf(this) < order.indexOf(other) ? 4 : 2;
 	},
 	getRootNode() {
@@ -928,9 +927,6 @@ const tag_class = (tags) => node_class((node) => is_element(node) && new RegExp(
 // ---------------------------------------------------------------------------
 // document and window
 // ---------------------------------------------------------------------------
-
-/** Stands in for <html> and <head>: something to hold attributes and styles that go nowhere. */
-const detached = () => new BlitzNode('element', 0);
 
 // ---------------------------------------------------------------------------
 // The address, and the history of it
@@ -1053,7 +1049,14 @@ function memory_storage() {
 	);
 }
 
-let page_title = '';
+/** Says once that something the page asked for is not done here. @type {Set<string>} */
+const unsupported = new Set();
+/** @param {string} what */
+function not_supported(what) {
+	if (unsupported.has(what)) return;
+	unsupported.add(what);
+	g.console.warn(`${what} is not supported in Sepal, and did nothing`);
+}
 
 const document = {
 	nodeType: 9,
@@ -1064,21 +1067,31 @@ const document = {
 		return address.href;
 	},
 	location,
-	// The page's title is the window's. Changing the window needs
-	// `permissions.window`; without it the title is only remembered here.
+	// The page's <title>, which the window shows, as a browser tab does.
 	get title() {
-		return page_title;
+		const title = query(html, 'title');
+		return title === null ? '' : String(/** @type {any} */ (title).textContent).replace(/\s+/g, ' ').trim();
 	},
 	set title(value) {
-		page_title = String(value);
-		host_call('window.set_title', { title: page_title }).catch(() => {});
+		/** @type {any} */
+		let title = query(html, 'title');
+		// As in a browser: a page without one gets a <title> in its head.
+		if (title === null) renderer.insert(head, (title = renderer.createElement('title')), null);
+		title.textContent = String(value);
 	},
+	/** The `<script>` element running now, if it is a classic script of the page. */
+	get currentScript() {
+		const id = g.__sb_page?.script;
+		return id ? lookup(id) : null;
+	},
+	write: () => not_supported('document.write()'),
+	writeln: () => not_supported('document.writeln()'),
 	nodeName: '#document',
 	/** @type {Map<string, Function[]> | null} */
 	listeners: null,
 	body: root,
-	documentElement: Object.assign(detached(), { name: 'html' }),
-	head: Object.assign(detached(), { name: 'head' }),
+	documentElement: html,
+	head,
 	defaultView: g,
 	visibilityState: 'visible',
 	hidden: false,
@@ -1100,11 +1113,11 @@ const document = {
 	createComment: (data) => renderer.createComment(data),
 	createDocumentFragment: () => renderer.createFragment(),
 	/** @param {string} name */
-	getElementsByTagName: (name) => query_all(root, name === '*' ? '*' : name.toLowerCase()),
+	getElementsByTagName: (name) => query_all(html, name === '*' ? '*' : name.toLowerCase()),
 	/** @param {string} id */
 	getElementById: (id) => {
 		let found = null;
-		walk(root, (node) => {
+		walk(html, (node) => {
 			if (node.attrs?.get('id') !== id) return false;
 			found = node;
 			return true;
@@ -1112,11 +1125,11 @@ const document = {
 		return found;
 	},
 	/** @param {string} selector */
-	querySelector: (selector) => (matches(root, selector) ? root : query(root, selector)),
+	querySelector: (selector) => (matches(html, selector) ? html : query(html, selector)),
 	/** @param {string} selector */
-	querySelectorAll: (selector) => query_all(root, selector),
+	querySelectorAll: (selector) => [...(matches(html, selector) ? [html] : []), ...query_all(html, selector)],
 	/** @param {any} node */
-	contains: (node) => /** @type {any} */ (root).contains(node),
+	contains: (node) => /** @type {any} */ (html).contains(node),
 	getRootNode: () => document,
 	/** @param {string} type @param {any} handler @param {any} [options] */
 	addEventListener(type, handler, options) {
@@ -1133,11 +1146,8 @@ const document = {
 		return !event.defaultPrevented;
 	}
 };
-document.documentElement.parent = null;
-host_hooks.outside = document.documentElement;
-// <html> is not in the tree (the host's root is <body>), but it is asked
-// whether a node is in the page.
-/** @type {any} */ (document.documentElement).contains = (/** @type {any} */ node) => node === document.documentElement || /** @type {any} */ (root).contains(node);
+// An event that hit nothing the app made (the area around <body>) is <html>'s.
+host_hooks.outside = html;
 // <html> is the viewport: the same numbers as `innerWidth` and `innerHeight`,
 // so that their difference, the width of a scrollbar, comes out as zero.
 define(document.documentElement, { clientWidth: { get: () => viewport.width }, clientHeight: { get: () => viewport.height } });
@@ -1146,9 +1156,9 @@ reported_box(root);
 
 /** `window` is the global object; these are its listeners. */
 const window_target = { listeners: /** @type {Map<string, Function[]> | null} */ (null) };
-// Above <body>: <html>, where routers listen for clicks on links, then the
-// document, then the window.
-outer_targets.push(document.documentElement, document, window_target);
+// Above <html>, where routers listen for clicks on links: the document,
+// then the window.
+outer_targets.push(document, window_target);
 
 // The host moves focus on its own when the user clicks or tabs. Follow it.
 add_listener(document, 'focusin', (/** @type {any} */ event) => {
