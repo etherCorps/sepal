@@ -299,6 +299,38 @@ impl JsEngine {
         }
     }
 
+    /// Run the callbacks the app queued with `requestAnimationFrame`, each
+    /// with `time`, the frame's timestamp. One at a time, with the microtasks
+    /// each queued run before the next, as with timers.
+    pub fn run_frame(&self, time: f64) {
+        loop {
+            let result = self.enter().with(|ctx| -> rquickjs::Result<bool> {
+                let frame: Function = entry(&ctx)?.get("frame")?;
+                frame.call((time,))
+            });
+            match result {
+                Ok(true) => self.run_jobs(),
+                Ok(false) => break,
+                Err(error) => {
+                    self.report("running animation frame callbacks", error);
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Whether the app waits for a frame (`requestAnimationFrame`).
+    pub fn frame_pending(&self) -> bool {
+        let result = self.enter().with(|ctx| -> rquickjs::Result<bool> {
+            let pending: Function = entry(&ctx)?.get("frame_pending")?;
+            pending.call(())
+        });
+        result.unwrap_or_else(|error| {
+            self.report("asking for a frame", error);
+            false
+        })
+    }
+
     /// The next timer deadline in host-clock milliseconds, if any timer is pending.
     pub fn next_timer(&self) -> Option<f64> {
         let result = self.enter().with(|ctx| -> rquickjs::Result<f64> {
@@ -315,7 +347,7 @@ impl JsEngine {
         }
     }
 
-    /// Take the clock JS sees (`performance.now()`, timers) away from real
+    /// Take the clock JS sees (`performance.now()`, timers, frames) away from real
     /// time and put it at `ms`. From then on it only moves when this is called.
     ///
     /// For a document that is not in a window: its animations run on a clock

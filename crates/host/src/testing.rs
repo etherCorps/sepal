@@ -27,10 +27,11 @@ impl SvelteDocument {
         self.after_layout();
     }
 
-    /// Let time pass: timers that come due fire, and CSS transitions and
-    /// animations move on by `seconds`.
+    /// Let time pass: timers that come due fire, `requestAnimationFrame`
+    /// callbacks run, and CSS transitions and animations move on by `seconds`.
     ///
-    /// In steps, as a window would: one timer often starts the next.
+    /// In steps of 20 ms, each a turn and a frame, as a window would: one
+    /// timer often starts the next.
     pub fn wait(&mut self, seconds: f64) {
         const STEP: f64 = 0.02;
         let mut left = seconds;
@@ -38,6 +39,8 @@ impl SvelteDocument {
             let step = left.min(STEP);
             self.advance_time(step);
             self.settle();
+            // A frame per step, as a window draws them while something waits for one.
+            self.begin_frame();
             self.resolve();
             left -= step;
         }

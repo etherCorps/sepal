@@ -365,8 +365,9 @@ What is different from SvelteKit on the web:
   default; `sepalKit()` turns that off, as it would wake an idle app.
   Updates come through `sepal/updater`.
 - **A link waits a frame.** SvelteKit lets the page repaint before it follows
-  a link (a `requestAnimationFrame`, then a `setTimeout(0)`). In Sepal today
-  that is a 16 ms timer and one more turn, about 20 ms more than a `goto`.
+  a link (a `requestAnimationFrame`, then a `setTimeout(0)`): in Sepal, the
+  next frame the host draws and the turn after it. At 75 Hz, opening an issue
+  in the Tracker takes 19 ms to its mark (Tauri: 14 ms).
 - **No scroll restoration**, and whatever else needs a part of the browser
   that the DOM layer does not have (see "Component libraries").
 
@@ -1014,7 +1015,6 @@ each refresh is also printed to stderr.
 - Desktop APIs cover fetch, files, dialogs, clipboard, opening links and basic
   window control. See "Desktop APIs" for what is missing.
 - Images and other resources load from data: URLs and the app directory only; no network.
-- `requestAnimationFrame` is a 16 ms timer, not tied to the display.
 - Measurements (`dom: true` only) leave out CSS transforms, and inside an
   event handler are as of the last layout. See "Measuring the page".
 - A script that runs for 10 seconds without returning is stopped.
@@ -1037,18 +1037,15 @@ each refresh is also printed to stderr.
    the host builds and most tests pass (see HANDOVER.md). Then packaging
    beyond a macOS `.app`: a `.dmg`, and Windows and Linux bundles, and a real
    notarisation run.
-3. **Links at the next frame.** `requestAnimationFrame` at the next frame
-   the host draws, and no extra turn for a `setTimeout(0)` queued from a
-   frame callback: SvelteKit waits for both before it follows a link.
-4. **The native layer.** A JavaScript backend thread (the stem) and native
+3. **The native layer.** A JavaScript backend thread (the stem) and native
    plugins (grafts).
-5. **More desktop APIs**: notifications, menus, a tray icon, global
+4. **More desktop APIs**: notifications, menus, a tray icon, global
    shortcuts, more than one window, a settings store.
-6. **Memory while drawing.** An idle Tracker sits at about 100 MB, but after
+5. **Memory while drawing.** An idle Tracker sits at about 100 MB, but after
    scrolling 1,000 rows it holds 305 MB of RAM and 220 MB of GPU memory
    ([compare.md](compare/results/compare.md)); a virtual list, and letting go
    of GPU memory sooner, are the places to start.
-7. **Later**: state-preserving HMR, if the full reload turns out not to be
+6. **Later**: state-preserving HMR, if the full reload turns out not to be
    enough; compiling the bundle with scriptc instead of running QuickJS (only
    `js.rs` should need to change).
 

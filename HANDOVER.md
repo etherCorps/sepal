@@ -253,6 +253,37 @@ anything the plan doesn't settle; do not guess. Keep the invariants
 in CLAUDE.md.
 ```
 
+## requestAnimationFrame on real frames (25 Nov 2026, branch `raf-frames`)
+
+Item 1 of the list below. `requestAnimationFrame` was a 16 ms timer; its
+callbacks now run when the window draws its next frame, before the shell
+lays out and paints (`SvelteDocument::begin_frame`, from `window.rs`), and
+a turn that ends with one queued asks for that frame (`TurnStats::frame`).
+None queued, none asked for. Hidden or minimised, they wait. A timer that is
+already due when a turn ends wakes the loop at once, from the UI thread, and
+timers nested six deep wait at least 4 ms, as in HTML.
+`performance.now()` reads the host's clock on both engines, as timers and
+frame timestamps do.
+
+Measured (session `raf-1`, `compare/results/raf-frames.md`, 1,000 issues,
+PR #3's head against this branch against Tauri, interleaved, 75 Hz display):
+opening an issue went from 35 to 19 ms to its mark (Tauri 14), the screen
+switches 5-20 ms sooner. Idle, the clock and the New issue dialog's animation
+cost the same: same frames, CPU and GPU time within 3 %. The raw data is in
+`compare/results/raw/raf-1`, which stays off main like the rest of `raw/`.
+`compare/harness/run.mjs` has a scenario 12 for the dialog (open and close
+it ten times); the others are unchanged. 120 Hz is untested.
+
+Found on the way, not this branch's: on both builds the dialog draws at
+the display's rate for about 280 ms after each open and each Escape,
+though its animation is 100 ms. Something else animates on (a transition, or
+Blitz holding an animation). Worth a look of its own.
+
+Also found, also its own job: keys reach the app 21-35 ms after `drive`
+posts them, on both builds (the traces of scenarios 5 and 8). Measure each
+hop (event posted, winit event, blitz-shell dispatch, the document's
+handler) and compare with Tauri.
+
 ## SvelteKit as the only router (24 Nov 2026, branch `sveltekit-only`)
 
 Phase 1 of the bigger plan. Sepal's own router is gone, with its modules,
@@ -271,10 +302,8 @@ same.
 
 Next, each its own job after this branch:
 
-1. **`requestAnimationFrame` at the next frame the host draws**, and no extra
-   turn for a `setTimeout(0)` queued from a frame callback. SvelteKit waits
-   for both before following a link; that wait is most of the 18-34 ms.
-   SvelteKit's client stays as it is: no third edit to `client.js`.
+1. ~~**`requestAnimationFrame` at the next frame the host draws**~~: done on
+   `raf-frames` (above).
 2. **Then a fresh comparison session**, and `compare.md` regenerated from it
    (`make_compare_report.py` reads sessions by name).
 3. **Blitz hit testing clipped to `overflow: hidden`.** Blitz descends into
@@ -919,7 +948,7 @@ Still to do for SvelteKit:
 ## Known gaps outside this brief
 
 IME, real key presses in a window (only scripted ones were run), state-preserving HMR,
-`requestAnimationFrame` tied to the display, multiple
+multiple
 windows, the scriptc experiment. See "Next steps" in `README.md`. Do not pull
 these into the icon or release work unless one turns out to block it.
 
