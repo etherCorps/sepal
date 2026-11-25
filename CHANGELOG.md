@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0-alpha.0 (25 Nov 2026)
 
 ### Breaking: SvelteKit is the only router
 
