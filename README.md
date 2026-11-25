@@ -1014,7 +1014,6 @@ each refresh is also printed to stderr.
 - Desktop APIs cover fetch, files, dialogs, clipboard, opening links and basic
   window control. See "Desktop APIs" for what is missing.
 - Images and other resources load from data: URLs and the app directory only; no network.
-- `requestAnimationFrame` is a 16 ms timer, not tied to the display.
 - Measurements (`dom: true` only) leave out CSS transforms, and inside an
   event handler are as of the last layout. See "Measuring the page".
 - A script that runs for 10 seconds without returning is stopped.

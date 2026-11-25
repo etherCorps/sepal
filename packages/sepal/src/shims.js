@@ -89,8 +89,13 @@ if (typeof g.queueMicrotask !== 'function') {
 	};
 }
 
-if (typeof g.performance === 'undefined') {
-	g.performance = { now: clock };
+// One clock for scripts, timers and frame timestamps: the host's, which
+// stands still headless until a test moves it. QuickJS-ng has a `performance`
+// of its own, on real time, whose `now` cannot be replaced; animation code
+// compares a frame's timestamp with `performance.now()`, so the whole object
+// is. Its `timeOrigin` stays.
+if (typeof g.performance === 'undefined' || host.now) {
+	g.performance = { ...g.performance, now: clock };
 }
 
 // ---------------------------------------------------------------------------
@@ -222,8 +227,62 @@ if (typeof g.setTimeout !== 'function') {
 	g.clearInterval = g.clearTimeout;
 }
 
+// ---------------------------------------------------------------------------
+// Animation frames
+//
+// A `requestAnimationFrame` callback runs when the host draws its next frame,
+// before it lays the page out and paints. The host asks `frame_pending()` at
+// the end of every turn and draws a frame only when the answer is yes, so
+// with no callback queued nothing is drawn and nothing wakes it.
+// ---------------------------------------------------------------------------
+
+/** Queued callbacks, in the order they were queued. @type {Map<number, (time: number) => void>} */
+const frame_callbacks = new Map();
+let next_frame_id = 1;
+/** The callbacks that were queued when the host started this frame. @type {number[] | null} */
+let frame = null;
+
+/**
+ * Run one callback of this frame, and say whether there was one. As with
+ * timers, the host calls this until the answer is no, and runs microtasks
+ * after every call. Every callback of a frame gets the same `time`; one
+ * queued during the frame runs in the next.
+ *
+ * @param {number} time the frame's timestamp, on the host clock
+ * @returns {boolean}
+ */
+export function run_frame(time) {
+	if (frame === null) {
+		if (frame_callbacks.size === 0) return false;
+		frame = [...frame_callbacks.keys()];
+	}
+	for (;;) {
+		const id = frame.shift();
+		if (id === undefined) {
+			frame = null;
+			return false;
+		}
+		const fn = frame_callbacks.get(id);
+		if (fn === undefined) continue; // cancelled by an earlier callback
+		frame_callbacks.delete(id);
+		try {
+			fn(time);
+		} catch (error) {
+			g.console.error('Error in requestAnimationFrame callback:', error);
+		}
+		return true;
+	}
+}
+
+/** Whether the app waits for a frame. The host asks at the end of every turn. */
+export const frame_pending = () => frame_callbacks.size > 0;
+
 if (typeof g.requestAnimationFrame !== 'function') {
-	// TODO: tie this to the host's redraw instead of a 16ms timer.
-	g.requestAnimationFrame = (/** @type {(time: number) => void} */ fn) => g.setTimeout(() => fn(clock()), 16);
-	g.cancelAnimationFrame = g.clearTimeout;
+	g.requestAnimationFrame = (/** @type {unknown} */ fn) => {
+		if (typeof fn !== 'function') throw new TypeError('requestAnimationFrame: the callback is not a function');
+		const id = next_frame_id++;
+		frame_callbacks.set(id, /** @type {(time: number) => void} */ (fn));
+		return id;
+	};
+	g.cancelAnimationFrame = (/** @type {number} */ id) => void frame_callbacks.delete(id);
 }

@@ -344,6 +344,32 @@ impl JsEngine {
         }
     }
 
+    /// Run the callbacks the app queued with `requestAnimationFrame`, each
+    /// with `time`, the frame's timestamp. As in the QuickJS wrapper.
+    pub fn run_frame(&self, time: f64) {
+        loop {
+            let ran = self.enter(|scope| {
+                v8::scope!(let scope, scope);
+                let time = v8::Number::new(scope, time).into();
+                entry(scope, "running animation frame callbacks", "frame", &[time])
+                    .is_some_and(|ran| ran.boolean_value(scope))
+            });
+            if !ran {
+                break;
+            }
+            self.run_jobs();
+        }
+    }
+
+    /// Whether the app waits for a frame (`requestAnimationFrame`).
+    pub fn frame_pending(&self) -> bool {
+        self.enter(|scope| {
+            v8::scope!(let scope, scope);
+            entry(scope, "asking for a frame", "frame_pending", &[])
+                .is_some_and(|pending| pending.boolean_value(scope))
+        })
+    }
+
     /// The next timer deadline in host-clock milliseconds, if any timer is pending.
     pub fn next_timer(&self) -> Option<f64> {
         self.enter(|scope| {

@@ -1,5 +1,5 @@
 // Shims must be evaluated before Svelte's runtime.
-import { run_timers, next_timer, track_rejection, report_rejections, rejection_count } from './shims.js';
+import { run_timers, next_timer, run_frame, frame_pending, track_rejection, report_rejections, rejection_count } from './shims.js';
 import { mount as svelte_mount, unmount } from 'svelte';
 import renderer, { root, dispatch, take_batch, stats, keep_alive, host_hooks } from './renderer.js';
 import { settle_call } from './host-call.js';
@@ -38,6 +38,10 @@ for (const [name, value] of Object.entries({ fetch, Headers, Request, Response }
 	timers: run_timers,
 	/** The next timer deadline on the host clock, or -1. Read at the end of a turn. */
 	next_timer,
+	/** Run one `requestAnimationFrame` callback; `false` when this frame has none left. Called until it says so. */
+	frame: run_frame,
+	/** Whether a `requestAnimationFrame` callback waits for a frame. Read at the end of a turn. */
+	frame_pending,
 	/** Answer a call the app made to the host (see host-call.js). */
 	resolve: settle_call,
 	/**

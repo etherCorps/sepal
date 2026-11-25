@@ -174,7 +174,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 7. **No frame loop, no polling.** The event loop waits in the OS. Anything that
    wakes it on a fixed interval is a regression. `idle_turns_do_no_work` and
    `timers_wake_the_event_loop` guard this. Dev reload obeys it too: the
-   host blocks on stdin, it does not watch files. Layout is reported at the
+   host blocks on stdin, it does not watch files. A frame is drawn only when
+   the page changed, a CSS animation runs, or a `requestAnimationFrame`
+   callback waits for one. Layout is reported at the
    end of a turn that changed the page and after a frame the shell drew
    anyway, never on a timer. Scroll positions likewise: at the end of the
    turn that moved them. **Two exceptions:** the performance overlay, while
@@ -199,7 +201,12 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `document`, `fetch`, or Node globals. `test/mock-host.js` runs it in a bare
   `vm` context for this reason. QuickJS-ng does provide `performance`,
   `queueMicrotask`, `WeakRef`, `FinalizationRegistry`; it does not provide
-  `console` or timers (see `shims.js`).
+  `console` or timers (see `shims.js`). Its `performance.now()` is on real
+  time, so `shims.js` replaces the object: `performance.now()`, timers and
+  frame timestamps all read the host's clock (`__sb_host.now`), on both
+  engines. Animation code compares a frame's timestamp with
+  `performance.now()`; two clocks make animations jump, and headless tests
+  stop being deterministic.
 - **`bind:` on elements is rewritten by the preset** (`packages/sepal/vite/bindings.js`)
   because Svelte refuses it for custom renderers: `bind:this` and `bind:value`
   become attachments, anything else compiles and warns. Attachments and
@@ -271,9 +278,21 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `REMOVE` detaches and, past `GC_AFTER_DETACHED`, collects once, a second
   later (`collect_detached` in `document.rs`). The pause is real (~250 ms
   for 200k nodes in QuickJS); fewer nodes per row is the cheaper cure.
-- **Timers run one per call** (`__sb.timers()` returns whether it ran one) and
-  the host runs microtasks in between, because libraries rely on one
-  `requestAnimationFrame` callback seeing what the previous one caused.
+- **Timers and frame callbacks run one per call** (`__sb.timers()` and
+  `__sb.frame()` return whether they ran one) and the host runs microtasks
+  in between, because libraries rely on one `requestAnimationFrame`
+  callback seeing what the previous one caused.
+- **`requestAnimationFrame` runs on the host's frames.** A turn ends by
+  asking `__sb.frame_pending()`; yes sets `TurnStats::frame`, and the window
+  asks for a frame. `window.rs` calls `SvelteDocument::begin_frame` on
+  `RedrawRequested`, before the shell lays out and paints: every callback
+  gets that frame's time, and one queued inside a callback runs in the next
+  frame. Timers do not run in that turn, so a `setTimeout(0)` queued in a
+  frame callback runs after the frame is painted, as in a browser. Hidden or
+  minimised (`WindowEvent::Occluded`, `set_visible`), no frame is asked for
+  and the callbacks wait. A callback loop that changes nothing on screen is
+  paced at 60 Hz by `defer_redraw`. Headless, each 20 ms step of `doc.wait`
+  is a turn and then a frame.
 - **The document lives in `Rc<RefCell<Page>>`** (`document.rs`). Never hold a
   borrow of it while JavaScript runs, or a measurement silently falls back to
   old boxes. `handle_ui_event` holds one on purpose: that is what stops a
@@ -350,11 +369,11 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   on a timer, which breaks invariant 7, and a request to `app.localhost`
   that nothing answers. Updates come through `sepal/updater`.
 - **SvelteKit follows a link a frame later.** Its click handler waits a
-  `requestAnimationFrame`, then a `setTimeout(0)`, before it navigates. In
-  Sepal that is a 16 ms timer (`shims.js`) and one more turn (a timer
-  queued from a timer runs in the next round). Headless, a link click needs
-  `doc.wait(0.04)` after it settles; the Tracker's and router_dom's
-  `click()` do that. `goto` does not wait.
+  `requestAnimationFrame`, then a `setTimeout(0)`, before it navigates: the
+  next frame the host draws, and the turn after it. Headless, a link click
+  needs `doc.wait(0.04)` after it settles (the frame comes in the first
+  step, the timer in the second); the Tracker's and router_dom's `click()`
+  do that. `goto` does not wait.
 - **SvelteKit's route announcer** (`#svelte-announcer`) is a 1px
   `overflow: hidden` box at the top left whose text overflows it, and Blitz
   hit-tests overflowing content. `sepalKit()` gives it `pointer-events:
@@ -476,9 +495,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   they go through real hit testing and Blitz's event driver.
 - For anything visual, render with `screenshot::render_rgba` and assert on
   pixels, then look at the PNG yourself before trusting the assertion.
-- Headless time stands still, for scripts (`performance.now()`, timers) and
-  animations alike. A CSS transition or a timer chain only moves when the
-  test calls `doc.wait(seconds)`; without it you assert on the first frame of
+- Headless time stands still, for scripts (`performance.now()`, timers,
+  `requestAnimationFrame`) and animations alike. A CSS transition, a timer
+  chain or a frame callback only moves when the test calls `doc.wait(seconds)`; without it you assert on the first frame of
   an animation. Do not `thread::sleep` to let a timer come due: it will not.
   Only a document made with `for_window` runs on real time
   (`timers_wake_the_event_loop`). The two clocks were separate once, and

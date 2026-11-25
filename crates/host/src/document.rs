@@ -43,6 +43,9 @@ pub struct TurnStats {
     pub scrolled: usize,
     /// The performance overlay changed (`hud.rs`). Not the app's doing.
     pub hud: bool,
+    /// The app waits for a frame (`requestAnimationFrame`), and the window
+    /// is on screen to draw one.
+    pub frame: bool,
 }
 
 impl TurnStats {
@@ -55,9 +58,10 @@ impl TurnStats {
         self.detached += stats.detached;
     }
 
-    /// The page may look different now: the window has to be redrawn.
+    /// The page may look different now, or the app waits for a frame: the
+    /// window has to draw one.
     pub fn changed(&self) -> bool {
-        self.visible > 0 || self.hud
+        self.visible > 0 || self.hud || self.frame
     }
 }
 
@@ -207,6 +211,9 @@ pub struct SvelteDocument {
     hud: Hud,
     /// When the event that started this turn arrived, if one did.
     turn_began: Option<Instant>,
+    /// The window is on screen. Hidden or minimised, it draws no frames, and
+    /// `requestAnimationFrame` callbacks wait, as in a background tab.
+    visible: bool,
 }
 
 /// Detached nodes are freed when JavaScript collects their objects, and an
@@ -419,6 +426,7 @@ impl SvelteDocument {
             gc_at: None,
             hud: Hud::default(),
             turn_began: None,
+            visible: true,
         };
 
         this.js.eval(app_js)?;
@@ -479,6 +487,34 @@ impl SvelteDocument {
     ///
     /// This is the only place the tree is mutated after startup.
     pub fn settle(&mut self) -> TurnStats {
+        self.turn(true)
+    }
+
+    /// The window is about to draw a frame. Run the callbacks the app queued
+    /// with `requestAnimationFrame`, all with this frame's time, and apply
+    /// what they changed, so that this frame paints it.
+    ///
+    /// Timers wait for the turn after the frame, as in a browser: SvelteKit
+    /// follows a link from a `setTimeout(0)` queued in a frame callback, to
+    /// let the page paint first.
+    pub fn begin_frame(&mut self) -> TurnStats {
+        if !self.visible || !self.js.frame_pending() {
+            return TurnStats::default();
+        }
+        self.turn_began.get_or_insert_with(Instant::now);
+        self.js.run_frame(self.js.now());
+        self.turn(false)
+    }
+
+    /// The window was hidden or minimised, or shows again. Hidden, it draws
+    /// no frames, so the app's frame callbacks wait for the first one after it shows.
+    pub fn set_visible(&mut self, visible: bool) {
+        self.visible = visible;
+    }
+
+    /// One turn: what [`SvelteDocument::settle`] says, with the due timers
+    /// run or left for the next turn.
+    fn turn(&mut self, timers: bool) -> TurnStats {
         let began = self.turn_began.take().unwrap_or_else(Instant::now);
         let mut turn = TurnStats::default();
 
@@ -487,8 +523,10 @@ impl SvelteDocument {
         while let Ok((id, result)) = self.answers.1.try_recv() {
             self.js.resolve_call(id, result);
         }
-        self.js.run_timers();
-        self.js.run_jobs();
+        if timers {
+            self.js.run_timers();
+            self.js.run_jobs();
+        }
 
         self.apply_batches(&mut turn);
 
@@ -522,6 +560,7 @@ impl SvelteDocument {
 
         self.hud.turn(began.elapsed(), turn.ops);
         turn.hud = self.update_hud();
+        turn.frame = self.visible && self.js.frame_pending();
 
         // Read the deadline last: effects that ran above may have started or stopped timers.
         let now = self.js.now();

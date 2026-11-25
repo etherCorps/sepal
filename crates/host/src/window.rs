@@ -403,11 +403,17 @@ impl ApplicationHandler for Host {
         }
         match &event {
             WindowEvent::ModifiersChanged(modifiers) => self.modifiers = modifiers.state(),
-            // A frame drawn before the window was first on screen is lost, and the
-            // redraw that follows would find nothing changed and leave it blank.
-            WindowEvent::Occluded(false) => {
+            // Hidden or minimised, the window draws no frames, and the app's
+            // frame callbacks wait. blitz-shell asks for a frame when it shows.
+            WindowEvent::Occluded(occluded) => {
                 if let Some(view) = self.application.windows.get_mut(&window_id) {
-                    view.renderer.repaint_all();
+                    view.downcast_doc_mut::<SvelteDocument>()
+                        .set_visible(!occluded);
+                    // A frame drawn before the window was first on screen is lost, and the
+                    // redraw that follows would find nothing changed and leave it blank.
+                    if !occluded {
+                        view.renderer.repaint_all();
+                    }
                 }
             }
             // The host's own shortcut: the app never sees it.
@@ -430,6 +436,12 @@ impl ApplicationHandler for Host {
             self.redraw_at = None;
             self.input_since_frame = false;
             let began = Instant::now();
+            // `requestAnimationFrame` callbacks, before the shell lays out and
+            // paints. One they queue asks for the next frame in the poll that
+            // follows this one.
+            if let Some(view) = self.application.windows.get_mut(&window_id) {
+                view.downcast_doc_mut::<SvelteDocument>().begin_frame();
+            }
             self.forward(event_loop, window_id, event);
             let took = began.elapsed();
             // The frame was laid out to be painted. If that moved something the

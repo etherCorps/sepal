@@ -7,7 +7,8 @@
 //! * JS calls into Rust through `__sb_host` — logging, a clock, and `call`,
 //!   which asks the host for something that takes time (see [`HostCall`]).
 //! * Rust calls into JS through `__sb` — `dispatch`, `take`, `timers`,
-//!   `next_timer`, and `resolve` to answer a `call`.
+//!   `next_timer`, `frame` and `frame_pending` (`requestAnimationFrame`),
+//!   and `resolve` to answer a `call`.
 //!
 //! Tree mutations never cross this boundary one at a time. They are pulled as
 //! one [`Batch`] per turn by [`JsEngine::take_batch`].
