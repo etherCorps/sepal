@@ -5,7 +5,7 @@
 //   node probe.mjs            (needs a host: SEPAL_HOST, or `pnpm run build:host`)
 
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
@@ -24,18 +24,22 @@ const only = process.argv.slice(2);
 const results = [];
 
 for (const name of names.filter((n) => only.length === 0 || only.includes(n))) {
-	const entry = `src/probes/.entries/${name}.ts`;
-	writeFileSync(join(root, entry), `import { mount } from 'sepal';\nimport '../../app.css';\nimport Probe from '../${name}.svelte';\nmount(Probe);\n`);
+	// A page per probe, which the build takes in place of index.html.
+	const entry = `src/probes/.entries/${name}`;
+	writeFileSync(join(root, `${entry}.ts`), `import { mount } from 'sepal';\nimport '../../app.css';\nimport Probe from '../${name}.svelte';\nmount(Probe);\n`);
+	writeFileSync(join(root, `${entry}.html`), `<!doctype html><html><head><title>${name}</title></head><body><script type="module" src="./${name}.ts"></script></body></html>\n`);
 	const dir = join(out, name);
 	let stage = 'compile';
 	let detail = '';
 	try {
 		await build({
 			root, configFile: false, logLevel: 'silent',
-			plugins: [tailwindcss(), sepal({ entry, app: {}, dom: true })],
+			plugins: [tailwindcss(), sepal({ app: {}, dom: true })],
 			// Not minified: a stack trace from a probe should be readable.
-			build: { outDir: dir, emptyOutDir: true, minify: false }
+			build: { outDir: dir, emptyOutDir: true, minify: false, rolldownOptions: { input: join(root, `${entry}.html`) } }
 		});
+		// The page lands where it was in the project; the app's is at the top.
+		renameSync(join(dir, `${entry}.html`), join(dir, 'index.html'));
 		stage = 'run';
 		const ran = spawnSync(host, ['--screenshot', join(dir, 'shot.png'), dir, '640x360'], { encoding: 'utf8', timeout: 15000 });
 		// The host logs what the app logs: console.warn and console.error, and uncaught errors.

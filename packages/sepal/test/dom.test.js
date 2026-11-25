@@ -2,15 +2,13 @@
 // with `dom: true`. The mock host's context has ECMAScript built-ins only, so
 // everything a library finds here was put there by the layer.
 
-import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { MockHost } from './mock-host.js';
 
-const bundle = fileURLToPath(new URL('../../../examples/shadcn/dist/app.js', import.meta.url));
 const host = new MockHost();
-host.eval(fs.readFileSync(bundle, 'utf8'));
+await host.load(fileURLToPath(new URL('../../../examples/shadcn/dist', import.meta.url)));
 // The router shows the page once its module has loaded.
 await host.flush_microtasks();
 assert.deepEqual(host.logs.filter(([level]) => level === 2), [], 'no errors logged during mount');

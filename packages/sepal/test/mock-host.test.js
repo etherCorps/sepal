@@ -1,15 +1,13 @@
-import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { MockHost } from './mock-host.js';
 
-const bundle = fileURLToPath(new URL('../../../examples/counter/dist/app.js', import.meta.url));
-const code = fs.readFileSync(bundle, 'utf8');
+const dist = fileURLToPath(new URL('../../../examples/counter/dist', import.meta.url));
 const squash = (s) => s.replace(/\s+/g, ' ').trim();
 
 const host = new MockHost();
-host.eval(code);
+await host.load(dist);
 
 const errors = () => host.logs.filter(([level]) => level === 2);
 assert.deepEqual(errors(), [], 'no errors logged during mount');

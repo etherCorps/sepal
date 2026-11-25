@@ -7,15 +7,13 @@
 use std::path::Path;
 use std::time::Instant;
 
-use blitz_dom::DocumentConfig;
 use sepal::SvelteDocument;
 
 fn load() -> SvelteDocument {
     let dist = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/counter/dist");
-    let js = std::fs::read_to_string(format!("{dist}/app.js"))
+    let app = sepal::app::App::from_dir(Path::new(dist))
         .expect("run `pnpm run build` in the repository root first");
-    let css = std::fs::read_to_string(format!("{dist}/app.css")).unwrap();
-    SvelteDocument::new(&js, &css, DocumentConfig::default()).expect("app failed to start")
+    SvelteDocument::for_app(&app).expect("app failed to start")
 }
 
 #[test]

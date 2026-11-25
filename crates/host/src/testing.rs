@@ -11,8 +11,24 @@ use blitz_traits::shell::{ColorScheme, Viewport};
 use keyboard_types::{Code, Key, Location, Modifiers, NamedKey};
 
 use crate::SvelteDocument;
+use crate::app::App;
 
 impl SvelteDocument {
+    /// Open an app folder with the test's own stylesheet in place of the
+    /// app's: its `index.html`, with each `<link rel="stylesheet">` taken
+    /// out and `css` put in a `<style>`. The app's modules load as they are.
+    pub fn with_css(dir: &std::path::Path, css: &str) -> Result<Self, String> {
+        let mut app = App::from_dir(dir)?;
+        while let Some(start) = app.html.find("<link rel=\"stylesheet\"") {
+            let end = start + app.html[start..].find('>').unwrap_or(0) + 1;
+            app.html.replace_range(start..end, "");
+        }
+        app.html = app
+            .html
+            .replacen("</head>", &format!("<style>{css}</style></head>"), 1);
+        Self::for_app(&app)
+    }
+
     /// Set the window size in CSS pixels and lay the document out.
     pub fn layout(&mut self, width: u32, height: u32) {
         self.base_mut()

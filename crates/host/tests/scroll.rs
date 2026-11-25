@@ -7,7 +7,8 @@
 //! own, and the counter for a plain `onscroll`. Build both first:
 //! `pnpm run build` in the repository root.
 
-use blitz_dom::DocumentConfig;
+use std::path::Path;
+
 use sepal::SvelteDocument;
 
 /// A 100px list of 50 rows, 20px each, below a 30px header: row `n` starts at
@@ -42,12 +43,14 @@ const SETUP: &str = "
 ";
 
 fn page() -> SvelteDocument {
-    let js = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../examples/shadcn/dist/app.js"
-    ))
+    let mut doc = SvelteDocument::with_css(
+        Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/shadcn/dist"
+        )),
+        CSS,
+    )
     .expect("run `pnpm run build` in the repository root first");
-    let mut doc = SvelteDocument::new(&js, CSS, DocumentConfig::default()).unwrap();
     doc.layout(400, 300);
     eval(&mut doc, SETUP);
     doc
@@ -263,10 +266,9 @@ fn scroll_into_view_scrolls_the_box_around_a_node() {
 #[test]
 fn onscroll_in_a_plain_app() {
     let dist = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/counter/dist");
-    let js = std::fs::read_to_string(format!("{dist}/app.js"))
+    let app = sepal::app::App::from_dir(Path::new(dist))
         .expect("run `pnpm run build` in the repository root first");
-    let css = std::fs::read_to_string(format!("{dist}/app.css")).unwrap();
-    let mut doc = SvelteDocument::new(&js, &css, DocumentConfig::default()).unwrap();
+    let mut doc = SvelteDocument::for_app(&app).unwrap();
     doc.layout(800, 600);
     let scrolled = doc.query("#scrolled").unwrap();
     assert_eq!(doc.text(scrolled), "scrolled 0px");

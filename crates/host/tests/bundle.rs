@@ -34,9 +34,27 @@ fn fake_host(dir: &Path) -> PathBuf {
 fn dist_with(dir: &Path, manifest: &str) -> PathBuf {
     let dist = dir.join("dist");
     fs::create_dir_all(&dist).unwrap();
-    fs::write(dist.join("app.js"), "").unwrap();
+    fs::write(dist.join("index.html"), "").unwrap();
     fs::write(dist.join("app.json"), manifest).unwrap();
     dist
+}
+
+/// Every file under a directory, relative to it.
+fn files(dir: &Path) -> Vec<PathBuf> {
+    let mut found = Vec::new();
+    for entry in fs::read_dir(dir).unwrap() {
+        let path = entry.unwrap().path();
+        if path.is_dir() {
+            found.extend(
+                files(&path)
+                    .into_iter()
+                    .map(|file| Path::new(path.file_name().unwrap()).join(file)),
+            );
+        } else {
+            found.push(PathBuf::from(path.file_name().unwrap()));
+        }
+    }
+    found
 }
 
 /// The entries of an `.icns` file as (type, payload).
@@ -68,11 +86,15 @@ fn bundles_the_counter_example() {
         fs::read(contents.join("MacOS/Counter")).unwrap(),
         fs::read(&host).unwrap()
     );
-    for file in ["app.js", "app.css", "app.json", "icon.png"] {
+    // The whole app folder: the page, its chunks and stylesheet, app.json, the icon.
+    let copied = files(counter_dist());
+    assert!(copied.contains(&PathBuf::from("index.html")) && copied.len() > 4);
+    for file in copied {
         assert_eq!(
-            fs::read(contents.join("Resources").join(file)).unwrap(),
-            fs::read(counter_dist().join(file)).unwrap(),
-            "{file} copied unchanged"
+            fs::read(contents.join("Resources").join(&file)).unwrap(),
+            fs::read(counter_dist().join(&file)).unwrap(),
+            "{} copied unchanged",
+            file.display()
         );
     }
 

@@ -1,6 +1,8 @@
 // A host written in plain JS. It applies op batches to a simple tree, which
 // lets the renderer be tested without Rust, a GPU or a window.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import vm from 'node:vm';
 import { OP } from '../src/protocol.js';
 
@@ -71,6 +73,45 @@ export class MockHost {
 
 	eval(code, filename = 'app.js') {
 		vm.runInContext(code, this.context, { filename });
+		this.settle();
+	}
+
+	/**
+	 * Load an app folder as the Rust host does: the module scripts of its
+	 * index.html, and what they import, by URL from the folder. Needs
+	 * `node --experimental-vm-modules`.
+	 * @param {string} dist
+	 */
+	async load(dist) {
+		/** @type {Map<string, any>} */
+		const modules = new Map();
+		/** @param {string} url */
+		const module_at = (url) => {
+			let module = modules.get(url);
+			if (module === undefined) {
+				module = new /** @type {any} */ (vm).SourceTextModule(readFileSync(join(dist, new URL(url).pathname), 'utf8'), {
+					context: this.context,
+					identifier: url,
+					initializeImportMeta: (/** @type {any} */ meta) => void (meta.url = url),
+					importModuleDynamically: async (/** @type {string} */ specifier) => {
+						const imported = module_at(new URL(specifier, url).href);
+						await imported.link(link);
+						await imported.evaluate();
+						return imported;
+					}
+				});
+				modules.set(url, module);
+			}
+			return module;
+		};
+		/** @param {string} specifier @param {any} referrer */
+		const link = (specifier, referrer) => module_at(new URL(specifier, referrer.identifier).href);
+		const page = readFileSync(join(dist, 'index.html'), 'utf8');
+		for (const [, src] of page.matchAll(/<script type="module"[^>]*\ssrc="([^"]+)"/g)) {
+			const module = module_at(new URL(src, 'http://app.localhost/').href);
+			await module.link(link);
+			await module.evaluate();
+		}
 		this.settle();
 	}
 

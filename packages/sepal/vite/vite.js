@@ -1,25 +1,39 @@
-// Vite preset: compile Svelte for the Blitz renderer and emit exactly one
-// `app.js` (an IIFE the host can eval) and one `app.css`.
-
+// Vite preset: compile Svelte for the Blitz renderer, as a web build: the
+// app's `index.html`, the ES module chunks it loads, one stylesheet, the
+// static files, and `app.json` for the host.
 //
 // Settings come from `sepal.config.ts` (or `.js`/`.mjs`) in the project
 // root, so that `vite.config.ts` stays a list of plugins. Options passed to
 // `sepal()` directly override the file, key by key.
 //
-// The entry is `src/main.js` or `src/main.ts`, or the `entry` option. An app
-// with pages in `src/routes` is a SvelteKit app: it uses `sepalKit()` from
+// The entry is `index.html`, as for any Vite app; its module script
+// (`src/main.ts` in the examples) mounts the app. An app with pages in
+// `src/routes` is a SvelteKit app: it uses `sepalKit()` from
 // `sepal/sveltekit` instead of this preset.
 //
 // In watch mode (`vite build --watch`) with a host binary available, it also
 // opens the app and reloads it in place after every rebuild.
 
 import { existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { normalizePath } from 'vite';
 import { dev_window, load_config, manifest } from './app.js';
 import { element_bindings } from './bindings.js';
 import { head } from './head.js';
+import { check_css, check_page } from './page.js';
+
+/** What `index.html` needs, for the message when there is none. */
+const PAGE = `<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>My app</title>
+	</head>
+	<body>
+		<script type="module" src="/src/main.ts"></script>
+	</body>
+</html>`;
 
 /**
  * What the app tells the host about itself. Written to `dist/app.json`.
@@ -82,13 +96,9 @@ import { head } from './head.js';
  * (`window`, `document`, element methods; see `sepal/dom`)
  * before anything else, so those libraries find what they reach for.
  *
- * `entry` is the module the app starts from (default `src/main.js` or
- * `src/main.ts`). It mounts the app; a router of your own goes there.
- *
  * @typedef {{
  *   app?: AppManifest,
  *   permissions?: Permissions,
- *   entry?: string,
  *   dom?: boolean
  * }} Config
  */
@@ -117,8 +127,10 @@ export function sepal(inline = {}) {
 	let config_path = null;
 	/** @type {import('vite').ConfigEnv} */
 	let config_env = { mode: 'production', command: 'build' };
-	/** The entry module, absolute and without extension, when `dom` is on. */
-	let dom_entry = '';
+	/** The modules `index.html` loads, when `dom` is on: the DOM layer goes first in each. */
+	const dom_entries = new Set();
+	/** @type {import('vite').Logger | null} */
+	let logger = null;
 	const user = inline.svelte ?? {};
 	let root = '';
 	/** The directory copied into the build as it is (`static/`). Empty when turned off. */
@@ -153,17 +165,15 @@ export function sepal(inline = {}) {
 				config_path = file.path;
 				options = { ...file.config, ...inline };
 
-				const has_main = ['js', 'ts'].some((ext) => existsSync(join(project, `src/main.${ext}`)));
-				if (options.entry === undefined && !has_main && existsSync(join(project, 'src/routes'))) {
+				const has_page = existsSync(join(project, 'index.html'));
+				if (!has_page && existsSync(join(project, 'src/routes'))) {
 					throw new Error(
-						"sepal: this app has pages in src/routes and no src/main. Pages are SvelteKit's: in vite.config.ts, use `sepalKit()` from 'sepal/sveltekit' in place of `sepal()`, and add a src/routes/+layout.ts with `export const ssr = false;`."
+						"sepal: this app has pages in src/routes and no index.html. Pages are SvelteKit's: in vite.config.ts, use `sepalKit()` from 'sepal/sveltekit' in place of `sepal()`, and add a src/routes/+layout.ts with `export const ssr = false;`."
 					);
 				}
-				// No extension: Vite resolves `src/main.js` or `src/main.ts`, whichever exists.
-				const entry = options.entry ?? 'src/main';
-
-				// Vite's module ids use `/` on Windows as well.
-				if (options.dom) dom_entry = normalizePath(resolve(project, entry)).replace(/\.[cm]?[jt]s$/, '');
+				if (!has_page) {
+					throw new Error(`sepal: this app has no index.html. It is the page the app starts from, as in any Vite app, next to vite.config.ts:\n\n${PAGE}`);
+				}
 
 				return {
 					// Files in `static/` are copied to the build as they are, so the app
@@ -180,28 +190,47 @@ export function sepal(inline = {}) {
 					},
 					build: {
 						target: 'es2022',
+						// One stylesheet, linked from index.html. A chunk's own
+						// stylesheet would be added with `document`, which an app
+						// without the DOM layer does not have.
 						cssCodeSplit: false,
-						lib: {
-							entry,
-							name: 'app',
-							formats: ['iife'],
-							fileName: () => 'app.js',
-							cssFileName: 'app'
-						},
-						// The sources are modules, and module code is strict; the IIFE
-						// keeps it so. Rolldown's default only keeps directives it finds.
-						rolldownOptions: { output: { strict: true } }
+						// So would preloading: Vite's modulepreload polyfill and the
+						// <link>s it writes ahead of a dynamic import. The host loads
+						// a module from the app folder when it is imported.
+						modulePreload: false
 					}
 				};
 			},
+			resolveId: {
+				// Before Vite's own resolver, which would answer first.
+				order: 'pre',
+				async handler(source, importer) {
+					// The modules index.html loads: with `dom`, the DOM layer has to
+					// exist before any library module runs, so it goes first in them.
+					if (!options.dom || !importer?.endsWith('.html')) return;
+					const resolved = await this.resolve(source, importer, { skipSelf: true });
+					if (resolved) dom_entries.add(resolved.id);
+					return resolved;
+				}
+			},
 			transform(code, id) {
-				// The DOM has to exist before any library module runs, so it is the
-				// entry module's first import.
-				if (dom_entry !== '' && id.replace(/\.[cm]?[jt]s$/, '') === dom_entry) {
-					return { code: `import 'sepal/dom';\n${code}`, map: null };
+				if (dom_entries.has(id)) return { code: `import 'sepal/dom';\n${code}`, map: null };
+				// Stylesheets, component styles included: nothing in them may load from the network.
+				if (/\.css($|\?)/.test(id)) {
+					const errors = check_css(code, normalizePath(relative(root, id.split('?')[0])));
+					if (errors.length > 0) this.error(`sepal: ${errors.join('\nsepal: ')}`);
+				}
+			},
+			transformIndexHtml: {
+				order: 'pre',
+				handler(html) {
+					const { errors, warnings } = check_page(html);
+					if (errors.length > 0) throw new Error(`sepal: ${errors.join('\nsepal: ')}`);
+					for (const warning of warnings) logger?.warn(`sepal: ${warning}`);
 				}
 			},
 			configResolved(config) {
+				logger = config.logger;
 				root = config.root;
 				static_dir = config.publicDir;
 				out_dir = resolve(root, config.build.outDir);
@@ -210,11 +239,11 @@ export function sepal(inline = {}) {
 			async buildStart() {
 				// In watch mode, pick up edits to the config file. What it says about
 				// the app and its permissions takes effect on the next build; a
-				// change to `entry` needs Vite restarted.
+				// change to `dom` needs Vite restarted.
 				if (config_path === null) return;
 				this.addWatchFile(config_path);
 				const file = await load_config(root, config_env);
-				options = { ...file.config, ...inline, entry: options.entry };
+				options = { ...file.config, ...inline };
 			},
 			generateBundle() {
 				let written;

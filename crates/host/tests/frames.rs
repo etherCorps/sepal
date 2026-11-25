@@ -11,16 +11,15 @@ use std::sync::{Arc, mpsc};
 use std::task::{Context, Wake, Waker};
 use std::time::{Duration, Instant};
 
-use blitz_dom::{Document, DocumentConfig};
+use blitz_dom::Document;
 use sepal::SvelteDocument;
 
 const COUNTER: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/counter/dist");
 
 fn load() -> SvelteDocument {
-    let js = std::fs::read_to_string(format!("{COUNTER}/app.js"))
+    let app = sepal::app::App::from_dir(Path::new(COUNTER))
         .expect("run `pnpm run build` in the repository root first");
-    let css = std::fs::read_to_string(format!("{COUNTER}/app.css")).unwrap();
-    let mut doc = SvelteDocument::new(&js, &css, DocumentConfig::default()).unwrap();
+    let mut doc = SvelteDocument::for_app(&app).unwrap();
     doc.layout(800, 600);
     doc
 }

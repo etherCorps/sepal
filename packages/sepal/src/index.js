@@ -6,18 +6,20 @@ import { settle_call } from './host-call.js';
 import { fetch, Headers, Request, Response } from './fetch.js';
 
 /**
- * Mount a component into the window.
+ * Mount a component into the window: into the page's `<body>`, or into
+ * `target`, an element of the page (with the DOM layer,
+ * `document.getElementById('app')`).
  *
  * @template {Record<string, any>} Props
  * @template {Record<string, any>} Exports
  * @param {import('svelte').Component<Props, Exports, any>} component
- * @param {{ props?: Props, context?: Map<any, any> }} [options]
+ * @param {{ props?: Props, context?: Map<any, any>, target?: object | null }} [options]
  * @returns {Exports} the component's exports; pass it to `unmount`
  */
 export function mount(component, options = {}) {
 	// Svelte's own signature makes `props` required when the component has
 	// required props; ours keeps it optional, hence the cast.
-	return svelte_mount(component, /** @type {any} */ ({ ...options, target: root, renderer }));
+	return svelte_mount(component, /** @type {any} */ ({ ...options, target: options.target ?? root, renderer }));
 }
 
 export { unmount, renderer, root };
