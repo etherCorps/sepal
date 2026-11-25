@@ -107,6 +107,8 @@ pub struct Api {
     /// Response bodies that JavaScript has not read yet, by request id.
     bodies: Mutex<HashMap<u64, Vec<u8>>>,
     next_body: Mutex<u64>,
+    /// The app folder, which answers the app's own origin (`fetch('/data.json')`).
+    folder: Option<Arc<crate::net::AppFolder>>,
 }
 
 impl Api {
@@ -117,7 +119,14 @@ impl Api {
             picked: Mutex::default(),
             bodies: Mutex::default(),
             next_body: Mutex::new(1),
+            folder: None,
         }
+    }
+
+    /// Answer requests to the app's own origin from this folder.
+    pub fn with_folder(mut self, folder: Arc<crate::net::AppFolder>) -> Self {
+        self.folder = Some(folder);
+        self
     }
 
     /// The work behind a host call, or the reason it is refused. Refusals that

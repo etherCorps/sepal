@@ -288,7 +288,8 @@ impl SvelteDocument {
             let version = app.manifest.version.as_deref().unwrap_or("0.0.0");
             Arc::new(Updater::new(config, version, app.bundle.clone()))
         });
-        let api = Api::new(app.manifest.permissions.clone(), app.manifest.app_id());
+        let api = Api::new(app.manifest.permissions.clone(), app.manifest.app_id())
+            .with_folder(resources.folder().clone());
         Self::create(app, config, Some(resources), updater, api, hold_host_calls)
     }
 

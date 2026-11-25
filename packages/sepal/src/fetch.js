@@ -181,8 +181,10 @@ function header_pairs(headers) {
  */
 export async function fetch(input, init = {}) {
 	const { url, method, headers, body } = new Request(input, init);
+	// A relative URL is relative to the page the app is on (the DOM layer's
+	// `location`), or to the app's origin.
 	/** @type {Record<string, unknown>} */
-	const request = { url, method, headers: [...headers] };
+	const request = { url, method, headers: [...headers], base: /** @type {any} */ (globalThis).location?.href };
 
 	if (typeof body === 'string') request.body = body;
 	else if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) request.body_base64 = encode(to_bytes(body));

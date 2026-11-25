@@ -97,6 +97,12 @@ impl AppFolder {
         if !path.starts_with(root) {
             return Err(Refused::Other("outside the app folder".into()));
         }
+        // A directory is its index.html, as on a web server.
+        let path = if path.is_dir() {
+            path.join("index.html")
+        } else {
+            path
+        };
         if !path.is_file() {
             return Err(Refused::Missing);
         }
