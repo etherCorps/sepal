@@ -14,8 +14,8 @@
 
 <div class="flex h-screen flex-col bg-slate-50 font-sans text-slate-900">
 	<nav class="flex items-center gap-4 border-b border-slate-200 bg-white px-6 py-3">
-		<!-- Files in static/ are copied next to the app and loaded by name. -->
-		<img src="logo.svg" alt="" width="28" height="28" />
+		<!-- Files in static/ are copied next to the app, addressed from the root. -->
+		<img src="/logo.svg" alt="" width="28" height="28" />
 		{#each links as link (link.href)}
 			<a
 				href={link.href}

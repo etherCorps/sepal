@@ -3,9 +3,9 @@
 	Open state is `ui.shortcuts`.
 -->
 <script lang="ts">
-	import { Dialog, DialogContent, DialogTitle } from '$lib/components/ui/dialog/index.js';
-	import Kbd from '$lib/components/Kbd.svelte';
-	import { SHORTCUTS, key_label, ui } from '$lib/ui.svelte';
+	import { Dialog, DialogContent, DialogTitle } from '#lib/components/ui/dialog/index.ts';
+	import Kbd from '#lib/components/Kbd.svelte';
+	import { SHORTCUTS, key_label, ui } from '#lib/ui.svelte.ts';
 
 
 	const columns = [

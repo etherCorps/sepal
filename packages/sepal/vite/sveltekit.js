@@ -18,7 +18,7 @@
 //
 // Runs in Node.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, posix, relative, resolve } from 'node:path';
 import { dev_window, load_config, manifest } from './app.js';
 import { element_bindings } from './bindings.js';
@@ -60,6 +60,18 @@ function files_in(directory) {
 }
 
 /**
+ * The files under `src` that SvelteKit would run on a server, which an app
+ * does not have: they would build, and then never run. Relative to `src`.
+ *
+ * ponytail: comes out when the backend thread lands; that is where they will run.
+ * @param {string} src
+ */
+export function server_files(src) {
+	if (!existsSync(src)) return [];
+	return files_in(src).filter((file) => /(^|\/)(\+(page|layout)\.server\.|\+server\.|hooks\.server\.)|\.remote\.[^/]+$/.test(file));
+}
+
+/**
  * Turn what SvelteKit built (an HTML page that imports one module) into what
  * the host loads (a script, a stylesheet, and the other files as they are).
  * @param {string} from SvelteKit's client output, with its fallback page as `index.html`
@@ -98,19 +110,28 @@ export function convert(from, to) {
 	writeFileSync(
 		join(to, 'app.js'),
 		`(() => {
+// The bundle was a module, and module code is strict. Run as a sloppy script,
+// the minified Tracker broke on V8 (a renderer method missing on Insights).
+'use strict';
 const __module_url = ${JSON.stringify(`http://app.localhost/${bundle}`)};
 ${code}
 globalThis.${payload}
 // Where SvelteKit puts the app: the element its start script sat in.
-const element = document.createElement('div');
-document.body.appendChild(element);
-${start}(element);
+const __sepal_target = document.createElement('div');
+document.body.appendChild(__sepal_target);
+${start}(__sepal_target);
 })();
 `
 	);
 
 	const styles = [...html.matchAll(/<link href="\/([^"]+)" rel="stylesheet">/g)].map((link) => link[1]).filter((file) => files.includes(file));
-	writeFileSync(join(to, 'app.css'), styles.map((file) => rebase_css(readFileSync(join(from, file), 'utf8'), posix.dirname(file))).join('\n'));
+	const css = styles.map((file) => rebase_css(readFileSync(join(from, file), 'utf8'), posix.dirname(file)));
+	// SvelteKit's route announcer is a 1px `overflow: hidden` box at the top
+	// left. Blitz hit-tests what overflows such a box, so after the first
+	// navigation its invisible text took clicks meant for what is drawn there.
+	// ponytail: until Blitz's hit testing clips to `overflow: hidden`; then this goes.
+	css.push('#svelte-announcer { pointer-events: none }');
+	writeFileSync(join(to, 'app.css'), css.join('\n'));
 
 	// Everything else is for the app to load by its path: static files, and
 	// what SvelteKit put in `_app/immutable/assets`.
@@ -159,6 +180,8 @@ export async function sepalKit(inline = {}) {
 	let root = process.cwd();
 	let watching = false;
 	const show = dev_window(() => ({ root, out_dir: resolve(root, out), name: options.app?.name }));
+	// Deprecated in SvelteKit 3's types, but still the only way to move `static/`:
+	// the top-level `assets` is `paths.assets`, a URL.
 	const static_dir = () => resolve(root, kit.files?.assets ?? 'static');
 
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -167,8 +190,9 @@ export async function sepalKit(inline = {}) {
 		async adapt(builder) {
 			const staging = builder.getBuildDirectory('sepal');
 			const to = resolve(root, out);
-			builder.rimraf(staging);
-			builder.rimraf(to);
+			// `builder.rimraf` is deprecated in SvelteKit 3.
+			rmSync(staging, { force: true, recursive: true });
+			rmSync(to, { force: true, recursive: true });
 			builder.writeClient(staging);
 			// The page SvelteKit serves for a route it did not prerender: nothing
 			// in it but the script that starts the app.
@@ -202,6 +226,17 @@ export async function sepalKit(inline = {}) {
 			root = config.root;
 			watching = config.build.watch != null;
 		},
+		buildStart() {
+			// On every build, so that a file added in watch mode is caught too.
+			const src = resolve(root, kit.files?.src ?? 'src');
+			const found = server_files(src);
+			if (found.length > 0) {
+				const names = found.map((file) => posix.join(relative(root, src).replaceAll('\\', '/'), file)).join(', ');
+				this.error(
+					`sepal: ${names} ${found.length === 1 ? 'is' : 'are'} server code. It would run in the app's backend thread, which Sepal does not have yet, so it would never run. Use +page.ts/+layout.ts (\`load\` runs in the app) until then.`
+				);
+			}
+		},
 		transform(code, id) {
 			const edit = patch.find(({ file }) => id.endsWith(file));
 			if (edit === undefined) return;
@@ -221,6 +256,10 @@ export async function sepalKit(inline = {}) {
 			output: { ...kit.output, bundleStrategy: 'single' },
 			// Nothing is rendered ahead of time. There is no server to send it.
 			prerender: { ...kit.prerender, entries: kit.prerender?.entries ?? [] },
+			// SvelteKit 3 asks the server for a new version every hour by default:
+			// a wake-up on a timer, and a request nothing answers. An app updates
+			// through `sepal/updater` instead.
+			version: { ...kit.version, pollInterval: kit.version?.pollInterval ?? 0 },
 			// Ours first: they have to see `bind:` on elements and `<svelte:head>`
 			// before Svelte refuses them.
 			preprocess: [element_bindings(), head(), ...[kit.preprocess ?? []].flat()],

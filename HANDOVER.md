@@ -12,7 +12,12 @@ what was published before the rename, and under which names, is in
 Names follow the 24 Nov rename: the project is Sepal, the crate is `sepal`, and
 the prebuilt host is calyx (binary `calyx`; npm `@ethercorps/calyx`, which since
 0.1.0-alpha.1 installs one of four `@ethercorps/calyx-<platform>` packages).
-This is the current work; the prompt to start it is at the end of this section.
+The prompt to start it is at the end of this section.
+
+**Order of the bigger plan (decided 24 Nov):** phase 1 is SvelteKit as the
+only router (done on branch `sveltekit-only`, see "SvelteKit as the only
+router" below), phase 2 is the backend thread, and this native layer is
+phase 3. There is no launch date; the major needs come first.
 
 The question: Electron apps have Node, Electrobun apps have Bun, Tauri apps
 have Rust. What does a Sepal app write its "backend" in, and how does it
@@ -36,8 +41,7 @@ clipboard, open, window, updater)?
   - plugins that start their own threads would undo the idle-CPU numbers
 - **The prebuilt host (calyx, the four platform packages) stays** for apps
   without `native/`, and those apps never need Rust or cargo. It gets a few
-  more commonly used APIs (Shivam picks them, see below). Everything else
-  becomes a plugin.
+  more commonly used APIs (below). Everything else becomes a plugin.
 - **The patches stay patches.** All four patched crates remain in this repo:
   `crates/blitz-dom` and `crates/anyrender_vello_hybrid` (Blitz's), and
   `crates/vello_gpu` and `crates/wgpu-hal` (the GPU memory fixes). Apps get
@@ -47,47 +51,30 @@ clipboard, open, window, updater)?
   per-app choice: `features = ["engine-v8"]` in `native/Cargo.toml`. The
   prebuilt host stays on QuickJS.
 
-### Open decisions: ask Shivam, do not guess
+### Decided later on 24 Nov (these were the open decisions)
 
-**Which APIs join the prebuilt host.** Candidates, cheapest first:
-
-- `process`: standard library only
-- settings store: JSON in the data directory (on the "not done" list)
-- OS info, environment variables, locale: `sys-locale`
-- notifications (on the "not done" list)
-- secrets: `keyring` 3
-- file watching: `notify`
-
-Measured on 24 Nov: secrets built as a standalone Linux library came to
-1.0 MB. About 300 KB of that is its own copy of Rust's standard library and
-serde_json, which the host already has, so expect less inside the host. The
-rest is keyring, its D-Bus client (vendored libdbus) and crypto. If both
-notifications and secrets go in, use one D-Bus stack on Linux for both.
-
-These stay out of the prebuilt host and become plugins:
-
-- tray and menus: `tray-icon` and `muda` need GTK on Linux
-- global shortcuts
-- autostart
-- SQLite
-
-**A size budget for the prebuilt host.** At 0.1.0-alpha.1 calyx is 25.4 MB
-on darwin-arm64 (25,437,456 bytes), 26.3 MB on darwin-x64, 29.3 MB on
-linux-arm64-gnu and 32.3 MB on linux-x64-gnu (the V8 spike measured 24.0 MB
-on 22 Nov).
-
-**The JS backend thread** (see "Later"). Two questions:
-
-- Confirm it.
-- Decide whether it stops when the window closes or keeps running. Tray apps
-  need it to keep running.
-
-**Publishing the `sepal` crate.** To crates.io, or only through git? `sepal`
-was still free on crates.io on 24 Nov, after the npm packages were published.
-Publishing works: the crate depends on `blitz-dom =0.3.0-beta.4`, and each
-app's patch lines replace that. Either way step 4 needs something to pin to:
-release.yml tags every release `v<version>` from 0.1.0-alpha.2 on (see
-"Automatic releases"); earlier versions have no tag.
+- **What joins the prebuilt calyx:** process, a settings store (JSON in the
+  data directory), OS info, environment and locale (`sys-locale`), secrets
+  (`keyring` 3) and notifications. Secrets and notifications share one D-Bus
+  stack on Linux. Tray and menus, global shortcuts, autostart, SQLite and file
+  watching stay plugins (tray and menus need GTK on Linux).
+- **calyx size budget: 30 MB.** At 0.1.0-alpha.1 calyx is 25.4 MB on
+  darwin-arm64 (25,437,456 bytes), 26.3 MB on darwin-x64, 29.3 MB on
+  linux-arm64-gnu and 32.3 MB on linux-x64-gnu. Measured on 24 Nov: secrets
+  built as a standalone Linux library came to 1.0 MB, about 300 KB of it the
+  standard library and serde_json the host already has. The whole set is
+  estimated at 1 to 1.5 MB.
+- **The backend thread's lifetime is chosen per app:** `background: true` in
+  `sepal.config.ts` keeps it running after the last window closes (tray
+  apps); by default it stops and the app quits.
+- **The `sepal` crate goes on crates.io for now.** Switching to git only may
+  come later. Plugin crates go to crates.io too, because crates.io refuses
+  crates with git-only dependencies. The crate depends on
+  `blitz-dom =0.3.0-beta.4`, and each app's patch lines replace that.
+  release.yml tags every release `v<version>` from 0.1.0-alpha.2 on (see
+  "Automatic releases"); earlier versions have no tag.
+- **Dev mode:** dev runs the same chunked output as a release, loaded by the
+  host the same way. No Vite dev server and no HMR.
 
 ### Why the patches need care now
 
@@ -129,7 +116,7 @@ library plus a thin binary. `lib.rs` already exists and `main.rs` already uses
 
 ```rust
 sepal::App::new()
-    .plugin(sepal_secrets::init())
+    .plugin(sepal_watch::init())
     .command("tracker.import", import_repo)
     .run();
 ```
@@ -149,8 +136,10 @@ sepal::App::new()
   manifest too. An unknown key is an error unless a registered plugin claims
   it. This is the rule `Permissions::parse` already follows: a typo must not
   turn into "allowed" or "not allowed".
-- **The prebuilt binary** is `App::new().run()` plus whichever built-ins
-  Shivam picks.
+- **The prebuilt binary** is `App::new().run()` plus the built-ins chosen
+  above.
+- Commands and events must reach both JS runtimes (UI and backend thread),
+  since the backend thread lands before this work.
 
 **Check:** the prebuilt release binary stays the same size, within a few KB.
 All host tests pass on both engines.
@@ -158,7 +147,7 @@ All host tests pass on both engines.
 #### 3. Events from Rust to JS
 
 - Add `emit(name, json)`, callable from any thread. It delivers to JS listeners
-  registered with `on(name, fn)` in `sepal`.
+  registered with `on(name, fn)` in `sepal`, in whichever runtime listens.
 - Wake the event loop the way call answers do today (the `answers` channel plus
   the waker), never by polling.
 - Tray clicks, shortcuts and file watching all need this.
@@ -168,9 +157,9 @@ thread, with no window activity, reaches JS with one wake-up.
 
 #### 4. `native/` in the CLI
 
-- **`sepal native init`** writes `native/Cargo.toml`, with the four
-  `[patch.crates-io]` lines pinned to this release (a git tag or a commit; see
-  "Publishing the `sepal` crate"), and `native/src/main.rs`.
+- **`sepal native init`** writes `native/Cargo.toml`, depending on the `sepal`
+  crate from crates.io, with the four `[patch.crates-io]` lines pinned to this
+  release's git tag, and `native/src/main.rs`.
 - **`sepal add <plugin>`** adds four things: the crate, the npm package,
   the `.plugin()` line and the `permissions` entry.
 - **When `native/Cargo.toml` exists,** dev and `--bundle` build it with cargo
@@ -191,39 +180,57 @@ thread, with no window activity, reaches JS with one wake-up.
   `crates/host/Cargo.toml` and writes into this machine's
   `packages/calyx-<platform>/`; both paths become arguments.
 
-**Check:** `examples/native`, with one command plus the secrets plugin, builds
-and runs through the CLI. Record two times: the cold build, and the build of a
+**Check:** `examples/native`, with one command plus the file-watching plugin,
+builds and runs through the CLI. Record two times: the cold build, and the build of a
 second app with the same versions on the shared target directory.
 
-#### 5. First plugin end to end: secrets
+#### 5. First plugin end to end: file watching
 
-- **Crate `sepal-secrets`,** using `keyring` 3: Keychain on macOS,
-  Credential Manager on Windows, Secret Service on Linux.
-- **npm package `sepal-secrets`,** with `getSecret`, `setSecret` and
-  `deleteSecret`. Both packages live in this repo.
-- **Gated by `permissions.secrets`.**
+Secrets moved into calyx (decided 24 Nov), so file watching is the plugin that
+proves the `native/` path. SQLite could take its place instead.
+
+- **A crate (for example `sepal-watch`)** on `notify`: FSEvents on macOS,
+  inotify on Linux.
+- **An npm package** with `watch(path, { recursive })`, delivering changes
+  through the Rust-to-JS events of step 3. Both packages live in this repo.
+- **Gated by its own permission key,** scoped like `fs`.
 - **A plugin template** whose `Cargo.toml` carries the patch lines, so plugin
   authors can run their own tests.
+- The first publish of each package is by hand; then add trusted publishing.
 
 **Check:**
 
 - A headless test covers the permission refusal and the argument handling.
-- Set and get work on macOS in a bundled, signed app.
+- A change on disk reaches JS with one wake-up and no polling.
+- `idle_turns_do_no_work` passes with a watcher open.
 
-#### 6. Prebuilt additions
+#### 6. The prebuilt additions
 
-Once Shivam has picked them, add each one separately. Measure the release size
-before and after each, and stay within the budget.
+Add process, the settings store, OS info and locale, secrets and notifications
+to calyx, each one separately. Measure the release size before and after each,
+and stay within the 30 MB budget. Secrets and notifications share one D-Bus
+stack on Linux, designed portal-first for Flatpak. `permissions.process` warns
+when it allows a shell (`osascript`, `sh`, `powershell`).
+
+#### 7. Publish the `sepal` crate
+
+Publish to crates.io (claim the name early; it was free on 24 Nov), then add it
+to the CI release with crates.io trusted publishing. Check that `cargo publish`
+passes with the vendored Blitz crates replaced by their crates.io versions plus
+the patch lines.
 
 ### Later, as separate work
 
-- **The JS backend thread:** a second QuickJS runtime on its own thread.
-  - Code in `src/backend/` is called from the UI through `$backend` stubs.
-  - With the SvelteKit preset, remote functions run there, with same-origin
-    `fetch` routed to that thread.
 - **A GitHub Actions workflow** that apps can copy to build on each OS.
 - **Merging update feeds across CI machines,** which per-OS builds now make
   necessary.
+- **Plugins:** tray and menus, global shortcuts, autostart, SQLite.
+- **Typed TS generated from Rust commands.**
+
+The JS backend thread is phase 2, before this work: a second QuickJS runtime
+on its own thread, with code in `src/backend/` called from the UI through
+`$backend` stubs, and SvelteKit's server files and remote functions running
+there (`sepalKit()` refuses them until it lands).
 
 ### Rules
 
@@ -240,11 +247,52 @@ before and after each, and stay within the budget.
 
 ```
 Read CLAUDE.md, then the "Native layer" section of HANDOVER.md.
-Do steps 1 to 5 in order. After each step, run the check it names
-and show me the result before starting the next one. Anything under
-"Open decisions" is mine: ask, do not guess. Keep the invariants
+Do steps 1 to 7 in order. After each step, run the check it names
+and show me the result before starting the next one. Ask me about
+anything the plan doesn't settle; do not guess. Keep the invariants
 in CLAUDE.md.
 ```
+
+## SvelteKit as the only router (24 Nov 2026, branch `sveltekit-only`)
+
+Phase 1 of the bigger plan. Sepal's own router is gone, with its modules,
+the preset's `router` option and its example; pages in `src/routes` are
+always a SvelteKit app built with `sepalKit()`. What went, and the migration
+table, are in CHANGELOG.md under Unreleased. The Tracker and the Tauri build in `compare/`
+run SvelteKit from the same install, and `examples/router-dom-probe` runs it
+under Bits UI.
+
+Measured (session `sk-1`, `compare/results/raw/sk-1`, 1,000 issues, `main`
+against this branch against Tauri, interleaved): link clicks are 18-34 ms
+slower to their mark, the `start` mark 5 ms later (QuickJS parses a 95 KB
+larger bundle), RAM 5 s after load about 2 MB higher (0.5 MB of it the
+JavaScript heap). Idle, the clock, the New issue dialog and scrolling are the
+same.
+
+Next, each its own job after this branch:
+
+1. **`requestAnimationFrame` at the next frame the host draws**, and no extra
+   turn for a `setTimeout(0)` queued from a frame callback. SvelteKit waits
+   for both before following a link; that wait is most of the 18-34 ms.
+   SvelteKit's client stays as it is: no third edit to `client.js`.
+2. **Then a fresh comparison session**, and `compare.md` regenerated from it
+   (`make_compare_report.py` reads sessions by name).
+3. **Blitz hit testing clipped to `overflow: hidden`.** Blitz descends into
+   content that overflows an `overflow: hidden` box, so invisible text can
+   take clicks. In `Node::hit_inner` (`crates/blitz-dom/src/node/node.rs`), a
+   point outside the box on an axis whose overflow is `hidden` or `clip`
+   should return `None`, as a `sepal patch`. That patch passes a test of its
+   own, but 5 Tracker tests click elements far below the window (y up to
+   7,300 in an 800 px window), which only works while hit testing ignores the
+   clip: they would have to scroll their target into view first. Until then
+   `sepalKit()` gives SvelteKit's route announcer `pointer-events: none`,
+   which is the one place it bit.
+4. **Same-origin requests answered from the app folder** (the `index.html`
+   work). Every SvelteKit error page waits for `updated.check()`, a fetch of
+   `/_app/version.json` that the host refuses today; answered from the app
+   folder, it gets a real answer, as on the web. `convert()` in
+   `sveltekit.js` leaves `_app/version.json` out of `dist` at present, so it
+   has to be copied too.
 
 ## Goal
 
@@ -548,9 +596,11 @@ from run 45059364101:
 
 - The host builds with MSVC. Passing: type checks, all example builds, the JS
   tests, and the host's `bundle`, `counter`, `icons`, `manifest`, `restyle`,
-  `routing`, `shadcn`, `sveltekit` and `updater` tests.
+  `routing` (removed with the built-in router on 24 Nov), `shadcn`,
+  `sveltekit` and `updater` tests.
 - What was fixed to get there: paths with `\` compared against Vite's and
-  SvelteKit's `/` (`sveltekit.js`, `vite.js`, `routes.js`); `/logo.svg`
+  SvelteKit's `/` (`sveltekit.js`, `vite.js`, and the built-in router's route
+  scanner); `/logo.svg`
   resolving to `D:\logo.svg` (`net.rs` now works on URLs); and QuickJS's
   1 MB stack limit, which is about 220 calls deep with MSVC's frames, too few
   for a Bits UI page. The limit is 4 MB now and the Windows main thread is
@@ -706,7 +756,7 @@ runtime, the Vite preset and the CLI became one package.
 
 | Package | Directory |
 |---|---|
-| `sepal`: the runtime; the Vite preset and router (`sepal/vite`, `sepal/sveltekit`, `sepal/router`, with a `router` option for custom routers); the `sepal` command | `packages/sepal` |
+| `sepal`: the runtime; the Vite presets (`sepal/vite`, and `sepal/sveltekit` for apps with routes); the `sepal` command | `packages/sepal` |
 | `create-sepal`: the seeds | `packages/create` |
 | `@ethercorps/calyx`: calyx, the host; finds this machine's binary | `packages/host` |
 | `@ethercorps/calyx-darwin-arm64`, `-darwin-x64`, `-linux-x64-gnu`, `-linux-arm64-gnu`: one binary each | `packages/calyx-<platform>` |
@@ -726,10 +776,9 @@ needs release hosting.
 - TypeScript in the package and the examples.
 - Dev reload (`vite build --watch`), run from a throwaway bundle on macOS.
 - `sepal` CLI and a starter template with `static/`.
-- SvelteKit-style file routing (`src/routes`, `load`, `$app/navigation`,
-  `$app/state`). See "Routing" in the README for what differs from SvelteKit.
-  Not done: generated `./$types`, `invalidate`, navigation lifecycle hooks,
-  rerunning only the loads whose inputs changed.
+- File routing in `src/routes` (`load`, `$app/navigation`, `$app/state`):
+  first a router of Sepal's own, replaced on 24 Nov by SvelteKit's (see
+  "SvelteKit as the only router").
 - Updater (Tauri-style: ed25519 key, `latest.json` feed, JS API). Decided by
   Shivam: own signing key, app-driven through JS, built-in HTTPS client
   (`ureq` + rustls, +2.2 MB). Not done: installing on Windows and Linux,
@@ -853,20 +902,19 @@ to SvelteKit's client, and it reads `sepal.config.ts` and opens and reloads the
 dev window like the other preset. `head.js` rewrites `<svelte:head>` for both
 presets. The host resolves `/file` against the app directory.
 
-`create-sepal` asks which router and has a SvelteKit starter
-(`--router sveltekit`); `pnpm run test:template` creates, checks, builds and
-renders both.
+`create-sepal`'s starter is a SvelteKit app (the only one since 24 Nov);
+`pnpm run test:template` creates, checks, builds and renders it.
 
 Still to do for SvelteKit:
 
 - Tested with SvelteKit 3.4.0 only. The two edits (`patch` in
   `sveltekit.js`) target its internal files; try every new SvelteKit release
   before raising the peer range.
-- `svelte-check` in `examples/sveltekit`. (The starter has it: SvelteKit 3
-  wants `"extends": "$app/tsconfig"` and `svelte-kit sync` before the check.)
-- Scroll restoration and `afterNavigate` focus handling were not looked at.
+- Scroll restoration was not looked at. Focus after a navigation is
+  SvelteKit's: it moves to `<body>` only when nothing else has it.
 - `$app/environment`'s `browser` is true, `building` false: fine. `$env`
-  modules, service workers and remote functions were not tried.
+  modules and service workers were not tried. Remote functions and server
+  files stop the build until the backend thread lands.
 
 ## Known gaps outside this brief
 

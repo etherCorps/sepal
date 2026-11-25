@@ -1,7 +1,7 @@
 <!-- A project's 10px colour square. -->
 <script lang="ts">
-	import { cn } from '$lib/utils';
-	import { project_by_key } from '$lib/seed';
+	import { cn } from '#lib/utils.ts';
+	import { project_by_key } from '#lib/seed.ts';
 
 	let { project, class: className = '' }: { project: string; class?: string } = $props();
 </script>

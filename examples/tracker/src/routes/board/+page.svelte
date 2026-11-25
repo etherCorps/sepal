@@ -9,15 +9,15 @@
 -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select/index.js';
-	import Card from '$lib/board/Card.svelte';
-	import Filters from '$lib/list/Filters.svelte';
-	import { count } from '$lib/format';
-	import { StatusIcon } from '$lib/glyphs';
-	import { STATUSES, status_by_id, type StatusId } from '$lib/seed';
-	import { data, set_scope, undo_action, update, view } from '$lib/store.svelte';
-	import { push, use_keys } from '$lib/ui.svelte';
+	import PageHeader from '#lib/components/PageHeader.svelte';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '#lib/components/ui/select/index.ts';
+	import Card from '#lib/board/Card.svelte';
+	import Filters from '#lib/list/Filters.svelte';
+	import { count } from '#lib/format.ts';
+	import { StatusIcon } from '#lib/glyphs/index.ts';
+	import { STATUSES, status_by_id, type StatusId } from '#lib/seed.ts';
+	import { data, set_scope, undo_action, update, view } from '#lib/store.svelte.ts';
+	import { push, use_keys } from '#lib/ui.svelte.ts';
 
 	$effect.pre(() => {
 		set_scope({});

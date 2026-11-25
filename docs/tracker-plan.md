@@ -2,6 +2,8 @@
 
 Written 23 Nov 2026. The benchmark app. Design: /hallmark, using the shadcn components in the verified set.
 
+**Since 24 Nov the Tracker is a SvelteKit app** (`sepalKit()`, SvelteKit's router, `#lib`), and Sepal has no router of its own (HANDOVER.md, "SvelteKit as the only router"). The plan below was written for Sepal's former built-in router; where it names that router, read SvelteKit's.
+
 ## Tracker: an offline, keyboard-first issue tracker in the style of Linear (examples/tracker)
 
 Tracker is a local-first issue tracker like Linear or GitHub Issues: a sidebar shell, a list and detail split over 5000 seeded issues with live search, filters, grouping and sorting, j/k navigation, bulk triage, a Kanban board, an Insights dashboard with SVG charts, a Cmd+K palette, a New issue form, Undo toasts, settings, and edits saved to disk. It is the shape most people mean by a real-world app, and normal use of it reaches every expensive path in Sepal. Keystroke filtering tests QuickJS. The board tests Blitz layout. Selects and Dialogs force layouts over a big page (invariant 2). Navigating routes mounts and unmounts Bits UI under the router. Persistence and simulated teammate edits test timers, host calls and idle. All data comes from a fixed seed with no network, so runs are deterministic headless or in a window, on QuickJS or V8, at 1k, 5k and 20k issues.
@@ -12,7 +14,7 @@ Tracker is a local-first issue tracker like Linear or GitHub Issues: a sidebar s
 
 A sidebar with Issues, My issues, Board, Insights, 5 projects with open counts (/projects/[key], which is the list with a fixed filter) and Settings. The shell holds the only document keydown listener, the palette, New issue and the toast stack. setTitle follows the route.
 
-- <a href> navigation through the built-in router
+- <a href> navigation through the router (SvelteKit's since 24 Nov)
 - One document.addEventListener('keydown') in an $effect (dom:true, no <svelte:window>): Cmd/Ctrl+K, c, /, g-chords with a 1 s timeout, ? for the shortcuts Dialog
 - Single-key shortcuts are skipped while document.activeElement is an input
 - Escape has a fixed order: Select, then Dialog, then palette, then pane, then toast
@@ -85,7 +87,7 @@ src/lib/seed.ts uses mulberry32 with seed 42 and word lists, no dependencies. It
 
 ## Stack
 
-examples/tracker uses sepal() with the built-in file router (+layout.svelte, issues/+layout.svelte, issues/[key]/+page.ts|svelte, my, projects/[key], board, insights, settings, +error.svelte; goto and back, page). sepal.config.ts: dom: true, id com.example.tracker, a 1280x800 window, permissions { fs: ['data'], window: true, clipboard: true, dialog: true }, no http. shadcn components copied from examples/shadcn, verified set only: Button, Badge, Card, Input, Label, Separator, Switch, Checkbox, Tabs, Dialog, Select, Tooltip. Not used: Skeleton (never idles), and DropdownMenu, Popover, Command and Sonner (untried). Tailwind v4, @lucide/svelte, fontsource Inter. Only structure ships before the design, with a data-testid contract the design must keep: search, row, row-active, group-header, show-more, show-all, bulk-bar, detail-title, status-select, board-column, card, palette, palette-item, new-issue, toast, nav-*. Runes-only .svelte.ts stores. Measurement: drive.rs (extended), SEPAL_TRACE=1, crates/host/tests/tracker.rs, --features engine-v8.
+examples/tracker used sepal() with the built-in file router, and since 24 Nov uses sepalKit() with SvelteKit's (+layout.svelte, issues/+layout.svelte, issues/[key]/+page.ts|svelte, my, projects/[key], board, insights, settings, +error.svelte; goto and back, page). sepal.config.ts: dom: true, id com.example.tracker, a 1280x800 window, permissions { fs: ['data'], window: true, clipboard: true, dialog: true }, no http. shadcn components copied from examples/shadcn, verified set only: Button, Badge, Card, Input, Label, Separator, Switch, Checkbox, Tabs, Dialog, Select, Tooltip. Not used: Skeleton (never idles), and DropdownMenu, Popover, Command and Sonner (untried). Tailwind v4, @lucide/svelte, fontsource Inter. Only structure ships before the design, with a data-testid contract the design must keep: search, row, row-active, group-header, show-more, show-all, bulk-bar, detail-title, status-select, board-column, card, palette, palette-item, new-issue, toast, nav-*. Runes-only .svelte.ts stores. Measurement: drive.rs (extended), SEPAL_TRACE=1, crates/host/tests/tracker.rs, --features engine-v8.
 
 ## Perf scenarios
 
@@ -107,7 +109,7 @@ examples/tracker uses sepal() with the built-in file router (+layout.svelte, iss
 
 ## Risks and constraints
 
-- The router plus dom:true is unverified: shadcn is the only app with dom:true and has one page. Router root click listener at packages/sepal/vite/routing.svelte.js:376. Bits UI unmounting across routes is untested. Probe first.
+- The router plus dom:true is unverified: shadcn is the only app with dom:true and has one page. The router listened for link clicks on its root. Bits UI unmounting across routes is untested. Probe first.
 - Scroll positions never reach JS: scrollTop and scrollLeft are fixed and scrollIntoView and scrollTo do nothing (packages/sepal/src/dom.js:762-763, :846-847, :1214). So: paging, no virtual list, and the j/k highlight can go off screen.
 - CSS constraints for /hallmark: no sticky, no overflow: auto (use overflow-y-scroll), no :focus-within, no container queries, no 3D transforms, no backdrop-filter, no infinite animations (Skeleton, animate-spin), which would spoil P14.
 - Forced layouts grow with the page (crates/host/src/document.rs, Page::laid_out_at), so Selects go in toolbars, the detail pane and the focused card only, never in rows.
@@ -143,7 +145,7 @@ examples/tracker uses sepal() with the built-in file router (+layout.svelte, iss
 - Plans 1 and 2 say there is no URL, URLSearchParams or history in QuickJS. With dom:true, dom.js provides URL and URLSearchParams (packages/sepal/src/dom.js:18, :1189) and a history object with pushState and replaceState (dom.js:986-989). Their advice to keep filter state in the store or router still holds.
 - Plan 3 says the test points the data directory at a temp dir the way tests/desktop.rs does. It does not. named_dir('data') always resolves to ~/Library/Application Support/<id> (crates/host/src/api/fs.rs:26-37), and desktop.rs swaps app.manifest.permissions for scratch absolute paths (app_with, tests/desktop.rs:40-50). What works: set app.manifest.id to a per-test id and delete that directory afterwards, or deny fs so the app falls back to the in-memory seed.
 - Plan 2 says the preset rewrites bind:value only for inputs and that textarea is unverified. bindings.js rewrites input, textarea and select (packages/sepal/vite/bindings.js:18). What is untested is typing into a textarea in Blitz: no host test uses one.
-- Plans 1 and 2 assume the router and dom:true work together. No example combines them: examples/shadcn, the only app with dom:true, has one page, and examples/routing has no dom. The router's root click listener (packages/sepal/vite/routing.svelte.js:376) and Bits UI unmounting across navigations are untested together. Plan 3 is right to probe first.
+- Plans 1 and 2 assume the router and dom:true work together. No example combines them: examples/shadcn, the only app with dom:true, has one page, and the routing example has no dom. The router's click listener on its root and Bits UI unmounting across navigations are untested together. Plan 3 is right to probe first.
 - Plan 1 implies SEPAL_TRACE layout numbers need a window. settle() prints '[trace] the app changed the page: N ops, M layouts in X ms' headless too (crates/host/src/document.rs:456).
 - No plan says drive and cargo test default to the dev profile. Perf numbers need --release to compare with README 'Performance'.
 - Confirmed, not wrong: drive.rs times only click: (drive.rs:37-46), and key: has no modifiers. testing.rs has press_with(Modifiers) but no click with modifiers and no wheel. scrollTop, scrollIntoView and scrollTo do nothing (dom.js:762, :846, :847). Keys with nothing focused reach the app only through host_hooks.outside (dom.js:1134).

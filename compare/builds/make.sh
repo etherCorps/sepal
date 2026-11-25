@@ -1,12 +1,16 @@
 #!/bin/sh
 # Sepal builds of the bench Tracker (compare/porting-blitz.md). Run from
 # the repository root after the release hosts (see porting-blitz.md).
-# The app is a bench build (VITE_BENCH=1: no seed, marks from the first line),
-# into its own outDir so examples/tracker/dist stays the normal build.
+# The app is a bench build (VITE_BENCH=1: no seed, marks from the first line).
+# sepalKit() always writes examples/tracker/dist, so the bench build is moved
+# out of it and the normal build is made again after.
 # The -diag apps run hosts built with blitz-dom's log-phase-times (per-phase
 # resolve timings on stdout): diagnostics only, never measured. Own app ids.
 set -e
-VITE_BENCH=1 pnpm --filter tracker exec vite build --outDir ../../compare/builds/dist-bench --emptyOutDir >/dev/null
+VITE_BENCH=1 pnpm --filter tracker build >/dev/null
+rm -rf compare/builds/dist-bench
+mv examples/tracker/dist compare/builds/dist-bench
+pnpm --filter tracker build >/dev/null
 cd compare/builds
 for column in blitz:quickjs:blitz blitzv8:v8:blitzv8 blitzdiag:quickjs-diag:blitz-diag blitzv8diag:v8-diag:blitzv8-diag; do
 	name=${column%%:*} rest=${column#*:}

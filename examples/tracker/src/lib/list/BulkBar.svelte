@@ -4,11 +4,11 @@
 -->
 <script lang="ts">
 	import XIcon from '@lucide/svelte/icons/x';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '$lib/components/ui/dialog/index.js';
-	import { count, plural } from '$lib/format';
-	import type { StatusId } from '$lib/seed';
-	import { checked, ui } from '$lib/ui.svelte';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '#lib/components/ui/dialog/index.ts';
+	import { count, plural } from '#lib/format.ts';
+	import type { StatusId } from '#lib/seed.ts';
+	import { checked, ui } from '#lib/ui.svelte.ts';
 	import Pick from './Pick.svelte';
 	import { edit, people_items, remove, status_items } from './edit';
 

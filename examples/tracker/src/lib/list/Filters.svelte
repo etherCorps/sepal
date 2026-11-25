@@ -5,10 +5,10 @@
 -->
 <script lang="ts">
 	import SearchIcon from '@lucide/svelte/icons/search';
-	import Kbd from '$lib/components/Kbd.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import type { PriorityId, StatusId } from '$lib/seed';
-	import { view } from '$lib/store.svelte';
+	import Kbd from '#lib/components/Kbd.svelte';
+	import { Input } from '#lib/components/ui/input/index.ts';
+	import type { PriorityId, StatusId } from '#lib/seed.ts';
+	import { view } from '#lib/store.svelte.ts';
 	import Pick from './Pick.svelte';
 	import { people_items, priority_items, project_items, status_items } from './edit';
 

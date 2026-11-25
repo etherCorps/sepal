@@ -11,11 +11,11 @@
 	whitespace between tags (each gap is a text node; a grid ignores it).
 -->
 <script lang="ts">
-	import { short_date } from '$lib/format';
-	import { PRIORITY_GLYPH, STATUS_GLYPH, avatar } from '$lib/glyphs';
-	import { label_by_id, type Issue } from '$lib/seed';
-	import { settings } from '$lib/store.svelte';
-	import { mark } from '$lib/ui.svelte';
+	import { short_date } from '#lib/format.ts';
+	import { PRIORITY_GLYPH, STATUS_GLYPH, avatar } from '#lib/glyphs/index.ts';
+	import { label_by_id, type Issue } from '#lib/seed.ts';
+	import { settings } from '#lib/store.svelte.ts';
+	import { mark } from '#lib/ui.svelte.ts';
 
 	let {
 		issue,

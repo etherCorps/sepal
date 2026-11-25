@@ -8,7 +8,7 @@
 	import '../app.css';
 	import { tick, type Snippet } from 'svelte';
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { setTitle } from 'sepal/window';
 	import LayoutListIcon from '@lucide/svelte/icons/layout-list';
 	import CircleUserIcon from '@lucide/svelte/icons/circle-user-round';
@@ -16,18 +16,18 @@
 	import ChartIcon from '@lucide/svelte/icons/chart-column';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import PlusIcon from '@lucide/svelte/icons/plus';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Avatar, ProjectSquare } from '$lib/glyphs';
-	import { PROJECTS, ME, project_by_key } from '$lib/seed';
-	import { data, person, view } from '$lib/store.svelte';
-	import { bench, bench_ready, mark, rects } from '$lib/bench';
-	import { count } from '$lib/format';
-	import { cn } from '$lib/utils';
-	import { handle_key, ui, use_keys } from '$lib/ui.svelte';
-	import CommandPalette from '$lib/overlays/CommandPalette.svelte';
-	import NewIssue from '$lib/overlays/NewIssue.svelte';
-	import Shortcuts from '$lib/overlays/Shortcuts.svelte';
-	import Toasts from '$lib/overlays/Toasts.svelte';
+	import { Button } from '#lib/components/ui/button/index.ts';
+	import { Avatar, ProjectSquare } from '#lib/glyphs/index.ts';
+	import { PROJECTS, ME, project_by_key } from '#lib/seed.ts';
+	import { data, person, view } from '#lib/store.svelte.ts';
+	import { bench, bench_ready, mark, rects } from '#lib/bench.ts';
+	import { count } from '#lib/format.ts';
+	import { cn } from '#lib/utils.ts';
+	import { handle_key, ui, use_keys } from '#lib/ui.svelte.ts';
+	import CommandPalette from '#lib/overlays/CommandPalette.svelte';
+	import NewIssue from '#lib/overlays/NewIssue.svelte';
+	import Shortcuts from '#lib/overlays/Shortcuts.svelte';
+	import Toasts from '#lib/overlays/Toasts.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -53,7 +53,7 @@
 		setTitle(title ? `${title} · Tracker` : 'Tracker').catch(() => {});
 	});
 
-	// dom: true gives a `document`; <svelte:window> does not exist for custom renderers.
+	// The DOM layer gives a `document`; <svelte:window> does not exist for custom renderers.
 	$effect(() => {
 		document.addEventListener('keydown', handle_key);
 		return () => document.removeEventListener('keydown', handle_key);
@@ -84,8 +84,12 @@
 
 	// Bench mode (compare/shared/PROTOCOL.md). `bench` is null until bench.json
 	// was read, so the first navigation and the empty search make no marks.
-	$effect(() => {
-		const at = path;
+	// A navigation that only changes the query (clearing the week) is not a new screen.
+	let marked = '';
+	afterNavigate(({ to }) => {
+		const at = to?.url.pathname;
+		if (at === undefined || at === marked) return;
+		marked = at;
 		if (bench) tick().then(() => (mark(`nav:${at}`), rects()));
 	});
 	$effect(() => {

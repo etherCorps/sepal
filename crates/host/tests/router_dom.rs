@@ -1,4 +1,4 @@
-//! The file router and the DOM layer together: `examples/router-dom-probe`,
+//! SvelteKit's router and the DOM layer together: `examples/router-dom-probe`,
 //! two routes under one layout, each with a Bits UI Select, Dialog and
 //! Tooltip. Bits UI portals its popups into `<body>`, outside the route that
 //! made them, so this checks they go when the route goes, and that the
@@ -38,6 +38,9 @@ fn click(doc: &mut SvelteDocument, selector: &str) {
     doc.click(node);
     doc.settle();
     doc.resolve();
+    // SvelteKit lets the page repaint before it follows a link: a
+    // `requestAnimationFrame`, then a `setTimeout(0)`, which runs a turn later.
+    doc.wait(0.04);
 }
 
 /// Click something inside the Dialog. The box is centred with
@@ -146,8 +149,9 @@ fn bits_ui_survives_twenty_navigations() {
         } else {
             ("A", "#nav-a", "/")
         };
-        // The router's click listener sits on the root; the DOM layer must
-        // not keep it from seeing a click on a link.
+        // SvelteKit's click listener sits on `<html>`; the DOM layer must not
+        // keep it from seeing a click on a link. `#nav-a` is under SvelteKit's
+        // route announcer, which must not take the click (sveltekit.js).
         click(&mut doc, link);
         doc.wait(0.1);
         assert_eq!(text(&doc, "#location"), path, "round {round}");
@@ -202,8 +206,8 @@ fn a_link_inside_a_dialog_navigates() {
     use_the_page(&mut doc, "A");
 }
 
-/// A click on an item in the Select's list picks it: the router's listener
-/// on the root sees the click too, and must leave it alone.
+/// A click on an item in the Select's list picks it: SvelteKit's listener
+/// on `<html>` sees the click too, and must leave it alone.
 #[test]
 fn a_click_in_a_select_list_picks() {
     let mut doc = load();

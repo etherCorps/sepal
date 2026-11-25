@@ -5,10 +5,10 @@
 	the bulk bar and the detail pane all use it.
 -->
 <script lang="ts">
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { Avatar, PriorityIcon, ProjectSquare, StatusIcon } from '$lib/glyphs';
-	import type { PriorityId, StatusId } from '$lib/seed';
-	import { cn } from '$lib/utils';
+	import * as Select from '#lib/components/ui/select/index.ts';
+	import { Avatar, PriorityIcon, ProjectSquare, StatusIcon } from '#lib/glyphs/index.ts';
+	import type { PriorityId, StatusId } from '#lib/seed.ts';
+	import { cn } from '#lib/utils.ts';
 	import type { Item } from './edit';
 
 	type Kind = 'status' | 'priority' | 'assignee' | 'project' | 'plain';

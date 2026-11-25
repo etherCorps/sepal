@@ -25,7 +25,7 @@ passes its tests headless, but its window has not been tried yet, and Windows
 is on hold. Today it has:
 
 - **Svelte 5 and Tailwind v4 as on the web**, with pages as files in
-  `src/routes`: Sepal's own small router, or SvelteKit's as a single-page app.
+  `src/routes`, run by SvelteKit's own router as a single-page app.
 - **Component libraries written for the web**: shadcn-svelte's Switch,
   Checkbox, Tabs, Accordion, Dialog, Select and Tooltip work, mouse and
   keyboard, through an opt-in DOM layer.
@@ -39,8 +39,8 @@ is on hold. Today it has:
 - **No Rust needed to use it**: `pnpm create sepal` and a prebuilt host for
   macOS (arm64, x64) and Linux (x64, arm64).
 
-The Tracker, an issue tracker built with shadcn-svelte, Tailwind and the
-built-in router (`examples/tracker`), in a Sepal window:
+The Tracker, an issue tracker built with SvelteKit, shadcn-svelte and
+Tailwind (`examples/tracker`), in a Sepal window:
 
 ![The Tracker example in a Sepal window on macOS](docs/tracker.png)
 
@@ -85,16 +85,8 @@ pnpm bundle                # my-app.app
 pnpm check                 # svelte-check
 ```
 
-The starter comes with one of two routers. Both have pages as files in
-`src/routes`, and the same pages work with either:
-
-| | |
-|---|---|
-| `built-in` (the default) | Sepal's own router. Small, and needs nothing of a browser. See "Routing". |
-| `sveltekit` | SvelteKit's router, as a single-page app: its full client API, at the cost of the DOM layer and a larger bundle. See "SvelteKit". |
-
-In a terminal you are asked which. To say so ahead of time:
-`pnpm create sepal my-app --router sveltekit`.
+The starter is a SvelteKit app: pages are files in `src/routes`, and
+SvelteKit's router runs them as a single-page app. See "Routing".
 
 The packages are on npm as `0.1.0-alpha.1`, an alpha: expect rough edges and
 changes between versions. Prebuilt hosts exist for macOS (arm64, x64) and
@@ -122,7 +114,7 @@ Permissions, sidecars, adapters and Vite plugins keep their usual names.
 
 | Package | What it is | Directory |
 |---|---|---|
-| `sepal` | The runtime (`mount`, the renderer, the op protocol, the desktop APIs), the Vite preset and the file-based router (`sepal/vite`, `sepal/sveltekit`, `sepal/router`), and the `sepal` command. The runtime has no Node code. | `packages/sepal` |
+| `sepal` | The runtime (`mount`, the renderer, the op protocol, the desktop APIs), the Vite presets (`sepal/vite`, and `sepal/sveltekit` for SvelteKit apps), and the `sepal` command. The runtime has no Node code. | `packages/sepal` |
 | `create-sepal` | The seeds: the starter templates. | `packages/create` |
 | `@ethercorps/calyx` | Calyx, the host: the lookup that finds this machine's binary. | `packages/host` |
 | `@ethercorps/calyx-<platform>` | The binary for one platform; only the matching one installs. | `packages/calyx-<platform>` |
@@ -206,7 +198,7 @@ export default defineConfig({
 	permissions: {
 		// what the app may do outside its window; see "Desktop APIs"
 	}
-	// router: see "Your own router"
+	// entry: the module the app starts from (default src/main.ts)
 	// dom: true, for component libraries written for the web; see "Component libraries"
 });
 ```
@@ -222,7 +214,7 @@ export default defineConfig({
 The file can also be `.js` or `.mjs`, and can export a function, which gets
 Vite's `{ mode, command }`. Anything passed to `sepal({ … })` directly
 overrides the file, key by key. In watch mode, edits to `app` and
-`permissions` are picked up on the next build; a change to `router` needs
+`permissions` are picked up on the next build; a change to `entry` needs
 Vite restarted.
 
 The icon is a static file: put it in `static/` and it is copied with the
@@ -300,116 +292,13 @@ has not been run**: it uploads to Apple and needs your credentials.
 
 ## Routing
 
-Pages are files in `src/routes`, with SvelteKit's conventions. A project that
-has that directory needs no `main.ts`: the router is the entry.
+Pages are files in `src/routes`, with SvelteKit's conventions, and SvelteKit's
+own client router runs them: links, `goto`, parameters, `load`, layouts,
+error pages, `$app/state`, `$app/navigation` and the back button. The app is
+a SvelteKit single-page app; the starter is one, and so are
+`examples/tracker`, `examples/sveltekit` and `examples/quakes`.
 
-```
-src/routes/
-  +layout.svelte            wraps every page; stays mounted while pages change
-  +layout.ts                load() for the layout
-  +page.svelte              /
-  +error.svelte             shown for errors and unknown paths
-  about/+page.svelte        /about
-  items/+page.svelte        /items
-  items/[id]/+page.svelte   /items/42          params.id === '42'
-  items/[id]/+page.ts       load() for that page
-  docs/[...path]/+page.svelte   /docs/a/b      params.path === 'a/b'
-  (account)/+layout.svelte  a group: a layout without a path segment
-  (account)/settings/+page.svelte   /settings
-```
-
-```ts
-// src/routes/items/[id]/+page.ts
-import { error } from 'sepal/router';
-import { items } from '$lib/items';
-
-export async function load({ params, parent }) {
-	const item = items.find((item) => item.id === params.id);
-	if (!item) error(404, `No item ${params.id}`);
-	return { item, ...(await parent()) };
-}
-```
-
-```svelte
-<!-- src/routes/items/[id]/+page.svelte -->
-<script lang="ts">
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-
-	let { data, params } = $props();
-</script>
-
-<h1>{data.item.name}</h1>
-<a href="/items">all items</a>
-<button onclick={() => goto('/')}>home</button>
-<p>{page.url.pathname}</p>
-```
-
-What works as in SvelteKit:
-
-- `+page.svelte`, `+layout.svelte` (nested, with `{@render children()}`),
-  `+error.svelte`, `[param]`, `[...rest]`, `(group)`.
-- `load` in `+page.js`/`.ts` and `+layout.js`/`.ts`, sync or async, with
-  `params`, `url`, `route` and `parent()`. The result arrives as the `data`
-  prop, merged with the layouts' data. The old page stays up until the new
-  one's loads are done.
-- `<a href="/path">` navigates. `goto()` from `$app/navigation`, `page` from
-  `$app/state`, and the `$lib` alias.
-- `error(status, message)` and `redirect(status, location)` inside `load`,
-  imported from `sepal/router`.
-
-What is different, because there is no browser and no server:
-
-- **The location lives in memory.** There is no address bar and no History
-  API. `back()` and `forward()` come from `$app/navigation` instead of
-  `history`.
-- **`page.url` is a plain object** with `pathname`, `search`, `hash`, `href`
-  and `searchParams.get()/has()`. The engine has no `URL` class.
-- **No server files.** `+page.server.*`, `+layout.server.*` and `+server.*`
-  are build errors. So are optional parameters (`[[x]]`) and matchers
-  (`[x=m]`).
-- **No generated `./$types`.** Type `data` and `params` yourself.
-- **Every `load` runs on every navigation**; there is no `invalidate`, and no
-  `beforeNavigate`/`afterNavigate`.
-- **All pages are in one bundle.** There is no code splitting.
-
-`examples/routing` exercises all of it.
-
-### Your own router
-
-The built-in router is the default, not a requirement. The preset's `router`
-option replaces it or turns it off:
-
-```ts
-sepal({ router: false })                          // no routing; src/main.ts is the entry
-sepal({ router: { entry: 'src/my-router.ts' } })  // your router is the entry
-sepal({ router: { dir: 'src/pages' } })           // built-in router, other directory
-```
-
-A router of your own is a module that mounts the app. It can use the route
-table the preset generates from the routes directory, or ignore it:
-
-```ts
-// src/my-router.ts
-import { mount } from 'sepal';
-import { routes, fallback } from 'virtual:sepal/routes';
-import Shell from './Shell.svelte';
-
-// Each route: { id, pattern, names, layouts, page, error, error_depth }.
-// `page` and each layout are { component, load }.
-mount(Shell, { props: { routes, fallback } });
-```
-
-With a custom entry the built-in `$app/navigation` and `$app/state` are not
-set up; your router exports its own API. The `Route` and `RouteNode` types
-come from `sepal/router`.
-
-### SvelteKit
-
-A SvelteKit app runs in the host with SvelteKit's own client router: links,
-`goto`, parameters, `load`, `$app/state`, `$app/navigation` and the back
-button. `examples/sveltekit` is one. In `vite.config.ts`, `sepalKit()`
-takes the place of `sveltekit()`:
+In `vite.config.ts`, `sepalKit()` takes the place of `sveltekit()`:
 
 ```ts
 import { sepalKit } from 'sepal/sveltekit';
@@ -417,28 +306,67 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sepalKit()]
-	// sepalKit({ kit: { alias: { … } } }) passes options on to SvelteKit
+	// sepalKit({ kit: { … } }) passes options on to SvelteKit
 });
+```
+
+and the root layout turns server rendering off, since there is no server:
+
+```ts
+// src/routes/+layout.ts
+export const ssr = false;
 ```
 
 Everything else is as for any Sepal app: settings in `sepal.config.ts`,
 the icon and other files in `static/`, `vite build` writes `dist/`,
 `vite build --watch` opens the app and reloads it on every save, and
-`sepal run` and `bundle` work on the result. Needs `@sveltejs/kit`
-3.4 or later in the project; no adapter.
+`sepal run` and `bundle` work on the result. Needs `@sveltejs/kit` 3.4 or
+later in the project, and SvelteKit's `src/app.html`; no adapter. Run
+`svelte-kit sync` before `svelte-check` (the starter's `check` does), since
+the project's `tsconfig.json` extends the one it writes.
+
+```ts
+// src/routes/items/[id]/+page.ts
+import { error } from '@sveltejs/kit';
+import { items } from '#lib/items.ts';
+
+export function load({ params }) {
+	const item = items.find((item) => item.id === params.id);
+	if (!item) error(404, `No item ${params.id}`);
+	return { item };
+}
+```
 
 What is different from SvelteKit on the web:
 
-- **No server.** The app is a single-page app, always. `+page.server.ts`,
-  `+layout.server.ts`, `+server.ts`, form actions and prerendering do not
-  exist here; a `load` in `+page.ts` runs in the app. Put
-  `export const ssr = false;` in the root `+layout.ts`.
+- **No server.** The app is a single-page app, always. `+page.server.*`,
+  `+layout.server.*`, `+server.*`, `hooks.server.*` and remote functions
+  (`*.remote.*`) stop the build: they would need the app's backend thread,
+  which Sepal does not have yet. Form actions and prerendering do not exist
+  here. A `load` in `+page.ts` runs in the app.
+- **Unknown addresses need a route.** SvelteKit answers an address no route
+  takes with a page load from the server; an app has neither, so `goto`
+  rejects and a link does nothing. A catch-all route that throws a 404
+  shows your error page instead (`src/routes/[...path]/+page.ts` in the
+  Tracker).
+- **`#lib`, not `$lib`.** SvelteKit 3 has no `$lib`: declare `#lib` in
+  package.json's `imports` (the starter does) and import with the file's
+  extension: `'#lib/format.ts'`.
 - **The address is made up.** The app starts at `http://app.localhost/`, and
   nothing is ever fetched from there. Static files are addressed from the
   root as usual (`<img src="/logo.svg">`).
+- **The DOM layer is always there.** `sepalKit()` loads it, so `dom: true` is
+  not needed.
 - **`<svelte:head>`** is rewritten: its `<title>` sets `document.title`, which
   is the window's title when the app has `permissions.window`. Anything else
   in it is dropped with a warning, since an app has no `<head>`.
+- **One bundle.** All pages are in `app.js`; there is no code splitting.
+- **No version polling.** SvelteKit checks for a new version every hour by
+  default; `sepalKit()` turns that off, as it would wake an idle app.
+  Updates come through `sepal/updater`.
+- **A link waits a frame.** SvelteKit lets the page repaint before it follows
+  a link (a `requestAnimationFrame`, then a `setTimeout(0)`). In Sepal today
+  that is a 16 ms timer and one more turn, about 20 ms more than a `goto`.
 - **No scroll restoration**, and whatever else needs a part of the browser
   that the DOM layer does not have (see "Component libraries").
 
@@ -448,6 +376,13 @@ SvelteKit's root component with this renderer), then turns SvelteKit's
 output, an HTML page that imports one module, into the script the host
 loads. Those edits follow SvelteKit's source. If a SvelteKit release changes
 those lines, the build stops and says so. Tested with 3.4.0.
+
+### Apps without routes
+
+An app with one screen, or a router of its own, uses `sepal()` from
+`sepal/vite` and starts from `src/main.ts`, which mounts the app
+(`examples/counter`, `examples/shadcn`). `sepal()` stops the build if it
+finds `src/routes` and no `src/main`, and points to `sepalKit()`.
 
 ## Component libraries: shadcn-svelte
 
@@ -811,8 +746,8 @@ The examples are TypeScript: `src/main.ts`, `<script lang="ts">` and
 `vite.config.ts`, checked with `svelte-check`. The preset picks up `src/main.ts`
 or `src/main.js`, whichever exists. Plain JavaScript apps work unchanged.
 
-The packages ship declarations for `mount`, `unmount`, the Vite preset and
-the router. Their source stays JavaScript with JSDoc; `tsc` checks it and
+The packages ship declarations for `mount`, `unmount`, the desktop APIs and
+the Vite presets. Their source stays JavaScript with JSDoc; `tsc` checks it and
 generates each package's `types/` on `pnpm install`.
 
 - Svelte strips type annotations itself. TypeScript features that emit code
@@ -838,10 +773,6 @@ packages/sepal/           sepal: the runtime, the preset and the command
   src/dom.js              window, document and element methods, for `dom: true`
   src/url.js, text.js     URL, URLSearchParams, TextEncoder, TextDecoder (part of the DOM layer)
   vite/vite.js            sepal/vite, the Vite preset: one app.js (IIFE) + one app.css
-  vite/routes.js          reads src/routes into a route table (build time)
-  vite/routing.svelte.js  the in-memory router: page, goto, back, load, errors
-  vite/Router.svelte      renders layouts around the current page
-  vite/router.js          sepal/router, the router's public API
   vite/bindings.js        rewrites `bind:` on elements, which Svelte refuses here
   vite/head.js            rewrites `<svelte:head>`, likewise
   vite/app.js             sepal.config.ts, the manifest, the dev window: shared by both presets
@@ -877,15 +808,18 @@ crates/host/              the `sepal` crate; its binary is calyx
   tests/manifest.rs       manifest parsing and icon decoding
   tests/bundle.rs         bundle layout, Info.plist, .icns contents
   tests/icons.rs          icon and image pixels, resource loading
-  tests/routing.rs        file-based routing, by clicking through examples/routing
+  tests/sveltekit.rs      a SvelteKit app, by clicking through examples/sveltekit
+  tests/router_dom.rs     SvelteKit's router and Bits UI together (examples/router-dom-probe)
+  tests/tracker/          the Tracker, a SvelteKit app, screen by screen
   tests/updater.rs        updates against a local server, tampering, the JS API
   tests/desktop.rs        desktop APIs from JS: fetch, files, permissions
 crates/blitz-dom/         blitz-dom 0.3.0-beta.4 with nine changes (see PATCH.md)
 crates/anyrender_vello_hybrid/   the window's renderer, 0.11.0, with two (see PATCH.md)
 examples/counter/         Svelte 5 + Tailwind 4 + TypeScript example
-examples/routing/         file-based routes: layouts, params, load, errors
 examples/shadcn/          shadcn-svelte components, and a probe for the ones that fail
-examples/sveltekit/       a SvelteKit app, with SvelteKit's own router
+examples/sveltekit/       a SvelteKit app: links, goto, load, back
+examples/tracker/         the Tracker, a SvelteKit app with shadcn-svelte (the benchmark app)
+examples/quakes/          live earthquake feeds on a map, a SvelteKit app made from the starter
 ```
 
 ## How it works
@@ -941,7 +875,9 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Clicks through Blitz hit testing, bubbling, `{#if}`, keyed `{#each}` reorder | `counter_app` |
 | Inline SVG and Lucide icons in hex and Tailwind colours, recolouring after a click, `<img>` from a data: URL, a file and an import | `tests/icons.rs` (pixels) + `docs/icons-probe.png` |
 | Resources: only data: URLs and files inside the app directory load; bad URLs do not crash | `tests/icons.rs` |
-| File-based routing: links, params, load data, groups, rest parameters, redirects, error pages, back/forward, slow and overtaken loads | `tests/routing.rs`, `test/routes.test.js` |
+| SvelteKit's router in the Tracker: links, `goto`, a redirect, nested layouts that stay mounted, `load` with params, errors inside a layout, an unknown address as a 404 | `tests/tracker/` |
+| SvelteKit's router with Bits UI: twenty navigations leave no popups or nodes behind, a link inside a Dialog navigates, a click in a Select list picks | `tests/router_dom.rs` |
+| Server files (`+page.server.*`, `+server.*`, `hooks.server.*`, `*.remote.*`) stop a `sepalKit()` build; `src/routes` without `src/main` stops a `sepal()` build | `test/sveltekit.test.js`, `test/preset.test.js` |
 | Updater: signatures, feed rules, a bundle replaced from a local server, tampered and foreign-signed updates refused, the JS API | `tests/updater.rs` |
 | Updater on a real bundle: 0.1.0 finds 0.2.0, verifies, replaces itself, relaunches; code signature still valid | `scripts/updater-e2e.sh` (macOS) |
 | Desktop APIs from JavaScript: fetch (methods, bodies, redirects, errors), files (text, bytes, directories), URL and path scopes, every call refused without permission, a slow request not blocking the UI | `tests/desktop.rs` |
@@ -983,7 +919,6 @@ Checked on macOS 27 (Apple M4 Pro, arm64, rustc 1.95):
 | The window opens at the size the manifest asks for | window bounds from WindowServer |
 | Bundle: `plutil` and `iconutil` accept the plist and `.icns`, `codesign --verify --strict` passes, the app launches from `open`, macOS reports the name "Counter" and shows the icon for the bundle | `pnpm run bundle`, macOS tools |
 | A fresh project made by the packed create script and installed from the package tarballs, no `SEPAL_HOST`: type-check, build, render | `pnpm run test:template` |
-| A router of the app's own as the entry, and routing switched off | `packages/sepal/test/custom-router.test.js` |
 | Dev runs from a bundle: macOS reports the name "Counter" and its bundle id | `pnpm dev`, `lsappinfo` |
 | Developer ID signing: `codesign --verify --strict` passes, hardened runtime flag set, the app launches | `--sign` with a real identity |
 | Dev reload: edit → reload in ~130 ms, broken builds keep the old one, Vite and host stop together | `pnpm dev`, read from the host log |
@@ -1102,9 +1037,9 @@ each refresh is also printed to stderr.
    the host builds and most tests pass (see HANDOVER.md). Then packaging
    beyond a macOS `.app`: a `.dmg`, and Windows and Linux bundles, and a real
    notarisation run.
-3. **Routing through SvelteKit only.** The built-in router, and with it
-   `sepal/router`, `sepal/navigation` and `sepal/state`, gives way to
-   SvelteKit's.
+3. **Links at the next frame.** `requestAnimationFrame` at the next frame
+   the host draws, and no extra turn for a `setTimeout(0)` queued from a
+   frame callback: SvelteKit waits for both before it follows a link.
 4. **The native layer.** A JavaScript backend thread (the stem) and native
    plugins (grafts).
 5. **More desktop APIs**: notifications, menus, a tray icon, global

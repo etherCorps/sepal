@@ -3,6 +3,7 @@ dist
 target
 packages/*/types
 bundle
+.svelte-kit
 # built by scripts/build-host-package.js
 packages/calyx-*/bin/
 packages/calyx-*/THIRD-PARTY-LICENSES.txt

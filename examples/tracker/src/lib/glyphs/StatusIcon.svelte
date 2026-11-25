@@ -1,7 +1,7 @@
 <!-- A status as a 14px circle glyph, coloured with currentColor (docs/tracker-design.md, Glyphs). -->
 <script lang="ts">
-	import { cn } from '$lib/utils';
-	import type { StatusId } from '$lib/seed';
+	import { cn } from '#lib/utils.ts';
+	import type { StatusId } from '#lib/seed.ts';
 	import { STATUS_GLYPH } from './shapes';
 
 	let { status, size = 14, class: className = '' }: { status: StatusId; size?: number; class?: string } = $props();

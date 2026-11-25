@@ -6,27 +6,20 @@
 // root, so that `vite.config.ts` stays a list of plugins. Options passed to
 // `sepal()` directly override the file, key by key.
 //
-// Routing: if the project has `src/routes`, the entry is the built-in router
-// and the route table is generated from that directory (see routes.js).
-// Otherwise the entry is `src/main.js` or `src/main.ts`. The `router` option
-// swaps in a router of your own, or turns routing off.
+// The entry is `src/main.js` or `src/main.ts`, or the `entry` option. An app
+// with pages in `src/routes` is a SvelteKit app: it uses `sepalKit()` from
+// `sepal/sveltekit` instead of this preset.
 //
 // In watch mode (`vite build --watch`) with a host binary available, it also
 // opens the app and reloads it in place after every rebuild.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { normalizePath } from 'vite';
 import { dev_window, load_config, manifest } from './app.js';
 import { element_bindings } from './bindings.js';
 import { head } from './head.js';
-import { generate_routes } from './routes.js';
-
-const ROUTES_ID = 'virtual:sepal/routes';
-/** @param {string} file a file in this package's `src` */
-const own = (file) => fileURLToPath(new URL(file, import.meta.url));
 
 /**
  * What the app tells the host about itself. Written to `dist/app.json`.
@@ -51,20 +44,6 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  *   updater?: { url: string, pubkey: string },
  *   window?: { title?: string, width?: number, height?: number }
  * }} AppManifest
- */
-
-/**
- * Routing. Leave it out for the default: the built-in router when the
- * project has a `src/routes` directory, no router when it does not.
- *
- * - `false` turns routing off even if `src/routes` exists.
- * - `dir` is where the route files are (default `src/routes`).
- * - `entry` is a router of your own: a module that becomes the app's entry.
- *   It mounts the app itself, and can import the generated route table
- *   (`routes`, `fallback`) from `virtual:sepal/routes`. The built-in
- *   `$app/navigation` and `$app/state` are not set up for it.
- *
- * @typedef {false | { dir?: string, entry?: string }} RouterOptions
  */
 
 /**
@@ -102,10 +81,12 @@ const own = (file) => fileURLToPath(new URL(file, import.meta.url));
  * (`window`, `document`, element methods; see `sepal/dom`)
  * before anything else, so those libraries find what they reach for.
  *
+ * `entry` is the module the app starts from (default `src/main.js` or
+ * `src/main.ts`). It mounts the app; a router of your own goes there.
+ *
  * @typedef {{
  *   app?: AppManifest,
  *   permissions?: Permissions,
- *   router?: RouterOptions,
  *   entry?: string,
  *   dom?: boolean
  * }} Config
@@ -135,7 +116,6 @@ export function sepal(inline = {}) {
 	let config_path = null;
 	/** @type {import('vite').ConfigEnv} */
 	let config_env = { mode: 'production', command: 'build' };
-	let routes_dir = '';
 	/** The entry module, absolute and without extension, when `dom` is on. */
 	let dom_entry = '';
 	const user = inline.svelte ?? {};
@@ -172,17 +152,14 @@ export function sepal(inline = {}) {
 				config_path = file.path;
 				options = { ...file.config, ...inline };
 
-				const router = options.router;
-				routes_dir = resolve(project, (router && router.dir) || 'src/routes');
-				const custom_router = router ? router.entry : undefined;
-				const built_in_router = router !== false && custom_router === undefined && existsSync(routes_dir);
-
-				const entry = custom_router
-					? resolve(project, custom_router)
-					: built_in_router
-						? own('./router-entry.js')
-						: // No extension: Vite resolves `src/main.js` or `src/main.ts`, whichever exists.
-							(options.entry ?? 'src/main');
+				const has_main = ['js', 'ts'].some((ext) => existsSync(join(project, `src/main.${ext}`)));
+				if (options.entry === undefined && !has_main && existsSync(join(project, 'src/routes'))) {
+					throw new Error(
+						"sepal: this app has pages in src/routes and no src/main. Pages are SvelteKit's: in vite.config.ts, use `sepalKit()` from 'sepal/sveltekit' in place of `sepal()`, and add a src/routes/+layout.ts with `export const ssr = false;`."
+					);
+				}
+				// No extension: Vite resolves `src/main.js` or `src/main.ts`, whichever exists.
+				const entry = options.entry ?? 'src/main';
 
 				// Vite's module ids use `/` on Windows as well.
 				if (options.dom) dom_entry = normalizePath(resolve(project, entry)).replace(/\.[cm]?[jt]s$/, '');
@@ -197,14 +174,8 @@ export function sepal(inline = {}) {
 						// `dom`, `browser` as well: libraries check it at build time to
 						// decide whether there is a DOM to work with.
 						conditions: ['svelte-custom-renderer', ...(options.dom ? ['browser'] : []), 'svelte', 'module', 'import', 'default'],
-						// The names a SvelteKit project uses. The `$app` ones belong to
-						// the built-in router; another router brings its own API.
-						alias: {
-							$lib: join(project, 'src/lib'),
-							...(built_in_router
-								? { '$app/navigation': own('./navigation.js'), '$app/state': own('./state.js') }
-								: {})
-						}
+						// The name SvelteKit 2 projects use for `src/lib`.
+						alias: { $lib: join(project, 'src/lib') }
 					},
 					build: {
 						target: 'es2022',
@@ -215,12 +186,12 @@ export function sepal(inline = {}) {
 							formats: ['iife'],
 							fileName: () => 'app.js',
 							cssFileName: 'app'
-						}
+						},
+						// The sources are modules, and module code is strict; the IIFE
+						// keeps it so. Rolldown's default only keeps directives it finds.
+						rolldownOptions: { output: { strict: true } }
 					}
 				};
-			},
-			resolveId(id) {
-				if (id === ROUTES_ID) return '\0' + ROUTES_ID;
 			},
 			transform(code, id) {
 				// The DOM has to exist before any library module runs, so it is the
@@ -228,16 +199,6 @@ export function sepal(inline = {}) {
 				if (dom_entry !== '' && id.replace(/\.[cm]?[jt]s$/, '') === dom_entry) {
 					return { code: `import 'sepal/dom';\n${code}`, map: null };
 				}
-			},
-			load(id) {
-				if (id !== '\0' + ROUTES_ID) return;
-				// A custom router may not use route files at all.
-				if (!existsSync(routes_dir)) return 'export const routes = [];\nexport const fallback = { layouts: [], error: null };\n';
-				const { code, files } = generate_routes(routes_dir);
-				// Rebuild when a route file is added, removed or changed.
-				this.addWatchFile(routes_dir);
-				for (const file of files) this.addWatchFile(file);
-				return code;
 			},
 			configResolved(config) {
 				root = config.root;
@@ -248,11 +209,11 @@ export function sepal(inline = {}) {
 			async buildStart() {
 				// In watch mode, pick up edits to the config file. What it says about
 				// the app and its permissions takes effect on the next build; a
-				// change to `router` or `entry` needs Vite restarted.
+				// change to `entry` needs Vite restarted.
 				if (config_path === null) return;
 				this.addWatchFile(config_path);
 				const file = await load_config(root, config_env);
-				options = { ...file.config, ...inline, router: options.router, entry: options.entry };
+				options = { ...file.config, ...inline, entry: options.entry };
 			},
 			generateBundle() {
 				let written;

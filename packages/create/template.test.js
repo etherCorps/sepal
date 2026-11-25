@@ -1,6 +1,5 @@
 // The starter template, the way a user gets it: pack every package, run the
 // packed `create-sepal`, install from the tarballs, type-check and build.
-// Once for each router it offers.
 //
 // When this platform's host binary has been built (`pnpm run build:host`), the
 // app is also rendered through the CLI with no `SEPAL_HOST`: the whole
@@ -55,22 +54,19 @@ try {
 	const create = join(scratch, 'create');
 	mkdirSync(create);
 	run('tar', ['-xzf', tarballs['create-sepal'], '-C', create], scratch);
-	// No terminal here, so nothing is asked: no flag means the built-in router.
-	for (const [router, flags] of /** @type {[string, string[]][]} */ ([
-		['built-in', []],
-		['sveltekit', ['--router', 'sveltekit']]
-	])) {
-		const app = join(scratch, router, 'My App');
-		mkdirSync(join(scratch, router));
-		run('node', [join(create, 'package/index.js'), app, ...flags], scratch);
+	{
+		const app = join(scratch, 'My App');
+		run('node', [join(create, 'package/index.js'), app], scratch);
 		assert(existsSync(join(app, '.gitignore')), '.gitignore was not restored');
 
 		const pkg = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8'));
 		assert(pkg.name === 'my-app', `package name is ${pkg.name}`);
-		assert(('@sveltejs/kit' in pkg.devDependencies) === (router === 'sveltekit'), `wrong starter for the ${router} router`);
+		assert('@sveltejs/kit' in pkg.devDependencies, 'the starter is not a SvelteKit app');
 		assert(/^\^\d/.test(pkg.dependencies.sepal), 'sepal is not a versioned entry in dependencies');
 		// SvelteKit 3 has no `$lib`: the starter declares `#lib` itself.
-		if (router === 'sveltekit') assert(pkg.imports?.['#lib/*'] === './src/lib/*', 'the SvelteKit starter does not declare #lib');
+		assert(pkg.imports?.['#lib/*'] === './src/lib/*', 'the starter does not declare #lib');
+		// svelte-check reads the tsconfig `svelte-kit sync` writes.
+		assert(pkg.scripts.check.startsWith('svelte-kit sync && svelte-check'), `check does not sync first: ${pkg.scripts.check}`);
 		assert(readFileSync(join(app, 'sepal.config.ts'), 'utf8').includes('name: "My App"'), 'app name not filled in');
 
 		// What is tested is this checkout, not what is published: the overrides stand in for the registry. Its own
@@ -101,17 +97,16 @@ try {
 		// The template is file-routed: the About page only exists in the bundle if src/routes was read.
 		const bundle = readFileSync(join(app, 'dist/app.js'), 'utf8');
 		assert(bundle.includes('back home'), 'routes were not bundled');
-		// SvelteKit's router brings a word of its own that the built-in one never says.
-		assert(bundle.includes('__sveltekit') === (router === 'sveltekit'), `not built with the ${router} router`);
+		assert(bundle.includes('__sveltekit'), 'not built with SvelteKit');
 		assert(readFileSync(join(app, 'dist/app.css'), 'utf8').includes('.bg-indigo-600'), 'Tailwind classes are missing from app.css');
 
 		if (existsSync(join(packages, `calyx-${platform()}`, 'bin'))) {
-			const shot = join(scratch, `${router}.png`);
+			const shot = join(scratch, 'template.png');
 			run('pnpm', ['exec', 'sepal', 'screenshot', shot], app);
 			assert(existsSync(shot), 'the CLI did not render a screenshot');
-			console.log(`template (${router}): rendered with the packaged ${platform()} host`);
+			console.log(`template: rendered with the packaged ${platform()} host`);
 		} else {
-			console.log(`template (${router}): no built host for ${platform()}; skipped the render`);
+			console.log(`template: no built host for ${platform()}; skipped the render`);
 		}
 	}
 	console.log('template: ok');

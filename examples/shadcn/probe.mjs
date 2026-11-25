@@ -32,7 +32,7 @@ for (const name of names.filter((n) => only.length === 0 || only.includes(n))) {
 	try {
 		await build({
 			root, configFile: false, logLevel: 'silent',
-			plugins: [tailwindcss(), sepal({ router: false, entry, app: {}, dom: true })],
+			plugins: [tailwindcss(), sepal({ entry, app: {}, dom: true })],
 			// Not minified: a stack trace from a probe should be readable.
 			build: { outDir: dir, emptyOutDir: true, minify: false }
 		});

@@ -1,7 +1,7 @@
 <!-- A priority as a 14px glyph: dashes, 1-3 signal bars, or the urgent square. currentColor only. -->
 <script lang="ts">
-	import { cn } from '$lib/utils';
-	import type { PriorityId } from '$lib/seed';
+	import { cn } from '#lib/utils.ts';
+	import type { PriorityId } from '#lib/seed.ts';
 	import { PRIORITY_GLYPH } from './shapes';
 
 	let { priority, size = 14, class: className = '' }: { priority: PriorityId; size?: number; class?: string } = $props();

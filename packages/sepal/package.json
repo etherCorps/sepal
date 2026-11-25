@@ -22,7 +22,6 @@
     "gui",
     "vite",
     "vite-plugin",
-    "router",
     "svelte-blitz"
   ],
   "type": "module",
@@ -77,33 +76,17 @@
     "./sveltekit": {
       "types": "./types/vite/sveltekit.d.ts",
       "default": "./vite/sveltekit.js"
-    },
-    "./router": {
-      "types": "./types/vite/router.d.ts",
-      "default": "./vite/router.js"
-    },
-    "./navigation": {
-      "types": "./types/vite/navigation.d.ts",
-      "default": "./vite/navigation.js"
-    },
-    "./state": {
-      "types": "./types/vite/state.d.ts",
-      "default": "./vite/state.js"
-    },
-    "./ambient": {
-      "types": "./ambient.d.ts"
     }
   },
   "files": [
     "src",
     "vite",
     "types",
-    "ambient.d.ts",
     "cli.js"
   ],
   "scripts": {
-    "check": "tsc && tsc -p tsconfig.vite.json && tsc -p tsconfig.node.json",
-    "prepare": "tsc && tsc -p tsconfig.vite.json && tsc -p tsconfig.node.json"
+    "check": "tsc && tsc -p tsconfig.node.json",
+    "prepare": "tsc && tsc -p tsconfig.node.json"
   },
   "dependencies": {
     "@ethercorps/calyx": "workspace:*"

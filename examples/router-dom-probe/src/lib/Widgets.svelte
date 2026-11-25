@@ -1,9 +1,9 @@
 <!-- What each route puts on the page: a Select, a Dialog and a Tooltip, all portalled by Bits UI. -->
 <script lang="ts">
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '$lib/components/ui/dialog/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select/index.js';
-	import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '$lib/components/ui/tooltip/index.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.ts';
+	import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '#lib/components/ui/dialog/index.ts';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '#lib/components/ui/select/index.ts';
+	import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '#lib/components/ui/tooltip/index.ts';
 
 	let { name }: { name: string } = $props();
 	let fruit = $state('apple');

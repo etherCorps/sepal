@@ -8,8 +8,8 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import CircleAlertIcon from '@lucide/svelte/icons/circle-alert';
-	import { StatusIcon } from '$lib/glyphs';
-	import { act, dismiss, toasts, ui } from '$lib/ui.svelte';
+	import { StatusIcon } from '#lib/glyphs/index.ts';
+	import { act, dismiss, toasts, ui } from '#lib/ui.svelte.ts';
 </script>
 
 <!-- Above the bulk bar while it is up (bottom 16px, 44px tall), so it never sits under a toast. -->
