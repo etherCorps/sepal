@@ -6,6 +6,9 @@
 // path a user without Rust takes.
 //
 // Needs the npm registry, or a warm pnpm store, for the template's dependencies.
+//
+// SEPAL_KIT=<version or tag> builds the starter against another
+// @sveltejs/kit than the one it pins (CI's `kit-latest` job: the newest).
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -75,8 +78,12 @@ try {
 			.filter(([name]) => name !== 'create-sepal')
 			// `/` on Windows too: a backslash in a quoted YAML string starts an escape.
 			.map(([name, tarball]) => `  "${name}": "file:${tarball.replaceAll('\\', '/')}"\n`);
+		// Outside sepal's peer range on purpose: this is how a new SvelteKit gets tried.
+		if (process.env.SEPAL_KIT) overrides.push(`  "@sveltejs/kit": "${process.env.SEPAL_KIT}"\n`);
 		writeFileSync(join(app, 'pnpm-workspace.yaml'), `packages: []\noverrides:\n${overrides.join('')}`);
 		run('pnpm', ['install', '--prefer-offline'], app);
+		const kit = JSON.parse(readFileSync(join(app, 'node_modules/@sveltejs/kit/package.json'), 'utf8')).version;
+		console.log(`template: @sveltejs/kit ${kit}`);
 
 		// Every Sepal package came from the tarballs, none from the registry, and of
 		// the four platform packages only this machine's was installed.

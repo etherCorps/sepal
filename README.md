@@ -320,8 +320,9 @@ export const ssr = false;
 Everything else is as for any Sepal app: settings in `sepal.config.ts`,
 the icon and other files in `static/`, `vite build` writes `dist/`,
 `vite build --watch` opens the app and reloads it on every save, and
-`sepal run` and `bundle` work on the result. Needs `@sveltejs/kit` 3.4 or
-later in the project, and SvelteKit's `src/app.html`; no adapter. Run
+`sepal run` and `bundle` work on the result. Needs `@sveltejs/kit` 3.4 in
+the project (sepal's peer range is `>=3.4 <3.5`), and SvelteKit's
+`src/app.html`; no adapter. Run
 `svelte-kit sync` before `svelte-check` (the starter's `check` does), since
 the project's `tsconfig.json` extends the one it writes.
 
@@ -376,7 +377,10 @@ own client code as it is bundled (to load the DOM layer first, and to mount
 SvelteKit's root component with this renderer), then turns SvelteKit's
 output, an HTML page that imports one module, into the script the host
 loads. Those edits follow SvelteKit's source. If a SvelteKit release changes
-those lines, the build stops and says so. Tested with 3.4.0.
+those lines, the build stops and says so. Tested with 3.4.0, which is why
+the peer range stops before 3.5; CI builds the starter against the newest
+SvelteKit too (`kit-latest`, allowed to fail), and the range is raised by
+hand once that passes.
 
 ### Apps without routes
 
