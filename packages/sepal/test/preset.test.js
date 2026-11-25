@@ -85,7 +85,21 @@ try {
 	// A project without a page is told what to write.
 	await assert.rejects(built('no-page', main), /has no index\.html[\s\S]*<script type="module" src="\/src\/main\.ts"><\/script>/);
 	// Pages in src/routes are SvelteKit's.
-	await assert.rejects(built('routes', { 'src/routes/+page.svelte': '<h1>Home</h1>\n' }), /src\/routes and no index\.html.*sepalKit\(\)/s);
+	await assert.rejects(built('routes', { 'src/routes/+page.svelte': '<h1>Home</h1>\n' }), /pages in src\/routes\. Pages are SvelteKit's[\s\S]*adapter: adapter\(\)[\s\S]*sepal\(\)/);
+	// A SvelteKit app (it has src/app.html) without SvelteKit's plugin is told how to set it up.
+	{
+		const project = join(scratch, 'kit-without-plugin');
+		mkdirSync(join(project, 'src'), { recursive: true });
+		writeFileSync(join(project, 'src/app.html'), '<html><head>%sveltekit.head%</head><body>%sveltekit.body%</body></html>');
+		const here = process.cwd();
+		process.chdir(project);
+		try {
+			const plugins = sepal();
+			await assert.rejects(build({ root: project, configFile: false, logLevel: 'silent', plugins }), /has src\/app\.html, so it is a SvelteKit app, but vite\.config\.ts has no `sveltekit\(\)`[\s\S]*customRenderer/);
+		} finally {
+			process.chdir(here);
+		}
+	}
 
 	// The checks themselves: images and local files are fine.
 	assert.deepEqual(check_page(page('<img src="https://example.com/a.png">', '<link rel="stylesheet" href="/a.css"><link rel="icon" href="https://example.com/i.png">')), { errors: [], warnings: [] });

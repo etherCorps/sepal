@@ -6,6 +6,10 @@
 // that the host pulls once per turn with `take_batch()`. No call crosses the
 // JS/Rust boundary while Svelte is rendering.
 
+// Before Svelte: its runtime keeps engine functions it finds when it loads
+// (`Object.getOwnPropertyDescriptor`), and shims.js fixes one in QuickJS.
+// Whichever module loads Svelte first, this one comes before it.
+import './shims.js';
 import { createRenderer } from 'svelte/renderer';
 import { OP, DISPATCH_PREVENT_DEFAULT, DISPATCH_STOP_PROPAGATION } from './protocol.js';
 

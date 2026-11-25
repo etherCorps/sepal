@@ -120,7 +120,7 @@ export default function adapter({ out = 'dist' } = {}) {
 			if (written) writeFileSync(join(to, 'app.json'), written.json);
 			if (written?.icon) cpSync(written.icon, join(to, 'icon.png'));
 			builder.log.minor(`Wrote the app to ${relative(root, to) || '.'}`);
-			session.written();
+			session.written(to);
 		}
 	};
 }

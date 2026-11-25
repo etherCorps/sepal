@@ -678,6 +678,10 @@ define(proto, {
 	className: reflected('class'),
 	title: reflected('title'),
 	role: reflected('role'),
+	// A <link>'s, which Vite's preloading sets as properties: a stylesheet
+	// it adds ahead of a dynamic import is only one with these on the page.
+	rel: reflected('rel'),
+	as: reflected('as'),
 	// For a link, the address it leads to, in full: routers read this and not
 	// the attribute.
 	href: {

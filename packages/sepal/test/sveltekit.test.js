@@ -1,25 +1,17 @@
-// What the SvelteKit adapter does to the stylesheets it merges into app.css,
-// and the server files it refuses.
+// What is left of sepalKit(): a stub that says how to move, for one release.
+// The server files the adapter refuses, by name.
 
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { rebase_css, server_files } from '../vite/sveltekit.js';
+import { server_files } from '../vite/adapter.js';
+import { sepalKit } from '../vite/sveltekit.js';
 
-const dir = '_app/immutable/assets';
-// A font next to the stylesheet, with or without quotes or `./`.
-assert.equal(rebase_css('src:url(./inter.Dx4k.woff2) format("woff2")', dir), `src:url(${dir}/inter.Dx4k.woff2) format("woff2")`);
-assert.equal(rebase_css(`url("a.woff2")`, dir), `url("${dir}/a.woff2")`);
-assert.equal(rebase_css(`url('../img/b.png')`, dir), `url('_app/immutable/img/b.png')`);
-// Left alone: data: URLs, other schemes, root paths and fragments.
-for (const kept of ['url(data:font/woff2;base64,AAAA)', 'url(https://example.com/a.png)', 'url(/logo.svg)', 'url(#clip)']) {
-	assert.equal(rebase_css(kept, dir), kept);
-}
+assert.throws(() => sepalKit(), /sepalKit\(\) is gone[\s\S]*adapter: adapter\(\)[\s\S]*customRenderer: 'sepal\/renderer'[\s\S]*pollInterval: 0[\s\S]*sepal\(\)[\s\S]*adapter\(\{ out \}\)/);
+console.log('sveltekit stub: ok');
 
-console.log('sveltekit css: ok');
-
-// Server code builds and then never runs in an app; the build refuses it.
+// Server code builds and then never runs in an app; the adapter refuses it.
 const src = mkdtempSync(join(tmpdir(), 'sepal-server-files-'));
 try {
 	const server = ['routes/+page.server.ts', 'routes/a/+layout.server.js', 'routes/api/+server.ts', 'hooks.server.ts', 'lib/data.remote.ts'];
