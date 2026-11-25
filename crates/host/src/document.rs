@@ -448,6 +448,17 @@ impl SvelteDocument {
         }
     }
 
+    /// How many files the page has loaded from the app folder: modules,
+    /// stylesheets, fonts and images. `index.html` and `app.json` are read
+    /// before, and are not counted.
+    pub fn files_read(&self) -> usize {
+        self.page
+            .borrow()
+            .resources
+            .as_ref()
+            .map_or(0, |resources| resources.folder().files_read())
+    }
+
     /// The id JavaScript knows a node by, if it knows it.
     pub fn js_id(&self, node: NodeId) -> Option<u32> {
         self.page.borrow().nodes.js(node)

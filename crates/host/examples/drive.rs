@@ -10,7 +10,8 @@
 //! and animations move on), `real:SECONDS` (real time passes and the host's
 //! answers arrive: for `fetch` and other host calls that wait on the network
 //! or the disk), `text:SELECTOR`, `count:SELECTOR`,
-//! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `hud:on`/`hud:off`
+//! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `files:` (how
+//! many files the app has read from its folder), `hud:on`/`hud:off`
 //! (the performance overlay), `shot:FILE.png`
 //! (CPU renderer), `gpushot:FILE.png` (the window's renderer; needs a GPU).
 //!
@@ -126,6 +127,10 @@ fn main() {
             ),
             "text" => println!("  text {rest}: {:?}", doc.query(rest).map(|n| doc.text(n))),
             "count" => println!("  count {rest}: {}", doc.query_all(rest).len()),
+            "files" => println!(
+                "  files read from the app folder so far: {}",
+                doc.files_read()
+            ),
             "attr" => {
                 let (sel, name) = rest.split_once('@').unwrap();
                 println!(
