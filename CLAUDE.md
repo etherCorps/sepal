@@ -281,7 +281,12 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Timers and frame callbacks run one per call** (`__sb.timers()` and
   `__sb.frame()` return whether they ran one) and the host runs microtasks
   in between, because libraries rely on one `requestAnimationFrame`
-  callback seeing what the previous one caused.
+  callback seeing what the previous one caused. A timer already due when a
+  turn ends wakes the loop at once, from the UI thread
+  (`TimerWaker::set_deadline`), not through the timer thread. From the
+  sixth nested timer on, a timer waits at least 4 ms, as HTML says: a
+  `setTimeout(0)` chain wakes the loop about 250 times a second, not as
+  fast as turns go.
 - **`requestAnimationFrame` runs on the host's frames.** A turn ends by
   asking `__sb.frame_pending()`; yes sets `TurnStats::frame`, and the window
   asks for a frame. `window.rs` calls `SvelteDocument::begin_frame` on

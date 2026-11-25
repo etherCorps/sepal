@@ -2,7 +2,8 @@
 //!
 //! There is no frame loop. The UI thread sleeps in the OS until there is input
 //! or until this thread fires the waker, and this thread itself sleeps on a
-//! condition variable until a deadline exists.
+//! condition variable until a deadline exists. A timer that is already due
+//! when a turn ends wakes the loop at once, from the UI thread.
 
 use std::sync::{Arc, Condvar, Mutex};
 use std::task::Waker;
@@ -43,6 +44,20 @@ impl TimerWaker {
 
     /// Set (or clear) the time of the next wake-up.
     pub fn set_deadline(&mut self, in_ms: Option<f64>) {
+        // Already due (a `setTimeout(0)` queued in a frame or by another
+        // timer): wake the loop from here, once, rather than a thread hop
+        // later. The turn it wakes for runs the timer.
+        if in_ms.is_some_and(|ms| ms <= 0.0) {
+            let (lock, condvar) = &*self.shared;
+            let mut state = lock.lock().unwrap();
+            if let Some(waker) = &state.waker {
+                waker.wake_by_ref();
+                if state.deadline.take().is_some() {
+                    condvar.notify_one();
+                }
+                return;
+            }
+        }
         let deadline =
             in_ms.map(|ms| Instant::now() + Duration::from_secs_f64(ms.max(0.0) / 1000.0));
         {
