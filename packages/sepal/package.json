@@ -73,6 +73,10 @@
       "types": "./types/vite/vite.d.ts",
       "default": "./vite/vite.js"
     },
+    "./adapter": {
+      "types": "./types/vite/adapter.d.ts",
+      "default": "./vite/adapter.js"
+    },
     "./sveltekit": {
       "types": "./types/vite/sveltekit.d.ts",
       "default": "./vite/sveltekit.js"
