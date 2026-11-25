@@ -272,10 +272,17 @@ fn a_symlink_cannot_lead_out_of_the_app_directory() {
 /// Upstream blitz-dom panics on both cases below; see crates/blitz-dom/PATCH.md.
 #[test]
 fn bad_image_urls_do_not_panic() {
-    use blitz_dom::{DocumentConfig, LocalName, QualName};
+    use blitz_dom::{LocalName, QualName};
 
     // No directory: the base URL is Blitz's default, which cannot resolve relative paths.
-    let mut doc = SvelteDocument::new("", "", DocumentConfig::default()).unwrap();
+    let page = App {
+        html: "<!doctype html><html><head></head><body></body></html>".into(),
+        manifest: Default::default(),
+        dir: None,
+        bundle: None,
+        dev: false,
+    };
+    let mut doc = SvelteDocument::for_app(&page).unwrap();
     for src in ["logo.png", "http://[", "//", ""] {
         let mut base = doc.base_mut();
         let mut mutator = base.mutate();

@@ -203,22 +203,23 @@ copied for the DOM, as this section used to describe).
   `examples/tracker`, so Vite's root and SvelteKit's project are the app's:
   `src/routes`, `src/lib` (through `#lib`), `src/app.html` and `src/app.css`
   are its own files, bench mode (`src/lib/bench.ts`) included.
-- **CSS: byte-identical.** SvelteKit's stylesheet,
-  `_app/immutable/assets/bundle.Bs749d7n.css`, is the same file in
-  `compare/tauri/dist` and in the Sepal build's `.svelte-kit/output/client`
-  (`cmp`, 67,814 bytes, 24 Nov). Sepal's adapter then moves it into
-  `app.css` and rebases its font URLs; Tauri links it as it is. Tailwind scans
-  the Vite root, which is why the build runs in `examples/tracker`.
+- **CSS: byte-identical.** SvelteKit's stylesheets in
+  `_app/immutable/assets` are the same files in `compare/tauri/dist` and in
+  the Sepal build's `dist` (checked with `cmp` on 24 Nov, when there was one
+  stylesheet; since 25 Nov both are SvelteKit's split build and write each as
+  it is). Tailwind scans the Vite root, which is why the build runs in
+  `examples/tracker`.
 - **Fonts.** The same `@font-face` rules with the same files (Inter Variable,
   Space Grotesk, JetBrains Mono, latin subsets), as files in
   `_app/immutable/assets` in both (data URLs before 24 Nov).
-- **Bundle shape.** SvelteKit's single bundle (`output.bundleStrategy:
-  'single'`), nothing prerendered, version polling off: the options
-  `sepalKit()` sets. One ES module and one stylesheet; Sepal's adapter turns
-  the module into the `app.js` script, adapter-static writes the page that
-  imports it (`index.html`, from `src/app.html`). Vite's default
-  minification. Resolve conditions are `sepalKit()`'s minus
-  `svelte-custom-renderer`: `browser, svelte, module, import, default`.
+- **Bundle shape.** SvelteKit's default split build, version polling off:
+  the options the Tracker's own vite.config.ts gives `sveltekit()` (since 25
+  Nov; before, one bundle, as `sepalKit()` set it). Both write SvelteKit's
+  output as it is: `index.html`, the shell from `src/app.html`, and the ES
+  module chunks it imports, Sepal's adapter with one `<style>` added for the
+  route announcer. Vite's default minification. Resolve conditions are
+  `sepal()`'s for SvelteKit apps minus `svelte-custom-renderer`: `browser,
+  svelte, module, import, default`.
 - **Package versions.** App files import their packages from where Node
   resolution finds them, the repo's workspace install that
   `examples/tracker` uses: svelte 5.59.1, bits-ui 2.21.0, @lucide/svelte 1.77.0,
@@ -239,9 +240,9 @@ copied for the DOM, as this section used to describe).
   same unknown-address route (`src/routes/[...path]`, a 404). In both, a link
   click waits a `requestAnimationFrame` and a `setTimeout(0)` before
   navigating (SvelteKit lets the page repaint first).
-- **Entry.** SvelteKit's single-bundle entry
-  (`@sveltejs/kit/src/runtime/client/bundle.js`), with
-  `compare/tauri/src/bench-emit.js` imported first, where `sepalKit()` puts the
+- **Entry.** SvelteKit's client entry
+  (`@sveltejs/kit/src/runtime/client/entry.js`), with
+  `compare/tauri/src/bench-emit.js` imported first, where `sepal()` puts the
   DOM layer and the runtime.
 - **Aliases:** only `sepal/{fs,dialog,clipboard,window}`.
 

@@ -40,10 +40,6 @@ pub struct Manifest {
 pub struct App {
     /// The page: `index.html`.
     pub html: String,
-    /// A build from before `index.html` (`app.js`), run after the page's own
-    /// scripts. Its stylesheet is in `html`.
-    // ponytail: until every build writes index.html; then this goes.
-    pub script: Option<String>,
     pub manifest: Manifest,
     /// Where the app was loaded from. Relative URLs (`<img src="logo.png">`)
     /// resolve against it, and nothing outside it can be loaded.
@@ -119,35 +115,20 @@ impl App {
     /// Load an app folder produced by the Vite preset: `index.html`, and
     /// optionally `app.json`.
     pub fn from_dir(dir: &Path) -> Result<Self, String> {
-        let (html, script) = match read(&dir.join("index.html"))? {
-            Some(html) => (html, None),
-            None => {
-                let js = read(&dir.join("app.js"))?
-                    .ok_or_else(|| format!("{} has no index.html", dir.display()))?;
-                let css = read(&dir.join("app.css"))?.unwrap_or_default();
-                (shell(&css), Some(js))
-            }
-        };
+        let html = read(&dir.join("index.html"))?
+            .ok_or_else(|| format!("{} has no index.html", dir.display()))?;
         let manifest = match read(&dir.join("app.json"))? {
             Some(json) => Manifest::parse(&json, dir)?,
             None => Manifest::default(),
         };
         Ok(Self {
             html,
-            script,
             manifest,
             dir: Some(dir.to_owned()),
             bundle: None,
             dev: false,
         })
     }
-}
-
-/// The page around a build from before `index.html`: its stylesheet, and
-/// nothing in the body.
-// ponytail: goes with `App::script`.
-pub(crate) fn shell(css: &str) -> String {
-    format!("<!doctype html><html><head><style>{css}</style></head><body></body></html>")
 }
 
 /// Decode a PNG icon. Any colour type is accepted and converted to RGBA8.

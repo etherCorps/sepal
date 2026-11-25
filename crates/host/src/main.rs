@@ -278,11 +278,7 @@ fn notarize(_bundle: &Path, _profile: &str) -> Result<(), String> {
 fn bundled_resources() -> Option<PathBuf> {
     let exe = env::current_exe().ok()?;
     let resources = exe.parent()?.parent()?.join("Resources");
-    // ponytail: app.js is a bundle from before index.html; it goes when every build writes index.html.
-    ["index.html", "app.js"]
-        .iter()
-        .any(|page| resources.join(page).is_file())
-        .then_some(resources)
+    resources.join("index.html").is_file().then_some(resources)
 }
 
 /// Load the app folder named by the first argument and return the rest of

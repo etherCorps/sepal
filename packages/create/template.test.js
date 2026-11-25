@@ -96,16 +96,22 @@ try {
 		run('pnpm', ['run', 'build'], app);
 		const manifest = JSON.parse(readFileSync(join(app, 'dist/app.json'), 'utf8'));
 		assert(manifest.name === 'My App' && manifest.id === 'com.example.my-app', 'manifest not written from the template');
-		assert(existsSync(join(app, 'dist/app.js')), 'bundle missing');
+		// A web build: SvelteKit's shell, its chunks and the version file, as SvelteKit writes them.
+		const dist = join(app, 'dist');
+		const page = readFileSync(join(dist, 'index.html'), 'utf8');
+		assert(page.includes('__sveltekit'), 'not built with SvelteKit');
+		assert(existsSync(join(dist, '_app/version.json')), '_app/version.json missing');
+		assert(!existsSync(join(dist, 'app.js')), 'an app.js from the old build');
+		const built = readdirSync(dist, { recursive: true }).map(String);
+		/** @param {string} ending */
+		const all = (ending) => built.filter((file) => file.endsWith(ending)).map((file) => readFileSync(join(dist, file), 'utf8')).join('\n');
 		// The starter has no icon of its own, so the packed package has to supply one.
 		const sepal_icon = readFileSync(join(packages, 'sepal/vite/icon.png'));
 		assert(readFileSync(join(app, 'dist/icon.png')).equals(sepal_icon), 'the build does not have the Sepal icon');
 		assert(existsSync(join(app, 'dist/logo.svg')), 'static/ was not copied into the build');
-		// The template is file-routed: the About page only exists in the bundle if src/routes was read.
-		const bundle = readFileSync(join(app, 'dist/app.js'), 'utf8');
-		assert(bundle.includes('back home'), 'routes were not bundled');
-		assert(bundle.includes('__sveltekit'), 'not built with SvelteKit');
-		assert(readFileSync(join(app, 'dist/app.css'), 'utf8').includes('.bg-indigo-600'), 'Tailwind classes are missing from app.css');
+		// The template is file-routed: the About page only exists in the build if src/routes was read.
+		assert(all('.js').includes('back home'), 'routes were not built');
+		assert(all('.css').includes('.bg-indigo-600'), 'Tailwind classes are missing from the stylesheets');
 
 		if (existsSync(join(packages, `calyx-${platform()}`, 'bin'))) {
 			const shot = join(scratch, 'template.png');

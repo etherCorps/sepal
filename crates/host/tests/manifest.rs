@@ -49,7 +49,7 @@ fn a_directory_without_a_manifest_gets_defaults() {
     std::fs::write(dir.join("index.html"), "<!doctype html><title>x</title>").unwrap();
 
     let app = App::from_dir(&dir).unwrap();
-    assert!(app.script.is_none(), "the page is all there is");
+    assert!(app.html.contains("<title>x</title>"));
     assert!(app.manifest.title.is_none() && app.manifest.icon.is_none());
     assert_eq!(app.manifest.size(), (800, 600));
 

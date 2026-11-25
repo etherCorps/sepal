@@ -293,29 +293,6 @@ impl SvelteDocument {
         Self::create(app, config, Some(resources), updater, api, hold_host_calls)
     }
 
-    /// A document for a bundle from before `index.html`: its stylesheet, then
-    /// its script, which mounts the app into `<body>`. No app folder.
-    // ponytail: goes with `App::script`, once every test loads a page.
-    pub fn new(app_js: &str, app_css: &str, config: DocumentConfig) -> Result<Self, String> {
-        let app = App {
-            html: crate::app::shell(app_css),
-            script: Some(app_js.to_owned()),
-            manifest: Default::default(),
-            dir: None,
-            bundle: None,
-            dev: false,
-        };
-        // No manifest, so no permissions: every desktop call is refused.
-        Self::create(
-            &app,
-            config,
-            None,
-            None,
-            Api::new(Default::default(), None),
-            false,
-        )
-    }
-
     /// Parse the page into the document, then run its scripts, which mount
     /// the app.
     fn create(
@@ -434,9 +411,6 @@ impl SvelteDocument {
         this.js
             .eval(&format!("({})({});", page::PREAMBLE, parsed.seed))?;
         this.run_scripts(parsed.scripts);
-        if let Some(script) = &app.script {
-            this.js.eval(script)?;
-        }
         this.settle();
         if trace_enabled() {
             eprintln!(
