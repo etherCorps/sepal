@@ -205,6 +205,7 @@ fn idle_turns_do_no_work() {
     for _ in 0..3 {
         assert!(!doc.poll(None), "poll reports no change while idle");
         assert_eq!(doc.last_turn().ops, 0);
+        assert!(!doc.last_turn().frame, "and asks for no frame");
     }
     assert!(!doc.base().has_changes());
 

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { MockHost } from './mock-host.js';
@@ -85,6 +86,37 @@ host.scroll(rows, [0, 120, 400, 37000, 400, 300]);
 await host.flush_microtasks();
 assert.equal(squash(host.text(host.by_id('scrolled'))), 'scrolled 120px', 'the handler read scrollTop from the node');
 assert.equal(host.scrolls.length, 0, 'being told about a scroll writes nothing back');
+
+// --- animation frames: the host runs the callbacks, one per call ---------------
+const run = (js) => vm.runInContext(js, host.context);
+assert.equal(run('__sb.frame_pending()'), false, 'nothing waits for a frame while idle');
+run(`globalThis.log = [];
+	requestAnimationFrame((t) => { log.push('a ' + t + ' ' + performance.now()); requestAnimationFrame((t) => log.push('nested ' + t)); });
+	const b = requestAnimationFrame(() => log.push('b'));
+	requestAnimationFrame(() => { log.push('c'); cancelAnimationFrame(d); });
+	const d = requestAnimationFrame(() => log.push('d'));
+	cancelAnimationFrame(b);`);
+assert.equal(run('__sb.frame_pending()'), true, 'a queued callback asks for a frame');
+const frame = host.time;
+assert.equal(run(`[__sb.frame(${frame}), __sb.frame(${frame}), __sb.frame(${frame})].join()`), 'true,true,false', 'one per call');
+assert.equal(run('log.join()'), `a ${frame} ${frame},c`, "in order, with the frame's time, which is performance.now()'s; cancelled ones do not run");
+assert.equal(run('__sb.frame_pending()'), true, 'one queued in a callback waits for the next frame');
+assert.equal(run(`[__sb.frame(${frame + 16}), __sb.frame(${frame + 16})].join() + ' ' + log.at(-1)`), `true,false nested ${frame + 16}`);
+assert.equal(run('__sb.frame_pending()'), false);
+
+// --- nested timers: from the sixth level on, at least 4 ms (HTML) ------------------
+run(`globalThis.depth = 0; globalThis.chain = () => { if (++depth < 9) setTimeout(chain, 0); }; setTimeout(chain, 0);`);
+const waits = [];
+for (let i = 0; i < 8; i++) {
+	waits.push(run('__sb.next_timer()') - host.time);
+	host.time = run('__sb.next_timer()');
+	while (run('__sb.timers()'));
+}
+assert.deepEqual(waits, [0, 0, 0, 0, 0, 0, 4, 4]);
+run(`requestAnimationFrame(() => setTimeout(() => {}, 0));`);
+run(`__sb.frame(${host.time})`);
+assert.equal(run('__sb.next_timer()') - host.time, 0, 'a timer from a frame callback is not nested');
+while (run('__sb.timers()'));
 
 assert.deepEqual(errors(), [], 'no errors logged');
 console.log('ok');
