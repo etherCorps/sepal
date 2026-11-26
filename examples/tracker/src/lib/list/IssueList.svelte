@@ -242,11 +242,15 @@
 	<PageHeader {title} count={shown === total ? count(total) : `${count(shown)} of ${count(total)}`} />
 
 	<!--
-		One 44px line. With the pane open the list is 560px: Group and Sort step aside, the search shrinks.
+		One 44px line. With the pane open Group and Sort step aside and the search starts small.
 		Above the list for hit testing, as PageHeader is: scrolled-away rows sit under it.
+		The filters wrap inside a box one line high: one that does not fit beside the
+		pane (a narrow window) drops out of sight whole, and none reaches over the pane.
 	-->
 	<div class="relative z-10 flex h-11 shrink-0 flex-nowrap items-center gap-2 border-b px-4">
-		<Filters {scope} compact={pane_open} />
+		<div class="flex h-7 min-w-0 flex-1 flex-wrap gap-x-2 gap-y-4 overflow-hidden">
+			<Filters {scope} compact={pane_open} />
+		</div>
 		{#if view.week !== null}
 			{@const [from] = week_range(view.week)}
 			<button

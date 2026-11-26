@@ -662,3 +662,30 @@ fn the_toolbar_stays_out_of_the_pane_at_the_1200px_window() {
     }
     assert!(doc.query("[data-testid=filter-assignee]").is_none(), "Assignee hides beside the pane");
 }
+
+/// In a narrower window a filter that does not fit beside the pane drops out
+/// of sight whole: none is drawn over the pane or takes its clicks.
+#[test]
+fn the_toolbar_stays_out_of_the_pane_in_a_narrow_window() {
+    let mut doc = load();
+    doc.layout(1000, 800);
+    click(&mut doc, "[data-testid=row]");
+    doc.wait(0.1);
+    doc.layout(1000, 800);
+    let pane_node = doc.query("[data-testid=pane]").unwrap();
+    let pane = doc.rect(pane_node).unwrap();
+    let search = doc.rect(doc.query("[data-testid=search]").unwrap()).unwrap();
+    for id in ["search", "filter-status", "filter-priority"] {
+        let (x, y, w, _) = doc.rect(doc.query(&format!("[data-testid={id}]")).unwrap()).unwrap();
+        // On the toolbar's line it fits beside the pane; one that does not
+        // fit has wrapped below the line, where the toolbar clips it.
+        assert!(x + w <= pane.0 || y > search.1, "{id} reaches the pane at {}", x + w);
+    }
+    // Where Priority reached over the pane before, a click is the pane's.
+    let hit = doc.base().hit((pane.0 + 30.0) as f32, (search.1 + 14.0) as f32).map(|hit| hit.node_id);
+    let mut at = hit;
+    while at.is_some_and(|id| id != pane_node) {
+        at = doc.base().get_node(at.unwrap()).and_then(|node| node.parent);
+    }
+    assert_eq!(at, Some(pane_node), "a click beside the toolbar is the pane's, not a filter's");
+}
