@@ -87,10 +87,10 @@ function parse(input, base) {
 		return { protocol, username: '', password: '', hostname: '', port: '', pathname: opaque[2], search: clean(opaque[3], QUERY_UNSAFE), hash: clean(opaque[4], HASH_UNSAFE), opaque: true };
 	}
 	if (base === undefined) return null;
-	if (no_authority.has(base)) {
+	if (no_authority(base)) {
 		// Nothing resolves against such a URL except a hash.
 		if (!input.startsWith('#')) return null;
-		return { protocol: base.protocol, username: '', password: '', hostname: '', port: '', pathname: base.pathname, search: raw.get(base)?.search ?? '', hash: clean(input, HASH_UNSAFE), opaque: true };
+		return { protocol: base.protocol, username: '', password: '', hostname: '', port: '', pathname: base.pathname, search: raw_search(base), hash: clean(input, HASH_UNSAFE), opaque: true };
 	}
 	// Relative to the base: `//host/path`, `/path`, `path`, `?query`, `#hash`, or nothing.
 	if (input.startsWith('//')) return parse(base.protocol + input, undefined);
@@ -102,7 +102,7 @@ function parse(input, base) {
 		return {
 			...parts,
 			pathname: base.pathname,
-			search: search === undefined ? raw.get(base)?.search ?? base.search : clean(search, QUERY_UNSAFE),
+			search: search === undefined ? raw_search(base) : clean(search, QUERY_UNSAFE),
 			hash: clean(hash, HASH_UNSAFE)
 		};
 	}
@@ -139,7 +139,7 @@ const parsed = new Map();
 
 /** @param {string} input @param {string | URL | undefined} base */
 function parse_cached(input, base) {
-	const base_key = base === undefined ? '' : base instanceof URL ? (no_authority.has(base) ? 'o' : 'u') + base.href : 's' + String(base);
+	const base_key = base === undefined ? '' : base instanceof URL ? (no_authority(base) ? 'o' : 'u') + base.href : 's' + String(base);
 	// The base's length first, so that no input can make two pairs one key.
 	const key = `${base_key.length}:${base_key}${input}`;
 	let parts = parsed.get(key);
@@ -151,6 +151,11 @@ function parse_cached(input, base) {
 	}
 	return parts;
 }
+
+/** The query of a URL as written, lone `?` included, for resolving against it. Set by the class. @type {(url: URL) => string} */
+let raw_search;
+/** Whether a URL is of the `scheme:path` kind. Set by the class. @type {(url: URL) => boolean} */
+let no_authority;
 
 export class URL {
 	/** @param {string | URL} input @param {string | URL} [base] */
@@ -165,20 +170,39 @@ export class URL {
 		this.pathname = parts.pathname;
 		this.#search = parts.search;
 		this.#hash = parts.hash;
-		raw.set(this, { search: parts.search });
-		if (parts.opaque) no_authority.add(this);
-		this.searchParams = new URLSearchParams(this.#search);
-		link.set(this.searchParams, (/** @type {string} */ query) => this.#set_search(query === '' ? '' : '?' + query));
+		this.#opaque = parts.opaque === true;
 	}
 
-	// With their `?` and `#`, which may be all there is.
+	// With their `?` and `#`, which may be all there is: what a URL resolved
+	// against this one keeps, lone `?` included.
 	#search = '';
 	#hash = '';
+	/** A `scheme:path` URL, with no host to print or to resolve against. */
+	#opaque = false;
+	/**
+	 * Made when it is first asked for. Routers and Vite's preload helper
+	 * make URLs for their parts, many a navigation (SvelteKit: one per link
+	 * on the page), and a `URLSearchParams` each was a third of that.
+	 * @type {URLSearchParams | null}
+	 */
+	#params = null;
+
+	static {
+		raw_search = (url) => url.#search;
+		no_authority = (url) => url.#opaque;
+	}
+
+	get searchParams() {
+		if (this.#params === null) {
+			this.#params = new URLSearchParams(this.#search);
+			link.set(this.#params, (/** @type {string} */ query) => this.#set_search(query === '' ? '' : '?' + query));
+		}
+		return this.#params;
+	}
 
 	/** @param {string} search */
 	#set_search(search) {
 		this.#search = search;
-		raw.set(this, { search });
 	}
 
 	get search() {
@@ -187,7 +211,7 @@ export class URL {
 	set search(value) {
 		value = String(value);
 		this.#set_search(value === '' ? '' : clean(value.startsWith('?') ? value : '?' + value, QUERY_UNSAFE));
-		reset.get(this.searchParams)?.(this.#search);
+		if (this.#params !== null) reset.get(this.#params)?.(this.#search);
 	}
 	get hash() {
 		return this.#hash === '#' ? '' : this.#hash;
@@ -206,7 +230,7 @@ export class URL {
 		return SPECIAL.test(this.protocol) ? `${this.protocol}//${this.host}` : 'null';
 	}
 	get href() {
-		if (no_authority.has(this)) return `${this.protocol}${this.pathname}${this.#search}${this.#hash}`;
+		if (this.#opaque) return `${this.protocol}${this.pathname}${this.#search}${this.#hash}`;
 		const user = this.username === '' ? '' : this.username + (this.password === '' ? '' : ':' + this.password) + '@';
 		return `${this.protocol}//${user}${this.host}${this.pathname}${this.#search}${this.#hash}`;
 	}
@@ -214,8 +238,7 @@ export class URL {
 		const parts = parse(String(value), undefined);
 		if (parts === null) throw new TypeError(`Invalid URL: ${String(value)}`);
 		const { search, hash, opaque, ...rest } = parts;
-		if (opaque) no_authority.add(this);
-		else no_authority.delete(this);
+		this.#opaque = opaque === true;
 		Object.assign(this, rest);
 		this.search = search;
 		this.#hash = hash;
@@ -246,11 +269,6 @@ export class URL {
 	}
 }
 
-/** URLs of the `scheme:path` kind, which have no host to print or to resolve against. @type {WeakSet<URL>} */
-const no_authority = new WeakSet();
-
-/** The query of a URL as written, lone `?` included, for resolving against it. @type {WeakMap<URL, { search: string }>} */
-const raw = new WeakMap();
 
 /** How a `searchParams` tells its URL that it changed, and the other way round. */
 /** @type {WeakMap<URLSearchParams, (query: string) => void>} */

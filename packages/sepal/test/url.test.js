@@ -88,5 +88,19 @@ for (const [Class, Params] of [[URL, URLSearchParams], [Ours, OurParams]]) {
 	assert.equal(new Params([['k', 'v']]).get('k'), 'v');
 	assert.equal(Class.canParse('nope'), false);
 	assert.equal(Class.canParse('/x', 'http://localhost'), true);
+
+	// Ours makes `searchParams` when it is first asked for: whatever came
+	// before, it has to start from the query as it is then.
+	const later = new Class('http://localhost/?a=1');
+	later.search = '?b=2';
+	assert.equal(later.searchParams.get('b'), '2');
+	const moved = new Class('http://localhost/');
+	moved.href = 'http://localhost/x?c=3#h';
+	assert.deepEqual([...moved.searchParams], [['c', '3']]);
+	moved.search = '';
+	assert.equal(moved.searchParams.size, 0);
+	moved.searchParams.append('d', '4');
+	assert.equal(moved.search, '?d=4');
+	assert.ok(!Object.keys(moved).includes('searchParams'), 'searchParams is not an own property, as in Node');
 }
 console.log(`url: ok (${compared} URLs compared with Node's)`);
