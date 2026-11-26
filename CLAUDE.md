@@ -55,7 +55,7 @@ pnpm run build              # builds every example: dist/index.html, its chunks,
 pnpm run test:js            # renderer against a JS mock host (fast, no Rust)
 pnpm run test:host          # end-to-end headless tests (QuickJS + blitz-dom)
 pnpm run check              # tsc on the package, svelte-check on the examples
-pnpm run build:host         # release host -> packages/calyx-<platform>/bin/calyx, and its THIRD-PARTY-LICENSES.txt
+pnpm run build:host         # the shipped host (--profile dist) -> packages/calyx-<platform>/bin/calyx, and its THIRD-PARTY-LICENSES.txt
 pnpm run test:template      # pack the packages, create a project from the template, build and render it
 pnpm release prerelease     # ask for a release: bump everything, file the CHANGELOG, commit (see release.yml)
 pnpm test                   # check + all test suites
@@ -74,6 +74,15 @@ cargo run --manifest-path crates/host/Cargo.toml --features screenshot -- \
 
 The first Rust build takes several minutes (Stylo, wgpu, Vello). Use the dev
 profile while iterating; it is already tuned in `Cargo.toml`.
+
+The shipped host is built with `--profile dist` (`crates/host/Cargo.toml`):
+release with fat LTO in one codegen unit, a quarter smaller and as fast,
+but two to three times slower to build cold. Plain `--release` keeps thin
+LTO. Measure size and speed on `dist`, which is what ships and what
+`compare/` runs. Every platform's host must stay under 30,000,000 bytes:
+release.yml stops above it, and `host-size.yml` checks pull requests that
+change a `Cargo.toml` or `Cargo.lock` (`scripts/host-size.js`).
+`size-report.yml`, run by hand, says where the bytes go.
 
 `tests/counter.rs` reads `examples/counter/dist`, so build the bundle before
 `cargo test`. The npm scripts do this for you.

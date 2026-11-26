@@ -36,6 +36,11 @@ To move an app without SvelteKit:
 
 Also:
 
+- **The prebuilt hosts are a quarter smaller**, built with fat LTO in one
+  codegen unit (the new `dist` profile) and as fast in the headless bench:
+  darwin-arm64 18.5 MB, darwin-x64 20.4 MB, linux-arm64-gnu 22.2 MB,
+  linux-x64-gnu 25.4 MB. Each must stay under 30,000,000 bytes; the release
+  stops above that.
 - **`calyx app.js app.css` is gone.** `calyx dist` runs an app from its
   folder, and `calyx --bundle` packs one that has an `index.html`. A bundle
   made before this release is not replaced by mistake.
