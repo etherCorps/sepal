@@ -42,8 +42,10 @@ Also:
   linux-x64-gnu 25.4 MB. Each must stay under 30,000,000 bytes; the release
   stops above that.
 - **`calyx app.js app.css` is gone.** `calyx dist` runs an app from its
-  folder, and `calyx --bundle` packs one that has an `index.html`. A bundle
-  made before this release is not replaced by mistake.
+  folder, and `calyx --bundle` packs one that has an `index.html`. It
+  replaces a bundle Sepal made, from this release or an earlier one (dev
+  keeps one in `node_modules/.sepal`, for the app's name and icon in the
+  Dock), and still never one it did not make.
 - **Relative `fetch` URLs resolve against `http://app.localhost/`**, the
   page's address, and the host answers that origin from the app folder:
   `GET` and `HEAD`, a content type by extension, a 404 for a missing file

@@ -143,6 +143,30 @@ fn bundles_the_counter_example() {
     assert!(!bundle.join("stale.txt").exists());
 }
 
+/// A bundle from before apps were web builds (0.2.0-alpha.0 and earlier:
+/// `app.js` and `app.css` where `index.html` is now) is Sepal's too. Dev
+/// keeps one in `node_modules/.sepal`; refused, dev ran the bare host, and
+/// the Dock said "calyx".
+#[test]
+fn replaces_a_bundle_from_before_index_html() {
+    let dir = scratch("old-layout");
+    let host = fake_host(&dir);
+    let old = dir.join("Counter.app/Contents");
+    fs::create_dir_all(old.join("MacOS")).unwrap();
+    fs::create_dir_all(old.join("Resources")).unwrap();
+    fs::write(old.join("MacOS/Counter"), "an older calyx").unwrap();
+    for file in ["app.js", "app.css", "app.json"] {
+        fs::write(old.join("Resources").join(file), "").unwrap();
+    }
+
+    bundle_macos(counter_dist(), &dir, &host).unwrap();
+    assert!(old.join("Resources/index.html").is_file());
+    assert!(
+        !old.join("Resources/app.js").exists(),
+        "the old app went with its bundle"
+    );
+}
+
 #[test]
 fn never_replaces_an_app_it_did_not_build() {
     let dir = scratch("foreign");
