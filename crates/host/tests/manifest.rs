@@ -76,6 +76,32 @@ fn manifest_fields_are_optional_and_lenient() {
     assert!(broken.starts_with("app.json:"), "{broken}");
 }
 
+/// `window.minWidth` and `window.minHeight`: how small the window can be
+/// made. Either alone does; the window never starts smaller.
+#[test]
+fn a_minimum_window_size_is_read_and_the_window_starts_no_smaller() {
+    let dir = Path::new(".");
+    assert_eq!(Manifest::parse("{}", dir).unwrap().min_size(), None);
+
+    let both = Manifest::parse(
+        r#"{ "window": { "width": 1200, "height": 800, "minWidth": 720, "minHeight": 500 } }"#,
+        dir,
+    )
+    .unwrap();
+    assert_eq!(both.min_size(), Some((720, 500)));
+    assert_eq!(both.size(), (1200, 800));
+
+    let one = Manifest::parse(r#"{ "window": { "minWidth": 1000 } }"#, dir).unwrap();
+    assert_eq!(one.min_size(), Some((1000, 0)));
+    assert_eq!(one.size(), (1000, 600), "not below its minimum");
+
+    let odd = Manifest::parse(
+        r#"{ "window": { "minWidth": -1, "minHeight": "tall" } }"#,
+        dir,
+    );
+    assert_eq!(odd.unwrap().min_size(), None);
+}
+
 #[test]
 fn a_bad_icon_is_an_error_not_a_panic() {
     let not_png = decode_icon(b"definitely not a png".to_vec()).err().unwrap();

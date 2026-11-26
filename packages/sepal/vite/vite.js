@@ -59,7 +59,9 @@ const PAGE = `<!doctype html>
  * (square, 1024×1024 recommended) in the `static/` directory, named relative to
  * it; `static/icon.png` is used when `icon` is left out, and the Sepal icon
  * when there is no `static/icon.png` either. `width` and `height`
- * are the initial window size in logical pixels. `id` (a bundle identifier such as `com.example.counter`) and
+ * are the initial window size in logical pixels, and `minWidth` and `minHeight` how
+ * small the window can be made: the size below which the app's layout cannot
+ * work. The window never opens smaller. `id` (a bundle identifier such as `com.example.counter`) and
  * `version` are used when the app is bundled.
  *
  * `updater` turns on self-update: `url` is where the update feed
@@ -73,7 +75,7 @@ const PAGE = `<!doctype html>
  *   version?: string,
  *   icon?: string,
  *   updater?: { url: string, pubkey: string },
- *   window?: { title?: string, width?: number, height?: number }
+ *   window?: { title?: string, width?: number, height?: number, minWidth?: number, minHeight?: number }
  * }} AppManifest
  */
 

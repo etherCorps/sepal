@@ -129,6 +129,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     let (proxy, receiver) = BlitzShellProxy::new(event_loop.create_proxy());
 
     let (width, height) = manifest.size();
+    let min_size = manifest.min_size();
     // The manifest's, the page's `<title>`, the app's name. Later changes
     // to `<title>` reach the window through Blitz.
     let title = manifest
@@ -139,6 +140,9 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     let mut attributes = WindowAttributes::default()
         .with_title(title)
         .with_surface_size(LogicalSize::new(width, height));
+    if let Some((min_width, min_height)) = min_size {
+        attributes = attributes.with_min_surface_size(LogicalSize::new(min_width, min_height));
+    }
 
     let mut dock_icon = None;
     if let Some(icon) = manifest.icon {

@@ -34,6 +34,9 @@ pub struct Manifest {
     pub title: Option<String>,
     pub width: Option<u32>,
     pub height: Option<u32>,
+    /// How small the window can be made, in logical pixels.
+    pub min_width: Option<u32>,
+    pub min_height: Option<u32>,
     pub icon: Option<Icon>,
 }
 
@@ -88,6 +91,8 @@ impl Manifest {
             title: text(&window["title"]),
             width: size(&window["width"]),
             height: size(&window["height"]),
+            min_width: size(&window["minWidth"]),
+            min_height: size(&window["minHeight"]),
             icon: value["icon"]
                 .as_str()
                 .map(|path| load_icon(dir, path))
@@ -105,9 +110,21 @@ impl Manifest {
         })
     }
 
-    /// Initial window size in logical pixels.
+    /// Initial window size in logical pixels, never below the minimum.
     pub fn size(&self) -> (u32, u32) {
-        (self.width.unwrap_or(800), self.height.unwrap_or(600))
+        let (min_width, min_height) = self.min_size().unwrap_or((0, 0));
+        (
+            self.width.unwrap_or(800).max(min_width),
+            self.height.unwrap_or(600).max(min_height),
+        )
+    }
+
+    /// How small the window can be made, in logical pixels, if the app says:
+    /// a layout has a width below which it cannot work. 0 for the side it
+    /// leaves out.
+    pub fn min_size(&self) -> Option<(u32, u32)> {
+        (self.min_width.is_some() || self.min_height.is_some())
+            .then(|| (self.min_width.unwrap_or(0), self.min_height.unwrap_or(0)))
     }
 }
 
