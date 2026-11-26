@@ -92,6 +92,35 @@ Also:
   SvelteKit once a day, when there is one newer than the lockfile's
   (`kit-latest`, allowed to fail); the range goes up once that passes.
 
+### Modules load as QuickJS bytecode
+
+After every build, calyx compiles each module of the app folder to
+QuickJS bytecode, `x.js.qbc` next to `x.js` (`calyx --compile <dist>`;
+the adapter and `sepal()` run it, dev included), and the host loads that
+instead of parsing the module. The Tracker's page starts 19 to 20 ms
+sooner, uses 23 ms less CPU to settle and 5.5 MB less RAM, and idles at
+7.0 ms of CPU in 20 s instead of 11.4 (`compare/results/bytecode.md`).
+First visits to a route barely move: there was little to compile.
+
+What changes for apps:
+
+- **`Function.prototype.toString` returns the `[native code]` form for
+  app code.** The bytecode has no source text. Error stacks keep their
+  file, line and column.
+- **The app folder about doubles**: the `.js` files ship as well, for a
+  host whose bytecode differs and for V8 hosts, which load only them.
+  The Tracker's goes from 972 KB to 1,964 KB.
+- **A build takes the compile longer**: 38-41 ms for the Tracker's 45
+  modules. Without a calyx for the machine, or with one from before
+  `--compile`, the build says so and the app loads its JavaScript.
+- **Bytecode is used only when it fits.** Its header names the calyx
+  version, the QuickJS-ng version, the target and the module, and the
+  size of the `.js` it came from (in dev, its contents too). Anything else,
+  a damaged file included, loads the `.js`, and the host says why. It is
+  read only from the app folder.
+- **`calyx --bundle` compiles again** inside the bundle, with the binary
+  it bundles.
+
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
 ### Breaking: SvelteKit is the only router

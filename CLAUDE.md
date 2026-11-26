@@ -104,7 +104,7 @@ at the size when a change adds crates or features.
   `sepalPreprocess()`), `adapter.js` (`sepal/adapter`: SvelteKit's output
   as SvelteKit writes it, plus `app.json`), `page.js` (what a page and its
   stylesheets may load: the app folder only), `app.js` (config file,
-  manifest and dev window), `head.js` and `bindings.js` (preprocessors for
+  manifest, `compile_bytecode` and the dev window), `head.js` and `bindings.js` (preprocessors for
   what Svelte refuses), `sveltekit.js` (`sepalKit()`, a stub that throws the
   new setup; goes a release after 0.2.0-alpha.0). All of it runs in Node.
   `icon.png` is the Sepal icon for apps without one. Pages in `src/routes`
@@ -135,7 +135,8 @@ at the size when a change adds crates or features.
   skipping what is already up, dist-tags. `check-versions.js` keeps the
   host crate at the packages' version, which `calyx --version` prints.
 - `crates/host/` — the Rust host: crate `sepal`, binary `calyx`. `app.rs` (app directory, `app.json`
-  manifest, icon), `bundle.rs` (macOS `.app`), `net.rs` (resource loading:
+  manifest, icon), `bundle.rs` (macOS `.app`), `bytecode.rs` (modules
+  compiled to `.qbc`: the header, and when the loader may use one), `net.rs` (resource loading:
   data: URLs and the app directory only), `updater.rs` (self-update and the
   build side of it), `api/` (desktop APIs and their permission checks), `js.rs` (the engine: `js/quickjs.rs`,
   or `js/v8_engine.rs` with `--features engine-v8`), `ops.rs` (apply batches), `scroll.rs` (scroll ops and reports),
@@ -268,6 +269,22 @@ at the size when a change adds crates or features.
   reverse order, and a dev reload does the opposite), finalizers need the
   platform's message loop pumped, and a script can only be stopped from
   another thread.
+- **Modules load as QuickJS bytecode** (`bytecode.rs`). After every build
+  the adapter and `sepal()` run `calyx --compile` (`compile_bytecode` in
+  `vite/app.js`) with `find_host()`'s binary, which writes `x.js.qbc` next to
+  every module, without source text: `Function.prototype.toString` gives the
+  `[native code]` form for app code, and error stacks keep file and line.
+  The QuickJS loader takes a `.qbc` only when its header names this calyx
+  version, QuickJS-ng version and target, the module's URL, and the `.js`'s
+  size (a stat on every launch; its hash in dev); anything else, a cut file
+  included, loads the `.js` and says why. **Never read bytecode from
+  anywhere but the app folder**, and never from a cache: QuickJS does not
+  check bytecode, and a planted file runs anything. `--bundle` compiles
+  again inside the bundle with its own binary. V8 ignores `.qbc`
+  (`set_modules`' bytecode argument). The examples' builds use
+  `packages/calyx-<platform>`'s binary, so until `pnpm run build:host` they
+  warn that it is "a calyx from before `--compile`" and ship JavaScript
+  only; `tests/bytecode.rs` compiles its own copies, the Tracker included.
 - **Where time goes** (measured 22 Nov 2026, see README "Performance"): turns
   are bound by JavaScript in QuickJS, an interpreter, not by Blitz. Do not
   optimise Rust before `SEPAL_TRACE=1` says layouts are the cost.
@@ -474,7 +491,7 @@ at the size when a change adds crates or features.
   `fetch` (`api/http.rs`, only to URLs in `permissions.http`, every redirect
   hop checked). Resources (`net.rs`) never touch the network; keep it that way.
 - **Everything the page loads comes from the app folder**: modules (both
-  engines' loaders), stylesheets, fonts and images, through `net.rs`, which
+  engines' loaders) and their bytecode, stylesheets, fonts and images, through `net.rs`, which
   maps `http://app.localhost/` to the folder (canonical paths: no way out
   through `..` or a symlink). A script, stylesheet, `modulepreload` or font
   from `http(s)://` stops the build (`vite/page.js`, for `sepal()` and the
