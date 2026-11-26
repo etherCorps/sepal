@@ -27,6 +27,28 @@ fn scripts_run_in_order_and_modules_load_from_the_app_folder() {
     );
 }
 
+/// As in a browser, a classic script that throws is reported and the page
+/// goes on: the next classic script runs, and so do the modules.
+#[test]
+fn a_classic_script_that_throws_does_not_stop_the_next() {
+    let doc = open();
+    let order = doc.js().eval_string("JSON.stringify(order)").unwrap();
+    let ran: Vec<String> = serde_json::from_str(&order).unwrap();
+    // The second inline classic script throws; `classic 3` is the one after it.
+    let after = ran
+        .iter()
+        .position(|entry| entry.starts_with("classic 3"))
+        .expect("the classic script after the one that throws did not run");
+    let before = ran.iter().position(|entry| entry == "classic 1").unwrap();
+    assert!(before < after, "{ran:?}");
+    assert!(
+        ran[after + 1..]
+            .iter()
+            .any(|entry| entry.starts_with("main ")),
+        "the module scripts ran after it: {ran:?}"
+    );
+}
+
 #[test]
 fn current_script_is_the_running_scripts_element() {
     let doc = open();

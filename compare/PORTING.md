@@ -253,10 +253,10 @@ copied for the DOM, as this section used to describe).
 | Svelte output | custom renderer (`customRenderer`), op buffer to Blitz | Svelte's normal DOM client | that is the comparison |
 | `bind:` on elements | rewritten to attachments by `bindings.js` | compiled by Svelte | Svelte supports it in the DOM; the preprocessor exists only because Svelte refuses it for custom renderers |
 | `<svelte:head>` preprocessor | `head.js` | not used | the app has no `<svelte:head>` |
-| DOM layer | `sepal/dom` loaded first (`sepalKit()` always loads it) | none | WebKit is a DOM |
+| DOM layer | `sepal/dom` loaded first (`sepal()` always loads it in a SvelteKit app) | none | WebKit is a DOM |
 | Events | `dispatch()` in `renderer.js` bubbles | WebKit's events; Svelte delegates `onclick` and similar to the mount target | DOM build behaviour. SvelteKit's click listener on `<html>` runs after the app's handlers in both |
 | `sepal/{fs,dialog,clipboard,window}` | host calls | `compare/tauri/src/desktop.js` on the plugins | see below |
-| HTML page | the host's base document; `sepalKit()` takes SvelteKit's start script out of the page it generates | adapter-static's `index.html`, from `src/app.html`: the stylesheet, a `modulepreload` of the bundle, and SvelteKit's start script in `<body>` | Tauri needs a page. Nothing else is in it |
+| HTML page | SvelteKit's `index.html`, from `src/app.html`, as `sepal/adapter` writes it: the stylesheet, `modulepreload`s of the chunks, and SvelteKit's start script in `<body>`, which the host runs | adapter-static's `index.html`, from the same `src/app.html` | the same page, but for the route announcer's `<style>` |
 | `app.json`, `icon.png` | written; the icon is the Sepal one, since the Tracker has none of its own | not used; the icon is in `src-tauri/icons` (made from `assets/brand/sepal-app-icon-1024.png` with `tauri icon`, the icon the Tracker gets from the preset) | Tauri's equivalent is `tauri.conf.json` |
 | App id / data dir | `com.compare.tracker.blitz` | `com.compare.tracker.tauri` (`~/Library/Application Support/com.compare.tracker.tauri`) | PROTOCOL.md |
 

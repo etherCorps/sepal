@@ -2,8 +2,71 @@
 
 ## Unreleased
 
+### Breaking: an app is a web build, loaded from index.html
+
+A Sepal build is what a web build is: `dist/index.html`, the ES module
+chunks it loads, its stylesheets, fonts and static files, and `app.json`
+for the host. The host parses the page, runs its scripts as a browser
+does, and loads modules, stylesheets and fonts from the app folder only.
+There is no `app.js` any more.
+
+A SvelteKit app uses SvelteKit's own plugin, given its options through
+`withSepal()`, with Sepal's adapter, `sepal/adapter`, and `sepal()` after
+it. SvelteKit's output is written as SvelteKit writes it, with its
+default split build: a route's code is read when it is first opened.
+`sepalKit()` is gone; for one release it throws, showing the new setup.
+
+To move a SvelteKit app:
+
+| Before | Now |
+|---|---|
+| `plugins: [sepalKit()]` from `sepal/sveltekit` | `plugins: [sveltekit(withSepal({ adapter: adapter() })), sepal()]`, with `sveltekit` from `@sveltejs/kit/vite`, `adapter` from `sepal/adapter` and `sepal`, `withSepal` from `sepal/vite` |
+| `sepalKit({ kit: { … } })` | the same options in `withSepal({ … })` |
+| `sepalKit({ out })` | `adapter({ out })` |
+| options set by hand: nothing | `compilerOptions.experimental.customRenderer: 'sepal/renderer'`, `version.pollInterval: 0` and `sepalPreprocess()` from `sepal/vite`, last in `preprocess`; `sepal()` stops the build naming `withSepal()` when one is missing |
+| `dist/app.js`, `dist/app.css` | `dist/index.html` and `dist/_app/` |
+
+To move an app without SvelteKit:
+
+| Before | Now |
+|---|---|
+| the module in `entry` (default `src/main.ts`) | `index.html` next to `vite.config.ts`, with `<script type="module" src="/src/main.ts"></script>`; `sepal()` says so when it is missing |
+| `entry` in `sepal.config.ts` | gone |
+| `dist/app.js`, `dist/app.css` | `dist/index.html`, `dist/assets/` |
+
+Also:
+
+- **`calyx app.js app.css` is gone.** `calyx dist` runs an app from its
+  folder, and `calyx --bundle` packs one that has an `index.html`. A bundle
+  made before this release is not replaced by mistake.
+- **Relative `fetch` URLs resolve against `http://app.localhost/`**, the
+  page's address, and the host answers that origin from the app folder:
+  `GET` and `HEAD`, a content type by extension, a 404 for a missing file
+  or a path that leads out of the folder. No `permissions.http` is needed
+  for it, and it never reaches the network. `fetch('not a url')` is now a
+  404 instead of an error.
+- **The title needs no permission.** `document.title` and
+  `<svelte:head><title>` set the window's title without
+  `permissions.window`, as a page's title on the web; so does
+  `setTitle()` from `sepal/window`. The other window calls still need it.
+- **Nothing loads from the network but `fetch`.** A script, stylesheet,
+  `modulepreload` or font from `http(s)://` stops the build, with what to
+  do instead (Fontsource for fonts); the host refuses them as well. What
+  the host leaves out of a page (`on*` attributes, iframes, import maps,
+  `document.write`) is warned about at build time.
+- **`sepalKit()` throws**, with the new setup in its message.
+- **A `<link rel="stylesheet">` the app adds gets a `load` or `error`
+  event**, as Vite expects for a chunk's styles. `document.currentScript`
+  is the running classic script's element.
+- **Sepal's runtime goes first in the modules `index.html` loads**, whatever
+  order the app imports in, so that its fixes for QuickJS are in place
+  before Svelte's runtime keeps its own copy of what they fix. (`bind:`
+  through `{...rest}` props broke when Svelte was imported first.)
+- **Selectors that end in a tag do not walk the page** in the DOM layer,
+  and URL parses are cached: SvelteKit's split build looks for
+  `meta[property=csp-nonce]` several times a navigation.
 - `sepal`'s peer range for `@sveltejs/kit` is now `>=3.4 <3.5`, the
-  versions `sepalKit()`'s edits to SvelteKit's client were tested with, and
+  versions `sepal()`'s edits to SvelteKit's client were tested with, and
   the starter asks for `~3.4.0`. CI builds the starter against the newest
   SvelteKit as well (`kit-latest`, allowed to fail); the range goes up once
   that passes.

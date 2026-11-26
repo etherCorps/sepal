@@ -45,7 +45,7 @@ jobs:
       - run: cargo test --manifest-path crates/host/Cargo.toml --features "screenshot engine-v8"
 
   # sepal's peer range stops at the SvelteKit it was tested with, because
-  # sepalKit() edits SvelteKit's client source. This builds the starter on
+  # sepal() edits SvelteKit's client source. This builds the starter on
   # the newest SvelteKit, so a release that breaks those edits shows up here
   # first. It may fail: the range is raised by hand, after a look.
   kit-latest:

@@ -148,8 +148,13 @@ export function sepal(inline = {}) {
 	let config_path = null;
 	/** @type {import('vite').ConfigEnv} */
 	let config_env = { mode: 'production', command: 'build' };
-	/** The modules `index.html` loads, when `dom` is on: the DOM layer goes first in each. */
-	const dom_entries = new Set();
+	/**
+	 * The modules `index.html` loads. Sepal's runtime goes first in each (the
+	 * DOM layer, with `dom`, which loads it): its engine fixes have to be in
+	 * place before Svelte's runtime runs, which keeps its own copy of
+	 * `Object.getOwnPropertyDescriptor`, whatever order the app imports in.
+	 */
+	const page_entries = new Set();
 	/** @type {import('vite').Logger | null} */
 	let logger = null;
 	const user = inline.svelte ?? {};
@@ -227,16 +232,16 @@ export function sepal(inline = {}) {
 			// Before Vite's own resolver, which would answer first.
 			order: 'pre',
 			async handler(source, importer) {
-				// The modules index.html loads: with `dom`, the DOM layer has to
-				// exist before any library module runs, so it goes first in them.
-				if (!options.dom || kit_app || !importer?.endsWith('.html')) return;
+				// The modules index.html loads, for `page_entries`. SvelteKit's
+				// entry gets the same from `patch`.
+				if (kit_app || !importer?.endsWith('.html')) return;
 				const resolved = await this.resolve(source, importer, { skipSelf: true });
-				if (resolved) dom_entries.add(resolved.id);
+				if (resolved) page_entries.add(resolved.id);
 				return resolved;
 			}
 		},
 		transform(code, id) {
-			if (dom_entries.has(id)) return { code: `import 'sepal/dom';\n${code}`, map: null };
+			if (page_entries.has(id)) return { code: `import '${options.dom ? 'sepal/dom' : 'sepal'}';\n${code}`, map: null };
 			// Stylesheets, component styles included: nothing in them may load from the network.
 			if (/\.css($|\?)/.test(id)) {
 				const errors = check_css(code, normalizePath(relative(root, id.split('?')[0])));

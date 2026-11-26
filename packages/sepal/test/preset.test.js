@@ -57,6 +57,8 @@ try {
 		// No modulepreload polyfill: it reaches for `document`, which an app without the DOM layer has not got.
 		const entry = readFileSync(join(dist, 'assets', /** @type {string} */ (assets.find((file) => file.startsWith('index-')))), 'utf8');
 		assert.ok(!entry.includes('MutationObserver'), 'the modulepreload polyfill is in the build');
+		// Sepal's runtime first in the page's modules, though main.js does not import it: its engine fixes come before anything of Svelte's.
+		assert.ok(entry.indexOf('there is no page to render into') !== -1 && entry.indexOf('there is no page to render into') < entry.indexOf('globalThis.started'), "Sepal's runtime is not first in the entry");
 	}
 
 	// With `dom: true`, the DOM layer comes first in the modules the page loads.

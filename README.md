@@ -198,7 +198,6 @@ export default defineConfig({
 	permissions: {
 		// what the app may do outside its window; see "Desktop APIs"
 	}
-	// entry: the module the app starts from (default src/main.ts)
 	// dom: true, for component libraries written for the web; see "Component libraries"
 });
 ```
@@ -214,7 +213,7 @@ export default defineConfig({
 The file can also be `.js` or `.mjs`, and can export a function, which gets
 Vite's `{ mode, command }`. Anything passed to `sepal({ … })` directly
 overrides the file, key by key. In watch mode, edits to `app` and
-`permissions` are picked up on the next build; a change to `entry` needs
+`permissions` are picked up on the next build; a change to `dom` needs
 Vite restarted.
 
 The icon is a static file: put it in `static/` and it is copied with the
@@ -223,9 +222,8 @@ An app with neither gets the Sepal icon, written into the build as
 `icon.png`; the starter relies on that until you add your own.
 
 The build writes `dist/app.json`. Point
-the host at the directory and it picks them up: `calyx dist`.
-Every field is optional; `calyx app.js app.css` still works and
-runs without a manifest.
+the host at the directory and it picks it up: `calyx dist`. Every field is
+optional.
 
 | Platform | Where the icon shows |
 |---|---|
@@ -240,6 +238,40 @@ items ("Quit Counter") use. The Dock label, the app switcher and Activity
 Monitor come from the app bundle a process runs from, so `sepal run` and dev
 run an app with a `name` out of a throwaway bundle in `node_modules/.sepal`.
 Started by hand (`calyx dist`), or without a `name`, it shows as `calyx`.
+
+## The app folder
+
+A build is a web build. `vite build` writes `dist/`:
+
+```
+dist/
+  index.html      the page the app starts from
+  assets/         its ES module chunks, stylesheet and fonts (_app/ in a SvelteKit app,
+                  which has a stylesheet per route and _app/version.json)
+  …               the files from static/, as they are
+  app.json        what the host needs: name, window, permissions, updater
+  icon.png        the icon, when the app has one, or the Sepal icon
+```
+
+The host loads it as a browser loads a site, from `http://app.localhost/`,
+an address that only names the folder: it parses `index.html`, runs its
+scripts, and loads modules, stylesheets, fonts and images from the folder.
+Nothing on the page comes from the network. A path that leaves the folder,
+through `..` or a symlink, is refused.
+
+What the host does with what a page holds:
+
+| In the page | |
+|---|---|
+| `<script type="module">`, with `src` or inline | runs after the page is parsed, in document order; its imports and `import()` load from the app folder |
+| an inline classic `<script>` | runs before the modules, in document order; one that throws does not stop the next. `document.currentScript` is its element |
+| `<link rel="stylesheet">`, `<style>` | applied as the page is parsed; one the app adds later gets a `load` or `error` event |
+| `<link rel="modulepreload">` | allowed; the module loads when it is imported |
+| `<title>` | the window's title, unless `app.window.title` sets one; `document.title` changes it later, with no permission needed |
+| `<meta>`, `<link rel="icon">` | kept in the page, and otherwise ignored: the icon is `app.json`'s |
+| `@font-face`, `<img>`, `url()` in CSS | from the app folder, or `data:` URLs |
+| a script, stylesheet, `modulepreload` or font from `http(s)://` | **stops the build**; the host refuses it too |
+| `<script src>` without `type="module"`, import maps, `on*` attributes, `<iframe>`, `document.write()` | not run, or not supported; the build warns |
 
 ## Bundle a macOS app
 
@@ -579,7 +611,7 @@ Images load from two places and nowhere else:
 </script>
 
 <img src={logo} alt="" />
-<img src="photo.png" alt="" />   <!-- a file next to app.js: put it in static/ -->
+<img src="photo.png" alt="" />   <!-- a file in the app folder: put it in static/ -->
 ```
 
 - `data:` URLs, which is what an `import` of an asset becomes.
@@ -763,8 +795,9 @@ What to know:
 ## TypeScript
 
 The examples are TypeScript: `src/main.ts`, `<script lang="ts">` and
-`vite.config.ts`, checked with `svelte-check`. The preset picks up `src/main.ts`
-or `src/main.js`, whichever exists. Plain JavaScript apps work unchanged.
+`vite.config.ts`, checked with `svelte-check`. The module script in
+`index.html` names the entry, `.ts` or `.js`; plain JavaScript apps work
+unchanged.
 
 The packages ship declarations for `mount`, `unmount`, the desktop APIs and
 the Vite presets. Their source stays JavaScript with JSDoc; `tsc` checks it and
