@@ -98,8 +98,10 @@ Session `html-1`, interleaved, 1 warm-up and 3 runs per build and scenario. M4 P
   number of ops. The Board and Insights, opened for the first time in
   scenario 10, are 25 and 12 ms slower; Settings and the way back to
   Issues, whose code is mostly loaded already, are 2 and 5 ms slower. Escape back to the list is 18 ms slower
-  at the median, with 1,417 ops against 1,092 in its turn; that difference in
-  ops is not explained yet.
+  at the median, with 1,417 ops against 1,092 in its turn: 325 more `DROP`s,
+  from a cycle collection that lands in that turn on this branch. Most of
+  the navigation gap is not compiling but Vite's preload helper, paid on
+  every visit; `single-bundle.md` has both.
 - **Idle** is the same: no frames, the same wake-ups.
 - **Memory.** RAM 5 s after load is about 4 MB lower over all start-up and
   idle runs (one script's source and its compiled code no longer held
@@ -130,13 +132,12 @@ Release host (`calyx`, `--features screenshot`, thin LTO, stripped), bytes:
 | Platform | 0.2.0-alpha.0 (main) | html-entry | |
 |---|---:|---:|---|
 | darwin-arm64, built here | 25,437,648 | 26,102,336 | +664,688 (+2.6 %) |
-| darwin-arm64, release CI | 25,493,936 | | |
-| darwin-x64, release CI | 26,499,360 | | |
-| linux-arm64-gnu, release CI | 29,766,944 | | |
-| linux-x64-gnu, release CI | 32,608,272 | | over the 30 MB budget before this branch |
+| darwin-arm64, release CI | 25,493,936 | 26,007,952 | +514,016 (+2.0 %) |
+| darwin-x64, release CI | 26,499,360 | 27,303,208 | +803,848 (+3.0 %) |
+| linux-arm64-gnu, release CI | 29,766,944 | 30,496,032 | +729,088 (+2.4 %), now over 30,000,000 (29.1 MiB) |
+| linux-x64-gnu, release CI | 32,608,272 | 33,530,736 | +922,464 (+2.8 %), over the 30 MB budget before this branch |
 
-The release CI column is the published 0.2.0-alpha.0. The branch's other
-platforms come from the release workflow's dry run once the branch is
-pushed; the difference should be about the same 0.66 MB (html5ever and the
-QuickJS module loader), which keeps darwin and linux-arm64 under 30 MB.
+The release CI column for main is the published 0.2.0-alpha.0; for
+html-entry, the release workflow's dry run on the pushed branch. The
+difference is html5ever and the QuickJS module loader.
 
