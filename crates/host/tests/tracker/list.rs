@@ -663,29 +663,90 @@ fn the_toolbar_stays_out_of_the_pane_at_the_1200px_window() {
     assert!(doc.query("[data-testid=filter-assignee]").is_none(), "Assignee hides beside the pane");
 }
 
-/// In a narrower window a filter that does not fit beside the pane drops out
-/// of sight whole: none is drawn over the pane or takes its clicks.
+/// Every control of the list's toolbar, where it is and whether a click at
+/// its middle reaches it.
+fn toolbar_controls(doc: &SvelteDocument) -> Vec<(&'static str, (f64, f64, f64, f64), bool)> {
+    let ids = ["search", "filter-status", "filter-priority", "filter-assignee", "filter-project", "group-by", "sort-by"];
+    ids.into_iter()
+        .filter_map(|id| {
+            let node = doc.query(&format!("[data-testid={id}]"))?;
+            let (x, y, w, h) = doc.rect(node)?;
+            Some((id, (x, y, w, h), reaches(doc, x + w / 2.0, y + h / 2.0, node)))
+        })
+        .collect()
+}
+
+/// In a narrow window the toolbar wraps onto more lines: every control stays
+/// in the list's column, where it can be seen and clicked.
 #[test]
-fn the_toolbar_stays_out_of_the_pane_in_a_narrow_window() {
+fn the_toolbar_wraps_in_a_narrow_window() {
+    let mut doc = load();
+    doc.layout(700, 800);
+    doc.settle();
+    let list = doc.rect(doc.query("[data-testid=list]").unwrap()).unwrap();
+    let controls = toolbar_controls(&doc);
+    assert_eq!(controls.len(), 7, "{controls:?}");
+    for (id, (x, _, w, _), clickable) in controls {
+        assert!(x >= list.0 && x + w <= list.0 + list.2, "{id} runs past the list: {x} + {w}");
+        assert!(clickable, "{id} cannot be clicked");
+    }
+    // The rows give the room to the title: labels show only in a wider list.
+    for title in doc.query_all("[data-testid=row] a span.truncate") {
+        let (_, _, w, _) = doc.rect(title).unwrap();
+        assert!(w >= 100.0, "a title squeezed to {w}px");
+    }
+}
+
+/// Side by side, the list is at least 400px wide (1120px window): the toolbar
+/// and the bulk bar stay in it, and the pane beside it takes its own clicks.
+#[test]
+fn beside_the_pane_the_list_keeps_its_controls_in_its_column() {
+    let mut doc = load();
+    doc.layout(1120, 800);
+    let first = keys(&doc)[0].clone();
+    click(&mut doc, &format!("{} input", row(&first)));
+    click(&mut doc, "[data-testid=row] a");
+    doc.wait(0.1);
+    doc.layout(1120, 800);
+    let pane_node = doc.query("[data-testid=pane]").unwrap();
+    let pane = doc.rect(pane_node).unwrap();
+    let list = doc.rect(doc.query("[data-testid=list]").unwrap()).unwrap();
+    assert_eq!(list.0 + list.2, pane.0, "side by side");
+    for (id, (x, _, w, _), clickable) in toolbar_controls(&doc) {
+        assert!(x + w <= pane.0, "{id} reaches the pane at {}", x + w);
+        assert!(clickable, "{id} cannot be clicked");
+    }
+    let bar = doc.rect(doc.query("[data-testid=bulk-bar]").unwrap()).unwrap();
+    assert!(bar.0 >= list.0 && bar.0 + bar.2 <= pane.0, "bulk bar {bar:?} out of the list {list:?}");
+    let search = doc.rect(doc.query("[data-testid=search]").unwrap()).unwrap();
+    assert!(reaches(&doc, pane.0 + 30.0, search.1 + 14.0, pane_node), "the pane's own clicks");
+}
+
+/// In a window too narrow for the list and the pane side by side, the pane
+/// takes the list's place, and closing it brings the list back.
+#[test]
+fn in_a_narrow_window_the_pane_takes_the_lists_place() {
     let mut doc = load();
     doc.layout(1000, 800);
-    click(&mut doc, "[data-testid=row]");
+    click(&mut doc, "[data-testid=row] a");
     doc.wait(0.1);
     doc.layout(1000, 800);
     let pane_node = doc.query("[data-testid=pane]").unwrap();
     let pane = doc.rect(pane_node).unwrap();
-    let search = doc.rect(doc.query("[data-testid=search]").unwrap()).unwrap();
-    for id in ["search", "filter-status", "filter-priority"] {
-        let (x, y, w, _) = doc.rect(doc.query(&format!("[data-testid={id}]")).unwrap()).unwrap();
-        // On the toolbar's line it fits beside the pane; one that does not
-        // fit has wrapped below the line, where the toolbar clips it.
-        assert!(x + w <= pane.0 || y > search.1, "{id} reaches the pane at {}", x + w);
-    }
-    // Where Priority reached over the pane before, a click is the pane's.
-    let hit = doc.base().hit((pane.0 + 30.0) as f32, (search.1 + 14.0) as f32).map(|hit| hit.node_id);
-    let mut at = hit;
-    while at.is_some_and(|id| id != pane_node) {
-        at = doc.base().get_node(at.unwrap()).and_then(|node| node.parent);
-    }
-    assert_eq!(at, Some(pane_node), "a click beside the toolbar is the pane's, not a filter's");
+    assert_eq!((pane.0, pane.0 + pane.2), (240.0, 1000.0), "the pane fills the space beside the sidebar");
+    let title = doc.query("[data-testid=page-title]").unwrap();
+    let (x, y, w, h) = doc.rect(title).unwrap();
+    assert!(!reaches(&doc, x + w / 2.0, y + h / 2.0, title), "the list's header is not drawn under the pane");
+    assert!(reaches(&doc, x + w / 2.0, y + h / 2.0, pane_node));
+    let close = doc.query("[data-testid=detail-close]").unwrap();
+    let (x, _, w, _) = doc.rect(close).unwrap();
+    assert!(x + w <= 1000.0, "the close button is in the window");
+
+    click(&mut doc, "[data-testid=detail-close]");
+    doc.wait(0.1);
+    doc.layout(1000, 800);
+    assert!(doc.query("[data-testid=pane]").is_none());
+    let row = doc.query("[data-testid=row] a").unwrap();
+    let (x, y, w, h) = doc.rect(row).unwrap();
+    assert!(reaches(&doc, x + w / 2.0, y + h / 2.0, row), "the list is back");
 }

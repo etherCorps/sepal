@@ -61,7 +61,7 @@
 	/><a
 		href="/issues/{issue.key}"
 		data-testid={marked?.active ? 'row-active' : undefined}
-		class="ring-ring grid h-full min-w-0 grid-cols-[16px_76px_16px_minmax(0,1fr)_auto_20px_56px] items-center gap-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset"
+		class="ring-ring grid h-full min-w-0 grid-cols-[16px_76px_16px_minmax(0,1fr)_minmax(0,max-content)_20px_56px] items-center gap-2.5 outline-none focus-visible:ring-2 focus-visible:ring-inset"
 		onclick={onopen}
 		><svg class={['shrink-0', PRIORITY_GLYPH[issue.priority].class]} width="14" height="14" viewBox="0 0 14 14" fill="currentColor" fill-rule="evenodd" aria-hidden="true"
 			><path d={PRIORITY_GLYPH[issue.priority].on} /><path d={PRIORITY_GLYPH[issue.priority].off} opacity="0.3" /></svg
@@ -76,8 +76,12 @@
 				stroke-dasharray={STATUS_GLYPH[issue.status].dash}
 			/></svg
 		><span class="text-foreground truncate font-medium">{issue.title}</span
-		><span class="flex items-center gap-3"
-			>{#each labels as label (label)}<span class="text-muted-foreground flex items-center gap-1.5 text-[11px] whitespace-nowrap"
+		><!-- Labels beside the title where the list is at least 760px wide (a 1000px window
+			without the pane; the sidebar is 240px): below that, the title needs the room. A
+			label that still does not fit drops out of sight whole, and never pushes the date
+			out of the row. The box stays, so the avatar and date keep their columns.
+		--><span class="flex h-4 min-w-0 flex-wrap items-center gap-x-3 gap-y-4 overflow-hidden"
+			>{#each labels as label (label)}<span class="text-muted-foreground flex items-center gap-1.5 text-[11px] whitespace-nowrap max-[1000px]:hidden"
 					><span class="inline-block size-1.5 shrink-0 rounded-full" style="background: var(--hue-{label_by_id[label]?.hue ?? 1});"></span
 					>{label_by_id[label]?.name}</span
 				>{/each}</span

@@ -29,11 +29,15 @@
 	}
 </script>
 
-<!-- Centred in the list. The toasts an Undo after every action leaves stack above it (Toasts.svelte). -->
+<!--
+	Centred in the list, 560px or the list's width less 16px a side, whichever is smaller:
+	beside the detail pane the list can be 400px. The toasts an Undo after every action
+	leaves stack above it (Toasts.svelte).
+-->
 <div
 	data-testid="bulk-bar"
-	style="left: calc(50% - 280px);"
-	class="bg-graphite text-graphite-foreground absolute bottom-4 z-10 flex h-11 w-[560px] items-center gap-1 rounded-lg py-1.5 pr-1.5 pl-3.5 shadow-sm"
+	style="left: max(16px, calc(50% - 280px)); width: min(560px, calc(100% - 32px));"
+	class="bg-graphite text-graphite-foreground absolute bottom-4 z-10 flex h-11 items-center gap-1 rounded-lg py-1.5 pr-1.5 pl-3.5 shadow-sm"
 >
 	<span data-testid="bulk-count" class="mr-auto font-mono text-xs">{count(n)} selected</span>
 	<Pick

@@ -175,20 +175,7 @@ fn click_node(doc: &mut SvelteDocument, node: blitz_dom::NodeId) {
     // out of its box, which clips clicks, or under a toast) is scrolled to
     // the middle of its box first.
     let (x, y, width, height) = doc.rect(node).expect("node has no layout");
-    let hit = doc
-        .base()
-        .hit((x + width / 2.0) as f32, (y + height / 2.0) as f32)
-        .map(|hit| hit.node_id);
-    let reaches = |mut at: Option<blitz_dom::NodeId>| {
-        while let Some(id) = at {
-            if id == node {
-                return true;
-            }
-            at = doc.base().get_node(id).and_then(|n| n.parent);
-        }
-        false
-    };
-    if !reaches(hit) {
+    if !reaches(doc, x + width / 2.0, y + height / 2.0, node) {
         doc.scroll_into_view(node);
     }
     doc.click(node);
@@ -197,6 +184,21 @@ fn click_node(doc: &mut SvelteDocument, node: blitz_dom::NodeId) {
     // SvelteKit lets the page repaint before it follows a link: a
     // `requestAnimationFrame`, then a `setTimeout(0)`, which runs a turn later.
     doc.wait(0.04);
+}
+
+/// Whether a click at `(x, y)` lands on `node` or inside it: what is drawn
+/// there, not merely where its box was laid out (a hidden node keeps its last
+/// box).
+fn reaches(doc: &SvelteDocument, x: f64, y: f64, node: blitz_dom::NodeId) -> bool {
+    let base = doc.base();
+    let mut at = base.hit(x as f32, y as f32).map(|hit| hit.node_id);
+    while let Some(id) = at {
+        if id == node {
+            return true;
+        }
+        at = base.get_node(id).and_then(|n| n.parent);
+    }
+    false
 }
 
 /// Scroll the list back to its top: "Show more" and "Show all" are at its
