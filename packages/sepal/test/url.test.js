@@ -33,7 +33,35 @@ for (const base of bases) {
 		}
 		assert.deepEqual(ours, theirs, `new URL(${JSON.stringify(input)}, ${JSON.stringify(base)})`);
 		compared++;
+		// The same again with the base as a URL, and once more, which comes from the cache of parses.
+		if (base === undefined || ours === 'throws') continue;
+		for (let again = 0; again < 2; again++) {
+			let from_url;
+			try {
+				from_url = describe(new Ours(input, new Ours(base)));
+			} catch {
+				from_url = 'throws';
+			}
+			assert.deepEqual(from_url, theirs, `new URL(${JSON.stringify(input)}, new URL(${JSON.stringify(base)}))`);
+		}
 	}
+}
+
+// Parses are cached by input and base, but every URL is its own object.
+{
+	const first = new Ours('items/7?tab=two', 'http://app.localhost/a/');
+	first.pathname = '/changed';
+	first.searchParams.set('tab', 'three');
+	const second = new Ours('items/7?tab=two', 'http://app.localhost/a/');
+	assert.notEqual(first, second);
+	assert.equal(second.href, 'http://app.localhost/a/items/7?tab=two');
+	// A base URL that changed in between is a different base.
+	const base = new Ours('http://app.localhost/a/');
+	assert.equal(new Ours('b', base).href, 'http://app.localhost/a/b');
+	base.pathname = '/other/';
+	assert.equal(new Ours('b', base).href, 'http://app.localhost/other/b');
+	assert.throws(() => new Ours('x', 'not a base'), TypeError);
+	assert.throws(() => new Ours('x', 'not a base'), TypeError, 'a failed parse is not cached as a success');
 }
 
 // Writing parts.

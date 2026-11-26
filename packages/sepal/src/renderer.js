@@ -227,10 +227,59 @@ const elements = new Map();
 
 const finalizer = has_weak_refs
 	? new FinalizationRegistry((/** @type {number} */ id) => {
+			if (by_tag !== null) by_tag.get(/** @type {any} */ (elements.get(id))?.tag)?.delete(id);
 			elements.delete(id);
 			ops.push(OP.DROP, id);
 		})
 	: null;
+
+/**
+ * The ids of the elements alive, attached or not, by lower-case tag name:
+ * the DOM layer's selectors try only these when a selector ends in a tag
+ * (`meta[property=csp-nonce]`, `link[href=…]`, `title`), instead of walking
+ * the page. Made the first time it is asked for, so an app without the DOM
+ * layer never pays for it; after that, each element is added when it is made
+ * and deleted when it is collected. The tag rides on the element's `WeakRef`,
+ * for the finalizer, which gets only the id.
+ * @type {Map<string, Set<number>> | null}
+ */
+let by_tag = null;
+
+/** @param {BlitzNode} node @param {any} entry its entry in `elements` */
+function index_tag(node, entry) {
+	const tag = node.name.toLowerCase();
+	if (has_weak_refs) entry.tag = tag;
+	const ids = /** @type {Map<string, Set<number>>} */ (by_tag).get(tag);
+	if (ids === undefined) /** @type {Map<string, Set<number>>} */ (by_tag).set(tag, new Set([node.node_id]));
+	else ids.add(node.node_id);
+}
+
+/**
+ * The elements named `name` (lower case) that are alive, attached or not, in
+ * no particular order; `null` if there are more than `limit`.
+ * @param {string} name
+ * @param {number} limit
+ * @returns {BlitzNode[] | null}
+ */
+export function elements_named(name, limit) {
+	if (by_tag === null) {
+		by_tag = new Map();
+		for (const [id, entry] of elements) {
+			const node = lookup(id);
+			if (node !== null) index_tag(node, entry);
+		}
+	}
+	const ids = by_tag.get(name);
+	if (ids === undefined) return [];
+	if (ids.size > limit) return null;
+	/** @type {BlitzNode[]} */
+	const nodes = [];
+	for (const id of ids) {
+		const node = lookup(id);
+		if (node !== null) nodes.push(node);
+	}
+	return nodes;
+}
 
 /** @param {'element' | 'text' | 'comment'} type */
 function create_node(type) {
@@ -623,7 +672,9 @@ const renderer = createRenderer({
 	createElement(name) {
 		const node = create_node(ELEMENT);
 		node.name = name;
-		elements.set(node.node_id, has_weak_refs ? new WeakRef(node) : node);
+		const entry = has_weak_refs ? new WeakRef(node) : node;
+		elements.set(node.node_id, entry);
+		if (by_tag !== null) index_tag(node, entry);
 		ops.push(OP.CREATE_ELEMENT, node.node_id, str(name));
 		return node;
 	},

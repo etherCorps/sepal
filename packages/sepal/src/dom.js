@@ -15,7 +15,7 @@
 
 import { TextDecoder, TextEncoder } from './text.js';
 import { URL, URLSearchParams } from './url.js';
-import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, head, host_hooks, html, lookup, outer_targets, remove_listener, request_focus, request_measure, root, scroll_state } from './renderer.js';
+import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, elements_named, head, host_hooks, html, lookup, outer_targets, remove_listener, request_focus, request_measure, root, scroll_state } from './renderer.js';
 
 const g = /** @type {any} */ (globalThis);
 const proto = /** @type {any} */ (BlitzNode.prototype);
@@ -156,8 +156,61 @@ function walk(scope, visit) {
 	return false;
 }
 
+/**
+ * When every alternative of the selector ends in a tag name, and few
+ * elements have those names: the ones below `scope` that match, in no
+ * particular order. `null` means walk. A walk visits every element of the
+ * page, and Vite's preload helper alone looks for `meta[property=csp-nonce]`
+ * several times a navigation; a page has no such element.
+ * ponytail: a common tag (div, span) still walks; ordering many candidates
+ * would need position keys kept up to date.
+ * @param {any} scope @param {string} selector
+ */
+function indexed(scope, selector) {
+	/** @type {Set<any>} */
+	const found = new Set();
+	for (const complex of parse_selector(selector)) {
+		const tag = complex.compounds[complex.compounds.length - 1].tag;
+		if (tag === null) return null;
+		const named = elements_named(tag, 64);
+		if (named === null) return null;
+		for (const node of named) if (below(node, scope) && matches_complex(node, complex)) found.add(node);
+	}
+	return found;
+}
+
+/** @param {any} node @param {any} scope */
+function below(node, scope) {
+	for (let parent = node.parent; parent !== null; parent = parent.parent) if (parent === scope) return true;
+	return false;
+}
+
+/** Whether `a` comes before `b` in the page. @param {any} a @param {any} b */
+function precedes(a, b) {
+	/** @param {any} node */
+	const path = (node) => {
+		const nodes = [];
+		for (; node !== null; node = node.parent) nodes.push(node);
+		return nodes;
+	};
+	const from_a = path(a);
+	const from_b = path(b);
+	let i = from_a.length - 1;
+	let j = from_b.length - 1;
+	while (i >= 0 && j >= 0 && from_a[i] === from_b[j]) {
+		i--;
+		j--;
+	}
+	// One is inside the other: the outer one comes first.
+	if (i < 0 || j < 0) return i < 0;
+	for (let node = from_a[i].next; node !== null; node = node.next) if (node === from_b[j]) return true;
+	return false;
+}
+
 /** @param {any} scope @param {string} selector */
 function query_all(scope, selector) {
+	const candidates = indexed(scope, selector);
+	if (candidates !== null) return [...candidates].sort((a, b) => (precedes(a, b) ? -1 : 1));
 	/** @type {any[]} */
 	const found = [];
 	walk(scope, (node) => {
@@ -168,6 +221,12 @@ function query_all(scope, selector) {
 
 /** @param {any} scope @param {string} selector */
 function query(scope, selector) {
+	const candidates = indexed(scope, selector);
+	if (candidates !== null) {
+		let first = null;
+		for (const node of candidates) if (first === null || precedes(node, first)) first = node;
+		return first;
+	}
 	let found = null;
 	walk(scope, (node) => {
 		if (!matches(node, selector)) return false;
