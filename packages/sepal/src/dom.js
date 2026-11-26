@@ -144,8 +144,42 @@ function matches_complex(node, complex, index = complex.compounds.length - 1) {
 	return false;
 }
 
+/**
+ * The test for a selector, built once. Walks of the page call it on every
+ * element: SvelteKit looks for `a` and `[autofocus]` after every navigation,
+ * 3,500 elements on the Tracker's Board, and going through the general
+ * matcher for each cost 1.8 and 2.4 ms. One tag, one attribute that must be
+ * there, one id or one class gets a test of its own; any other compound
+ * without combinators is matched directly; the rest as a list.
+ * @type {Map<string, (node: any) => boolean>}
+ */
+const tests = new Map();
+
+/** @param {string} selector */
+function test_for(selector) {
+	let test = tests.get(selector);
+	if (test !== undefined) return test;
+	const list = parse_selector(selector);
+	const one = list.length === 1 && list[0].compounds.length === 1 ? list[0].compounds[0] : null;
+	if (one === null) {
+		test = (node) => list.some((complex) => matches_complex(node, complex));
+	} else {
+		const parts = (one.tag !== null ? 1 : 0) + (one.id !== null ? 1 : 0) + one.classes.length + one.attrs.length + one.nots.length + one.pseudos.length;
+		const { tag, id } = one;
+		const [name] = one.classes;
+		const attr = one.attrs[0];
+		if (parts === 1 && tag !== null) test = (node) => node.type === 'element' && (node.name === tag || node.name.toLowerCase() === tag);
+		else if (parts === 1 && id !== null) test = (node) => node.type === 'element' && node.attrs !== null && node.attrs.get('id') === id;
+		else if (parts === 1 && name !== undefined) test = (node) => node.type === 'element' && node.attrs !== null && (node.attrs.get('class') ?? '').split(/\s+/).includes(name);
+		else if (parts === 1 && attr !== undefined && attr.op === null) test = (node) => node.type === 'element' && node.attrs !== null && node.attrs.has(attr.name);
+		else test = (node) => matches_compound(node, one);
+	}
+	tests.set(selector, test);
+	return test;
+}
+
 /** @param {any} node @param {string} selector */
-const matches = (node, selector) => parse_selector(selector).some((complex) => matches_complex(node, complex));
+const matches = (node, selector) => test_for(selector)(node);
 
 /** Every element below `scope`, in document order. @param {any} scope @param {(node: any) => boolean | void} visit returns true to stop */
 function walk(scope, visit) {
@@ -213,8 +247,9 @@ function query_all(scope, selector) {
 	if (candidates !== null) return [...candidates].sort((a, b) => (precedes(a, b) ? -1 : 1));
 	/** @type {any[]} */
 	const found = [];
+	const test = test_for(selector);
 	walk(scope, (node) => {
-		if (matches(node, selector)) found.push(node);
+		if (test(node)) found.push(node);
 	});
 	return found;
 }
@@ -228,8 +263,9 @@ function query(scope, selector) {
 		return first;
 	}
 	let found = null;
+	const test = test_for(selector);
 	walk(scope, (node) => {
-		if (!matches(node, selector)) return false;
+		if (!test(node)) return false;
 		found = node;
 		return true;
 	});

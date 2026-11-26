@@ -25,6 +25,18 @@ assert.equal(run('document.body instanceof HTMLElement && !(document.body instan
 assert.equal(run(`document.querySelector('#count').tagName`), 'BUTTON');
 assert.equal(run(`document.querySelectorAll('main > div [data-slot=button]').length`), 8);
 assert.equal(run(`document.getElementById('count').closest('main') === document.querySelector('main')`), true);
+// A selector of one tag, attribute, id or class has a test of its own, which a
+// walk of the page calls on every element. Each answers what the general
+// matcher does, which `:not(:not(…))` goes through.
+for (const selector of ['div', 'DIV', '[data-slot]', '#count', '.flex', 'button[data-slot]', 'main div']) {
+	const fast = run(`[...document.querySelectorAll(${JSON.stringify(selector)})].map((node) => node.node_id).join()`);
+	const general = selector.includes(' ') ? fast : run(`[...document.querySelectorAll(${JSON.stringify(`:not(:not(${selector}))`)})].map((node) => node.node_id).join()`);
+	assert.ok(fast.length > 0, `${selector} finds something`);
+	assert.equal(fast, general, selector);
+}
+assert.equal(run(`document.querySelector('[data-none]')`), null);
+assert.equal(run(`document.body.matches('body') && !document.body.matches('[id]') && document.getElementById('count').matches('#count')`), true);
+
 // A selector that ends in a tag tries only the elements of that tag. The
 // answers are the walk's (`*` always walks): document order, below the scope,
 // nothing detached or removed.
