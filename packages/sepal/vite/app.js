@@ -159,6 +159,11 @@ export function compile_bytecode(dir, warn) {
 	const done = spawnSync(bin, ['--compile', dir], { encoding: 'utf8' });
 	if (done.error || done.status !== 0) {
 		remove_bytecode(dir);
+		// A calyx from before --compile takes it for the app folder.
+		if (done.stderr?.includes('--compile is not an app folder')) {
+			warn(`sepal: ${bin} is a calyx from before \`--compile\`, so the app's modules were not compiled to bytecode and it loads their JavaScript. A current calyx compiles them.`);
+			return null;
+		}
 		const why = done.error?.message ?? done.stderr.trim();
 		warn(`sepal: compiling the app's modules to bytecode failed, so it loads their JavaScript: ${why}`);
 		return null;
