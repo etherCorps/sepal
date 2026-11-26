@@ -132,7 +132,7 @@ always `crates/host`, so the patches always applied.
 
 With per-app builds, the top level is the app's `native/` crate. Without the
 patch lines, it compiles against the stock crates and quietly loses what each
-`PATCH.md` lists: the fourteen changes to `blitz-dom`, the eleven to
+`PATCH.md` lists: the fifteen changes to `blitz-dom`, the eleven to
 `anyrender_vello_hybrid` (the glyph atlas, damage tracking), and the GPU
 memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
 first blit costs about 80 MB of driver memory). Step 1 makes that

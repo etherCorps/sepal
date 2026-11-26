@@ -539,4 +539,72 @@ mod tests {
         assert_eq!(&*node.element_data().unwrap().name.local, "div");
         assert_eq!(doc.root_node().children, vec![div]);
     }
+
+    /// Blitz builds no boxes below a `display: none` box and never looks at
+    /// the layout children it gave them before. A child changed and freed
+    /// down there (the Tracker's list column behind the detail pane, once
+    /// V8 collects the old labels) left an id that is no longer a node, and
+    /// Blitz's debug check of the layout tree panicked on it.
+    #[test]
+    fn a_node_freed_below_a_hidden_box_is_not_a_layout_child() {
+        use blitz_traits::shell::{ColorScheme, Viewport};
+
+        fn run(doc: &mut BaseDocument, nodes: &mut NodeMap, ops: Vec<i32>) {
+            let strings = [
+                "html",
+                "div",
+                "p",
+                "section",
+                "style",
+                "display: none",
+                "aside",
+            ];
+            let batch = Batch {
+                ops,
+                strings: strings.map(String::from).to_vec(),
+            };
+            apply_batch(doc, nodes, &mut HashSet::new(), &batch);
+            doc.resolve(0.0);
+        }
+        let children = |doc: &BaseDocument, nodes: &NodeMap| {
+            let p = doc.get_node(nodes.blitz(4).unwrap()).unwrap();
+            p.layout_children
+                .borrow()
+                .clone()
+                .unwrap_or_default()
+                .to_vec()
+        };
+
+        let mut doc = BaseDocument::new(DocumentConfig::default());
+        doc.set_viewport(Viewport::new(200, 100, 1.0, ColorScheme::Light));
+        let mut nodes = NodeMap::default();
+        nodes.insert(1, doc.root_node().id);
+        #[rustfmt::skip]
+        run(&mut doc, &mut nodes, vec![
+            CREATE_ELEMENT, 2, 0, // <html>
+            CREATE_ELEMENT, 3, 1, // <div>
+            CREATE_ELEMENT, 4, 2, // <p>, laid out while it shows
+            CREATE_ELEMENT, 5, 3, // <section>
+            INSERT, 1, 2, 0,
+            INSERT, 2, 3, 0,
+            INSERT, 3, 4, 0,
+            INSERT, 4, 5, 0,
+        ]);
+        assert_eq!(children(&doc, &nodes), [nodes.blitz(5).unwrap()]);
+
+        run(&mut doc, &mut nodes, vec![SET_ATTR, 3, 4, 5]);
+        #[rustfmt::skip]
+        run(&mut doc, &mut nodes, vec![
+            REMOVE, 5,
+            DROP, 5,
+            CREATE_ELEMENT, 6, 6, // <aside>
+            INSERT, 4, 6, 0,
+        ]);
+        run(&mut doc, &mut nodes, vec![REMOVE_ATTR, 3, 4]);
+        assert_eq!(
+            children(&doc, &nodes),
+            [nodes.blitz(6).unwrap()],
+            "shown again, it is laid out anew"
+        );
+    }
 }
