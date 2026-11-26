@@ -221,6 +221,15 @@ assert.throws(() => run(`history.pushState(null, '', 'http://elsewhere.test/')`)
 // A link's `href` is where it leads from here, whatever was written in the attribute.
 run(`const link = document.createElement('a'); link.id = 'link'; link.setAttribute('href', '../up?q#h'); document.body.appendChild(link);`);
 assert.equal(run(`document.getElementById('link').href + ' ' + document.getElementById('link').getAttribute('href')`), 'http://app.localhost/up?q#h ../up?q#h');
+// Asked again, it answers from what is written now and from where the page is
+// now: a changed attribute, or a navigation, gives a fresh answer.
+run(`document.getElementById('link').setAttribute('href', 'next')`);
+assert.equal(run(`document.getElementById('link').href`), 'http://app.localhost/next');
+run(`history.pushState(null, '', '/deep/page')`);
+assert.equal(run(`document.getElementById('link').href`), 'http://app.localhost/deep/next');
+run(`history.back()`);
+host.advance(1);
+assert.equal(run(`location.pathname + ' ' + document.getElementById('link').href`), '/one http://app.localhost/next');
 run(`document.getElementById('link').remove(); sessionStorage.setItem('k', 'v'); sessionStorage.other = 1`);
 assert.equal(run(`[sessionStorage.getItem('k'), sessionStorage.k, sessionStorage.getItem('other'), sessionStorage.length, sessionStorage.getItem('none')].join()`), 'v,v,1,2,');
 assert.equal(run(`new TextDecoder().decode(new TextEncoder().encode('héllo'))`), 'héllo');

@@ -748,7 +748,7 @@ define(proto, {
 		get() {
 			const written = this.attrs?.get('href');
 			if (written === undefined) return '';
-			return URL.parse(written, address.href)?.href ?? written;
+			return resolve_href(written, address.href);
 		},
 		/** @this {any} @param {any} value */
 		set(value) {
@@ -969,6 +969,30 @@ function is_focusable(node) {
 	if (node.type !== 'element' || node.attrs?.has('disabled')) return false;
 	if (node.attrs?.has('tabindex') || node.attrs?.has('contenteditable')) return true;
 	return /^(button|input|select|textarea|summary)$/i.test(node.name) || (/^(a|area)$/i.test(node.name) && node.attrs?.has('href'));
+}
+
+/**
+ * Where a link's `href` attribute leads from a page, by both. SvelteKit reads
+ * every link's `href` after each navigation, to set up preloading, and
+ * resolving one builds a whole `URL`: 316 of them were 1.8 ms of a Board
+ * visit in the Tracker. Keyed by the page's address as well, which a
+ * relative attribute depends on.
+ * ponytail: dropped whole at 4,096 entries, as url.js's parses are.
+ * @type {Map<string, string>}
+ */
+const resolved_hrefs = new Map();
+
+/** @param {string} written @param {string} base */
+function resolve_href(written, base) {
+	// The base's length first, so that no attribute can make two pairs one key.
+	const key = `${base.length}:${base}${written}`;
+	let href = resolved_hrefs.get(key);
+	if (href === undefined) {
+		href = URL.parse(written, base)?.href ?? written;
+		if (resolved_hrefs.size >= 4096) resolved_hrefs.clear();
+		resolved_hrefs.set(key, href);
+	}
+	return href;
 }
 
 /** A DOM class that elements with one of these tag names count as. @param {((node: any) => boolean)} test */
