@@ -55,7 +55,7 @@ pnpm run build              # builds every example: dist/index.html, its chunks,
 pnpm run test:js            # renderer against a JS mock host (fast, no Rust)
 pnpm run test:host          # end-to-end headless tests (QuickJS + blitz-dom)
 pnpm run check              # tsc on the package, svelte-check on the examples
-pnpm run build:host         # release host -> packages/calyx-<platform>/bin/calyx, and its THIRD-PARTY-LICENSES.txt
+pnpm run build:host         # the shipped host (--profile dist) -> packages/calyx-<platform>/bin/calyx, and its THIRD-PARTY-LICENSES.txt
 pnpm run test:template      # pack the packages, create a project from the template, build and render it
 pnpm release prerelease     # ask for a release: bump everything, file the CHANGELOG, commit (see release.yml)
 pnpm test                   # check + all test suites
@@ -74,6 +74,15 @@ cargo run --manifest-path crates/host/Cargo.toml --features screenshot -- \
 
 The first Rust build takes several minutes (Stylo, wgpu, Vello). Use the dev
 profile while iterating; it is already tuned in `Cargo.toml`.
+
+The shipped host is built with `--profile dist` (`crates/host/Cargo.toml`):
+release with fat LTO in one codegen unit, a quarter smaller and as fast,
+but two to three times slower to build cold. Plain `--release` keeps thin
+LTO. Measure size and speed on `dist`, which is what ships and what
+`compare/` runs. Every platform's host must stay under 30,000,000 bytes:
+release.yml's host job checks the binary it built (`scripts/host-size.js`)
+and stops the release above it. Nothing checks it on pull requests, so look
+at the size when a change adds crates or features.
 
 `tests/counter.rs` reads `examples/counter/dist`, so build the bundle before
 `cargo test`. The npm scripts do this for you.
@@ -542,6 +551,15 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `tests/sveltekit.rs`, `tests/router_dom.rs` and the Tracker's tests
   (`tests/tracker/`), on both engines.
 - Linux CI needs no display for any of the tests.
+- **CI minutes are limited.** `ci.yml` runs on pull requests (not drafts)
+  and on main only, Linux tests and the V8 host tests, and skips changes
+  to Markdown, `docs/` and `compare/results/`. macOS runs only in
+  release.yml, so run `pnpm test` here before every push. Push when the
+  work is ready for review; earlier, open the pull request as a draft.
+  `kit-latest` runs daily, and only builds when SvelteKit has a newer
+  release than the lockfile's; Windows runs by hand
+  (`gh workflow run ci.yml -f job=windows`). Ask before starting a release
+  dry run, a manual workflow or a re-run.
 - CI runs Node 22, the oldest the packages support; this Mac has 26. A test
   that compares against Node's own behaviour (`url.test.js`) has to hold on
   both: Node's `URL` changed between them in a few corners. Run such a test

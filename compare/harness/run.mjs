@@ -129,7 +129,8 @@ async function find_builds() {
 		};
 	}
 	const dist = path.join(REPO, 'examples/tracker/dist');
-	const host = path.join(REPO, 'crates/host/target/release/calyx');
+	// The profile the release ships (`cargo build --profile dist`), so the numbers are the shipped host's.
+	const host = path.join(REPO, 'crates/host/target/dist/calyx');
 	if (fs.existsSync(host) && fs.existsSync(path.join(dist, 'app.json'))) {
 		const id = JSON.parse(fs.readFileSync(path.join(dist, 'app.json'), 'utf8')).id;
 		builds.dev = { name: 'dev', kind: 'blitz', app: null, id, exe: host, args: [dist], version: 'repo' };

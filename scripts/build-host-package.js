@@ -17,13 +17,14 @@ if (!existsSync(join(dir, 'package.json'))) {
 const file = process.platform === 'win32' ? 'calyx.exe' : 'calyx';
 
 // `screenshot` is in the shipped binary: `sepal screenshot` needs it and it costs about 1.5 MB.
+// The `dist` profile is release with fat LTO in one codegen unit (crates/host/Cargo.toml).
 execFileSync(
 	'cargo',
-	['build', '--release', '--features', 'screenshot', '--manifest-path', join(root, 'crates/host/Cargo.toml')],
+	['build', '--profile', 'dist', '--features', 'screenshot', '--manifest-path', join(root, 'crates/host/Cargo.toml')],
 	{ stdio: 'inherit' }
 );
 mkdirSync(join(dir, 'bin'), { recursive: true });
-copyFileSync(join(root, 'crates/host/target/release', file), join(dir, 'bin', file));
+copyFileSync(join(root, 'crates/host/target/dist', file), join(dir, 'bin', file));
 console.log(`${platform()}: ${join(dir, 'bin', file)}`);
 
 // The notices of everything in that binary travel with it.

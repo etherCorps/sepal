@@ -1,28 +1,44 @@
 name: CI
 
+# Pull requests and main. A branch pushed without a pull request runs
+# nothing: every change is tested locally (`pnpm test`, on macOS) before it
+# is pushed, and release.yml runs every platform's tests before anything is
+# published. Changes that cannot break a build (Markdown, docs/, measured
+# results) run nothing either; no test reads them.
 on:
-  push:
   pull_request:
-  # By hand, which is the only way the Windows job runs.
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore: ['**/*.md', 'compare/results/**', 'docs/**']
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'compare/results/**', 'docs/**']
+  # kit-latest, once a day.
+  schedule:
+    - cron: '17 4 * * *'
+  # By hand: kit-latest, or the Windows job, which runs no other way.
   workflow_dispatch:
+    inputs:
+      job:
+        description: Which job to run
+        type: choice
+        options: [kit-latest, windows]
+        default: kit-latest
 
-# A newer push to the same branch makes the older run pointless.
+# A newer push to the same pull request or branch makes the older run pointless.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   # Everything `pnpm test` runs: type checks, the JavaScript tests, the host's
   # tests, and both starter templates created, built and rendered. No display
   # is needed: every test is headless, and screenshots render on the CPU.
+  # Linux only here; release.yml runs it on macOS too.
   test:
-    name: test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      # One platform failing says nothing about the other.
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
+    name: test (ubuntu-latest)
+    if: (github.event_name == 'push' || github.event_name == 'pull_request') && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
@@ -33,7 +49,9 @@ jobs:
   # learns, the other has to as well, and this is what notices when it has not.
   engine-v8:
     name: host tests on V8
+    if: (github.event_name == 'push' || github.event_name == 'pull_request') && !github.event.pull_request.draft
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
@@ -47,30 +65,43 @@ jobs:
   # sepal's peer range stops at the SvelteKit it was tested with, because
   # sepal() edits SvelteKit's client source. This builds the starter on
   # the newest SvelteKit, so a release that breaks those edits shows up here
-  # first. It may fail: the range is raised by hand, after a look.
+  # within a day. It does nothing while the newest is the lockfile's, which
+  # every other job tests. It may fail: the range is raised by hand, after a
+  # look.
   kit-latest:
     name: starter on the newest SvelteKit
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.job == 'kit-latest')
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     continue-on-error: true
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup
-      - run: pnpm install --frozen-lockfile
-      - run: |
-          SEPAL_KIT=$(pnpm view @sveltejs/kit version)
-          echo "@sveltejs/kit $SEPAL_KIT"
-          SEPAL_KIT=$SEPAL_KIT pnpm run test:template
+      - name: Is there a newer SvelteKit than the lockfile's?
+        id: kit
+        run: |
+          locked=$(grep -oE "^  '@sveltejs/kit@[0-9][^'(]*" pnpm-lock.yaml | sed 's/.*@//' | sort -uV | tail -1)
+          newest=$(npm view @sveltejs/kit version)
+          echo "@sveltejs/kit: lockfile $locked, newest $newest" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "newest=$newest" >> "$GITHUB_OUTPUT"
+          if [ "$locked" != "$newest" ]; then echo "newer=true" >> "$GITHUB_OUTPUT"; else echo "Nothing to do." | tee -a "$GITHUB_STEP_SUMMARY"; fi
+      - if: steps.kit.outputs.newer == 'true'
+        uses: ./.github/actions/setup
+      - if: steps.kit.outputs.newer == 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.kit.outputs.newer == 'true'
+        run: SEPAL_KIT=${{ steps.kit.outputs.newest }} pnpm run test:template
 
   # Windows is on hold (23 Nov 2026): the host builds and most of its tests
   # pass, see HANDOVER.md for what is left. Twenty minutes on every push is
   # too much for a job nobody is looking at, so it only runs when started by
-  # hand: `gh workflow run ci.yml`.
+  # hand: `gh workflow run ci.yml -f job=windows`.
   windows:
     name: test (windows-latest, on hold)
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.job == 'windows'
     runs-on: windows-latest
     continue-on-error: true
-    # A cold build takes about 20 minutes there. A test that hangs should not take six hours.
+    # A cold build takes about 20 minutes there, so 30 would cut the tests
+    # off. A test that hangs should not take six hours either.
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5

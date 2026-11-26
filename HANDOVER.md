@@ -664,7 +664,7 @@ it took to get there:
   (`JsEngine::set_time`), and `doc.wait()` no longer sleeps.
 
 **Windows: on hold (Shivam, 23 Nov 2026).** The CI job is still there but
-only runs when started by hand (`gh workflow run ci.yml`). Where it stands,
+only runs when started by hand (`gh workflow run ci.yml -f job=windows`). Where it stands,
 from run 45059364101:
 
 - The host builds with MSVC. Passing: type checks, all example builds, the JS

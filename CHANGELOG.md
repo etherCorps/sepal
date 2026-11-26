@@ -36,6 +36,11 @@ To move an app without SvelteKit:
 
 Also:
 
+- **The prebuilt hosts are a quarter smaller**, built with fat LTO in one
+  codegen unit (the new `dist` profile) and as fast in the headless bench:
+  darwin-arm64 18.5 MB, darwin-x64 20.4 MB, linux-arm64-gnu 22.2 MB,
+  linux-x64-gnu 25.4 MB. Each must stay under 30,000,000 bytes; the release
+  stops above that.
 - **`calyx app.js app.css` is gone.** `calyx dist` runs an app from its
   folder, and `calyx --bundle` packs one that has an `index.html`. A bundle
   made before this release is not replaced by mistake.
@@ -68,8 +73,8 @@ Also:
 - `sepal`'s peer range for `@sveltejs/kit` is now `>=3.4 <3.5`, the
   versions `sepal()`'s edits to SvelteKit's client were tested with, and
   the starter asks for `~3.4.0`. CI builds the starter against the newest
-  SvelteKit as well (`kit-latest`, allowed to fail); the range goes up once
-  that passes.
+  SvelteKit once a day, when there is one newer than the lockfile's
+  (`kit-latest`, allowed to fail); the range goes up once that passes.
 
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
