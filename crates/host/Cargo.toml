@@ -118,3 +118,13 @@ opt-level = 2
 lto = "thin"
 # The binary ships through npm; symbols are a third of its size.
 strip = true
+
+# What ships (`pnpm run build:host`, release.yml) and what compare/ measures:
+# release, with the whole program optimised as one unit. About a quarter
+# smaller than release (linux-x64 33.5 -> 25.4 MB, under the 30,000,000-byte
+# budget on every platform) and as fast in the headless bench, but a cold
+# build takes two to three times as long, so plain --release keeps thin LTO.
+[profile.dist]
+inherits = "release"
+lto = "fat"
+codegen-units = 1

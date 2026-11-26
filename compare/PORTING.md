@@ -129,17 +129,19 @@ a filter while the pane is open.
 
 ```sh
 pnpm --filter tracker build
-cargo build --release --features screenshot --manifest-path crates/host/Cargo.toml
-cp crates/host/target/release/calyx compare/builds/hosts/calyx-quickjs
-cargo build --release --features "screenshot engine-v8" --manifest-path crates/host/Cargo.toml
-cp crates/host/target/release/calyx compare/builds/hosts/calyx-v8
+cargo build --profile dist --features screenshot --manifest-path crates/host/Cargo.toml
+cp crates/host/target/dist/calyx compare/builds/hosts/calyx-quickjs
+cargo build --profile dist --features "screenshot engine-v8" --manifest-path crates/host/Cargo.toml
+cp crates/host/target/dist/calyx compare/builds/hosts/calyx-v8
 compare/builds/make.sh
 ```
 
 Features: `window` (default; includes blitz-paint, so inline SVG and
 scrollbars draw) plus `screenshot`, as `scripts/build-host-package.js` builds
-the host that ships in `@ethercorps/calyx`. Release profile as in
-`crates/host/Cargo.toml` (thin LTO, stripped). `make.sh` copies
+the host that ships in `@ethercorps/calyx`. The `dist` profile, as that
+host is built (`crates/host/Cargo.toml`: release with fat LTO in one codegen
+unit, stripped); results from before 26 Nov 2026 used `--release` (thin LTO),
+which is as fast in the headless bench and a quarter bigger. `make.sh` copies
 `examples/tracker/dist` with only `app.json`'s `id` changed
 (`com.compare.tracker.blitz` / `.blitzv8`; the example keeps
 `com.example.tracker`), runs `<host> --bundle <copy> <out>`, which writes
