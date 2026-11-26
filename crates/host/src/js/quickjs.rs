@@ -540,10 +540,8 @@ pub fn engine() -> String {
 }
 
 /// Compile every module of the app folder `dir` to bytecode, next to it
-/// (see `bytecode.rs`), with this host's own QuickJS. A module whose
-/// bytecode is already what this would write is left alone, and the
-/// compiled files of modules that are gone are removed: run after every
-/// build, it compiles what changed.
+/// (see `bytecode.rs`), with this host's own QuickJS. Run after every
+/// build, on the folder the build has just written.
 ///
 /// Nothing runs: modules are compiled, not evaluated. A module that does
 /// not compile (a syntax error, a missing import, a script that is not a
@@ -553,38 +551,10 @@ pub fn compile_folder(dir: &Path) -> Result<Compiled, String> {
         .canonicalize()
         .map_err(|e| format!("{}: {e}", dir.display()))?;
     let folder = Arc::new(AppFolder::new(Some(&root)));
-    let (modules, compiled_files) = bytecode::scan(&root)?;
     let mut done = Compiled::default();
-
-    for file in &compiled_files {
-        let module = file.to_string_lossy();
-        let module = module.strip_suffix(bytecode::SUFFIX).unwrap_or(&module);
-        if !root.join(module).is_file() {
-            std::fs::remove_file(root.join(file))
-                .map_err(|e| format!("{}: {e}", file.display()))?;
-            done.removed += 1;
-            // A build that kept only bytecode in a directory it no longer
-            // writes (`clear_but_bytecode`) leaves it empty now.
-            let mut dir = root.join(file);
-            while dir.pop() && dir != root && std::fs::remove_dir(&dir).is_ok() {}
-        }
-    }
-
     let mut needed = BTreeSet::new();
-    for file in &modules {
-        let url = bytecode::url_of(file)?;
-        let source = match folder.module(&url) {
-            Ok(source) => source,
-            Err(reason) => {
-                done.left.push((file.to_string_lossy().into_owned(), reason));
-                continue;
-            }
-        };
-        if bytecode::current(&folder, &url, source.as_bytes()) {
-            done.current += 1;
-        } else {
-            needed.insert(url);
-        }
+    for file in bytecode::modules(&root)? {
+        needed.insert(bytecode::url_of(&file)?);
     }
     if needed.is_empty() {
         return Ok(done);
@@ -629,7 +599,7 @@ pub fn compile_folder(dir: &Path) -> Result<Compiled, String> {
         if written.borrow().contains(&url) {
             continue;
         }
-        // Its old bytecode, if any, would be older than the module now.
+        // Bytecode from before, if the folder had any, is older than the module.
         if let Ok(file) = compiled_path(&folder, &url) {
             let _ = std::fs::remove_file(file);
         }

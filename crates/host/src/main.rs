@@ -6,7 +6,7 @@
 //!                                        write <name>.app (default: next to <dist>, in bundle/),
 //!                                        and with a key also the signed update for it
 //! `calyx --compile <dist>`               compile the app's modules to bytecode, next to them
-//!                                        (QuickJS only; what changed since the last time)
+//!                                        (QuickJS only)
 //! `calyx --updater-keygen <file>`        make an update signing key; prints the public half
 //! `calyx --version`                      the version, the same as the npm package it ships in
 //!
@@ -123,11 +123,9 @@ fn compile(dist: &Path) -> Result<(), String> {
     }
     let modules = |n: usize| format!("{n} module{}", if n == 1 { "" } else { "s" });
     println!(
-        "calyx: compiled {} to bytecode in {:.0} ms ({} up to date, {} removed)",
+        "calyx: compiled {} to bytecode in {:.0} ms",
         modules(done.compiled),
-        started.elapsed().as_secs_f64() * 1000.0,
-        done.current,
-        done.removed
+        started.elapsed().as_secs_f64() * 1000.0
     );
     Ok(())
 }

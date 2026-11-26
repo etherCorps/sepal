@@ -217,35 +217,26 @@ fn bytecode_outside_the_app_folder_is_refused() {
     assert!(from_bytecode(&run(&app, false)));
 }
 
-/// Run after every build, the compiler compiles what changed and removes
-/// what is gone.
+/// Run after every build, the compiler compiles every module; one that
+/// does not compile gets no bytecode, and loses any it had.
 #[cfg(not(feature = "engine-v8"))]
 #[test]
-fn the_compiler_compiles_what_changed() {
+fn the_compiler_compiles_every_module() {
     let dir = scratch("compiler");
     let first = compile_folder(&dir).unwrap();
-    assert_eq!((first.compiled, first.current, first.removed), (3, 0, 0));
+    assert_eq!(first.compiled, 3);
     assert!(dir.join("lib/math.js.qbc").is_file());
     assert!(!dir.join("classic.js.qbc").exists());
 
-    let again = compile_folder(&dir).unwrap();
-    assert_eq!((again.compiled, again.current, again.removed), (0, 3, 0));
-
     fs::write(dir.join("later.js"), "export const value = 'changed';\n").unwrap();
-    let changed = compile_folder(&dir).unwrap();
-    assert_eq!((changed.compiled, changed.current), (1, 2));
+    assert_eq!(compile_folder(&dir).unwrap().compiled, 3);
     assert_eq!(run(&dir, false)["later"], "changed");
 
-    fs::remove_file(dir.join("later.js")).unwrap();
-    let removed = compile_folder(&dir).unwrap();
-    assert_eq!((removed.compiled, removed.removed), (0, 1));
+    fs::write(dir.join("later.js"), "export const value = ;\n").unwrap();
+    let broken = compile_folder(&dir).unwrap();
+    assert_eq!(broken.compiled, 2);
+    assert!(broken.left.iter().any(|(module, _)| module == "later.js"));
     assert!(!dir.join("later.js.qbc").exists());
-
-    // A directory the build no longer writes, kept for its bytecode, goes
-    // with it.
-    fs::remove_file(dir.join("lib/math.js")).unwrap();
-    compile_folder(&dir).unwrap();
-    assert!(!dir.join("lib").exists());
 }
 
 /// A real SvelteKit build, run from bytecode: the Tracker draws its list.
@@ -259,7 +250,7 @@ fn the_tracker_runs_from_bytecode() {
     let dir = scratch_of(dist, "tracker");
     let done = compile_folder(&dir).unwrap();
     assert!(done.left.is_empty(), "{:?}", done.left);
-    assert!(done.compiled + done.current > 30);
+    assert!(done.compiled > 30);
 
     let mut doc = SvelteDocument::for_app(&App::from_dir(&dir).unwrap()).unwrap();
     doc.layout(1200, 800);

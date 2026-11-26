@@ -17,9 +17,9 @@
 //
 // Runs in Node.
 
-import { cpSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { clear_but_bytecode, compile_bytecode, kit, manifest } from './app.js';
+import { compile_bytecode, kit, manifest } from './app.js';
 import { check_css, check_page } from './page.js';
 import { kit_setup_problems } from './vite.js';
 
@@ -87,7 +87,7 @@ export default function adapter({ out = 'dist' } = {}) {
 			if (session === null) return;
 
 			const to = resolve(root, out);
-			clear_but_bytecode(to);
+			rmSync(to, { force: true, recursive: true });
 			builder.writeClient(to);
 			// The shell SvelteKit serves for an address it did not prerender:
 			// what the app starts from, whatever its address.

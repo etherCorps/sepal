@@ -57,8 +57,8 @@ try {
 	// A shell that would load from the network stops the build too.
 	await assert.rejects(adapter().adapt(builder(good, '<html><head><link rel="stylesheet" href="https://cdn.example.com/x.css"></head><body></body></html>')), /loads the stylesheet https:\/\/cdn\.example\.com\/x\.css/);
 
-	// The app is compiled to bytecode once written; the last build's is kept
-	// for that, and everything else goes. A script stands in for calyx.
+	// The app is compiled to bytecode once written, every module of it: the
+	// last build goes whole, its bytecode too. A script stands in for calyx.
 	const dist = join(project, 'dist');
 	const unix = process.platform !== 'win32';
 	if (unix) {
@@ -72,8 +72,7 @@ try {
 	writeFileSync(join(dist, 'stale.txt'), '');
 	await adapter().adapt(builder(good));
 	delete process.env.SEPAL_HOST;
-	assert.ok(existsSync(join(dist, '_app/start.js.qbc')), "the last build's bytecode is kept");
-	assert.ok(!existsSync(join(dist, 'stale.txt')), "the last build's other files are not");
+	for (const old of ['_app/start.js.qbc', 'stale.txt']) assert.ok(!existsSync(join(dist, old)), `${old} from the last build was left`);
 	if (unix) assert.equal(readFileSync(join(project, 'calyx.log'), 'utf8').trim(), `--compile ${dist}`);
 	const html = readFileSync(join(dist, 'index.html'), 'utf8');
 	assert.match(html, /<link href="\/_app\/immutable\/assets\/0\.css" rel="stylesheet">\s*<style>#svelte-announcer \{ pointer-events: none \}<\/style>\s*<\/head>/, html);

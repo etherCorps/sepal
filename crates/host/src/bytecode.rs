@@ -1,8 +1,8 @@
 //! An app's modules compiled ahead of time, to QuickJS bytecode.
 //!
 //! `calyx --compile <dist>` (`js::compile_folder`) writes `x.js.qbc` next to
-//! every module `x.js` of the app folder, and the QuickJS loader takes the
-//! bytecode over the source when it fits this host. The `.js` stays: it is
+//! every module `x.js` of the app folder, after every build, and the QuickJS
+//! loader takes the bytecode over the source when it fits this host. The `.js` stays: it is
 //! what loads when the bytecode does not fit, and what V8 always loads.
 //!
 //! QuickJS does not check bytecode: a crafted file can make it run anything.
@@ -19,7 +19,7 @@
 //! target            u8 length, UTF-8: "aarch64-apple-darwin"; the same
 //! module URL        u16 length, UTF-8: what the module is loaded as
 //! source length     u64: the .js it came from, checked on every launch
-//! source hash       u64: FNV-1a of that .js, checked in dev and by --compile
+//! source hash       u64: FNV-1a of that .js, checked in dev
 //! payload           JS_WriteObject's output, without source text
 //! ```
 //!
@@ -233,18 +233,6 @@ pub fn lookup(folder: &AppFolder, url: &str, dev: bool) -> Result<Option<Vec<u8>
     Ok(Some(payload.to_vec()))
 }
 
-/// Whether the compiled file next to `module` (in the folder, at `url`) is
-/// what `--compile` would write now. Its contents are always compared.
-pub fn current(folder: &AppFolder, url: &str, source: &[u8]) -> bool {
-    let Ok(module) = Url::parse(url) else {
-        return false;
-    };
-    let Ok(bytes) = folder.read(&compiled_url(&module)) else {
-        return false;
-    };
-    Header::decode(&bytes).is_ok_and(|(header, _)| header == Header::new(url, source))
-}
-
 /// The engine's way to ask for a module's bytecode, which reports once per
 /// launch that another host's bytecode is passed over, and each file that
 /// does not fit.
@@ -268,10 +256,9 @@ pub fn finder(folder: Arc<AppFolder>, dev: bool) -> crate::js::ModuleBytecode {
     })
 }
 
-/// The modules (`.js`, `.mjs`) and compiled files under `root`, relative to
-/// it, in a stable order.
-pub fn scan(root: &Path) -> Result<(Vec<PathBuf>, Vec<PathBuf>), String> {
-    let (mut modules, mut compiled) = (Vec::new(), Vec::new());
+/// The modules (`.js`, `.mjs`) under `root`, relative to it, in a stable order.
+pub fn modules(root: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut modules = Vec::new();
     let mut stack = vec![root.to_owned()];
     while let Some(dir) = stack.pop() {
         let entries = std::fs::read_dir(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
@@ -283,23 +270,20 @@ pub fn scan(root: &Path) -> Result<(Vec<PathBuf>, Vec<PathBuf>), String> {
                 .map_err(|e| format!("{}: {e}", path.display()))?;
             if kind.is_dir() {
                 stack.push(path);
-                continue;
-            }
-            let relative = path
-                .strip_prefix(root)
-                .expect("walked from root")
-                .to_owned();
-            let name = relative.to_string_lossy();
-            if name.ends_with(SUFFIX) {
-                compiled.push(relative);
-            } else if name.ends_with(".js") || name.ends_with(".mjs") {
-                modules.push(relative);
+            } else if path
+                .extension()
+                .is_some_and(|ext| ext == "js" || ext == "mjs")
+            {
+                modules.push(
+                    path.strip_prefix(root)
+                        .expect("walked from root")
+                        .to_owned(),
+                );
             }
         }
     }
     modules.sort();
-    compiled.sort();
-    Ok((modules, compiled))
+    Ok(modules)
 }
 
 /// Write a compiled file so that a host reading the folder meanwhile (dev)

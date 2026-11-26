@@ -6,8 +6,8 @@
 // Runs in Node.
 
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, relative, resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfigFromFile } from 'vite';
 import { find_host } from '@ethercorps/calyx';
@@ -134,15 +134,12 @@ export function dev_window(project) {
 	};
 }
 
-/** What the host names a module's bytecode: the module's file name and this. */
-const BYTECODE = '.qbc';
-
 /**
  * Compile the app's modules to bytecode with this machine's calyx (`calyx
  * --compile`), which writes `x.js.qbc` next to each `x.js`: the host then
- * loads them without parsing them. Only what changed since the last time
- * is compiled. Without a calyx that can, the app loads its JavaScript, as it
- * always could: the build says so, and goes on.
+ * loads them without parsing them. The app folder is a new build, so every
+ * module is compiled. Without a calyx that can, the app loads its
+ * JavaScript, as it always could: the build says so, and goes on.
  * @param {string} dir the app folder
  * @param {(message: string) => void} warn
  * @returns {string | null} calyx's summary, or null when nothing was compiled
@@ -152,13 +149,11 @@ export function compile_bytecode(dir, warn) {
 	try {
 		bin = find_host().path;
 	} catch (error) {
-		remove_bytecode(dir);
 		warn(`sepal: the app's modules were not compiled to bytecode, so it loads their JavaScript: ${/** @type {Error} */ (error).message}`);
 		return null;
 	}
 	const done = spawnSync(bin, ['--compile', dir], { encoding: 'utf8' });
 	if (done.error || done.status !== 0) {
-		remove_bytecode(dir);
 		// A calyx from before --compile takes it for the app folder.
 		if (done.stderr?.includes('--compile is not an app folder')) {
 			warn(`sepal: ${bin} is a calyx from before \`--compile\`, so the app's modules were not compiled to bytecode and it loads their JavaScript. A current calyx compiles them.`);
@@ -171,65 +166,4 @@ export function compile_bytecode(dir, warn) {
 	// Modules that stayed JavaScript, one line each.
 	for (const line of done.stderr.split('\n').filter(Boolean)) warn(`sepal: ${line}`);
 	return done.stdout.trim() || null;
-}
-
-/**
- * The last build's bytecode, kept for a calyx that then could not compile:
- * next to modules rebuilt since, none of it may ship. Outside dev the host
- * compares only a module's size with what its bytecode was compiled from.
- * @param {string} dir
- */
-function remove_bytecode(dir) {
-	for (const file of keep_bytecode(dir).keys()) rmSync(join(dir, file));
-}
-
-/**
- * Empty the app folder for a new build, but keep the last build's bytecode:
- * `compile_bytecode` then compiles only the modules that changed, and
- * removes the bytecode of those that are gone.
- * @param {string} dir
- */
-export function clear_but_bytecode(dir) {
-	if (!existsSync(dir)) return;
-	for (const entry of readdirSync(dir, { withFileTypes: true })) {
-		const path = join(dir, entry.name);
-		if (entry.isDirectory()) {
-			clear_but_bytecode(path);
-			if (readdirSync(path).length === 0) rmSync(path, { recursive: true });
-		} else if (!entry.name.endsWith(BYTECODE)) {
-			rmSync(path);
-		}
-	}
-}
-
-/**
- * The bytecode in the app folder, by path, read before a bundler empties it
- * (Vite does, before every build): `restore_bytecode` puts it back after.
- * @param {string} dir
- * @returns {Map<string, Buffer>}
- */
-export function keep_bytecode(dir) {
-	const kept = new Map();
-	if (!existsSync(dir)) return kept;
-	for (const entry of readdirSync(dir, { recursive: true, withFileTypes: true })) {
-		if (!entry.isFile() || !entry.name.endsWith(BYTECODE)) continue;
-		const path = join(entry.parentPath, entry.name);
-		kept.set(relative(dir, path), readFileSync(path));
-	}
-	return kept;
-}
-
-/**
- * Put back what `keep_bytecode` read, next to the modules the new build
- * wrote. Whether each still fits its module is for calyx to say.
- * @param {string} dir
- * @param {Map<string, Buffer>} kept
- */
-export function restore_bytecode(dir, kept) {
-	for (const [file, bytes] of kept) {
-		const path = join(dir, file);
-		if (existsSync(path) || !existsSync(path.slice(0, -BYTECODE.length))) continue;
-		mkdirSync(dirname(path), { recursive: true });
-		writeFileSync(path, bytes);
-	}
 }

@@ -102,10 +102,6 @@ pub type ModuleBytecode = Box<dyn Fn(&str) -> Option<Vec<u8>>>;
 pub struct Compiled {
     /// Modules compiled and written.
     pub compiled: usize,
-    /// Modules whose bytecode was already what it would have written.
-    pub current: usize,
-    /// Compiled files removed because their module is gone.
-    pub removed: usize,
     /// Modules that did not compile, with why: they load as JavaScript.
     pub left: Vec<(String, String)>,
     /// Said instead of compiling, by an engine that has no bytecode.
