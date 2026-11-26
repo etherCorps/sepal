@@ -464,7 +464,7 @@ at the size when a change adds crates or features.
   brings it back; check with `footprint` while frames are drawn. See its
   `PATCH.md`. Same rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in fourteen places, all marked
+  It differs from crates.io 0.3.0-beta.4 in fifteen places, all marked
   `sepal patch` (as are the changes in the other patched copies) and
   described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.

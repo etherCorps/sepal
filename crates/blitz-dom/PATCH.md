@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with fourteen changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with fifteen changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -179,8 +179,22 @@ took clicks outside the box (SvelteKit's route announcer, which
 clicked rows far below the window scroll them into view first now
 (`SvelteDocument::scroll_into_view`).
 
+**15. The layout tree's debug check looks only at the layout tree.**
+`src/resolve.rs`, `assert_layout_parents_consistent` (debug builds only):
+upstream checks the layout children of every node in the document. Below a
+`display: none` box, `resolve_layout_children` never walks, because the box
+has no layout children. The lists down there keep what they held when the
+box was hidden, and a child freed since is no longer in the slab. Nothing
+lays out, paints or hit-tests those lists, and showing the box again
+rebuilds them. The check now walks the tree that is kept, from the root.
+
+Upstream panicked on it ("layout child … is not in the slab") in every
+debug build: the Tracker's list column hides behind the detail pane in a
+narrow window, the rows' labels change, and V8 collects the old ones
+(`ops::tests::a_node_freed_below_a_hidden_box_is_not_a_layout_child`).
+
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the fourteen changes (search for
+directory with that version's source and reapply the fifteen changes (search for
 `sepal patch`).
