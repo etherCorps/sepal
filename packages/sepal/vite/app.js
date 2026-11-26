@@ -152,11 +152,13 @@ export function compile_bytecode(dir, warn) {
 	try {
 		bin = find_host().path;
 	} catch (error) {
+		remove_bytecode(dir);
 		warn(`sepal: the app's modules were not compiled to bytecode, so it loads their JavaScript: ${/** @type {Error} */ (error).message}`);
 		return null;
 	}
 	const done = spawnSync(bin, ['--compile', dir], { encoding: 'utf8' });
 	if (done.error || done.status !== 0) {
+		remove_bytecode(dir);
 		const why = done.error?.message ?? done.stderr.trim();
 		warn(`sepal: compiling the app's modules to bytecode failed, so it loads their JavaScript: ${why}`);
 		return null;
@@ -164,6 +166,16 @@ export function compile_bytecode(dir, warn) {
 	// Modules that stayed JavaScript, one line each.
 	for (const line of done.stderr.split('\n').filter(Boolean)) warn(`sepal: ${line}`);
 	return done.stdout.trim() || null;
+}
+
+/**
+ * The last build's bytecode, kept for a calyx that then could not compile:
+ * next to modules rebuilt since, none of it may ship. Outside dev the host
+ * compares only a module's size with what its bytecode was compiled from.
+ * @param {string} dir
+ */
+function remove_bytecode(dir) {
+	for (const file of keep_bytecode(dir).keys()) rmSync(join(dir, file));
 }
 
 /**

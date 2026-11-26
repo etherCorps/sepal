@@ -51,12 +51,15 @@ try {
 	assert.equal(readFileSync(log, 'utf8').trim(), `--compile ${app}`);
 	assert.deepEqual(warnings, ['sepal: classic.js stays JavaScript: SyntaxError: invalid keyword']);
 
-	// A calyx from before --compile refuses it: the app loads its JavaScript.
+	// A calyx from before --compile refuses it: the app loads its JavaScript,
+	// and the last build's bytecode, kept for compiling, does not ship.
 	warnings = [];
+	writeFileSync(join(app, 'main.js.qbc'), 'from the last build');
 	process.env.SEPAL_HOST = host('old-calyx', 'echo "--compile is not an app folder" >&2\nexit 1');
 	assert.equal(compile_bytecode(app, warn), null);
 	assert.equal(warnings.length, 1);
 	assert.match(warnings[0], /compiling the app's modules to bytecode failed, so it loads their JavaScript: --compile is not an app folder/);
+	assert.ok(!existsSync(join(app, 'main.js.qbc')), 'old bytecode next to a new build');
 
 	// So does a calyx that is not there.
 	warnings = [];
