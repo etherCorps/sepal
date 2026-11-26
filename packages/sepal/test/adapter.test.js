@@ -10,7 +10,7 @@ import adapter from '../vite/adapter.js';
 import { SEPAL_ICON, kit } from '../vite/app.js';
 
 const project = mkdtempSync(join(tmpdir(), 'sepal-adapter-'));
-const good = { compilerOptions: { experimental: { customRenderer: 'sepal/renderer' } }, version: { pollInterval: 0 }, files: { src: 'src', assets: 'static' } };
+const good = { compilerOptions: { experimental: { customRenderer: 'sepal/renderer' } }, version: { pollInterval: 0 }, preprocess: [{ name: 'sepal' }], files: { src: 'src', assets: 'static' } };
 
 /**
  * A builder as SvelteKit hands it over, for a client like the one it writes.
@@ -42,8 +42,9 @@ try {
 
 	let written = 0;
 	kit.session = { root: project, options: { app: { name: 'Kit' } }, written: () => void written++ };
-	await assert.rejects(adapter().adapt(builder({ ...good, compilerOptions: {} })), /add `compilerOptions: \{ experimental: \{ customRenderer: 'sepal\/renderer' \} \}` to `sveltekit\(\{ … \}\)`/);
-	await assert.rejects(adapter().adapt(builder({ ...good, version: { pollInterval: 3_600_000 } })), /add `version: \{ pollInterval: 0 \}` to `sveltekit\(\{ … \}\)`/);
+	await assert.rejects(adapter().adapt(builder({ ...good, compilerOptions: {} })), /not compiled for the Sepal renderer\. Pass SvelteKit's options through withSepal\(\)/);
+	await assert.rejects(adapter().adapt(builder({ ...good, version: { pollInterval: 3_600_000 } })), /new version every hour[\s\S]*withSepal\(\)/);
+	await assert.rejects(adapter().adapt(builder({ ...good, preprocess: [] })), /rewrites of `bind:` and `<svelte:head>` are not among the preprocessors\. Pass SvelteKit's options through withSepal\(\)/);
 	mkdirSync(join(project, 'src/routes/api'), { recursive: true });
 	writeFileSync(join(project, 'src/routes/+page.server.ts'), '');
 	writeFileSync(join(project, 'src/routes/api/+server.ts'), '');

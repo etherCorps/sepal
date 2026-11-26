@@ -10,10 +10,12 @@
 // (`src/main.ts` in the examples) mounts the app.
 //
 // A SvelteKit app (one with `src/app.html`) uses SvelteKit's own plugin,
-// untouched, with `sepal/adapter`, and this preset after it, which adds
-// what SvelteKit cannot: the custom renderer's build conditions, two edits
-// to SvelteKit's client (see `patch`), the rewrites of `bind:` and
-// `<svelte:head>`, `sepal.config.ts` and the dev window. See `KIT_SETUP`.
+// given its options through `withSepal()` (the custom renderer, no version
+// polling, the rewrites of `bind:` and `<svelte:head>`) with
+// `sepal/adapter`, and this preset after it, which adds what SvelteKit's
+// options cannot: the custom renderer's build conditions, the edits to
+// SvelteKit's client (see `patch`), `sepal.config.ts` and the dev window.
+// See `KIT_SETUP`.
 //
 // In watch mode (`vite build --watch`) with a host binary available, it also
 // opens the app and reloads it in place after every rebuild.
@@ -31,18 +33,11 @@ import { check_css, check_page } from './page.js';
 /** A SvelteKit app's vite.config.ts, for the messages that point to it. */
 export const KIT_SETUP = `import { sveltekit } from '@sveltejs/kit/vite';
 import adapter from 'sepal/adapter';
-import { sepal } from 'sepal/vite';
+import { sepal, withSepal } from 'sepal/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [
-		sveltekit({
-			adapter: adapter(),
-			compilerOptions: { experimental: { customRenderer: 'sepal/renderer' } },
-			version: { pollInterval: 0 }
-		}),
-		sepal()
-	]
+	plugins: [sveltekit(withSepal({ adapter: adapter() })), sepal()]
 });`;
 
 /** What `index.html` needs, for the message when there is none. */
@@ -264,14 +259,13 @@ export function sepal(inline = {}) {
 			watching = config.build.watch != null;
 			const kit_plugin = config.plugins.find((plugin) => plugin.name === 'vite-plugin-sveltekit-setup');
 			const has_kit = kit_plugin !== undefined;
-			// svelte-check reads how to preprocess components from SvelteKit's
-			// plugin (`api.options`), not from the build: it has to see the
-			// rewrites too, or it reports what Svelte refuses for custom renderers.
-			// The build gets them from `sveltekit_edits()`.
+			// SvelteKit's options, as validated. The adapter checks them too, but
+			// only once everything is compiled, and a component with `bind:` on an
+			// element would stop the build first, with Svelte's message.
 			const kit_options = kit_plugin?.api?.options;
 			if (kit_app && kit_options) {
-				const groups = [kit_options.preprocess ?? []].flat();
-				if (!groups.some((group) => group?.name === 'sepal:element-bindings')) kit_options.preprocess = [element_bindings(), head(), ...groups];
+				const missing = kit_setup_problems(kit_options);
+				if (missing.length > 0) throw new Error(`sepal: ${missing.join('\nsepal: ')}`);
 			}
 			if (kit_app && !has_kit) {
 				throw new Error(`sepal: this project has src/app.html, so it is a SvelteKit app, but vite.config.ts has no \`sveltekit()\`. Set it up as:\n\n${KIT_SETUP}`);
@@ -340,6 +334,91 @@ export function sepal(inline = {}) {
 }
 
 /**
+ * Sepal's rewrites of what Svelte refuses for a custom renderer (`bind:` on
+ * elements, `<svelte:head>`), as one preprocessor. `withSepal()` adds it;
+ * this is for an app that sets `sveltekit()`'s options by hand, after its
+ * own preprocessors: `preprocess: [vitePreprocess(), sepalPreprocess()]`.
+ * @returns {import('svelte/compiler').PreprocessorGroup}
+ */
+export function sepalPreprocess() {
+	const rewrites = [element_bindings(), head()];
+	return {
+		name: 'sepal',
+		async markup({ content, filename }) {
+			if (!content.includes('bind:') && !content.includes('<svelte:head')) return;
+			const rewritten = await preprocess(content, rewrites, { filename });
+			return { code: rewritten.code, map: /** @type {any} */ (rewritten.map) };
+		}
+	};
+}
+
+/** `{}` or `Object.create(null)`: not an array, a function or a class instance. @param {unknown} value @returns {value is Record<string, any>} */
+const plain = (value) => value !== null && typeof value === 'object' && [Object.prototype, null].includes(Object.getPrototypeOf(value));
+
+/**
+ * `ours` merged into a copy of `theirs`, level by level where both are plain
+ * objects. Anything else is taken as it is; where both have a value, ours.
+ * @param {Record<string, any>} theirs @param {Record<string, any>} ours
+ * @returns {Record<string, any>}
+ */
+function merge(theirs, ours) {
+	const merged = { ...theirs };
+	for (const [key, value] of Object.entries(ours)) merged[key] = plain(value) && plain(theirs[key]) ? merge(theirs[key], value) : value;
+	return merged;
+}
+
+/**
+ * SvelteKit's options for a Sepal app: `sveltekit(withSepal({ adapter: adapter() }))`,
+ * with `adapter` from `sepal/adapter`. Adds what every Sepal app needs to
+ * the app's own options: components compiled for the Sepal renderer, no
+ * version polling (apps update through `sepal/updater`), and Sepal's
+ * rewrites after the app's own preprocessors (`sepalPreprocess()`), once.
+ * Throws on options that cannot work in an app.
+ * @template {import('@sveltejs/kit/vite').Config} T
+ * @param {T} options
+ * @returns {T}
+ */
+export function withSepal(options) {
+	const usage = "`sveltekit(withSepal({ adapter: adapter() }))`, with `import adapter from 'sepal/adapter'`";
+	const given = /** @type {any} */ (options ?? {});
+	if (given.adapter === undefined) throw new Error(`sepal: withSepal() has no adapter. A Sepal app's is sepal/adapter, which writes the app for the host: ${usage}.`);
+	if (given.adapter?.name !== 'sepal') throw new Error(`sepal: withSepal() was given the adapter ${given.adapter?.name ?? '(unnamed)'}. A Sepal app's is sepal/adapter, which writes the app for the host: ${usage}.`);
+	const renderer = given.compilerOptions?.experimental?.customRenderer;
+	if (renderer !== undefined && renderer !== 'sepal/renderer') {
+		throw new Error(`sepal: compilerOptions.experimental.customRenderer is ${JSON.stringify(renderer)}. A Sepal app's components are compiled for 'sepal/renderer'; leave it out, withSepal() sets it.`);
+	}
+	const poll = given.version?.pollInterval;
+	if (typeof poll === 'number' && poll > 0) {
+		throw new Error(`sepal: version.pollInterval is ${poll}. SvelteKit would ask the server for a new version that often, waking an idle app, and an app has no server to answer. Apps update through sepal/updater; leave it out, withSepal() sets it to 0.`);
+	}
+	const merged = merge(given, { compilerOptions: { experimental: { customRenderer: 'sepal/renderer' } }, version: { pollInterval: 0 } });
+	const groups = [given.preprocess ?? []].flat();
+	merged.preprocess = groups.some((group) => group?.name === 'sepal') ? groups : [...groups, sepalPreprocess()];
+	return /** @type {T} */ (merged);
+}
+
+/**
+ * What SvelteKit's options lack for a Sepal app, as messages; empty when
+ * nothing does. `sepal()` checks before the build, the adapter after it.
+ * @param {any} config SvelteKit's options, as it validated them
+ * @returns {string[]}
+ */
+export function kit_setup_problems(config) {
+	const found = [];
+	const fix = 'Pass SvelteKit\'s options through withSepal() from sepal/vite: `sveltekit(withSepal({ adapter: adapter() }))` in vite.config.ts';
+	if (config.compilerOptions?.experimental?.customRenderer !== 'sepal/renderer') {
+		found.push(`components are not compiled for the Sepal renderer. ${fix} (by hand: \`compilerOptions: { experimental: { customRenderer: 'sepal/renderer' } }\`).`);
+	}
+	if (config.version?.pollInterval !== 0) {
+		found.push(`SvelteKit would ask for a new version every hour, waking an idle app; apps update through \`sepal/updater\`. ${fix} (by hand: \`version: { pollInterval: 0 }\`).`);
+	}
+	if (![config.preprocess ?? []].flat().some((group) => group?.name === 'sepal')) {
+		found.push(`Sepal's rewrites of \`bind:\` and \`<svelte:head>\` are not among the preprocessors. ${fix} (by hand: \`sepalPreprocess()\` from sepal/vite, last in \`preprocess\`).`);
+	}
+	return found;
+}
+
+/**
  * The edits to SvelteKit's client. Each names the file, what to find in it,
  * and what goes there instead. SvelteKit's peer range in package.json stops
  * at the versions these were checked against.
@@ -375,22 +454,15 @@ const patch = [
 ];
 
 /**
- * What a SvelteKit app needs besides SvelteKit's own plugin: the edits to
- * SvelteKit's client, and the rewrites of what Svelte refuses for a custom
- * renderer (`bind:` on elements, `<svelte:head>`). Those run on each
- * component after SvelteKit's own preprocessing and before it is compiled.
+ * The edits to SvelteKit's client. The rewrites of components are
+ * SvelteKit's options' (`withSepal()`), so that svelte-check sees them too.
  * @returns {import('vite').Plugin}
  */
 function sveltekit_edits() {
-	const rewrites = [element_bindings(), head()];
 	return {
 		name: 'sepal:sveltekit',
 		enforce: 'pre',
-		async transform(code, id) {
-			if (id.endsWith('.svelte')) {
-				const rewritten = await preprocess(code, rewrites, { filename: id });
-				return { code: rewritten.code, map: /** @type {any} */ (rewritten.map) ?? null };
-			}
+		transform(code, id) {
 			const edit = patch.find(({ file }) => id.endsWith(file));
 			if (edit === undefined) return;
 			if (!code.includes(edit.find)) {

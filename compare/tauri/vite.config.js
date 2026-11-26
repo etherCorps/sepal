@@ -1,11 +1,12 @@
 // The Tracker built for the DOM (WKWebView): SvelteKit as a single-page app,
 // from the app's own source and with the app's own toolchain.
 //
-// Mirrors the Tracker's own vite.config.ts (SvelteKit's plugin, Sepal's
-// adapter, sepal()) with the renderer-specific parts taken out: no
-// `customRenderer`, no `svelte-custom-renderer` condition, no
-// `bind:`/`<svelte:head>` rewrites (Svelte handles both for the DOM), no
-// DOM layer, and adapter-static in place of Sepal's adapter. The SvelteKit
+// Mirrors the Tracker's own vite.config.ts (`sveltekit(withSepal({ adapter:
+// adapter() }))`, then sepal()) with the renderer-specific parts taken out,
+// which is all withSepal() adds, so it is not used here: no `customRenderer`,
+// no `bind:`/`<svelte:head>` rewrites (Svelte handles both for the DOM), no
+// `svelte-custom-renderer` condition, no DOM layer, and adapter-static in
+// place of Sepal's adapter (withSepal() refuses any other). The SvelteKit
 // options are the app's: SvelteKit's default split build, no version polling.
 //
 // `pnpm run build:web` runs it from examples/tracker, so Vite's root,

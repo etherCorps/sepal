@@ -95,7 +95,27 @@ try {
 		process.chdir(project);
 		try {
 			const plugins = sepal();
-			await assert.rejects(build({ root: project, configFile: false, logLevel: 'silent', plugins }), /has src\/app\.html, so it is a SvelteKit app, but vite\.config\.ts has no `sveltekit\(\)`[\s\S]*customRenderer/);
+			await assert.rejects(build({ root: project, configFile: false, logLevel: 'silent', plugins }), /has src\/app\.html, so it is a SvelteKit app, but vite\.config\.ts has no `sveltekit\(\)`[\s\S]*sveltekit\(withSepal\(\{ adapter: adapter\(\) \}\)\), sepal\(\)/);
+		} finally {
+			process.chdir(here);
+		}
+	}
+
+	// SvelteKit's options without withSepal() stop the build before anything
+	// is compiled, naming it; and sepal() does not rewrite components itself
+	// in a SvelteKit app: the rewrites are SvelteKit's options'.
+	{
+		const project = join(scratch, 'kit-without-withsepal');
+		mkdirSync(join(project, 'src'), { recursive: true });
+		writeFileSync(join(project, 'src/app.html'), '<html><head>%sveltekit.head%</head><body>%sveltekit.body%</body></html>');
+		const here = process.cwd();
+		process.chdir(project);
+		try {
+			const plugins = /** @type {any[]} */ (sepal());
+			const setup = { name: 'vite-plugin-sveltekit-setup', api: { options: { compilerOptions: {}, version: {}, preprocess: [] } } };
+			await assert.rejects(build({ root: project, configFile: false, logLevel: 'silent', plugins: [setup, ...plugins] }), /not compiled for the Sepal renderer\. Pass SvelteKit's options through withSepal\(\)[\s\S]*pollInterval[\s\S]*sepalPreprocess/);
+			const edits = plugins.find((plugin) => plugin.name === 'sepal:sveltekit');
+			assert.equal(edits.transform('<input bind:value={text} />', join(project, 'src/routes/+page.svelte')), undefined);
 		} finally {
 			process.chdir(here);
 		}

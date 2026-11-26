@@ -3,17 +3,10 @@
 //   // vite.config.ts
 //   import { sveltekit } from '@sveltejs/kit/vite';
 //   import adapter from 'sepal/adapter';
-//   import { sepal } from 'sepal/vite';
+//   import { sepal, withSepal } from 'sepal/vite';
 //
 //   export default defineConfig({
-//     plugins: [
-//       sveltekit({
-//         adapter: adapter(),
-//         compilerOptions: { experimental: { customRenderer: 'sepal/renderer' } },
-//         version: { pollInterval: 0 }
-//       }),
-//       sepal()
-//     ]
+//     plugins: [sveltekit(withSepal({ adapter: adapter() })), sepal()]
 //   });
 //
 // It writes SvelteKit's output as SvelteKit writes it, a single-page app:
@@ -28,6 +21,7 @@ import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } 
 import { join, relative, resolve } from 'node:path';
 import { kit, manifest } from './app.js';
 import { check_css, check_page } from './page.js';
+import { kit_setup_problems } from './vite.js';
 
 /** Every file under a directory, as paths relative to it, with `/`. @param {string} directory @returns {string[]} */
 function files_in(directory) {
@@ -59,12 +53,7 @@ export function problems(config, root) {
 	if (kit.session === null) {
 		found.push('add `sepal()` from `sepal/vite` to the plugins in vite.config.ts, after `sveltekit()`: it builds the app for the Sepal renderer, and the adapter needs it.');
 	}
-	if (config.compilerOptions?.experimental?.customRenderer !== 'sepal/renderer') {
-		found.push("add `compilerOptions: { experimental: { customRenderer: 'sepal/renderer' } }` to `sveltekit({ … })` in vite.config.ts: components have to be compiled for the Sepal renderer.");
-	}
-	if (config.version?.pollInterval !== 0) {
-		found.push('add `version: { pollInterval: 0 }` to `sveltekit({ … })` in vite.config.ts: SvelteKit would ask for a new version every hour, waking an idle app. Apps update through `sepal/updater`.');
-	}
+	found.push(...kit_setup_problems(config));
 	const src = resolve(root, config.files?.src ?? 'src');
 	const server = server_files(src).map((file) => relative(root, join(src, file)).replaceAll('\\', '/'));
 	if (server.length > 0) {
