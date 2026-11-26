@@ -91,7 +91,11 @@
 <div class="min-h-0 flex-1 overflow-y-scroll">
 	<div class="mx-auto flex max-w-[1120px] flex-col gap-6 p-6">
 		<TooltipProvider delayDuration={800}>
-			<div class="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4">
+			<!--
+				One row where each 1fr tile gets the ~155px its number needs: (155 x 5 + 3 gaps) plus
+				the page's padding and the sidebar is 1120px of window. Below that, two by two.
+			-->
+			<div class="grid grid-cols-2 gap-4 min-[1120px]:grid-cols-[2fr_1fr_1fr_1fr]">
 				{#each tiles as tile (tile.id)}
 					<Tooltip>
 						<TooltipTrigger>
@@ -126,7 +130,8 @@
 			<Chart weeks={stats.weeks} />
 		</section>
 
-		<div class="grid grid-cols-[3fr_2fr] items-start gap-6">
+		<!-- Side by side from 1120px, as the tiles; stacked below, where By priority's table has no room. -->
+		<div class="grid grid-cols-1 items-start gap-6 min-[1120px]:grid-cols-[3fr_2fr]">
 			<section data-testid="by-assignee" class={panel}>
 				<h2 class="{heading} mb-3">Open by assignee</h2>
 				<div class="flex flex-col gap-2">

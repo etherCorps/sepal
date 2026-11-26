@@ -120,7 +120,8 @@
 </script>
 
 <PageHeader title="Board" count={shown === total ? count(total) : `${count(shown)} of ${count(total)}`} />
-<div class="flex h-11 shrink-0 items-center gap-2 border-b px-4"><Filters /></div>
+<!-- One 44px line where there is room; in a narrow window it wraps rather than run out of it. -->
+<div class="flex min-h-11 shrink-0 flex-wrap items-center gap-2 border-b px-4 py-[7.5px]"><Filters /></div>
 
 <div class="min-h-0 flex-1 overflow-x-scroll">
 	<div class="flex h-full w-max gap-3 p-4">

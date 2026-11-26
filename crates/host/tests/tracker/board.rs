@@ -349,3 +349,29 @@ fn insights_chart_draws_bars_and_links_weeks() {
     click_node(&mut doc, last);
     assert_eq!(text(&doc, "[data-testid=page-title]"), "Issues");
 }
+
+/// In the narrowest window the app allows (720px), the Board's filters wrap
+/// onto another line inside the window, and Insights puts its tiles two by
+/// two and stacks its panels: nothing runs out of the window.
+#[test]
+fn board_and_insights_fit_the_narrowest_window() {
+    let mut doc = load();
+    doc.layout(720, 800);
+    click(&mut doc, "[data-testid=nav-board]");
+    doc.wait(0.1);
+    doc.layout(720, 800);
+    for id in ["search", "filter-status", "filter-priority", "filter-assignee", "filter-project"] {
+        let node = doc.query(&format!("[data-testid={id}]")).unwrap();
+        let (x, y, w, h) = doc.rect(node).unwrap();
+        assert!(x + w <= 720.0, "the Board's {id} runs out of the window at {}", x + w);
+        assert!(reaches(&doc, x + w / 2.0, y + h / 2.0, node), "the Board's {id} cannot be clicked");
+    }
+
+    click(&mut doc, "[data-testid=nav-insights]");
+    doc.wait(0.1);
+    doc.layout(720, 800);
+    for id in ["tile-open", "tile-created", "tile-closed", "tile-age", "chart", "by-assignee", "by-priority"] {
+        let (x, _, w, _) = doc.rect(doc.query(&format!("[data-testid={id}]")).unwrap()).unwrap();
+        assert!(x >= 240.0 && x + w <= 720.0, "Insights' {id} runs out of the window: {x} + {w}");
+    }
+}
