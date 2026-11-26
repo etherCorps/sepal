@@ -207,6 +207,12 @@ pub fn apply_batch(
 
     let mut mutator = doc.mutate();
     let mut i = 0;
+    // Nodes whose JavaScript objects were collected, freed once the batch has
+    // been applied and the mutator flushed. Blitz keeps some work on a node it
+    // added for the flush (a form control's owner, a <style>'s sheet, the
+    // <title>), and a node can be added and collected in one batch: freed on
+    // the spot, the flush would look it up and panic.
+    let mut collected = Vec::new();
 
     // Read `n` operands, or stop if the batch is truncated.
     macro_rules! operands {
@@ -328,25 +334,13 @@ pub fn apply_batch(
             }
             DROP => {
                 let o = operands!(1);
-                // The JS object is gone, so the id can never be referenced again.
-                // It may already have been freed along with an ancestor.
-                let Some(id) = nodes.blitz(o[0] as u32) else {
-                    continue;
-                };
-                if mutator.doc.get_node(id).is_none() {
+                // The JS object is gone. Its id goes now: JavaScript never
+                // gives an id out twice, but a batch is the app's input, and
+                // a later op must not reach the node through it. The node
+                // goes after the flush.
+                if let Some(id) = nodes.blitz(o[0] as u32) {
                     nodes.forget_blitz(id);
-                    continue;
-                }
-                if mutator.node_has_parent(id) {
-                    // Still attached: JS collects whole detached trees, so this is a
-                    // child of a tree whose root will be (or was) dropped separately.
-                    continue;
-                }
-                let mut freed = Vec::new();
-                mutator.remove_and_drop_node_with(id, &mut |dropped| freed.push(dropped));
-                for dropped in freed {
-                    nodes.forget_blitz(dropped);
-                    stats.dropped += 1;
+                    collected.push(id);
                 }
             }
             LISTEN => {
@@ -390,6 +384,30 @@ pub fn apply_batch(
             _ => {
                 eprintln!("[host] unknown opcode {code} at {i}; dropping the rest of the batch");
                 break;
+            }
+        }
+    }
+
+    // Flushes. A mutator of its own for freeing: the flush of this one would
+    // look at its <title> again.
+    drop(mutator);
+    if !collected.is_empty() {
+        let mut mutator = doc.mutate();
+        for id in collected {
+            // It may already have been freed along with an ancestor.
+            if mutator.doc.get_node(id).is_none() {
+                continue;
+            }
+            if mutator.node_has_parent(id) {
+                // Still attached: JS collects whole detached trees, so this is a
+                // child of a tree whose root will be (or was) dropped separately.
+                continue;
+            }
+            let mut freed = Vec::new();
+            mutator.remove_and_drop_node_with(id, &mut |dropped| freed.push(dropped));
+            for dropped in freed {
+                nodes.forget_blitz(dropped);
+                stats.dropped += 1;
             }
         }
     }
@@ -442,5 +460,83 @@ mod tests {
             1,
             "only the scroll of a node that exists"
         );
+    }
+
+    /// A node can be added and collected in one batch: JavaScript makes an
+    /// element, puts it on the page, takes it off, and a garbage collection
+    /// in the same turn (V8's, or QuickJS's at its allocation threshold)
+    /// runs its finalizer before the turn ends. Blitz keeps some work on an
+    /// added node for the mutator's flush (a form control's owner, a
+    /// <style>'s sheet, the <title>), which must not find it freed.
+    #[test]
+    fn a_node_added_and_collected_in_one_batch_is_freed_after_the_flush() {
+        let mut doc = BaseDocument::new(DocumentConfig::default());
+        let mut nodes = NodeMap::default();
+        nodes.insert(1, doc.root_node().id);
+        let mut listening = HashSet::new();
+        #[rustfmt::skip]
+        let ops = vec![
+            CREATE_ELEMENT, 2, 0, // <input>
+            CREATE_ELEMENT, 3, 1, // <style>
+            CREATE_ELEMENT, 4, 2, // <title>
+            CREATE_TEXT, 5, 3,
+            INSERT, 4, 5, 0,
+            INSERT, 1, 2, 0,
+            INSERT, 1, 3, 0,
+            INSERT, 1, 4, 0,
+            REMOVE, 2,
+            REMOVE, 3,
+            REMOVE, 4,
+            DROP, 2,
+            DROP, 3,
+            DROP, 5,              // a child first: it stays until its root goes
+            DROP, 4,
+        ];
+        let batch = Batch {
+            ops,
+            strings: vec![
+                "input".into(),
+                "style".into(),
+                "title".into(),
+                "A title".into(),
+            ],
+        };
+        let stats = apply_batch(&mut doc, &mut nodes, &mut listening, &batch);
+
+        assert_eq!(stats.dropped, 4);
+        for js in 2..=5 {
+            assert_eq!(nodes.blitz(js), None, "node {js} is still known");
+        }
+        assert_eq!(doc.root_node().children.len(), 0);
+    }
+
+    /// The id goes at the DROP, the node after the flush: an id given out
+    /// again in the same batch names the new node, which stays.
+    #[test]
+    fn an_id_dropped_and_given_out_again_names_the_new_node() {
+        let mut doc = BaseDocument::new(DocumentConfig::default());
+        let mut nodes = NodeMap::default();
+        nodes.insert(1, doc.root_node().id);
+        let mut listening = HashSet::new();
+        #[rustfmt::skip]
+        let ops = vec![
+            CREATE_ELEMENT, 2, 0, // <input>
+            INSERT, 1, 2, 0,
+            REMOVE, 2,
+            DROP, 2,
+            CREATE_ELEMENT, 2, 1, // <div>, under the same id
+            INSERT, 1, 2, 0,
+        ];
+        let batch = Batch {
+            ops,
+            strings: vec!["input".into(), "div".into()],
+        };
+        let stats = apply_batch(&mut doc, &mut nodes, &mut listening, &batch);
+
+        assert_eq!(stats.dropped, 1);
+        let div = nodes.blitz(2).expect("the id names the <div>");
+        let node = doc.get_node(div).expect("the <div> was not freed");
+        assert_eq!(&*node.element_data().unwrap().name.local, "div");
+        assert_eq!(doc.root_node().children, vec![div]);
     }
 }

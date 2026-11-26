@@ -70,6 +70,11 @@ Also:
 - **Selectors that end in a tag do not walk the page** in the DOM layer,
   and URL parses are cached: SvelteKit's split build looks for
   `meta[property=csp-nonce]` several times a navigation.
+- **A crash when an element came and went within one turn is fixed.** A
+  form control, `<style>` or `<title>` that was added and garbage-collected
+  before the turn ended (rare on QuickJS, seen on V8) stopped the app with
+  "invalid SlotMap key used"; the host now frees such nodes after Blitz has
+  finished with them.
 - `sepal`'s peer range for `@sveltejs/kit` is now `>=3.4 <3.5`, the
   versions `sepal()`'s edits to SvelteKit's client were tested with, and
   the starter asks for `~3.4.0`. CI builds the starter against the newest
