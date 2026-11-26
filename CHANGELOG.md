@@ -73,8 +73,8 @@ Also:
 - `sepal`'s peer range for `@sveltejs/kit` is now `>=3.4 <3.5`, the
   versions `sepal()`'s edits to SvelteKit's client were tested with, and
   the starter asks for `~3.4.0`. CI builds the starter against the newest
-  SvelteKit as well (`kit-latest`, allowed to fail); the range goes up once
-  that passes.
+  SvelteKit once a day, when there is one newer than the lockfile's
+  (`kit-latest`, allowed to fail); the range goes up once that passes.
 
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
