@@ -44,6 +44,23 @@ jobs:
       - run: pnpm run build
       - run: cargo test --manifest-path crates/host/Cargo.toml --features "screenshot engine-v8"
 
+  # sepal's peer range stops at the SvelteKit it was tested with, because
+  # sepal() edits SvelteKit's client source. This builds the starter on
+  # the newest SvelteKit, so a release that breaks those edits shows up here
+  # first. It may fail: the range is raised by hand, after a look.
+  kit-latest:
+    name: starter on the newest SvelteKit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - run: pnpm install --frozen-lockfile
+      - run: |
+          SEPAL_KIT=$(pnpm view @sveltejs/kit version)
+          echo "@sveltejs/kit $SEPAL_KIT"
+          SEPAL_KIT=$SEPAL_KIT pnpm run test:template
+
   # Windows is on hold (23 Nov 2026): the host builds and most of its tests
   # pass, see HANDOVER.md for what is left. Twenty minutes on every push is
   # too much for a job nobody is looking at, so it only runs when started by

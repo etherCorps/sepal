@@ -90,6 +90,40 @@ pub struct HostCall {
     pub args: String,
 }
 
+/// Where the engines get a module's source, by its URL (`AppFolder::module`).
+pub type ModuleSource = Box<dyn Fn(&str) -> Result<String, String>>;
+
+/// The URL a module specifier names, from the module or page that imports it
+/// (`base`). Modules load only from the app folder; a bare name such as
+/// `svelte` means the app was not bundled.
+pub(crate) fn resolve_module(base: &str, specifier: &str) -> Result<String, String> {
+    use blitz_traits::net::Url;
+
+    let relative = ["/", "./", "../"]
+        .iter()
+        .any(|start| specifier.starts_with(start));
+    let url = if relative {
+        Url::parse(base).and_then(|base| base.join(specifier))
+    } else {
+        Url::parse(specifier)
+    }
+    .map_err(|_| {
+        format!("cannot import {specifier:?}: only paths and URLs of the app's own files can be imported, not package names")
+    })?;
+    if !crate::net::in_app(&url) {
+        return Err(format!(
+            "cannot import {url}: modules load only from the app folder"
+        ));
+    }
+    Ok(url.into())
+}
+
+/// `import.meta.url` of the module with this name: the name, unless it is
+/// an inline module of the page (`…#inline-<node>`), whose URL is the page's.
+pub(crate) fn meta_url(name: &str) -> &str {
+    name.split_once('#').map_or(name, |(url, _)| url)
+}
+
 /// How long one stretch of JavaScript may run before it is interrupted.
 ///
 /// The app shares the UI thread with the window: while a script runs, nothing

@@ -11,8 +11,13 @@
 //! Uses the shadcn example's bundle for its DOM layer, with a stylesheet of
 //! its own. Build the bundle first: `pnpm run build` in the repository root.
 
+use std::path::Path;
+
 use sepal::SvelteDocument;
 use sepal::screenshot::render_rgba;
+
+/// The shadcn example's modules, with each test's own stylesheet.
+const SHADCN: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/shadcn/dist");
 
 const CSS: &str = "
     div { height: 10px; width: 10px }
@@ -75,12 +80,8 @@ fn named(pairs: &[(&str, f64)]) -> Vec<(String, f64)> {
 
 #[test]
 fn an_attribute_change_restyles_everything_that_depends_on_it() {
-    let js = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../examples/shadcn/dist/app.js"
-    ))
-    .expect("run `pnpm run build` in the repository root first");
-    let mut doc = SvelteDocument::new(&js, CSS, Default::default()).unwrap();
+    let mut doc = SvelteDocument::with_css(Path::new(SHADCN), CSS)
+        .expect("run `pnpm run build` in the repository root first");
     doc.layout(800, 600);
     let eval = |doc: &mut SvelteDocument, code: &str| {
         doc.js().eval_string(code).unwrap();
@@ -173,12 +174,8 @@ const HAS_SETUP: &str = "
 
 #[test]
 fn has_follows_what_it_looks_for() {
-    let js = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../examples/shadcn/dist/app.js"
-    ))
-    .expect("run `pnpm run build` in the repository root first");
-    let mut doc = SvelteDocument::new(&js, HAS_CSS, Default::default()).unwrap();
+    let mut doc = SvelteDocument::with_css(Path::new(SHADCN), HAS_CSS)
+        .expect("run `pnpm run build` in the repository root first");
     doc.layout(800, 600);
     let eval = |doc: &mut SvelteDocument, code: &str| {
         doc.js().eval_string(code).unwrap();
@@ -253,12 +250,8 @@ const CHILD_CSS: &str = "
 /// only when such a selector is in play.
 #[test]
 fn children_that_come_and_go_are_styled_along_with_what_depends_on_them() {
-    let js = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../examples/shadcn/dist/app.js"
-    ))
-    .expect("run `pnpm run build` in the repository root first");
-    let mut doc = SvelteDocument::new(&js, CHILD_CSS, Default::default()).unwrap();
+    let mut doc = SvelteDocument::with_css(Path::new(SHADCN), CHILD_CSS)
+        .expect("run `pnpm run build` in the repository root first");
     doc.layout(800, 600);
     let eval = |doc: &mut SvelteDocument, code: &str| {
         doc.js().eval_string(code).unwrap();
@@ -366,12 +359,8 @@ const STYLE_CSS: &str = "
 /// patched copy leaves that to Stylo.
 #[test]
 fn class_and_style_changes_reach_children_layout_and_drawings() {
-    let js = std::fs::read_to_string(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../examples/shadcn/dist/app.js"
-    ))
-    .expect("run `pnpm run build` in the repository root first");
-    let mut doc = SvelteDocument::new(&js, STYLE_CSS, Default::default()).unwrap();
+    let mut doc = SvelteDocument::with_css(Path::new(SHADCN), STYLE_CSS)
+        .expect("run `pnpm run build` in the repository root first");
     doc.layout(400, 300);
     let eval = |doc: &mut SvelteDocument, code: &str| {
         doc.js().eval_string(code).unwrap();

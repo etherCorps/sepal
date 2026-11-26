@@ -2,7 +2,7 @@
 # Sepal builds of the bench Tracker (compare/porting-blitz.md). Run from
 # the repository root after the release hosts (see porting-blitz.md).
 # The app is a bench build (VITE_BENCH=1: no seed, marks from the first line).
-# sepalKit() always writes examples/tracker/dist, so the bench build is moved
+# Sepal's adapter writes examples/tracker/dist, so the bench build is moved
 # out of it and the normal build is made again after.
 # The -diag apps run hosts built with blitz-dom's log-phase-times (per-phase
 # resolve timings on stdout): diagnostics only, never measured. Own app ids.

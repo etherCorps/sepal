@@ -12,8 +12,10 @@ Read `README.md` for the architecture and `HANDOVER.md` for the current work.
 
 Anything people type stays plain and starts with `sepal`: the `sepal`
 package and its subpaths (`sepal/vite`, `sepal/fs`, …), the `sepal`
-command, `create-sepal`, `sepal.config.ts`, `SEPAL_*` variables, `sepal()`
-and `sepalKit()`. The host packages are the exception, because nobody types
+command, `create-sepal`, `sepal.config.ts`, `SEPAL_*` variables, `sepal()`,
+`sepalPreprocess()` and `sepal/adapter`. `withSepal()` is the one exception:
+it wraps SvelteKit's options, and reads as that.
+The host packages are the exception, because nobody types
 them: `@ethercorps/calyx`, and the `calyx` binary of the `sepal` crate.
 
 The plant words go in docs, the README and CLI messages, only where they
@@ -49,7 +51,7 @@ the mark.
 
 ```sh
 pnpm install
-pnpm run build              # builds examples/counter -> dist/app.js + dist/app.css
+pnpm run build              # builds every example: dist/index.html, its chunks, app.json
 pnpm run test:js            # renderer against a JS mock host (fast, no Rust)
 pnpm run test:host          # end-to-end headless tests (QuickJS + blitz-dom)
 pnpm run check              # tsc on the package, svelte-check on the examples
@@ -86,13 +88,16 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `shell.js`, `window.js` (desktop APIs; public names are camelCase),
   `dom.js` (the opt-in DOM layer for web component libraries). Runs in
   QuickJS: no Node code belongs here.
-- `packages/sepal/vite/` — the two presets (`sepal/vite`,
-  `sepal/sveltekit`). `vite.js` (`sepal()`, for apps without routes),
-  `sveltekit.js` (`sepalKit()`: SvelteKit on this renderer, as an
-  adapter plus two edits to SvelteKit's client; see the `patch` table there
-  before touching a SvelteKit version), `app.js` (config file, manifest and
-  dev window, shared by both presets), `head.js` and `bindings.js`
-  (preprocessors for what Svelte refuses). All of it runs in Node.
+- `packages/sepal/vite/` — the build side. `vite.js` (`sepal/vite`:
+  `sepal()`, a web build from `index.html`, and next to `sveltekit()` the
+  edits to SvelteKit's client, see the `patch` table there before touching
+  a SvelteKit version; `withSepal()`, SvelteKit's options for an app;
+  `sepalPreprocess()`), `adapter.js` (`sepal/adapter`: SvelteKit's output
+  as SvelteKit writes it, plus `app.json`), `page.js` (what a page and its
+  stylesheets may load: the app folder only), `app.js` (config file,
+  manifest and dev window), `head.js` and `bindings.js` (preprocessors for
+  what Svelte refuses), `sveltekit.js` (`sepalKit()`, a stub that throws the
+  new setup; goes a release after 0.2.0-alpha.0). All of it runs in Node.
   `icon.png` is the Sepal icon for apps without one. Pages in `src/routes`
   are always a SvelteKit app: Sepal has no router of its own.
 - `packages/sepal/cli.js` — the `sepal` command. `packages/create/` —
@@ -129,7 +134,9 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   `testing.rs`, `hud.rs` (the performance overlay).
 - `examples/counter/` — the tested example. `examples/icons/` — icon probe.
   `examples/shadcn/` — the DOM layer under a real component library.
-  `examples/sveltekit/` — a SvelteKit app, built with `sepalKit()`.
+  `examples/sveltekit/` — a SvelteKit app (`sveltekit(withSepal(…))`, `sepal()`).
+  `examples/bind-rest/` — `bind:` through `{...rest}` with Svelte imported
+  before Sepal (`tests/bind_rest.rs`).
   `examples/router-dom-probe/` — SvelteKit's router and Bits UI together.
   `examples/tracker/` — the benchmark app, a SvelteKit app (docs/tracker-plan.md,
   `compare/`). `examples/quakes/` — a SvelteKit app made
@@ -159,7 +166,14 @@ profile while iterating; it is already tuned in `Cargo.toml`.
    (`SvelteDocument::report_layout` -> `__sb.layout`). Do not add a second
    exception.
 3. **Node ids are allocated in JS** and never reused. Fragments have id 0 and
-   never exist on the host.
+   never exist on the host. **One exception, added on 25 Nov 2026 when apps
+   became web builds loaded from `index.html`:** the nodes the host parses
+   from the page are numbered by the host, `1..n` in document order, and
+   handed to JavaScript once, as `__sb_page`, before any script runs
+   (`page.rs`, `page.js`). `renderer.js` builds its mirror from them and
+   allocates from `n + 1`. That is the only time the host tells JavaScript
+   about nodes; from then on the mirror is JavaScript's own (invariant 2).
+   Do not add a second exception.
 4. **`protocol.js` and `ops.rs` must stay in sync.** A new opcode needs: the
    constant in both files, the arity in `test/mock-host.js`, a case in
    `apply_batch`, and a test.
@@ -363,13 +377,15 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **No `URL`, `URLSearchParams`, `location` or `history` in QuickJS.** The
   DOM layer provides them (`dom: true`, and every SvelteKit app); code that
   runs without it must not reach for them.
-- **The app bundle runs in strict mode, and must stay that way.** Its
-  sources are ES modules, which are always strict. `sepal()` asks Rolldown
-  for `output.strict`; `sepalKit()`'s `convert()` puts `'use strict'` at the
-  top of the script it wraps SvelteKit's module in. Run as a sloppy script,
-  the minified Tracker broke on V8 only (a renderer method missing on
+- **The app's code runs in strict mode, and must stay that way.** It is
+  ES modules, and the host loads them as modules, which are always strict.
+  Only the page's inline classic scripts are sloppy, as in a browser (they
+  are SvelteKit's few lines of start-up). Run as a sloppy script, the
+  minified Tracker once broke on V8 only (a renderer method missing on
   Insights), and QuickJS hid it.
-- **`version.pollInterval` is 0 under `sepalKit()`, and must stay so.**
+- **`version.pollInterval` is 0 in a SvelteKit app, and must stay so.**
+  `withSepal()` sets it and throws on more; `sepal()` and the adapter stop a
+  build without it.
   SvelteKit 3 polls for a new app version every hour by default: a wake-up
   on a timer, which breaks invariant 7, and a request to `app.localhost`
   that nothing answers. Updates come through `sepal/updater`.
@@ -381,8 +397,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   do that. `goto` does not wait.
 - **SvelteKit's route announcer** (`#svelte-announcer`) is a 1px
   `overflow: hidden` box at the top left whose text overflows it, and Blitz
-  hit-tests overflowing content. `sepalKit()` gives it `pointer-events:
-  none` in `app.css`; without that it took clicks at the top left after
+  hit-tests overflowing content. `sepal/adapter` gives it `pointer-events:
+  none` in a `<style>` in `index.html`; without that it took clicks at the top left after
   the first navigation. The real fix is a Blitz patch that clips hit
   testing to `overflow: hidden`, which also changes what the Tracker tests
   can click (they click rows far below the window).
@@ -393,13 +409,14 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   shows the error page (the Tracker has one).
 - **An error page in a SvelteKit app waits for a host call.** On any page
   with status 400 or more, SvelteKit runs `updated.check()`: a `fetch` of
-  `/_app/version.json`, which the host refuses on a thread, in real time.
+  `/_app/version.json`, which the host answers from the app folder on a
+  thread, in real time.
   Headless, wait for an error page with `until` (`until_shown` in
   `tests/tracker/main.rs`), not `doc.wait`: under load the answer comes
   after the virtual time has passed. The same holds for anything else that
   waits on a host call.
-- **Server code stops a `sepalKit()` build** (`server_files` in
-  `sveltekit.js`): `+page.server.*`, `+layout.server.*`, `+server.*`,
+- **Server code stops a SvelteKit build** (`server_files` in
+  `adapter.js`): `+page.server.*`, `+layout.server.*`, `+server.*`,
   `hooks.server.*`, `*.remote.*`. They need the backend thread; the check
   comes out when it lands.
 - **Resolve condition.** Svelte's custom-renderer build is selected with the
@@ -444,6 +461,14 @@ profile while iterating; it is already tuned in `Cargo.toml`.
 - **Two things use the network:** the updater (`updater.rs`, HTTPS only) and
   `fetch` (`api/http.rs`, only to URLs in `permissions.http`, every redirect
   hop checked). Resources (`net.rs`) never touch the network; keep it that way.
+- **Everything the page loads comes from the app folder**: modules (both
+  engines' loaders), stylesheets, fonts and images, through `net.rs`, which
+  maps `http://app.localhost/` to the folder (canonical paths: no way out
+  through `..` or a symlink). A script, stylesheet, `modulepreload` or font
+  from `http(s)://` stops the build (`vite/page.js`, for `sepal()` and the
+  adapter alike), and the host refuses it as well. `fetch` to the app's own
+  origin is answered from the folder too, without `permissions.http`, and
+  never reaches the network.
 - **Desktop APIs are default-deny.** A new one needs: a permission in
   `api::Permissions`, the check in the host (never in JS), a refusal message
   built with `denied()`, and a line in the "refused without permission" test.
@@ -512,7 +537,8 @@ profile while iterating; it is already tuned in `Cargo.toml`.
   not. For a translated element, use `click_at`.
 - Renderer-only changes: extend `packages/sepal/test/mock-host.test.js`.
   DOM layer changes: `packages/sepal/test/dom.test.js`, and `tests/shadcn.rs`.
-- Preset changes: `packages/sepal/test/`. `sepalKit()` changes: also
+- Preset changes: `packages/sepal/test/`. Changes to SvelteKit's setup
+  (`withSepal()`, the adapter, `patch`): also
   `tests/sveltekit.rs`, `tests/router_dom.rs` and the Tracker's tests
   (`tests/tracker/`), on both engines.
 - Linux CI needs no display for any of the tests.

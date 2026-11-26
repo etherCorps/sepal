@@ -1,11 +1,15 @@
-// The app's window. Needs `permissions.window`.
+// The app's window. Everything but the title needs `permissions.window`.
 //
 // Title, size and icon at startup come from the app config; these change the
 // window while the app runs.
 
 import { host_call } from './host-call.js';
 
-/** @param {string} title @returns {Promise<void>} */
+/**
+ * Set the window's title. Needs no permission: the title is the app's own,
+ * as a page's is on the web (`document.title` does the same).
+ * @param {string} title @returns {Promise<void>}
+ */
 export function setTitle(title) {
 	return host_call('window.set_title', { title });
 }

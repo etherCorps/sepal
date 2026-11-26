@@ -2,7 +2,9 @@
 //
 // A batch is { ops: Int32Array, strings: string[] }. `ops` is a flat list of
 // records: an opcode followed by a fixed number of integer operands. Operands
-// are node ids (allocated by JS, never reused) or indexes into `strings`.
+// are node ids or indexes into `strings`. Node ids are never reused: the host
+// numbers the nodes it parsed from index.html (1 to n, handed to JS once as
+// `__sb_page`), and JS allocates the rest, from n + 1.
 //
 // Keep this file in sync with crates/host/src/ops.rs.
 
@@ -23,9 +25,6 @@ export const OP = {
 	SCROLL: 14, // node, left, top (scroll it to that offset; the host clamps it)
 	SCROLL_INTO_VIEW: 15 // node, block, inline (scroll its ancestors; 0 start, 1 center, 2 end, 3 nearest)
 };
-
-/** Id of the mount target. The host maps it to <body>. */
-export const ROOT_ID = 1;
 
 // Flags returned from dispatch
 export const DISPATCH_PREVENT_DEFAULT = 1;

@@ -1,8 +1,14 @@
-import { sepalKit } from 'sepal/sveltekit';
+import { sveltekit } from '@sveltejs/kit/vite';
+import adapter from 'sepal/adapter';
+import { sepal, withSepal } from 'sepal/vite';
 import { defineConfig } from 'vite';
 
-// `sepalKit()` takes the place of `sveltekit()`. Settings for the app
-// are in sepal.config.ts.
+// SvelteKit's own plugin, given its options through withSepal() (the
+// renderer, no version polling, Sepal's rewrites) with Sepal's adapter, then
+// sepal(). App settings live in sepal.config.ts.
 export default defineConfig({
-	plugins: [sepalKit()]
+	plugins: [
+		sveltekit(withSepal({ adapter: adapter() })),
+		sepal()
+	]
 });

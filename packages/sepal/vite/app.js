@@ -14,6 +14,16 @@ import { find_host } from '@ethercorps/calyx';
 const CONFIG_FILES = ['sepal.config.ts', 'sepal.config.js', 'sepal.config.mjs'];
 
 /**
+ * What `sepal()` tells the SvelteKit adapter (`sepal/adapter`), which runs
+ * inside SvelteKit's build and has no other way to reach it: the project,
+ * the settings from `sepal.config.ts`, and what to do once the app is
+ * written to a directory (open or reload the dev window). `null` until
+ * `sepal()` has run.
+ * @type {{ session: { root: string, options: import('./vite.js').Config, written: (out_dir: string) => void } | null }}
+ */
+export const kit = { session: null };
+
+/**
  * Read the project's config file, if it has one.
  * @param {string} project
  * @param {import('vite').ConfigEnv} env

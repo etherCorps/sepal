@@ -8,15 +8,15 @@
 //! `calyx --updater-keygen <file>`        make an update signing key; prints the public half
 //! `calyx --version`                      the version, the same as the npm package it ships in
 //!
-//! `<dist>` is the directory the Vite preset wrote (`app.js`, `app.css`,
-//! `app.json`). `<app.js> [app.css]` is accepted in its place and runs without
-//! a manifest. With no arguments at all, the host runs the app it is bundled
-//! with (`../Resources` next to the executable, as in a macOS `.app`).
+//! `<dist>` is the app folder the Vite preset wrote: `index.html`, the
+//! modules and stylesheets it loads, other files, and `app.json`. With no
+//! arguments at all, the host runs the app it is bundled with
+//! (`../Resources` next to the executable, as in a macOS `.app`).
 
 use std::path::{Path, PathBuf};
 use std::{env, fs, process::ExitCode};
 
-use sepal::app::{App, Manifest};
+use sepal::app::App;
 use sepal::bundle::bundle_macos;
 use sepal::updater;
 
@@ -41,7 +41,7 @@ fn parse_size(size: &str) -> Option<(u32, u32)> {
 }
 
 fn run(args: &[String]) -> Result<(), String> {
-    const USAGE: &str = "usage: calyx [--watch | --screenshot out.png] <dist | app.js [app.css]> [WIDTHxHEIGHT]\n       calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       calyx --updater-keygen <private-key-file>\n       calyx --version";
+    const USAGE: &str = "usage: calyx [--watch | --screenshot out.png] <dist> [WIDTHxHEIGHT]\n       calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       calyx --updater-keygen <private-key-file>\n       calyx --version";
 
     // Launched from Finder or the Dock: no arguments, the app is inside the bundle.
     if args.is_empty()
@@ -81,7 +81,8 @@ fn run(args: &[String]) -> Result<(), String> {
         [flag, rest @ ..] if flag == "--watch" => (None, true, rest),
         _ => (None, false, args),
     };
-    let (app, rest) = load(args)?.ok_or(USAGE)?;
+    let (mut app, rest) = load(args)?.ok_or(USAGE)?;
+    app.dev = watch;
 
     match shot {
         Some(out) => {
@@ -90,7 +91,11 @@ fn run(args: &[String]) -> Result<(), String> {
         }
         None => {
             let args = args.to_vec();
-            let reload = move || load(&args)?.map(|(app, _)| app).ok_or(USAGE.to_owned());
+            let reload = move || {
+                let (mut app, _) = load(&args)?.ok_or(USAGE.to_owned())?;
+                app.dev = true;
+                Ok(app)
+            };
             window(app, watch.then(|| Box::new(reload) as _))
         }
     }
@@ -273,42 +278,21 @@ fn notarize(_bundle: &Path, _profile: &str) -> Result<(), String> {
 fn bundled_resources() -> Option<PathBuf> {
     let exe = env::current_exe().ok()?;
     let resources = exe.parent()?.parent()?.join("Resources");
-    resources.join("app.js").is_file().then_some(resources)
+    resources.join("index.html").is_file().then_some(resources)
 }
 
-/// Load the app named by the leading arguments and return the rest of them.
-/// `None` if there are no arguments.
+/// Load the app folder named by the first argument and return the rest of
+/// them. `None` if there are no arguments.
 fn load(args: &[String]) -> Result<Option<(App, &[String])>, String> {
-    let Some((first, mut rest)) = args.split_first() else {
+    let Some((first, rest)) = args.split_first() else {
         return Ok(None);
     };
-    let app = if Path::new(first).is_dir() {
-        App::from_dir(Path::new(first))?
-    } else {
-        let css = match rest.split_first() {
-            Some((css, after)) if parse_size(css).is_none() => {
-                rest = after;
-                read(css)?
-            }
-            _ => String::new(),
-        };
-        App {
-            js: read(first)?,
-            css,
-            manifest: Manifest::default(),
-            // Bare `app.js` resolves to "", which means the current directory.
-            dir: Path::new(first).parent().map(|dir| {
-                if dir.as_os_str().is_empty() {
-                    Path::new(".")
-                } else {
-                    dir
-                }
-                .to_owned()
-            }),
-            bundle: None,
-        }
-    };
-    Ok(Some((app, rest)))
+    if !Path::new(first).is_dir() {
+        return Err(format!(
+            "{first} is not an app folder: give the directory the build wrote, with index.html in it"
+        ));
+    }
+    Ok(Some((App::from_dir(Path::new(first))?, rest)))
 }
 
 #[cfg(feature = "window")]

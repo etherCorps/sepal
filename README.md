@@ -114,7 +114,7 @@ Permissions, sidecars, adapters and Vite plugins keep their usual names.
 
 | Package | What it is | Directory |
 |---|---|---|
-| `sepal` | The runtime (`mount`, the renderer, the op protocol, the desktop APIs), the Vite presets (`sepal/vite`, and `sepal/sveltekit` for SvelteKit apps), and the `sepal` command. The runtime has no Node code. | `packages/sepal` |
+| `sepal` | The runtime (`mount`, the renderer, the op protocol, the desktop APIs), the Vite preset and SvelteKit's options (`sepal()` and `withSepal()` from `sepal/vite`), the SvelteKit adapter (`sepal/adapter`), and the `sepal` command. The runtime has no Node code. | `packages/sepal` |
 | `create-sepal` | The seeds: the starter templates. | `packages/create` |
 | `@ethercorps/calyx` | Calyx, the host: the lookup that finds this machine's binary. | `packages/host` |
 | `@ethercorps/calyx-<platform>` | The binary for one platform; only the matching one installs. | `packages/calyx-<platform>` |
@@ -198,7 +198,6 @@ export default defineConfig({
 	permissions: {
 		// what the app may do outside its window; see "Desktop APIs"
 	}
-	// entry: the module the app starts from (default src/main.ts)
 	// dom: true, for component libraries written for the web; see "Component libraries"
 });
 ```
@@ -214,7 +213,7 @@ export default defineConfig({
 The file can also be `.js` or `.mjs`, and can export a function, which gets
 Vite's `{ mode, command }`. Anything passed to `sepal({ … })` directly
 overrides the file, key by key. In watch mode, edits to `app` and
-`permissions` are picked up on the next build; a change to `entry` needs
+`permissions` are picked up on the next build; a change to `dom` needs
 Vite restarted.
 
 The icon is a static file: put it in `static/` and it is copied with the
@@ -223,9 +222,8 @@ An app with neither gets the Sepal icon, written into the build as
 `icon.png`; the starter relies on that until you add your own.
 
 The build writes `dist/app.json`. Point
-the host at the directory and it picks them up: `calyx dist`.
-Every field is optional; `calyx app.js app.css` still works and
-runs without a manifest.
+the host at the directory and it picks it up: `calyx dist`. Every field is
+optional.
 
 | Platform | Where the icon shows |
 |---|---|
@@ -240,6 +238,40 @@ items ("Quit Counter") use. The Dock label, the app switcher and Activity
 Monitor come from the app bundle a process runs from, so `sepal run` and dev
 run an app with a `name` out of a throwaway bundle in `node_modules/.sepal`.
 Started by hand (`calyx dist`), or without a `name`, it shows as `calyx`.
+
+## The app folder
+
+A build is a web build. `vite build` writes `dist/`:
+
+```
+dist/
+  index.html      the page the app starts from
+  assets/         its ES module chunks, stylesheet and fonts (_app/ in a SvelteKit app,
+                  which has a stylesheet per route and _app/version.json)
+  …               the files from static/, as they are
+  app.json        what the host needs: name, window, permissions, updater
+  icon.png        the icon, when the app has one, or the Sepal icon
+```
+
+The host loads it as a browser loads a site, from `http://app.localhost/`,
+an address that only names the folder: it parses `index.html`, runs its
+scripts, and loads modules, stylesheets, fonts and images from the folder.
+Nothing on the page comes from the network. A path that leaves the folder,
+through `..` or a symlink, is refused.
+
+What the host does with what a page holds:
+
+| In the page | |
+|---|---|
+| `<script type="module">`, with `src` or inline | runs after the page is parsed, in document order; its imports and `import()` load from the app folder |
+| an inline classic `<script>` | runs before the modules, in document order; one that throws does not stop the next. `document.currentScript` is its element |
+| `<link rel="stylesheet">`, `<style>` | applied as the page is parsed; one the app adds later gets a `load` or `error` event |
+| `<link rel="modulepreload">` | allowed; the module loads when it is imported |
+| `<title>` | the window's title, unless `app.window.title` sets one; `document.title` changes it later, with no permission needed |
+| `<meta>`, `<link rel="icon">` | kept in the page, and otherwise ignored: the icon is `app.json`'s |
+| `@font-face`, `<img>`, `url()` in CSS | from the app folder, or `data:` URLs |
+| a script, stylesheet, `modulepreload` or font from `http(s)://` | **stops the build**; the host refuses it too |
+| `<script src>` without `type="module"`, import maps, `on*` attributes, `<iframe>`, `document.write()` | not run, or not supported; the build warns |
 
 ## Bundle a macOS app
 
@@ -298,17 +330,30 @@ error pages, `$app/state`, `$app/navigation` and the back button. The app is
 a SvelteKit single-page app; the starter is one, and so are
 `examples/tracker`, `examples/sveltekit` and `examples/quakes`.
 
-In `vite.config.ts`, `sepalKit()` takes the place of `sveltekit()`:
+In `vite.config.ts`, SvelteKit's own plugin gets its options through
+`withSepal()`, with Sepal's adapter, and `sepal()` comes after it:
 
 ```ts
-import { sepalKit } from 'sepal/sveltekit';
+import { sveltekit } from '@sveltejs/kit/vite';
+import adapter from 'sepal/adapter';
+import { sepal, withSepal } from 'sepal/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [sepalKit()]
-	// sepalKit({ kit: { … } }) passes options on to SvelteKit
+	plugins: [sveltekit(withSepal({ adapter: adapter() })), sepal()]
 });
 ```
+
+`withSepal()` keeps the app's own options (anything SvelteKit or
+vite-plugin-svelte takes) and adds what every app needs: components
+compiled for the Sepal renderer (`compilerOptions.experimental.customRenderer`),
+no version polling (`version.pollInterval: 0`), and Sepal's rewrites of
+`bind:` and `<svelte:head>` after the app's own preprocessors. It throws on
+an adapter other than `sepal/adapter`, another renderer, or a
+`pollInterval` above 0. An app that sets these options by hand adds the
+rewrites with `sepalPreprocess()` from `sepal/vite`, last in `preprocess`;
+`sepal()` stops the build, naming `withSepal()`, when any of the three is
+missing. `adapter({ out })` writes somewhere other than `dist/`.
 
 and the root layout turns server rendering off, since there is no server:
 
@@ -320,8 +365,9 @@ export const ssr = false;
 Everything else is as for any Sepal app: settings in `sepal.config.ts`,
 the icon and other files in `static/`, `vite build` writes `dist/`,
 `vite build --watch` opens the app and reloads it on every save, and
-`sepal run` and `bundle` work on the result. Needs `@sveltejs/kit` 3.4 or
-later in the project, and SvelteKit's `src/app.html`; no adapter. Run
+`sepal run` and `bundle` work on the result. Needs `@sveltejs/kit` 3.4 in
+the project (sepal's peer range is `>=3.4 <3.5`), and SvelteKit's
+`src/app.html`. Run
 `svelte-kit sync` before `svelte-check` (the starter's `check` does), since
 the project's `tsconfig.json` extends the one it writes.
 
@@ -355,14 +401,16 @@ What is different from SvelteKit on the web:
 - **The address is made up.** The app starts at `http://app.localhost/`, and
   nothing is ever fetched from there. Static files are addressed from the
   root as usual (`<img src="/logo.svg">`).
-- **The DOM layer is always there.** `sepalKit()` loads it, so `dom: true` is
+- **The DOM layer is always there.** `sepal()` loads it, so `dom: true` is
   not needed.
 - **`<svelte:head>`** is rewritten: its `<title>` sets `document.title`, which
-  is the window's title when the app has `permissions.window`. Anything else
-  in it is dropped with a warning, since an app has no `<head>`.
-- **One bundle.** All pages are in `app.js`; there is no code splitting.
+  is the window's title. Anything else in it is dropped with a warning.
+- **SvelteKit's own output.** The adapter writes what SvelteKit builds for a
+  single-page app: `index.html`, the chunks of its default split build, the
+  stylesheets and the static files, and `app.json`. A route's code is read
+  from the app folder when it is first opened.
 - **No version polling.** SvelteKit checks for a new version every hour by
-  default; `sepalKit()` turns that off, as it would wake an idle app.
+  default; `withSepal()` turns that off, as it would wake an idle app.
   Updates come through `sepal/updater`.
 - **A link waits a frame.** SvelteKit lets the page repaint before it follows
   a link (a `requestAnimationFrame`, then a `setTimeout(0)`): in Sepal, the
@@ -371,19 +419,22 @@ What is different from SvelteKit on the web:
 - **No scroll restoration**, and whatever else needs a part of the browser
   that the DOM layer does not have (see "Component libraries").
 
-How it works, and what can break: the build edits two places in SvelteKit's
+How it works, and what can break: `sepal()` edits two places in SvelteKit's
 own client code as it is bundled (to load the DOM layer first, and to mount
-SvelteKit's root component with this renderer), then turns SvelteKit's
-output, an HTML page that imports one module, into the script the host
-loads. Those edits follow SvelteKit's source. If a SvelteKit release changes
-those lines, the build stops and says so. Tested with 3.4.0.
+SvelteKit's root component with this renderer), and the host loads the page
+SvelteKit wrote, as a browser would. Those edits follow SvelteKit's source. If a SvelteKit release changes
+those lines, the build stops and says so. Tested with 3.4.0, which is why
+the peer range stops before 3.5; CI builds the starter against the newest
+SvelteKit too (`kit-latest`, allowed to fail), and the range is raised by
+hand once that passes.
 
 ### Apps without routes
 
 An app with one screen, or a router of its own, uses `sepal()` from
-`sepal/vite` and starts from `src/main.ts`, which mounts the app
-(`examples/counter`, `examples/shadcn`). `sepal()` stops the build if it
-finds `src/routes` and no `src/main`, and points to `sepalKit()`.
+`sepal/vite` alone and starts from `index.html`, whose module script
+(`src/main.ts`) mounts the app (`examples/counter`, `examples/shadcn`).
+`sepal()` stops the build if it finds `src/routes` without SvelteKit, and
+shows the setup above.
 
 ## Component libraries: shadcn-svelte
 
@@ -560,7 +611,7 @@ Images load from two places and nowhere else:
 </script>
 
 <img src={logo} alt="" />
-<img src="photo.png" alt="" />   <!-- a file next to app.js: put it in static/ -->
+<img src="photo.png" alt="" />   <!-- a file in the app folder: put it in static/ -->
 ```
 
 - `data:` URLs, which is what an `import` of an asset becomes.
@@ -744,8 +795,9 @@ What to know:
 ## TypeScript
 
 The examples are TypeScript: `src/main.ts`, `<script lang="ts">` and
-`vite.config.ts`, checked with `svelte-check`. The preset picks up `src/main.ts`
-or `src/main.js`, whichever exists. Plain JavaScript apps work unchanged.
+`vite.config.ts`, checked with `svelte-check`. The module script in
+`index.html` names the entry, `.ts` or `.js`; plain JavaScript apps work
+unchanged.
 
 The packages ship declarations for `mount`, `unmount`, the desktop APIs and
 the Vite presets. Their source stays JavaScript with JSDoc; `tsc` checks it and
@@ -773,12 +825,14 @@ packages/sepal/           sepal: the runtime, the preset and the command
   src/fs.js, dialog.js, clipboard.js, shell.js, window.js   desktop APIs
   src/dom.js              window, document and element methods, for `dom: true`
   src/url.js, text.js     URL, URLSearchParams, TextEncoder, TextDecoder (part of the DOM layer)
-  vite/vite.js            sepal/vite, the Vite preset: one app.js (IIFE) + one app.css
+  vite/vite.js            sepal/vite: sepal(), the Vite preset (a web build from index.html), and withSepal(), SvelteKit's options
   vite/bindings.js        rewrites `bind:` on elements, which Svelte refuses here
   vite/head.js            rewrites `<svelte:head>`, likewise
   vite/app.js             sepal.config.ts, the manifest, the dev window: shared by both presets
   vite/icon.png           the Sepal icon, for apps without one (a copy of assets/brand/sepal-app-icon-1024.png)
-  vite/sveltekit.js       sepal/sveltekit, sepalKit(): SvelteKit on this renderer
+  vite/adapter.js         sepal/adapter: SvelteKit's output as SvelteKit writes it, plus app.json
+  vite/page.js            what index.html and stylesheets may load: the app folder only
+  vite/sveltekit.js       sepal/sveltekit: sepalKit(), which only says how to move
   cli.js                  the sepal command
   test/                   a host written in JS, for testing without Rust, and the preset's tests
 packages/create/          create-sepal
@@ -878,7 +932,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Resources: only data: URLs and files inside the app directory load; bad URLs do not crash | `tests/icons.rs` |
 | SvelteKit's router in the Tracker: links, `goto`, a redirect, nested layouts that stay mounted, `load` with params, errors inside a layout, an unknown address as a 404 | `tests/tracker/` |
 | SvelteKit's router with Bits UI: twenty navigations leave no popups or nodes behind, a link inside a Dialog navigates, a click in a Select list picks | `tests/router_dom.rs` |
-| Server files (`+page.server.*`, `+server.*`, `hooks.server.*`, `*.remote.*`) stop a `sepalKit()` build; `src/routes` without `src/main` stops a `sepal()` build | `test/sveltekit.test.js`, `test/preset.test.js` |
+| `withSepal()`: what it throws on, the app's own options kept, the rewrites appended once; SvelteKit's options without it stop the build, naming it. Server files (`+page.server.*`, `+server.*`, `hooks.server.*`, `*.remote.*`) stop the build; `src/routes` without SvelteKit stops a `sepal()` build | `test/sveltekit.test.js`, `test/adapter.test.js`, `test/preset.test.js` |
 | Updater: signatures, feed rules, a bundle replaced from a local server, tampered and foreign-signed updates refused, the JS API | `tests/updater.rs` |
 | Updater on a real bundle: 0.1.0 finds 0.2.0, verifies, replaces itself, relaunches; code signature still valid | `scripts/updater-e2e.sh` (macOS) |
 | Desktop APIs from JavaScript: fetch (methods, bodies, redirects, errors), files (text, bytes, directories), URL and path scopes, every call refused without permission, a slow request not blocking the UI | `tests/desktop.rs` |
@@ -894,7 +948,7 @@ Checked on Linux x86-64, in a sandbox with no display:
 | Children that are added, removed or moved are styled, and so is what depends on their position (`:first-child`, `:nth-child()`, `a + b`, `:empty`) | `tests/restyle.rs` |
 | `:has()`: follows an attribute, a child that arrives or leaves, and the focus, for a parent, an ancestor, what is under it, and siblings on either side | `tests/restyle.rs` |
 | The window's GPU renderer draws what the CPU screenshots show: the same page differs by at most 2/255 per channel | `drive … gpushot:` against `shot:` (needs a GPU; by hand) |
-| A SvelteKit app built with `sepalKit()`: a link, `goto`, a parameter with `load`, `$app/state`, back twice, component styles, a static image by root path, `<svelte:head>` titles | `tests/sveltekit.rs`, `test/head.test.js` |
+| A SvelteKit app built with `withSepal()` and `sepal()`: a link, `goto`, a parameter with `load`, `$app/state`, back twice, component styles, a static image by root path, `<svelte:head>` titles | `tests/sveltekit.rs`, `test/head.test.js` |
 | SvelteKit in dev: an edit rebuilds, `dist/` has the change, the host is told to reload | by hand, with a stand-in host |
 | `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder` agree with Node's on 231 URLs and on text cut at every byte | `test/url.test.js`, `test/text.test.js` |
 | A promise rejected with nobody listening is reported as `Uncaught (in promise)`; one that is handled is not | `tests/counter.rs`, on both engines |

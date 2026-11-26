@@ -2,15 +2,13 @@
 // with `dom: true`. The mock host's context has ECMAScript built-ins only, so
 // everything a library finds here was put there by the layer.
 
-import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { MockHost } from './mock-host.js';
 
-const bundle = fileURLToPath(new URL('../../../examples/shadcn/dist/app.js', import.meta.url));
 const host = new MockHost();
-host.eval(fs.readFileSync(bundle, 'utf8'));
+await host.load(fileURLToPath(new URL('../../../examples/shadcn/dist', import.meta.url)));
 // The router shows the page once its module has loaded.
 await host.flush_microtasks();
 assert.deepEqual(host.logs.filter(([level]) => level === 2), [], 'no errors logged during mount');
@@ -27,6 +25,40 @@ assert.equal(run('document.body instanceof HTMLElement && !(document.body instan
 assert.equal(run(`document.querySelector('#count').tagName`), 'BUTTON');
 assert.equal(run(`document.querySelectorAll('main > div [data-slot=button]').length`), 8);
 assert.equal(run(`document.getElementById('count').closest('main') === document.querySelector('main')`), true);
+// A selector that ends in a tag tries only the elements of that tag. The
+// answers are the walk's (`*` always walks): document order, below the scope,
+// nothing detached or removed.
+run(`
+	globalThis.made = (tag, id) => Object.assign(document.createElement(tag), { id });
+	globalThis.a = made('aside', 'a');
+	globalThis.b = made('aside', 'b');
+	globalThis.c = made('aside', 'c');
+	made('aside', 'never-inserted');
+	document.body.appendChild(b);
+	document.body.insertBefore(a, b);
+	a.appendChild(c);
+	const gone = made('aside', 'removed');
+	document.body.appendChild(gone);
+	gone.remove();
+	globalThis.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+	svg.appendChild(made('linearGradient', 'gradient'));
+	document.body.appendChild(svg);
+	for (let i = 0; i < 70; i++) document.body.appendChild(made('section', 's' + i));
+	globalThis.ids = (nodes) => [...nodes].map((node) => node.id || node.tagName).join(' ');
+	globalThis.walked = (selector, scope = document) => ids([...scope.querySelectorAll('*')].filter((node) => node.matches(selector)));
+`);
+for (const selector of ['aside', 'aside aside', 'body > aside', 'aside, svg', 'svg, aside', 'linearGradient', 'LINEARGRADIENT', 'meta[property=csp-nonce]', 'title', 'section', 'html', 'aside:not(#a)']) {
+	assert.equal(run(`ids(document.querySelectorAll(${JSON.stringify(selector)}))`), run(`walked(${JSON.stringify(selector)})`), selector);
+	assert.equal(run(`document.querySelector(${JSON.stringify(selector)})?.id ?? null`), run(`[...document.querySelectorAll('*')].find((node) => node.matches(${JSON.stringify(selector)}))?.id ?? null`), selector);
+}
+assert.equal(run(`ids(document.querySelectorAll('aside'))`), 'a c b');
+assert.equal(run(`ids(a.querySelectorAll('aside'))`), 'c', 'below the scope only');
+assert.equal(run(`ids(document.getElementsByTagName('aside'))`), 'a c b');
+assert.equal(run(`document.querySelector('meta[property=csp-nonce]')`), null);
+run(`document.head.appendChild(Object.assign(document.createElement('meta'), { id: 'nonce' })).setAttribute('property', 'csp-nonce')`);
+assert.equal(run(`document.querySelector('meta[property=csp-nonce]').id`), 'nonce');
+run(`document.getElementById('nonce').remove(); for (const node of document.querySelectorAll('aside, svg, section')) node.remove()`);
+assert.equal(run(`document.querySelector('meta[property=csp-nonce]') ?? document.querySelector('aside') ?? document.querySelector('section')`), null);
 // Libraries borrow methods from the class, not from the node.
 assert.equal(run(`Element.prototype.matches.call(document.getElementById('count'), 'button[data-slot^=but]:not([disabled])')`), true);
 

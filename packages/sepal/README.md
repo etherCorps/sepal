@@ -41,15 +41,24 @@ What is in here:
 | `sepal/updater` | self-update |
 | `sepal/dom` | a small DOM for component libraries written for the web (`dom: true`) |
 | `sepal/renderer`, `sepal/protocol` | what the Vite preset and the host are built against |
-| `sepal/vite` | the Vite preset for apps without routes, `sepal()`, and `defineConfig` for `sepal.config.ts` |
-| `sepal/sveltekit` | `sepalKit()`, for apps with pages in `src/routes`: it takes the place of both `sveltekit()` and the adapter |
+| `sepal/vite` | the Vite preset, `sepal()`; `withSepal()`, SvelteKit's options for an app; `sepalPreprocess()`; and `defineConfig` for `sepal.config.ts` |
+| `sepal/adapter` | the SvelteKit adapter |
 
-The preset compiles Svelte for the Blitz renderer, writes the one `app.js` and
-`app.css` the host loads, reads `sepal.config.ts`, and in `vite build --watch`
+The preset compiles Svelte for the Blitz renderer and writes a web build the
+host loads: `index.html`, its ES module chunks and stylesheets, the static
+files and `app.json`. It reads `sepal.config.ts`, and in `vite build --watch`
 opens the app and reloads it on save.
 
 ```ts
-// vite.config.ts
+// vite.config.ts, for an app with pages in src/routes: SvelteKit's own plugin
+import { sveltekit } from '@sveltejs/kit/vite';
+import adapter from 'sepal/adapter';
+import { sepal, withSepal } from 'sepal/vite';
+export default { plugins: [sveltekit(withSepal({ adapter: adapter() })), sepal()] };
+```
+
+```ts
+// vite.config.ts, for an app without routes, which starts from index.html
 import { sepal } from 'sepal/vite';
 export default { plugins: [sepal()] };
 ```

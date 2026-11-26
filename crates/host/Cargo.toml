@@ -11,7 +11,11 @@ publish = false
 [dependencies]
 blitz-dom = { version = "=0.3.0-beta.4", features = ["scrollbars"] }
 blitz-traits = "=0.3.0-beta.4"
-rquickjs = { version = "0.14", features = ["array-buffer"] }
+# The page: `index.html`. blitz-html's tree builder, driven by html5ever
+# directly, which leaves out its XHTML sniffing and xml5ever (+0.7 MB in all).
+blitz-html = "=0.3.0-beta.4"
+html5ever = "0.40.1"
+rquickjs = { version = "0.14", features = ["array-buffer", "loader"] }
 # A second engine, behind the `engine-v8` feature. See `src/js/v8.rs`.
 v8 = { version = "152", optional = true }
 keyboard-types = "0.8"

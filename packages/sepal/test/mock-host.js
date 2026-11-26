@@ -1,8 +1,15 @@
 // A host written in plain JS. It applies op batches to a simple tree, which
 // lets the renderer be tested without Rust, a GPU or a window.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import vm from 'node:vm';
-import { OP, ROOT_ID } from '../src/protocol.js';
+import { OP } from '../src/protocol.js';
+
+// The page the Rust host would have parsed: <html><head></head><body></body></html>.
+const HTML = 1;
+const HEAD = 2;
+const BODY = 3;
 
 const ARITY = {
 	[OP.CREATE_ELEMENT]: 2,
@@ -25,7 +32,13 @@ const ARITY = {
 export class MockHost {
 	constructor() {
 		this.nodes = new Map();
-		this.nodes.set(ROOT_ID, { id: ROOT_ID, kind: 'element', name: 'body', attrs: {}, children: [], parent: null });
+		const html = { id: HTML, kind: 'element', name: 'html', attrs: {}, children: [], parent: null };
+		for (const [id, name] of [[HEAD, 'head'], [BODY, 'body']]) {
+			const node = { id, kind: 'element', name, attrs: {}, children: [], parent: html };
+			html.children.push(node);
+			this.nodes.set(id, node);
+		}
+		this.nodes.set(HTML, html);
 		this.listening = new Set();
 		/** Ids of the nodes the app wants boxes for. */
 		this.measured = new Set();
@@ -40,6 +53,12 @@ export class MockHost {
 
 		// A context with ECMAScript built-ins only: no DOM, no timers, no console.
 		this.context = vm.createContext({
+			// What the Rust host hands over before any script runs (its page.js).
+			__sb_page: {
+				ops: [OP.CREATE_ELEMENT, HTML, 0, OP.CREATE_ELEMENT, HEAD, 1, OP.INSERT, HTML, HEAD, 0, OP.CREATE_ELEMENT, BODY, 2, OP.INSERT, HTML, BODY, 0],
+				strings: ['html', 'head', 'body'],
+				next_id: BODY + 1
+			},
 			__sb_host: {
 				log: (level, message) => this.logs.push([level, message]),
 				now: () => this.time
@@ -47,12 +66,52 @@ export class MockHost {
 		});
 	}
 
+	/** `<body>`, where apps mount. */
 	get root() {
-		return this.nodes.get(ROOT_ID);
+		return this.nodes.get(BODY);
 	}
 
 	eval(code, filename = 'app.js') {
 		vm.runInContext(code, this.context, { filename });
+		this.settle();
+	}
+
+	/**
+	 * Load an app folder as the Rust host does: the module scripts of its
+	 * index.html, and what they import, by URL from the folder. Needs
+	 * `node --experimental-vm-modules`.
+	 * @param {string} dist
+	 */
+	async load(dist) {
+		/** @type {Map<string, any>} */
+		const modules = new Map();
+		/** @param {string} url */
+		const module_at = (url) => {
+			let module = modules.get(url);
+			if (module === undefined) {
+				module = new /** @type {any} */ (vm).SourceTextModule(readFileSync(join(dist, new URL(url).pathname), 'utf8'), {
+					context: this.context,
+					identifier: url,
+					initializeImportMeta: (/** @type {any} */ meta) => void (meta.url = url),
+					importModuleDynamically: async (/** @type {string} */ specifier) => {
+						const imported = module_at(new URL(specifier, url).href);
+						await imported.link(link);
+						await imported.evaluate();
+						return imported;
+					}
+				});
+				modules.set(url, module);
+			}
+			return module;
+		};
+		/** @param {string} specifier @param {any} referrer */
+		const link = (specifier, referrer) => module_at(new URL(specifier, referrer.identifier).href);
+		const page = readFileSync(join(dist, 'index.html'), 'utf8');
+		for (const [, src] of page.matchAll(/<script type="module"[^>]*\ssrc="([^"]+)"/g)) {
+			const module = module_at(new URL(src, 'http://app.localhost/').href);
+			await module.link(link);
+			await module.evaluate();
+		}
 		this.settle();
 	}
 
@@ -160,7 +219,7 @@ export class MockHost {
 
 	attached(node) {
 		while (node.parent) node = node.parent;
-		return node.id === ROOT_ID;
+		return node.id === HTML;
 	}
 
 	dispatch(node, type, detail = null, bubbles = true) {

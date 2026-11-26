@@ -24,7 +24,7 @@ fn scratch(name: &str) -> PathBuf {
 #[test]
 fn reads_what_the_vite_preset_wrote() {
     let app = App::from_dir(counter_dist()).expect("run `pnpm run build` first");
-    assert!(!app.js.is_empty() && !app.css.is_empty());
+    assert!(app.html.contains("<html"));
 
     let manifest = app.manifest;
     assert_eq!(manifest.name.as_deref(), Some("Counter"));
@@ -46,15 +46,15 @@ fn reads_what_the_vite_preset_wrote() {
 #[test]
 fn a_directory_without_a_manifest_gets_defaults() {
     let dir = scratch("no-manifest");
-    std::fs::write(dir.join("app.js"), "").unwrap();
+    std::fs::write(dir.join("index.html"), "<!doctype html><title>x</title>").unwrap();
 
     let app = App::from_dir(&dir).unwrap();
-    assert_eq!(app.css, "", "app.css is optional");
+    assert!(app.html.contains("<title>x</title>"));
     assert!(app.manifest.title.is_none() && app.manifest.icon.is_none());
     assert_eq!(app.manifest.size(), (800, 600));
 
     let missing = App::from_dir(&scratch("empty")).err().unwrap();
-    assert!(missing.contains("app.js"), "{missing}");
+    assert!(missing.contains("index.html"), "{missing}");
 }
 
 #[test]

@@ -1,19 +1,35 @@
-//! SvelteKit itself, built with `sepalKit()` (`examples/sveltekit`),
-//! with its own client router running in the host.
+//! SvelteKit itself (`examples/sveltekit`: `sveltekit(withSepal(…))`,
+//! `sepal/adapter`, `sepal()`), SvelteKit's split build loaded from its
+//! index.html, with its own client router running in the host.
 //!
-//! Build the bundle first: `pnpm run build` in the repository root.
+//! Build the app first: `pnpm run build` in the repository root.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use sepal::SvelteDocument;
+use sepal::api::Permissions;
 use sepal::app::App;
 
-fn load() -> SvelteDocument {
-    let dist = Path::new(concat!(
+fn dist() -> PathBuf {
+    Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../examples/sveltekit/dist"
-    ));
-    let app = App::from_dir(dist).expect("run `pnpm run build` in the repository root first");
+    ))
+    .to_path_buf()
+}
+
+fn load() -> SvelteDocument {
+    load_with(None)
+}
+
+/// With these permissions instead of the app's own.
+fn load_with(permissions: Option<Permissions>) -> SvelteDocument {
+    let mut app =
+        App::from_dir(&dist()).expect("run `pnpm run build` in the repository root first");
+    if let Some(permissions) = permissions {
+        app.manifest.permissions = permissions;
+    }
     let mut doc = SvelteDocument::for_app(&app).unwrap();
     doc.layout(800, 600);
     // SvelteKit loads the first route's modules before it shows anything.
@@ -100,5 +116,105 @@ fn sveltekit_routes_between_pages() {
             .eval_string("location.pathname + ' ' + history.length")
             .unwrap(),
         "/about 4"
+    );
+}
+
+/// A stylesheet the app adds at run time gets `load` or `error`, as in a
+/// browser: Vite waits for one before it runs a chunk with styles of its
+/// own. It sets `rel` as a property, so that is what this does. A missing
+/// file and one on the network are errors; the host never fetches the second.
+#[test]
+fn stylesheets_added_at_run_time_say_whether_they_loaded() {
+    let mut doc = load();
+    let assets = dist().join("_app/immutable/assets");
+    let css = std::fs::read_dir(&assets)
+        .unwrap()
+        .filter_map(|entry| entry.ok()?.file_name().into_string().ok())
+        .find(|name| name.ends_with(".css"))
+        .expect("SvelteKit wrote a stylesheet");
+    let script = format!(
+        "globalThis.heard = [];
+         for (const href of ['/_app/immutable/assets/{css}', '/missing.css', 'https://example.com/remote.css']) {{
+             const link = document.createElement('link');
+             link.rel = 'stylesheet';
+             link.href = href;
+             link.addEventListener('load', () => heard.push('load ' + href));
+             link.addEventListener('error', () => heard.push('error ' + href));
+             document.head.appendChild(link);
+         }}
+         'ok'"
+    );
+    doc.js().eval_string(&script).unwrap();
+    doc.settle();
+    assert_eq!(
+        doc.js().eval_string("heard.join(', ')").unwrap(),
+        format!(
+            "load /_app/immutable/assets/{css}, error /missing.css, error https://example.com/remote.css"
+        )
+    );
+}
+
+/// Modules load from the app folder only: an import from the network is
+/// refused, and the app hears why.
+#[test]
+fn a_module_from_the_network_is_refused() {
+    let mut doc = load();
+    doc.js()
+        .eval_string(
+            "globalThis.outcome = 'pending';
+             import('https://example.com/remote.js').then(() => (outcome = 'loaded'), (error) => (outcome = 'refused: ' + error.message));
+             'ok'",
+        )
+        .unwrap();
+    doc.settle();
+    let outcome = doc.js().eval_string("outcome").unwrap();
+    assert!(outcome.starts_with("refused: "), "{outcome}");
+}
+
+/// `document.title` (and `<svelte:head><title>`) reaches the window without
+/// `permissions.window`, as a page's title does on the web.
+#[test]
+fn the_title_reaches_the_window_without_permission() {
+    #[derive(Default)]
+    struct Titles(Mutex<Vec<String>>);
+    impl blitz_traits::shell::ShellProvider for Titles {
+        fn set_window_title(&self, title: String) {
+            self.0.lock().unwrap().push(title);
+        }
+    }
+    let mut doc = load_with(Some(Permissions::default()));
+    let titles = Arc::new(Titles::default());
+    doc.base_mut().set_shell_provider(titles.clone());
+    doc.js()
+        .eval_string("document.title = 'Set by the app'")
+        .unwrap();
+    doc.settle();
+    click(&mut doc, "#about");
+    let seen = titles.0.lock().unwrap().clone();
+    assert_eq!(
+        seen.first().map(String::as_str),
+        Some("Set by the app"),
+        "{seen:?}"
+    );
+    assert_eq!(seen.last(), Some(&doc.title().unwrap()), "{seen:?}");
+}
+
+/// Once SvelteKit has shown the first page, nothing happens until something
+/// does: no ops, no frames, no version polling (`withSepal()` turns it off).
+#[test]
+fn idle_turns_do_no_work() {
+    use blitz_dom::Document;
+
+    let mut doc = load();
+    doc.wait(1.0);
+    for _ in 0..3 {
+        assert!(!doc.poll(None), "poll reports no change while idle");
+        assert_eq!(doc.last_turn().ops, 0);
+        assert!(!doc.last_turn().frame, "and asks for no frame");
+    }
+    assert_eq!(
+        doc.js().eval_string("String(__sb.next_timer())").unwrap(),
+        "-1",
+        "no timer is waiting"
     );
 }

@@ -5,9 +5,18 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use rquickjs::{CatchResultExt, Context, Ctx, Function, Object, Runtime, TypedArray, Value};
+use rquickjs::context::EvalOptions;
+use rquickjs::loader::{ImportAttributes, Loader, Resolver};
+use rquickjs::module::Declared;
+use rquickjs::{
+    CatchResultExt, Context, Ctx, Exception, Function, Module, Object, Persistent, Promise,
+    Runtime, TypedArray, Value,
+};
 
-use super::{Batch, EventDetail, HostCall, Mods, RUNAWAY_SCRIPT, SCROLL_FIELDS};
+use super::{
+    Batch, EventDetail, HostCall, Mods, ModuleSource, RUNAWAY_SCRIPT, SCROLL_FIELDS, meta_url,
+    resolve_module,
+};
 
 /// How much stack a script may use before it is stopped with "Maximum call
 /// stack size exceeded".
@@ -136,6 +145,58 @@ impl JsEngine {
                 .map_err(|e| e.to_string())
         })?;
         self.run_jobs();
+        Ok(())
+    }
+
+    /// Load modules from `source` from now on, by URL: what `import` and
+    /// `import()` reach, and [`run_module`](Self::run_module).
+    pub fn set_modules(&self, source: ModuleSource) {
+        self.runtime.set_loader(Urls, Files(source));
+    }
+
+    /// Run a classic script of the page, as a browser does: not in strict
+    /// mode unless it asks, and with `url` as the base of its `import()`s.
+    /// The microtasks it queues wait for the caller's `run_jobs`.
+    pub fn eval_script(&self, code: &str, url: &str) -> Result<(), String> {
+        let mut options = EvalOptions::default();
+        options.strict = false;
+        options.filename = Some(url.to_owned());
+        let result = self.enter().with(|ctx| {
+            ctx.eval_with_options::<(), _>(code, options)
+                .catch(&ctx)
+                .map_err(|e| e.to_string())
+        });
+        result
+    }
+
+    /// Run a module script of the page: the module at `url`, or `inline`
+    /// code with that name. What it throws while it runs rejects its
+    /// promise, and is reported as an unhandled rejection.
+    pub fn run_module(&self, url: &str, inline: Option<&str>) -> Result<(), String> {
+        let started = self
+            .enter()
+            .with(|ctx| -> Result<Persistent<Promise<'static>>, String> {
+                let promise = match inline {
+                    Some(code) => {
+                        let module = Module::declare(ctx.clone(), url, code)
+                            .and_then(|module| {
+                                module.meta()?.set("url", meta_url(url))?;
+                                Ok(module)
+                            })
+                            .catch(&ctx)
+                            .map_err(|e| e.to_string())?;
+                        let (_, promise) = module.eval().catch(&ctx).map_err(|e| e.to_string())?;
+                        promise
+                    }
+                    None => Module::import(&ctx, url)
+                        .catch(&ctx)
+                        .map_err(|e| e.to_string())?,
+                };
+                Ok(Persistent::save(&ctx, promise))
+            })?;
+        self.run_jobs();
+        // Kept until here so the promise is not collected while it runs.
+        drop(started);
         Ok(())
     }
 
@@ -391,6 +452,38 @@ impl JsEngine {
             }
         });
         eprintln!("[js error] while {what}: {message}");
+    }
+}
+
+/// Resolves `import` specifiers to URLs in the app folder.
+struct Urls;
+
+impl Resolver for Urls {
+    fn resolve<'js>(
+        &mut self,
+        ctx: &Ctx<'js>,
+        base: &str,
+        name: &str,
+        _attributes: Option<ImportAttributes<'js>>,
+    ) -> rquickjs::Result<String> {
+        resolve_module(base, name).map_err(|message| Exception::throw_message(ctx, &message))
+    }
+}
+
+/// Reads modules, by URL, and gives each its `import.meta.url`.
+struct Files(ModuleSource);
+
+impl Loader for Files {
+    fn load<'js>(
+        &mut self,
+        ctx: &Ctx<'js>,
+        name: &str,
+        _attributes: Option<ImportAttributes<'js>>,
+    ) -> rquickjs::Result<Module<'js, Declared>> {
+        let source = (self.0)(name).map_err(|message| Exception::throw_message(ctx, &message))?;
+        let module = Module::declare(ctx.clone(), name, source)?;
+        module.meta()?.set("url", meta_url(name))?;
+        Ok(module)
     }
 }
 

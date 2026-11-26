@@ -125,11 +125,37 @@ function clean(part, unsafe) {
 	return part === undefined ? '' : encode(part, unsafe);
 }
 
+/**
+ * What `parse` made of an input and a base, by both. Routers and Vite's
+ * preload helper parse the same few URLs on every navigation; each `new URL`
+ * still gets its own object, copied from the cached parts, which nothing
+ * writes to. A base `URL` is keyed by its `href` (and whether it has an
+ * authority), which is everything `parse` reads from it.
+ * ponytail: dropped whole at 1,000 entries; an LRU if apps with many
+ * distinct URLs show it.
+ * @type {Map<string, ReturnType<typeof parse>>}
+ */
+const parsed = new Map();
+
+/** @param {string} input @param {string | URL | undefined} base */
+function parse_cached(input, base) {
+	const base_key = base === undefined ? '' : base instanceof URL ? (no_authority.has(base) ? 'o' : 'u') + base.href : 's' + String(base);
+	// The base's length first, so that no input can make two pairs one key.
+	const key = `${base_key.length}:${base_key}${input}`;
+	let parts = parsed.get(key);
+	if (parts === undefined) {
+		const against = base === undefined ? undefined : base instanceof URL ? base : new URL(String(base));
+		parts = parse(input, against);
+		if (parsed.size >= 1000) parsed.clear();
+		parsed.set(key, parts);
+	}
+	return parts;
+}
+
 export class URL {
 	/** @param {string | URL} input @param {string | URL} [base] */
 	constructor(input, base) {
-		const against = base === undefined ? undefined : base instanceof URL ? base : new URL(String(base));
-		const parts = parse(String(input), against);
+		const parts = parse_cached(String(input), base);
 		if (parts === null) throw new TypeError(`Invalid URL: ${String(input)}`);
 		this.protocol = parts.protocol;
 		this.username = parts.username;

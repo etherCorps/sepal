@@ -16,6 +16,8 @@ use blitz_traits::net::Url;
 use sepal::SvelteDocument;
 use sepal::api::{Api, Permissions, Scope, named_dir, open_target, url_allowed};
 use sepal::app::{App, Manifest};
+use sepal::net::AppFolder;
+use serde_json::{Value, json};
 
 fn scratch(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("sepal-{}-{name}", std::process::id()));
@@ -132,6 +134,7 @@ fn serve(other_origin: Option<String>) -> String {
                 ),
                 "/leave" => redirect(format!("{}/hello", other_origin.as_deref().unwrap_or(""))),
                 "/loop" => redirect("/loop".into()),
+                "/into-app" => redirect("http://app.localhost/app.json".into()),
                 _ => ("404 Not Found", String::new(), b"nothing here".to_vec()),
             };
             let head = format!(
@@ -348,12 +351,116 @@ fn fetch_from_javascript() {
         )
     );
     assert!(run(&mut doc, &format!("fetch('{origin}/leave')")).contains("is not allowed"));
+    // `app.localhost` is this machine: no server may send the app there.
+    assert!(run(&mut doc, &format!("fetch('{origin}/into-app')")).contains("the app's own origin"),);
+
+    // The app's own files, by path, with no permission for them.
+    assert_eq!(
+        run(
+            &mut doc,
+            "fetch('/app.json').then(async (r) => [r.status, r.headers.get('content-type'), (await r.json()).name])"
+        ),
+        r#"[200,"application/json","Desktop APIs"]"#
+    );
+    assert_eq!(
+        run(
+            &mut doc,
+            "fetch('/no-such-file.json').then((r) => [r.status, r.ok])"
+        ),
+        "[404,false]"
+    );
     assert!(run(&mut doc, "fetch('file:///etc/hosts')").contains("is not allowed"));
-    assert!(run(&mut doc, "fetch('not a url')").starts_with("ERROR:"));
+    // As in a browser, that is a path relative to the page: not there.
+    assert_eq!(
+        run(&mut doc, "fetch('not a url').then((r) => r.status)"),
+        "404"
+    );
+    assert!(run(&mut doc, "fetch('http://[')").starts_with("ERROR:"));
 
     // Without any http permission nothing goes out at all.
     let mut closed = app_with(Permissions::default());
     assert!(run(&mut closed, &format!("fetch('{origin}/hello')")).contains("permissions.http"));
+}
+
+/// The app's own origin is its folder, served as a static web server would:
+/// no permission needed, read-only, and a 404 for what is not there or lies
+/// outside it, whichever way the path tries to get there.
+#[test]
+fn same_origin_requests_are_answered_from_the_app_folder() {
+    let dir = scratch("same-origin");
+    let app_dir = dir.join("app");
+    fs::create_dir_all(app_dir.join("_app")).unwrap();
+    fs::write(app_dir.join("_app/version.json"), r#"{"version":"1"}"#).unwrap();
+    fs::write(app_dir.join("index.html"), "<p>the page</p>").unwrap();
+    fs::write(dir.join("secret.txt"), "secret").unwrap();
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(dir.join("secret.txt"), app_dir.join("link.txt")).unwrap();
+
+    let folder = Arc::new(AppFolder::new(Some(&app_dir)));
+    let api = Arc::new(Api::new(Permissions::default(), None).with_folder(folder));
+    let call = |name: &str, args: Value| -> Value {
+        let work = api.call(name, &args.to_string()).unwrap();
+        serde_json::from_str(&work().unwrap()).unwrap()
+    };
+    let fetch = |url: &str, method: &str, base: Option<&str>| {
+        call(
+            "http.fetch",
+            json!({ "url": url, "method": method, "base": base }),
+        )
+    };
+    let body = |head: &Value| call("http.body", json!({ "id": head["id"] }));
+
+    let head = fetch("/_app/version.json", "GET", None);
+    assert_eq!(head["status"], 200);
+    assert_eq!(head["url"], "http://app.localhost/_app/version.json");
+    assert_eq!(body(&head), r#"{"version":"1"}"#);
+    // The same file by its full URL, and relative to the page the app is on.
+    assert_eq!(
+        fetch("http://app.localhost/_app/version.json", "GET", None)["status"],
+        200
+    );
+    assert_eq!(
+        fetch(
+            "version.json",
+            "GET",
+            Some("http://app.localhost/_app/page")
+        )["status"],
+        200
+    );
+    // A directory is its index.html.
+    assert_eq!(body(&fetch("/", "GET", None)), "<p>the page</p>");
+    // HEAD has the headers and no body.
+    let head = fetch("/_app/version.json", "HEAD", None);
+    assert_eq!(
+        (head["status"].clone(), body(&head)),
+        (json!(200), json!(""))
+    );
+
+    assert_eq!(fetch("/missing.json", "GET", None)["status"], 404);
+    // Out of the folder: `..` stops at the origin's root, and a symlink that
+    // leads out is as good as missing.
+    for path in [
+        "/../secret.txt",
+        "/_app/../../secret.txt",
+        "/%2e%2e/secret.txt",
+        "/link.txt",
+    ] {
+        assert_eq!(fetch(path, "GET", None)["status"], 404, "{path}");
+    }
+    // Read-only.
+    let post = fetch("/_app/version.json", "POST", None);
+    assert_eq!(post["status"], 405);
+    assert_eq!(post["headers"], json!([["allow", "GET, HEAD"]]));
+
+    // Another origin still needs `permissions.http`.
+    let refused = api
+        .call(
+            "http.fetch",
+            &json!({ "url": "https://example.com/" }).to_string(),
+        )
+        .unwrap()()
+    .unwrap_err();
+    assert!(refused.contains("`permissions.http`"), "{refused}");
 }
 
 #[test]
@@ -602,7 +709,6 @@ fn everything_is_refused_without_permission() {
         ("__api.clipboard.readText()", "clipboard"),
         ("__api.clipboard.writeText('x')", "clipboard"),
         ("__api.shell.open('https://svelte.dev')", "open"),
-        ("__api.window.setTitle('x')", "window"),
         ("__api.window.minimize()", "window"),
         ("__api.window.close()", "window"),
         (read.as_str(), "fs"),
@@ -614,6 +720,9 @@ fn everything_is_refused_without_permission() {
             "{call}: {result}"
         );
     }
+    // Except the title, which is the app's own, as a page's is on the web.
+    let result = run(&mut doc, "__api.window.setTitle('x')");
+    assert!(!result.starts_with("ERROR:"), "setTitle: {result}");
 }
 
 /// With permission, the window and clipboard calls reach the shell. There is

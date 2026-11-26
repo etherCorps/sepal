@@ -17,3 +17,5 @@ crates/wgpu-hal/Cargo.lock
 
 # written by tests/counter.rs and `pnpm run screenshot`
 /screenshot.png
+# Left behind only if packages/sepal/test/preset.test.js crashes.
+packages/sepal/test/.scratch-*

@@ -7,11 +7,15 @@
 //! `--jitless` to run without generating machine code.
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, Condvar, Mutex, Once};
 use std::time::{Duration, Instant};
 
-use super::{Batch, EventDetail, HostCall, Mods, RUNAWAY_SCRIPT, SCROLL_FIELDS};
+use super::{
+    Batch, EventDetail, HostCall, Mods, ModuleSource, RUNAWAY_SCRIPT, SCROLL_FIELDS, meta_url,
+    resolve_module,
+};
 
 type Measure = Box<dyn Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 9]>>;
 
@@ -25,6 +29,17 @@ struct Host {
     rejected: std::cell::Cell<bool>,
     /// The time JS sees once the host has taken the clock over (`set_time`).
     time: std::cell::Cell<Option<f64>>,
+    /// Where modules come from (`set_modules`).
+    source: RefCell<Option<ModuleSource>>,
+    /// Every module compiled so far, by name (its URL), and each one's name
+    /// by its identity hash, which is all V8's callbacks give.
+    // ponytail: identity hashes can collide; a Vec per hash if one ever does.
+    modules: RefCell<HashMap<String, v8::Global<v8::Module>>>,
+    names: RefCell<HashMap<i32, String>>,
+    /// `import()`s that wait for `run_jobs`: the promise to settle, and the
+    /// URL to load or why there is none. Never loaded inside the call itself,
+    /// which runs in the middle of a script.
+    imports: RefCell<Vec<(v8::Global<v8::PromiseResolver>, Result<String, String>)>>,
 }
 
 impl Host {
@@ -130,9 +145,15 @@ impl JsEngine {
             measure: RefCell::new(None),
             rejected: std::cell::Cell::new(false),
             time: std::cell::Cell::new(None),
+            source: RefCell::new(None),
+            modules: RefCell::default(),
+            names: RefCell::default(),
+            imports: RefCell::default(),
         });
         isolate.set_slot(host.clone());
         isolate.set_promise_reject_callback(promise_rejected);
+        isolate.set_host_import_module_dynamically_callback(dynamic_import);
+        isolate.set_host_initialize_import_meta_object_callback(import_meta);
 
         let watchdog = Arc::new(Watchdog {
             limit,
@@ -210,24 +231,73 @@ impl JsEngine {
 
     /// Evaluate a script (the app bundle) and run the microtasks it queued.
     pub fn eval(&self, code: &str) -> Result<(), String> {
-        self.enter(|scope| run(scope, code).map(|_| ()))?;
+        self.enter(|scope| run(scope, code, None).map(|_| ()))?;
         self.run_jobs();
         Ok(())
+    }
+
+    /// Load modules from `source` from now on, by URL: what `import` and
+    /// `import()` reach, and [`run_module`](Self::run_module).
+    pub fn set_modules(&self, source: ModuleSource) {
+        *self.host.source.borrow_mut() = Some(source);
+    }
+
+    /// Run a classic script of the page, as a browser does: not in strict
+    /// mode unless it asks, and with `url` as the base of its `import()`s.
+    /// The microtasks it queues wait for the caller's `run_jobs`.
+    pub fn eval_script(&self, code: &str, url: &str) -> Result<(), String> {
+        let result = self.enter(|scope| run(scope, code, Some(url)).map(|_| ()));
+        result
+    }
+
+    /// Run a module script of the page: the module at `url`, or `inline`
+    /// code with that name. What it throws while it runs rejects its
+    /// promise, and is reported as an unhandled rejection.
+    pub fn run_module(&self, url: &str, inline: Option<&str>) -> Result<(), String> {
+        let result = self.enter(|scope| {
+            v8::scope!(let scope, scope);
+            let module = compile(scope, &self.host, url, inline)?;
+            evaluate(scope, module).map(|_| ())
+        });
+        self.run_jobs();
+        result
     }
 
     /// Evaluate an expression and return its string value. Handy in tests.
     pub fn eval_string(&self, code: &str) -> Result<String, String> {
         let out = self.enter(|scope| {
             v8::scope!(let scope, scope);
-            let value = run(scope, code)?;
+            let value = run(scope, code, None)?;
             Ok::<_, String>(value.to_rust_string_lossy(scope))
         })?;
         self.run_jobs();
         Ok(out)
     }
 
-    /// Run promise reactions and other queued jobs until the queue is empty.
+    /// Run promise reactions and other queued jobs until the queue is empty,
+    /// and the `import()`s they made, which queue more.
     pub fn run_jobs(&self) {
+        loop {
+            self.run_microtasks();
+            let imports = std::mem::take(&mut *self.host.imports.borrow_mut());
+            if imports.is_empty() {
+                break;
+            }
+            self.enter(|scope| {
+                for (resolver, target) in imports {
+                    settle_import(scope, &self.host, resolver, target);
+                }
+            });
+        }
+        if self.host.rejected.replace(false) {
+            self.enter(|scope| {
+                v8::scope!(let scope, scope);
+                entry(scope, "reporting unhandled rejections", "rejections", &[]);
+            });
+        }
+    }
+
+    fn run_microtasks(&self) {
         self.enter(|scope| {
             v8::tc_scope!(let scope, scope);
             scope.perform_microtask_checkpoint();
@@ -243,12 +313,6 @@ impl JsEngine {
                 );
             }
         });
-        if self.host.rejected.replace(false) {
-            self.enter(|scope| {
-                v8::scope!(let scope, scope);
-                entry(scope, "reporting unhandled rejections", "rejections", &[]);
-            });
-        }
     }
 
     /// Deliver a DOM event to the renderer's dispatcher. Returns `DISPATCH_*` flags.
@@ -428,6 +492,9 @@ impl Drop for Entered<'_> {
 
 impl Drop for JsEngine {
     fn drop(&mut self) {
+        // Handles into the isolate go before it does.
+        self.host.modules.borrow_mut().clear();
+        self.host.imports.borrow_mut().clear();
         {
             let mut state = self.watchdog.running.lock().unwrap();
             state.2 = true;
@@ -452,19 +519,227 @@ fn describe(scope: &mut v8::PinnedRef<v8::TryCatch<v8::HandleScope>>) -> String 
     stack.unwrap_or_else(|| "an exception without a description".to_owned())
 }
 
-/// Compile and run a script.
+/// Compile and run a script, named `name` (its URL, the base of its `import()`s).
 fn run<'s>(
     scope: &mut v8::PinScope<'s, '_>,
     code: &str,
+    name: Option<&str>,
 ) -> Result<v8::Local<'s, v8::Value>, String> {
     v8::tc_scope!(let tc, scope);
     let source = string(tc, code);
-    let result = v8::Script::compile(tc, source, None).and_then(|script| script.run(tc));
+    let origin = name.map(|name| origin(tc, name, false));
+    let result = v8::Script::compile(tc, source, origin.as_ref()).and_then(|script| script.run(tc));
     match result {
         Some(value) => Ok(value),
         None if tc.has_terminated() => Err("the script did not return and was stopped".into()),
         None => Err(describe(tc)),
     }
+}
+
+/// Where a script or module came from: its URL, which is what `import()`
+/// and `import.meta` are told.
+fn origin<'s>(scope: &v8::PinScope<'s, '_>, name: &str, module: bool) -> v8::ScriptOrigin<'s> {
+    let name = string(scope, name);
+    v8::ScriptOrigin::new(
+        scope,
+        name.into(),
+        0,
+        0,
+        false,
+        -1,
+        None,
+        false,
+        false,
+        module,
+        None,
+    )
+}
+
+/// Compile the module named `name` (its URL) and everything it imports,
+/// each once. `inline` is the code of a module script in the page.
+fn compile<'s>(
+    scope: &mut v8::PinScope<'s, '_>,
+    host: &Host,
+    name: &str,
+    inline: Option<&str>,
+) -> Result<v8::Local<'s, v8::Module>, String> {
+    if let Some(module) = host.modules.borrow().get(name) {
+        return Ok(v8::Local::new(scope, module));
+    }
+    let code = match inline {
+        Some(code) => code.to_owned(),
+        None => {
+            let source = host.source.borrow();
+            source.as_ref().ok_or("this page cannot load modules")?(name)?
+        }
+    };
+    let module = {
+        v8::tc_scope!(let tc, scope);
+        let text = string(tc, &code);
+        let origin = origin(tc, name, true);
+        let mut source = v8::script_compiler::Source::new(text, Some(&origin));
+        match v8::script_compiler::compile_module(tc, &mut source) {
+            Some(module) => module,
+            None => return Err(describe(tc)),
+        }
+    };
+    // Before what it imports: an import cycle finds it here.
+    let global = v8::Global::new(scope, module);
+    host.modules.borrow_mut().insert(name.to_owned(), global);
+    host.names
+        .borrow_mut()
+        .insert(module.get_identity_hash().get(), name.to_owned());
+    let requests = module.get_module_requests();
+    for index in 0..requests.length() {
+        let Some(request) = requests
+            .get(scope, index)
+            .and_then(|request| v8::Local::<v8::ModuleRequest>::try_from(request).ok())
+        else {
+            continue;
+        };
+        let specifier = request.get_specifier().to_rust_string_lossy(scope);
+        compile(scope, host, &resolve_module(name, &specifier)?, None)?;
+    }
+    Ok(module)
+}
+
+/// Link a compiled module to what it imports and run it. Returns the
+/// promise of its evaluation.
+fn evaluate<'s>(
+    scope: &mut v8::PinScope<'s, '_>,
+    module: v8::Local<'s, v8::Module>,
+) -> Result<v8::Local<'s, v8::Value>, String> {
+    v8::tc_scope!(let tc, scope);
+    if module.get_status() == v8::ModuleStatus::Uninstantiated
+        && module.instantiate_module(tc, resolve).is_none()
+    {
+        return Err(describe(tc));
+    }
+    match module.evaluate(tc) {
+        Some(done) => Ok(done),
+        None if tc.has_terminated() => Err("the module did not return and was stopped".into()),
+        None => Err(describe(tc)),
+    }
+}
+
+/// V8 asks for a module that `referrer` imports. Everything was compiled
+/// ahead (`compile`), so this only looks it up.
+fn resolve<'s>(
+    context: v8::Local<'s, v8::Context>,
+    specifier: v8::Local<'s, v8::String>,
+    _attributes: v8::Local<'s, v8::FixedArray>,
+    referrer: v8::Local<'s, v8::Module>,
+) -> Option<v8::Local<'s, v8::Module>> {
+    v8::callback_scope!(unsafe scope, context);
+    let host = host_of(scope)?;
+    let specifier = specifier.to_rust_string_lossy(scope);
+    let found = host
+        .names
+        .borrow()
+        .get(&referrer.get_identity_hash().get())
+        .cloned()
+        .ok_or_else(|| "a module the host does not know imports".to_owned())
+        .and_then(|base| resolve_module(&base, &specifier))
+        .and_then(|url| {
+            host.modules
+                .borrow()
+                .get(&url)
+                .cloned()
+                .ok_or(format!("{url} was not loaded"))
+        });
+    match found {
+        Ok(module) => Some(v8::Local::new(scope, module)),
+        Err(message) => {
+            let message = string(scope, &message);
+            let error = v8::Exception::error(scope, message);
+            scope.throw_exception(error);
+            None
+        }
+    }
+}
+
+/// `import()`: a promise now, the module at the next `run_jobs`.
+fn dynamic_import<'s>(
+    scope: &mut v8::PinScope<'s, '_>,
+    _options: v8::Local<'s, v8::Data>,
+    resource: v8::Local<'s, v8::Value>,
+    specifier: v8::Local<'s, v8::String>,
+    _attributes: v8::Local<'s, v8::FixedArray>,
+) -> Option<v8::Local<'s, v8::Promise>> {
+    let resolver = v8::PromiseResolver::new(scope)?;
+    let promise = resolver.get_promise(scope);
+    let host = host_of(scope)?;
+    let base = resource.to_rust_string_lossy(scope);
+    let target = resolve_module(&base, &specifier.to_rust_string_lossy(scope));
+    let resolver = v8::Global::new(scope, resolver);
+    host.imports.borrow_mut().push((resolver, target));
+    Some(promise)
+}
+
+/// Load what an `import()` asked for and settle its promise: with the
+/// module's namespace once it has run, or with why it could not be had.
+fn settle_import(
+    scope: &mut v8::PinScope,
+    host: &Host,
+    resolver: v8::Global<v8::PromiseResolver>,
+    target: Result<String, String>,
+) {
+    v8::scope!(let scope, scope);
+    let resolver = v8::Local::new(scope, resolver);
+    let loaded = target.and_then(|url| {
+        let module = compile(scope, host, &url, None)?;
+        let done = evaluate(scope, module)?;
+        Ok((module, done))
+    });
+    let settled = match loaded {
+        Ok((module, done)) => {
+            // Once the module has run: a module with top-level `await` is
+            // not done when `evaluate` returns.
+            let namespace = module.get_module_namespace();
+            let give = v8::Function::builder(
+                |_: &mut v8::PinScope,
+                 args: v8::FunctionCallbackArguments,
+                 mut out: v8::ReturnValue| { out.set(args.data()) },
+            )
+            .data(namespace)
+            .build(scope);
+            v8::Local::<v8::Promise>::try_from(done)
+                .ok()
+                .zip(give)
+                .and_then(|(done, give)| done.then(scope, give))
+                .and_then(|namespace| resolver.resolve(scope, namespace.into()))
+        }
+        Err(message) => {
+            let message = string(scope, &message);
+            let error = v8::Exception::error(scope, message);
+            resolver.reject(scope, error)
+        }
+    };
+    if settled.is_none() {
+        eprintln!("[js error] an import() could not be settled");
+    }
+}
+
+/// `import.meta` of a module: its `url`.
+extern "C" fn import_meta(
+    context: v8::Local<v8::Context>,
+    module: v8::Local<v8::Module>,
+    meta: v8::Local<v8::Object>,
+) {
+    v8::callback_scope!(unsafe scope, context);
+    v8::scope!(let scope, scope);
+    let Some(host) = host_of(scope) else { return };
+    let Some(name) = host
+        .names
+        .borrow()
+        .get(&module.get_identity_hash().get())
+        .cloned()
+    else {
+        return;
+    };
+    let key = string(scope, "url");
+    let value = string(scope, meta_url(&name));
+    meta.create_data_property(scope, key.into(), value.into());
 }
 
 /// Call `__sb.<name>(…args)`. Errors are reported and come back as `None`.

@@ -129,8 +129,11 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     let (proxy, receiver) = BlitzShellProxy::new(event_loop.create_proxy());
 
     let (width, height) = manifest.size();
+    // The manifest's, the page's `<title>`, the app's name. Later changes
+    // to `<title>` reach the window through Blitz.
     let title = manifest
         .title
+        .or_else(|| doc.title())
         .or(manifest.name)
         .unwrap_or_else(|| "Sepal".into());
     let mut attributes = WindowAttributes::default()

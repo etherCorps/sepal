@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 
 use blitz_dom::{
     BaseDocument, DocGuard, DocGuardMut, Document, DocumentConfig, EventDriver, EventHandler,
-    LocalName, NodeId, QualName, local_name, ns,
+    NodeId, local_name,
 };
 use blitz_traits::events::{
     BlitzKeyEvent, BlitzPointerEvent, BlitzPointerId, DomEvent, DomEventData, EventState,
@@ -24,8 +24,9 @@ use crate::api::{Api, Work, denied};
 use crate::app::App;
 use crate::hud::{AppNumbers, Hud};
 use crate::js::{EventDetail, JsEngine, Mods};
-use crate::net::AppResources;
+use crate::net::{AppResources, ORIGIN};
 use crate::ops::{self, ApplyStats, NodeMap};
+use crate::page::{self, Script};
 use crate::timers::TimerWaker;
 use crate::updater::Updater;
 
@@ -95,6 +96,9 @@ struct Page {
     laid_out_at: Option<f64>,
     /// Boxes that scrolled since the app was last told (`report_scrolls`).
     scrolled: Vec<NodeId>,
+    /// What loads the page's stylesheets, fonts and images, and remembers
+    /// whether each one did. `None` for a document made without an app folder.
+    resources: Option<Arc<AppResources>>,
 }
 
 impl Page {
@@ -255,10 +259,6 @@ pub(crate) fn trace_enabled() -> bool {
     *ENABLED.get_or_init(|| std::env::var_os("SEPAL_TRACE").is_some())
 }
 
-fn html(name: &str) -> QualName {
-    QualName::new(None, ns!(html), LocalName::from(name))
-}
-
 impl SvelteDocument {
     /// Create the document for an app, able to load the app's own files and
     /// `data:` URLs. This is what screenshots and tests use.
@@ -278,64 +278,38 @@ impl SvelteDocument {
     }
 
     fn for_app_in(app: &App, hold_host_calls: bool) -> Result<Self, String> {
-        let resources = AppResources::new(app.dir.as_deref());
+        let resources = Arc::new(AppResources::new(app.dir.as_deref()));
         let config = DocumentConfig {
             base_url: resources.base_url(),
-            net_provider: Some(Arc::new(resources)),
+            net_provider: Some(resources.clone()),
             ..Default::default()
         };
         let updater = app.manifest.updater.clone().map(|config| {
             let version = app.manifest.version.as_deref().unwrap_or("0.0.0");
             Arc::new(Updater::new(config, version, app.bundle.clone()))
         });
-        let api = Api::new(app.manifest.permissions.clone(), app.manifest.app_id());
-        Self::create(&app.js, &app.css, config, updater, api, hold_host_calls)
+        let api = Api::new(app.manifest.permissions.clone(), app.manifest.app_id())
+            .with_folder(resources.folder().clone());
+        Self::create(app, config, Some(resources), updater, api, hold_host_calls)
     }
 
-    /// Create the document, load the stylesheet, then evaluate the app bundle,
-    /// which mounts the app into `<body>`.
-    pub fn new(app_js: &str, app_css: &str, config: DocumentConfig) -> Result<Self, String> {
-        // No manifest, so no permissions: every desktop call is refused.
-        Self::create(
-            app_js,
-            app_css,
-            config,
-            None,
-            Api::new(Default::default(), None),
-            false,
-        )
-    }
-
+    /// Parse the page into the document, then run its scripts, which mount
+    /// the app.
     fn create(
-        app_js: &str,
-        app_css: &str,
+        app: &App,
         config: DocumentConfig,
+        resources: Option<Arc<AppResources>>,
         updater: Option<Arc<Updater>>,
         api: Api,
         hold_host_calls: bool,
     ) -> Result<Self, String> {
+        let started = Instant::now();
         let mut doc = BaseDocument::new(config);
-
-        // <html><head><style>…</style></head><body></body></html>
-        let body = {
-            let mut m = doc.mutate();
-            let root = m.doc.root_node().id;
-            let html_el = m.create_element(html("html"), Vec::new());
-            let head = m.create_element(html("head"), Vec::new());
-            let body = m.create_element(html("body"), Vec::new());
-            m.append_children(root, &[html_el]);
-            m.append_children(html_el, &[head, body]);
-            if !app_css.is_empty() {
-                let style = m.create_element(html("style"), Vec::new());
-                let css = m.create_text_node(app_css);
-                m.append_children(style, &[css]);
-                m.append_children(head, &[style]);
-            }
-            body
-        };
-
+        let parsed = page::parse(&mut doc, &app.html, app.dev);
         let mut nodes = NodeMap::default();
-        nodes.insert(ops::ROOT_ID, body);
+        for &(js, blitz) in &parsed.nodes {
+            nodes.insert(js, blitz);
+        }
 
         let page = Rc::new(RefCell::new(Page {
             doc,
@@ -348,9 +322,14 @@ impl SvelteDocument {
             layout_count: 0,
             laid_out_at: None,
             scrolled: Vec::new(),
+            resources: resources.clone(),
         }));
 
         let js = JsEngine::new()?;
+        if let Some(resources) = &resources {
+            let folder = resources.folder().clone();
+            js.set_modules(Box::new(move |url| folder.module(url)));
+        }
         // Outside a window, time is the caller's to move (`advance_time`), for
         // scripts as for animations: one clock, or a script that waits for an
         // animation with a timer finishes at a different moment on every machine.
@@ -429,9 +408,69 @@ impl SvelteDocument {
             visible: true,
         };
 
-        this.js.eval(app_js)?;
+        this.js
+            .eval(&format!("({})({});", page::PREAMBLE, parsed.seed))?;
+        this.run_scripts(parsed.scripts);
         this.settle();
+        if trace_enabled() {
+            eprintln!(
+                "[trace] the page started in {:.1}ms, with {} files from the app folder",
+                started.elapsed().as_secs_f64() * 1000.0,
+                resources.map_or(0, |resources| resources.folder().files_read())
+            );
+        }
         Ok(this)
+    }
+
+    /// Run the page's scripts, in order. One that fails is reported, and the
+    /// next runs anyway, as in a browser.
+    fn run_scripts(&mut self, scripts: Vec<Script>) {
+        for script in scripts {
+            let failed = match &script {
+                Script::Classic { node, code } => {
+                    // `document.currentScript` is this script's element while
+                    // it runs, and nothing once the microtasks after it run.
+                    let _ = self.js.eval(&format!("__sb_page.begin({node})"));
+                    let ran = self.js.eval_script(code, ORIGIN);
+                    let _ = self.js.eval("__sb_page.end()");
+                    ran.err()
+                        .map(|error| format!("in a script in index.html: {error}"))
+                }
+                Script::Module { url, code } => self
+                    .js
+                    .run_module(url, code.as_deref())
+                    .err()
+                    .map(|error| format!("in {url}: {error}")),
+            };
+            if let Some(message) = failed {
+                eprintln!("[js error] {message}");
+            }
+        }
+    }
+
+    /// How many files the page has loaded from the app folder: modules,
+    /// stylesheets, fonts and images. `index.html` and `app.json` are read
+    /// before, and are not counted.
+    pub fn files_read(&self) -> usize {
+        self.page
+            .borrow()
+            .resources
+            .as_ref()
+            .map_or(0, |resources| resources.folder().files_read())
+    }
+
+    /// The id JavaScript knows a node by, if it knows it.
+    pub fn js_id(&self, node: NodeId) -> Option<u32> {
+        self.page.borrow().nodes.js(node)
+    }
+
+    /// The page's title: the text of its `<title>`, if it has one.
+    pub fn title(&self) -> Option<String> {
+        let page = self.page.borrow();
+        let id = page.doc.query_selector("title").ok().flatten()?;
+        let text = page.doc.get_node(id)?.text_content();
+        let text = text.trim();
+        (!text.is_empty()).then(|| text.to_owned())
     }
 
     pub fn base(&self) -> Ref<'_, BaseDocument> {
@@ -633,6 +672,9 @@ impl SvelteDocument {
             let forced = std::mem::take(&mut self.page.borrow_mut().forced);
             forced.into_iter().for_each(|stats| turn.add(stats));
             let Some(batch) = self.js.take_batch() else {
+                if self.report_links() {
+                    continue;
+                }
                 if scroll_rounds < LAYOUT_ROUNDS && self.report_scrolls(turn) {
                     scroll_rounds += 1;
                     continue;
@@ -674,6 +716,46 @@ impl SvelteDocument {
                 .dispatch(id, "scroll", false, &EventDetail::Scroll(metrics));
         }
         turn.scrolled += events.len();
+        self.js.run_jobs();
+        !events.is_empty()
+    }
+
+    /// Tell the app whether the stylesheets of the `<link>`s it put on the
+    /// page loaded: a `load` or an `error` event on each, as a browser sends.
+    /// Returns whether it was told anything.
+    fn report_links(&mut self) -> bool {
+        let events: Vec<(u32, &str)> = {
+            let mut page = self.page.borrow_mut();
+            let links = std::mem::take(&mut page.nodes.links);
+            let base = blitz_traits::net::Url::parse(ORIGIN).expect("the app's origin is a URL");
+            links
+                .into_iter()
+                .filter_map(|id| {
+                    let element = page.doc.get_node(page.nodes.blitz(id)?)?.element_data()?;
+                    let rel = element.attr(local_name!("rel"))?;
+                    if !rel
+                        .split_ascii_whitespace()
+                        .any(|rel| rel.eq_ignore_ascii_case("stylesheet"))
+                    {
+                        return None;
+                    }
+                    let url = base.join(element.attr(local_name!("href"))?).ok()?;
+                    let loaded = page
+                        .resources
+                        .as_ref()
+                        .and_then(|resources| resources.loaded(url.as_str()));
+                    let event = if loaded == Some(true) {
+                        "load"
+                    } else {
+                        "error"
+                    };
+                    page.listening.contains(event).then_some((id, event))
+                })
+                .collect()
+        };
+        for &(id, event) in &events {
+            self.js.dispatch(id, event, false, &EventDetail::None);
+        }
         self.js.run_jobs();
         !events.is_empty()
     }
@@ -822,7 +904,9 @@ impl SvelteDocument {
     }
 
     fn window_call(&self, name: &str, action: &str, args: &str) -> Result<String, String> {
-        if !self.api.permissions.window {
+        // The title is the page's own, as on the web: `document.title` sets
+        // it without asking too.
+        if action != "set_title" && !self.api.permissions.window {
             return Err(denied("changing the window", "window"));
         }
         let args: serde_json::Value = serde_json::from_str(args).unwrap_or_default();

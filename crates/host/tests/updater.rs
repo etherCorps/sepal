@@ -36,7 +36,7 @@ fn fake_bundle(dir: &Path, version: &str) -> PathBuf {
     )
     .unwrap();
     fs::write(
-        bundle.join("Contents/Resources/app.js"),
+        bundle.join("Contents/Resources/index.html"),
         format!("// {version}"),
     )
     .unwrap();

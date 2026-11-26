@@ -7,6 +7,54 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## Apps are web builds, loaded from index.html (26 Nov 2026, branch `html-entry`)
+
+A build is what a web build is: `dist/index.html`, its ES module chunks,
+stylesheets, fonts and static files, and `app.json`. The host parses the
+page into the document (html5ever, through blitz-html's tree builder), runs
+its inline classic scripts and then its module scripts as a browser does,
+and loads modules, stylesheets, fonts and images from the app folder only,
+on both engines. `http://app.localhost/` is the page's address; a `fetch`
+to it is answered from the folder. A SvelteKit app is
+`sveltekit(withSepal({ adapter: adapter() }))` and `sepal()` after it, with
+SvelteKit's default split build written as SvelteKit writes it;
+`sepalKit()` is a stub that throws the new setup, for one release. The
+CHANGELOG has the migration tables and the behaviour changes.
+
+Measured (1,000 issues, interleaved sessions; `compare/results/`:
+`html-entry.md` for `html-1`, `single-bundle.md` for `html-2`,
+`preload-fix.md` for `html-3`): start-up is the same within a few ms, files
+read to show the first screen went from 9 to 46, and RAM 5 s after load is
+~5 MB lower than with one bundle. Navigation in the split build was 5-12 ms
+slower than one bundle, most of it Vite's preload helper looking for
+`meta[property=csp-nonce]` with `querySelector` (a walk of the whole page)
+several times a navigation, and parsing two URLs per dependency. The DOM
+layer now answers a selector that ends in a tag from an index of elements
+by tag, and caches URL parses (f225c91): repeat visits are level with one
+bundle. What is left is a route's first visit, when its chunks are read and
+compiled (Board +10 ms, an issue +3.7). The split build stays the default:
+Shivam chose it for the faster start and the lower RAM, and the first
+visits are bytecode's job. The release host grew 0.5-0.9 MB per platform
+(html5ever and the module loaders); linux-arm64 is now just over
+30,000,000 bytes, linux-x64 was over before.
+
+Left for later, each its own job:
+
+1. **Bytecode**: modules compiled ahead of time instead of parsed by QuickJS
+   at load. Then **prerendering** and **the server build** (the backend
+   thread), which the adapter refuses today.
+2. **The host's size on Linux**, under the 30 MB budget.
+3. **SvelteKit's link scan.** After every navigation SvelteKit looks at
+   each `<a>` on the page (its URL, its `data-sveltekit-*` options up the
+   ancestors) to set up preloading: about 32 µs a link in the DOM layer,
+   10 ms on the Board's 316. Main never paid it, because its `<html>` was a
+   stand-in with no children. `href`, attribute reads and `closest` are
+   where it can come down (`preload-fix.md`). Without it the Board is still
+   4.7 ms behind main on a repeat visit: not looked into.
+4. **Blitz hit testing clipped to `overflow: hidden`** (below, item 3 of the
+   SvelteKit list): `sepal/adapter` still gives the route announcer
+   `pointer-events: none`.
+
 ## Native layer: backend, OS APIs and per-app host builds (24 Nov 2026)
 
 Names follow the 24 Nov rename: the project is Sepal, the crate is `sepal`, and
@@ -315,13 +363,9 @@ Next, each its own job after this branch:
    7,300 in an 800 px window), which only works while hit testing ignores the
    clip: they would have to scroll their target into view first. Until then
    `sepalKit()` gives SvelteKit's route announcer `pointer-events: none`,
-   which is the one place it bit.
-4. **Same-origin requests answered from the app folder** (the `index.html`
-   work). Every SvelteKit error page waits for `updated.check()`, a fetch of
-   `/_app/version.json` that the host refuses today; answered from the app
-   folder, it gets a real answer, as on the web. `convert()` in
-   `sveltekit.js` leaves `_app/version.json` out of `dist` at present, so it
-   has to be copied too.
+   which is the one place it bit (`sepal/adapter` does it now).
+4. ~~**Same-origin requests answered from the app folder**~~: done on
+   `html-entry` (above); the adapter writes `_app/version.json`.
 
 ## Goal
 

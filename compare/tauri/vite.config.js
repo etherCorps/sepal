@@ -1,12 +1,13 @@
 // The Tracker built for the DOM (WKWebView): SvelteKit as a single-page app,
 // from the app's own source and with the app's own toolchain.
 //
-// Mirrors sepalKit() (packages/sepal/vite/sveltekit.js) with the
-// renderer-specific parts taken out: no `customRenderer`, no
-// `svelte-custom-renderer` condition, no `bind:`/`<svelte:head>`
-// preprocessors (Svelte handles both for the DOM), no DOM layer, and
-// adapter-static in place of Sepal's adapter. The SvelteKit options are
-// sepalKit()'s: one bundle, nothing prerendered, no version polling.
+// Mirrors the Tracker's own vite.config.ts (`sveltekit(withSepal({ adapter:
+// adapter() }))`, then sepal()) with the renderer-specific parts taken out,
+// which is all withSepal() adds, so it is not used here: no `customRenderer`,
+// no `bind:`/`<svelte:head>` rewrites (Svelte handles both for the DOM), no
+// `svelte-custom-renderer` condition, no DOM layer, and adapter-static in
+// place of Sepal's adapter (withSepal() refuses any other). The SvelteKit
+// options are the app's: SvelteKit's default split build, no version polling.
 //
 // `pnpm run build:web` runs it from examples/tracker, so Vite's root,
 // SvelteKit's project and Tailwind's scan are the app's. Vite, SvelteKit,
@@ -30,23 +31,21 @@ export default {
 	plugins: [
 		tailwindcss(),
 		{
-			// First in SvelteKit's single-bundle entry, where sepalKit() puts the
-			// DOM layer: `__bench_emit` has to exist before bench.ts marks `start`.
+			// First in SvelteKit's client entry, where sepal() puts the DOM
+			// layer: `__bench_emit` has to exist before bench.ts marks `start`.
 			name: 'tracker-tauri:bench-emit',
 			transform: (code, id) =>
-				id.endsWith('/kit/src/runtime/client/bundle.js') ? { code: `import ${JSON.stringify(bench_emit)};\n${code}`, map: null } : undefined
+				id.endsWith('/kit/src/runtime/client/entry.js') ? { code: `import ${JSON.stringify(bench_emit)};\n${code}`, map: null } : undefined
 		},
 		await sveltekit({
 			adapter: adapter({ pages: dist, assets: dist, fallback: 'index.html' }),
 			// Keep SvelteKit's generated files apart from the Sepal build's.
 			outDir: here('./.svelte-kit'),
-			output: { bundleStrategy: 'single' },
-			prerender: { entries: [] },
 			version: { pollInterval: 0 }
 		})
 	],
 	resolve: {
-		// sepalKit()'s list minus `svelte-custom-renderer`.
+		// sepal()'s list for SvelteKit apps minus `svelte-custom-renderer`.
 		conditions: ['browser', 'svelte', 'module', 'import', 'default'],
 		alias: [{ find: /^sepal\/(fs|dialog|clipboard|window)$/, replacement: here('./src/desktop.js') }]
 	}
