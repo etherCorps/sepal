@@ -25,7 +25,7 @@ import { join, relative, resolve } from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { preprocess } from 'svelte/compiler';
 import { normalizePath } from 'vite';
-import { dev_window, kit, load_config, manifest } from './app.js';
+import { compile_bytecode, dev_window, kit, load_config, manifest } from './app.js';
 import { element_bindings } from './bindings.js';
 import { head } from './head.js';
 import { check_css, check_page } from './page.js';
@@ -334,6 +334,8 @@ export function sepal(inline = {}) {
 			// `writeBundle`, not `closeBundle`: it only runs when the build
 			// succeeded, so a syntax error leaves the last good build on screen.
 			writeBundle() {
+				const compiled = compile_bytecode(out_dir, (message) => logger?.warn(message));
+				if (compiled) logger?.info(compiled);
 				if (watching) show();
 			}
 		}

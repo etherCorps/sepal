@@ -7,6 +7,48 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## Modules load as QuickJS bytecode (26 Nov 2026, branch `bytecode`)
+
+`calyx --compile <dist>` compiles every module of the app folder with the
+host binary itself and writes `x.js.qbc` next to each `x.js`: bytecode
+without source text, with debug info. The adapter and `sepal()` run it
+after every build, dev included (`compile_bytecode` in `vite/app.js`); a
+machine without a calyx that can compile builds JavaScript only, with a
+warning. `--bundle` compiles again inside the bundle with its own binary.
+The QuickJS loader takes the bytecode when its header (`bytecode.rs`)
+names this calyx, QuickJS-ng version and target triple, the module's URL,
+and the `.js`'s size, checked on every launch, and its hash in dev;
+otherwise it loads the `.js` and says why. It is read only through
+`AppFolder`. V8 ignores `.qbc`. The `.js` files ship too, for now.
+
+Why the header carries the target: QuickJS-ng writes native-endian, and
+nothing in a module's bytecode depends on the word size, so the four
+targets should agree, but only arm64 macOS has been seen to, and a wrong
+guess is memory corruption, not an error. `JS_ReadObject` checks a format
+byte and a checksum, which catch accidents and nothing else.
+
+Measured (session `bc-1`, `compare/results/bytecode.md`, 1,000 issues):
+the page starts 19-20 ms sooner, CPU to settled is 23 ms lower, RAM 5 s
+after load 5.5 MB lower, idle CPU over 20 s 11.4 against 7.0 ms. First
+visits move by 1-4 ms: a route's own chunk is small, and what is left of
+its first visit is rendering (the Board's chunk is `nodes/6`, 6 KB, not
+the 36 KB that `preload-fix.md` put down as the Board's: that is
+Insights'). Those gaps go to the link-scan job. The app folder doubles
+(972 to 1,964 KB, 60 to 105 files); a build takes 0.06 s longer, 38-41 ms
+of it compiling 45 modules.
+
+Left for later:
+
+- **Dropping the `.js` from a bundle**, which runs only its own bytecode:
+  530 KB for the Tracker. The `.js` is the fallback for an app folder run
+  by another calyx, and what V8 loads.
+- **The host's own script** (`page.js` and the page's nodes) stays
+  JavaScript: 0.30 ms a launch.
+- A one-off: a bench build of the Tracker once had 22 `.js` files of the
+  build before it in `dist`. Three rebuilds, the same sequence included,
+  were clean. If it shows up again, check whether `.svelte-kit/output`
+  kept chunks from an earlier build.
+
 ## Apps are web builds, loaded from index.html (26 Nov 2026, branch `html-entry`)
 
 A build is what a web build is: `dist/index.html`, its ES module chunks,
@@ -34,15 +76,16 @@ by tag, and caches URL parses (f225c91): repeat visits are level with one
 bundle. What is left is a route's first visit, when its chunks are read and
 compiled (Board +10 ms, an issue +3.7). The split build stays the default:
 Shivam chose it for the faster start and the lower RAM, and the first
-visits are bytecode's job. The release host grew 0.5-0.9 MB per platform
+visits are bytecode's job (they were not, it turned out: see "Modules load as QuickJS bytecode"). The release host grew 0.5-0.9 MB per platform
 (html5ever and the module loaders); linux-arm64 is now just over
 30,000,000 bytes, linux-x64 was over before.
 
 Left for later, each its own job:
 
-1. **Bytecode**: modules compiled ahead of time instead of parsed by QuickJS
-   at load. Then **prerendering** and **the server build** (the backend
-   thread), which the adapter refuses today.
+1. ~~**Bytecode**~~: done, branch `bytecode` (above); it did not close
+   the first-visit gaps, which were not compiling. Then **prerendering**
+   and **the server build** (the backend thread), which the adapter
+   refuses today.
 2. **The host's size on Linux**, under the 30 MB budget.
 3. **SvelteKit's link scan.** After every navigation SvelteKit looks at
    each `<a>` on the page (its URL, its `data-sveltekit-*` options up the

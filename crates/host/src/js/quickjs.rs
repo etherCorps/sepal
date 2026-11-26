@@ -2,7 +2,10 @@
 //! interpreter.
 
 use std::cell::{Cell, RefCell};
+use std::collections::BTreeSet;
+use std::path::Path;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use rquickjs::context::EvalOptions;
@@ -10,13 +13,15 @@ use rquickjs::loader::{ImportAttributes, Loader, Resolver};
 use rquickjs::module::Declared;
 use rquickjs::{
     CatchResultExt, Context, Ctx, Exception, Function, Module, Object, Persistent, Promise,
-    Runtime, TypedArray, Value,
+    Runtime, TypedArray, Value, WriteOptions,
 };
 
 use super::{
-    Batch, EventDetail, HostCall, Mods, ModuleSource, RUNAWAY_SCRIPT, SCROLL_FIELDS, meta_url,
-    resolve_module,
+    Batch, Compiled, EventDetail, HostCall, Mods, ModuleBytecode, ModuleSource, RUNAWAY_SCRIPT,
+    SCROLL_FIELDS, meta_url, resolve_module,
 };
+use crate::bytecode::{self, Header};
+use crate::net::AppFolder;
 
 /// How much stack a script may use before it is stopped with "Maximum call
 /// stack size exceeded".
@@ -149,9 +154,10 @@ impl JsEngine {
     }
 
     /// Load modules from `source` from now on, by URL: what `import` and
-    /// `import()` reach, and [`run_module`](Self::run_module).
-    pub fn set_modules(&self, source: ModuleSource) {
-        self.runtime.set_loader(Urls, Files(source));
+    /// `import()` reach, and [`run_module`](Self::run_module). A module that
+    /// `bytecode` has bytecode for is loaded from that instead.
+    pub fn set_modules(&self, source: ModuleSource, bytecode: Option<ModuleBytecode>) {
+        self.runtime.set_loader(Urls, Files { source, bytecode });
     }
 
     /// Run a classic script of the page, as a browser does: not in strict
@@ -470,8 +476,13 @@ impl Resolver for Urls {
     }
 }
 
-/// Reads modules, by URL, and gives each its `import.meta.url`.
-struct Files(ModuleSource);
+/// Reads modules, by URL, from their bytecode when the app folder has some
+/// that fits and from their source otherwise, and gives each its
+/// `import.meta.url`.
+struct Files {
+    source: ModuleSource,
+    bytecode: Option<ModuleBytecode>,
+}
 
 impl Loader for Files {
     fn load<'js>(
@@ -480,9 +491,189 @@ impl Loader for Files {
         name: &str,
         _attributes: Option<ImportAttributes<'js>>,
     ) -> rquickjs::Result<Module<'js, Declared>> {
-        let source = (self.0)(name).map_err(|message| Exception::throw_message(ctx, &message))?;
+        if let Some(compiled) = self.bytecode.as_ref().and_then(|find| find(name)) {
+            // SAFETY: QuickJS runs bytecode unchecked. This came from the app
+            // folder, as the module's source would, and its header says this
+            // host wrote it, for this module (`bytecode::lookup`). What
+            // QuickJS does check (its format version, a checksum) turns a
+            // damaged file into an error, which falls back to the source.
+            match unsafe { Module::load(ctx.clone(), &compiled) } {
+                Ok(module) => {
+                    module.meta()?.set("url", meta_url(name))?;
+                    return Ok(module);
+                }
+                Err(error) => {
+                    let reason = caught(ctx, error);
+                    let path = name.trim_start_matches(crate::net::ORIGIN.trim_end_matches('/'));
+                    eprintln!(
+                        "[host] {path}{} did not load ({reason}): loading the JavaScript instead",
+                        bytecode::SUFFIX
+                    );
+                }
+            }
+        }
+        let source =
+            (self.source)(name).map_err(|message| Exception::throw_message(ctx, &message))?;
         let module = Module::declare(ctx.clone(), name, source)?;
         module.meta()?.set("url", meta_url(name))?;
+        Ok(module)
+    }
+}
+
+/// What a failed call threw, as text.
+fn caught(ctx: &Ctx<'_>, error: rquickjs::Error) -> String {
+    if !error.is_exception() {
+        return error.to_string();
+    }
+    let exception = ctx.catch();
+    match exception.as_exception() {
+        Some(e) => e.message().unwrap_or_default(),
+        None => format!("{exception:?}"),
+    }
+}
+
+/// The engine compiled modules record: "QuickJS-ng 0.16.2".
+pub fn engine() -> String {
+    // SAFETY: a static, NUL-terminated string.
+    let version = unsafe { std::ffi::CStr::from_ptr(rquickjs::qjs::JS_GetVersion()) };
+    format!("QuickJS-ng {}", version.to_string_lossy())
+}
+
+/// Compile every module of the app folder `dir` to bytecode, next to it
+/// (see `bytecode.rs`), with this host's own QuickJS. Run after every
+/// build, on the folder the build has just written.
+///
+/// Nothing runs: modules are compiled, not evaluated. A module that does
+/// not compile (a syntax error, a missing import, a script that is not a
+/// module) gets no bytecode and loads as JavaScript, as it would have.
+pub fn compile_folder(dir: &Path) -> Result<Compiled, String> {
+    let root = dir
+        .canonicalize()
+        .map_err(|e| format!("{}: {e}", dir.display()))?;
+    let folder = Arc::new(AppFolder::new(Some(&root)));
+    let mut done = Compiled::default();
+    let mut needed = BTreeSet::new();
+    for file in bytecode::modules(&root)? {
+        needed.insert(bytecode::url_of(&file)?);
+    }
+    if needed.is_empty() {
+        return Ok(done);
+    }
+
+    let written = Rc::new(RefCell::new(BTreeSet::new()));
+    let failures = Rc::new(RefCell::new(Vec::new()));
+    let runtime = Runtime::new().map_err(|e| e.to_string())?;
+    runtime.set_max_stack_size(SCRIPT_STACK);
+    // Compiling a module compiles what it imports, through the loader:
+    // the needed ones are written as they go by.
+    runtime.set_loader(
+        Urls,
+        Compiler {
+            folder: folder.clone(),
+            needed: needed.clone(),
+            written: written.clone(),
+            failures: failures.clone(),
+        },
+    );
+    let context = Context::full(&runtime).map_err(|e| e.to_string())?;
+    context.with(|ctx| {
+        for url in &needed {
+            if written.borrow().contains(url) {
+                continue;
+            }
+            let outcome = folder.module(url).and_then(|source| {
+                let module = Module::declare(ctx.clone(), url.as_str(), source.clone())
+                    .map_err(|error| caught(&ctx, error))?;
+                write_compiled(&folder, url, &source, &module)
+            });
+            match outcome {
+                Ok(()) => {
+                    written.borrow_mut().insert(url.clone());
+                }
+                Err(reason) => failures.borrow_mut().push((url.clone(), reason)),
+            }
+        }
+    });
+
+    for (url, reason) in failures.take() {
+        if written.borrow().contains(&url) {
+            continue;
+        }
+        // Bytecode from before, if the folder had any, is older than the module.
+        if let Ok(file) = compiled_path(&folder, &url) {
+            let _ = std::fs::remove_file(file);
+        }
+        let path = url
+            .strip_prefix(crate::net::ORIGIN)
+            .unwrap_or(&url)
+            .to_owned();
+        if !done.left.iter().any(|(left, _)| *left == path) {
+            done.left.push((path, reason));
+        }
+    }
+    done.compiled = written.borrow().len();
+    Ok(done)
+}
+
+/// Where the bytecode of the module at `url` goes: next to its file.
+fn compiled_path(folder: &AppFolder, url: &str) -> Result<std::path::PathBuf, String> {
+    let url = blitz_traits::net::Url::parse(url).map_err(|e| format!("{url}: {e}"))?;
+    let mut path = folder
+        .file(&url)
+        .map_err(|e| e.to_string())?
+        .into_os_string();
+    path.push(bytecode::SUFFIX);
+    Ok(path.into())
+}
+
+/// Write the bytecode of a module just compiled, without its source text:
+/// a third of the size, and error stacks keep their file, line and column.
+/// `Function.prototype.toString` gives the `[native code]` form instead.
+fn write_compiled(
+    folder: &AppFolder,
+    url: &str,
+    source: &str,
+    module: &Module<'_, Declared>,
+) -> Result<(), String> {
+    let payload = module
+        .write(WriteOptions {
+            strip_source: true,
+            ..Default::default()
+        })
+        .map_err(|e| format!("cannot write its bytecode: {e}"))?;
+    let file = Header::new(url, source.as_bytes()).encode(&payload);
+    bytecode::write(&compiled_path(folder, url)?, &file)
+}
+
+/// The loader `compile_folder` compiles with: every import from source,
+/// and the bytecode of the needed ones written as they are compiled.
+struct Compiler {
+    folder: Arc<AppFolder>,
+    needed: BTreeSet<String>,
+    written: Rc<RefCell<BTreeSet<String>>>,
+    failures: Rc<RefCell<Vec<(String, String)>>>,
+}
+
+impl Loader for Compiler {
+    fn load<'js>(
+        &mut self,
+        ctx: &Ctx<'js>,
+        name: &str,
+        _attributes: Option<ImportAttributes<'js>>,
+    ) -> rquickjs::Result<Module<'js, Declared>> {
+        let source = self
+            .folder
+            .module(name)
+            .map_err(|message| Exception::throw_message(ctx, &message))?;
+        let module = Module::declare(ctx.clone(), name, source.clone())?;
+        if self.needed.contains(name) && !self.written.borrow().contains(name) {
+            match write_compiled(&self.folder, name, &source, &module) {
+                Ok(()) => {
+                    self.written.borrow_mut().insert(name.to_owned());
+                }
+                Err(reason) => self.failures.borrow_mut().push((name.to_owned(), reason)),
+            }
+        }
         Ok(module)
     }
 }

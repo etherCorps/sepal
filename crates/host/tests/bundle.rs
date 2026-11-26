@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use sepal::app::decode_icon;
 use sepal::bundle::bundle_macos;
+use sepal::bytecode::SUFFIX;
 
 fn counter_dist() -> &'static Path {
     Path::new(concat!(
@@ -89,6 +90,23 @@ fn bundles_the_counter_example() {
     // The whole app folder: the page, its chunks and stylesheet, app.json, the icon.
     let copied = files(counter_dist());
     assert!(copied.contains(&PathBuf::from("index.html")) && copied.len() > 4);
+    // Bytecode is this host's own, compiled again in the bundle.
+    let (copied, compiled): (Vec<_>, Vec<_>) = copied
+        .into_iter()
+        .partition(|file| !file.to_string_lossy().ends_with(SUFFIX));
+    let resources = files(&contents.join("Resources"));
+    for module in copied
+        .iter()
+        .filter(|file| file.extension().is_some_and(|x| x == "js"))
+    {
+        let qbc = PathBuf::from(format!("{}{SUFFIX}", module.display()));
+        assert_eq!(
+            resources.contains(&qbc),
+            cfg!(not(feature = "engine-v8")) || compiled.contains(&qbc),
+            "{}",
+            qbc.display()
+        );
+    }
     for file in copied {
         assert_eq!(
             fs::read(contents.join("Resources").join(&file)).unwrap(),

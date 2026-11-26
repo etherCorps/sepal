@@ -134,7 +134,8 @@ Each platform's binary is a package of its own, so nobody who installs from
 npm needs Rust, and nobody downloads the other platforms' binaries.
 `@ethercorps/calyx` lists them as optional dependencies; each sets `os` and
 `cpu` (and `libc` on Linux), so the package manager installs only the one
-that fits. The Vite preset and the CLI ask `@ethercorps/calyx` for the path;
+that fits. The Vite preset (to compile the app's modules after each build,
+and for the dev window) and the CLI ask `@ethercorps/calyx` for the path;
 `SEPAL_HOST` overrides it with a host you built yourself.
 
 | Package | Binary | Download |
@@ -252,6 +253,7 @@ dist/
   …               the files from static/, as they are
   app.json        what the host needs: name, window, permissions, updater
   icon.png        the icon, when the app has one, or the Sepal icon
+  **/*.js.qbc     each module compiled to bytecode, next to it (below)
 ```
 
 The host loads it as a browser loads a site, from `http://app.localhost/`,
@@ -259,6 +261,18 @@ an address that only names the folder: it parses `index.html`, runs its
 scripts, and loads modules, stylesheets, fonts and images from the folder.
 Nothing on the page comes from the network. A path that leaves the folder,
 through `..` or a symlink, is refused.
+
+After the build, calyx compiles every module of the folder to QuickJS
+bytecode (`calyx --compile dist`; the adapter and `sepal()` run it): `x.js`
+gets `x.js.qbc` next to it, and the host loads that instead of parsing and
+compiling the module, which takes about 20 ms off the Tracker's start-up.
+The bytecode has no source text, and keeps file, line and column for error
+stacks. It is used only when its header says this host wrote it, for this
+module, on this platform, from a `.js` of the size the file has now (in dev,
+of the same contents); otherwise the host loads the JavaScript and says why.
+It is read only from the app folder, as modules are. The `.js` files ship
+too, and V8 hosts load only those. A machine without a calyx builds the
+app all the same, without bytecode, and says so.
 
 What the host does with what a page holds:
 
@@ -287,7 +301,8 @@ calyx --bundle dist [out-dir]
 Counter.app/Contents/
   Info.plist           name, id, version, icon
   MacOS/Counter        the host binary that did the bundling
-  Resources/           everything from dist/, plus AppIcon.icns
+  Resources/           everything from dist/, plus AppIcon.icns; its modules'
+                       bytecode compiled again by that host, so the two fit
 ```
 
 The manifest needs a `name`. `id` (default `app.sepal.<name>`) and
@@ -1023,6 +1038,9 @@ What the time is spent on, from sampling:
   renderer's glyph atlas is now on (a patch to the vendored
   `anyrender_vello_hybrid`), which cut the time spent painting by half. A
   page with an endless animation, such as a `Skeleton`, still never idles.
+- **Start-up.** Modules load as bytecode, compiled when the app is built:
+  the Tracker's page starts 19-20 ms sooner than when QuickJS parsed and
+  compiled its 36 modules at every launch (`compare/results/bytecode.md`).
 - **The engine.** QuickJS is an interpreter. The host can be built on V8
   instead (`cargo build --features engine-v8`, experimental): long lists get
   about 3.5 times faster and components about 1.5 times once warm, for a
@@ -1073,6 +1091,8 @@ each refresh is also printed to stderr.
 - Measurements (`dom: true` only) leave out CSS transforms, and inside an
   event handler are as of the last layout. See "Measuring the page".
 - A script that runs for 10 seconds without returning is stopped.
+- `Function.prototype.toString` returns the `[native code]` form for app
+  code: its modules load as bytecode, without their source text.
 - An element is put in the SVG namespace by its name alone. `a`, `title`,
   `style` and `script` are always HTML, also inside an `<svg>`.
 - Blitz itself is beta. Its status page lists `position: sticky`, container

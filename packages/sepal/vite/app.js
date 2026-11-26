@@ -1,6 +1,7 @@
 // What every way of building an app shares, whichever router it uses: reading
-// `sepal.config.ts`, writing the manifest the host reads (`app.json`), and
-// opening the app in dev and reloading it after each rebuild.
+// `sepal.config.ts`, writing the manifest the host reads (`app.json`),
+// compiling the modules to bytecode, and opening the app in dev and
+// reloading it after each rebuild.
 //
 // Runs in Node.
 
@@ -131,4 +132,38 @@ export function dev_window(project) {
 		// code: when the build tool exits, the host's stdin closes and it quits.
 		host.on('exit', (code) => process.exit(code ?? 0));
 	};
+}
+
+/**
+ * Compile the app's modules to bytecode with this machine's calyx (`calyx
+ * --compile`), which writes `x.js.qbc` next to each `x.js`: the host then
+ * loads them without parsing them. The app folder is a new build, so every
+ * module is compiled. Without a calyx that can, the app loads its
+ * JavaScript, as it always could: the build says so, and goes on.
+ * @param {string} dir the app folder
+ * @param {(message: string) => void} warn
+ * @returns {string | null} calyx's summary, or null when nothing was compiled
+ */
+export function compile_bytecode(dir, warn) {
+	let bin;
+	try {
+		bin = find_host().path;
+	} catch (error) {
+		warn(`sepal: the app's modules were not compiled to bytecode, so it loads their JavaScript: ${/** @type {Error} */ (error).message}`);
+		return null;
+	}
+	const done = spawnSync(bin, ['--compile', dir], { encoding: 'utf8' });
+	if (done.error || done.status !== 0) {
+		// A calyx from before --compile takes it for the app folder.
+		if (done.stderr?.includes('--compile is not an app folder')) {
+			warn(`sepal: ${bin} is a calyx from before \`--compile\`, so the app's modules were not compiled to bytecode and it loads their JavaScript. A current calyx compiles them.`);
+			return null;
+		}
+		const why = done.error?.message ?? done.stderr.trim();
+		warn(`sepal: compiling the app's modules to bytecode failed, so it loads their JavaScript: ${why}`);
+		return null;
+	}
+	// Modules that stayed JavaScript, one line each.
+	for (const line of done.stderr.split('\n').filter(Boolean)) warn(`sepal: ${line}`);
+	return done.stdout.trim() || null;
 }

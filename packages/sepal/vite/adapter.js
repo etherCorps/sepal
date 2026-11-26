@@ -19,7 +19,7 @@
 
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { kit, manifest } from './app.js';
+import { compile_bytecode, kit, manifest } from './app.js';
 import { check_css, check_page } from './page.js';
 import { kit_setup_problems } from './vite.js';
 
@@ -108,6 +108,8 @@ export default function adapter({ out = 'dist' } = {}) {
 			const written = manifest(session.options, root, existsSync(assets) ? assets : '');
 			if (written) writeFileSync(join(to, 'app.json'), written.json);
 			if (written?.icon) cpSync(written.icon, join(to, 'icon.png'));
+			const compiled = compile_bytecode(to, (message) => builder.log.warn(message));
+			if (compiled) builder.log.minor(compiled);
 			builder.log.minor(`Wrote the app to ${relative(root, to) || '.'}`);
 			session.written(to);
 		}

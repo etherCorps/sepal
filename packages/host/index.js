@@ -3,7 +3,7 @@
 // Each platform's binary is a package of its own, `@ethercorps/calyx-<platform>`,
 // listed in this package's optionalDependencies, so a package manager installs
 // only the one that fits the machine. Anything that needs the host (the Vite
-// preset in dev, the CLI) asks here, so how binaries are delivered can change
+// preset, after a build and in dev, the CLI) asks here, so how binaries are delivered can change
 // without touching the callers.
 
 import { existsSync, readFileSync } from 'node:fs';
