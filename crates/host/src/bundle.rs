@@ -82,6 +82,9 @@ pub fn bundle_macos(dist: &Path, out: &Path, host: &Path) -> Result<PathBuf, Str
     let macos = contents.join("MacOS");
     io(fs::create_dir_all(&macos), &macos)?;
     copy_dir(dist, &resources)?;
+    // Compiled again by this binary, which is the one the bundle runs: the
+    // dist's bytecode may be another calyx's, and would load as JavaScript.
+    crate::js::compile_folder(&resources)?;
     // `fs::copy` keeps the executable bit and the linker's ad-hoc signature.
     io(fs::copy(host, macos.join(name)), host)?;
 

@@ -18,12 +18,12 @@ use std::time::Duration;
 #[cfg(not(feature = "engine-v8"))]
 mod quickjs;
 #[cfg(not(feature = "engine-v8"))]
-pub use quickjs::JsEngine;
+pub use quickjs::{JsEngine, compile_folder, engine};
 
 #[cfg(feature = "engine-v8")]
 mod v8_engine;
 #[cfg(feature = "engine-v8")]
-pub use v8_engine::JsEngine;
+pub use v8_engine::{JsEngine, compile_folder, engine};
 
 /// One turn's worth of tree mutations. See `packages/sepal/src/protocol.js`.
 pub struct Batch {
@@ -92,6 +92,25 @@ pub struct HostCall {
 
 /// Where the engines get a module's source, by its URL (`AppFolder::module`).
 pub type ModuleSource = Box<dyn Fn(&str) -> Result<String, String>>;
+
+/// Where QuickJS gets a module's bytecode, by its URL, when the app folder
+/// has some this host wrote (`bytecode::finder`). V8 compiles JavaScript.
+pub type ModuleBytecode = Box<dyn Fn(&str) -> Option<Vec<u8>>>;
+
+/// What `compile_folder` did to an app folder.
+#[derive(Debug, Default)]
+pub struct Compiled {
+    /// Modules compiled and written.
+    pub compiled: usize,
+    /// Modules whose bytecode was already what it would have written.
+    pub current: usize,
+    /// Compiled files removed because their module is gone.
+    pub removed: usize,
+    /// Modules that did not compile, with why: they load as JavaScript.
+    pub left: Vec<(String, String)>,
+    /// Said instead of compiling, by an engine that has no bytecode.
+    pub note: Option<&'static str>,
+}
 
 /// The URL a module specifier names, from the module or page that imports it
 /// (`base`). Modules load only from the app folder; a bare name such as

@@ -13,8 +13,8 @@ use std::sync::{Arc, Condvar, Mutex, Once};
 use std::time::{Duration, Instant};
 
 use super::{
-    Batch, EventDetail, HostCall, Mods, ModuleSource, RUNAWAY_SCRIPT, SCROLL_FIELDS, meta_url,
-    resolve_module,
+    Batch, Compiled, EventDetail, HostCall, Mods, ModuleBytecode, ModuleSource, RUNAWAY_SCRIPT,
+    SCROLL_FIELDS, meta_url, resolve_module,
 };
 
 type Measure = Box<dyn Fn(u32, &dyn Fn() -> Option<Batch>) -> Option<[f64; 9]>>;
@@ -238,7 +238,8 @@ impl JsEngine {
 
     /// Load modules from `source` from now on, by URL: what `import` and
     /// `import()` reach, and [`run_module`](Self::run_module).
-    pub fn set_modules(&self, source: ModuleSource) {
+    /// V8 compiles the JavaScript: bytecode is QuickJS's, and never read here.
+    pub fn set_modules(&self, source: ModuleSource, _bytecode: Option<ModuleBytecode>) {
         *self.host.source.borrow_mut() = Some(source);
     }
 
@@ -952,4 +953,17 @@ fn measure(
             .collect();
         result.set(v8::Array::new_with_elements(scope, &numbers).into());
     }
+}
+
+/// The engine, as compiled modules would record it. V8 writes none.
+pub fn engine() -> String {
+    format!("V8 {}", v8::V8::get_version())
+}
+
+/// V8 loads an app's JavaScript and has no bytecode to write.
+pub fn compile_folder(_dir: &std::path::Path) -> Result<Compiled, String> {
+    Ok(Compiled {
+        note: Some("this calyx runs V8, which loads the app's JavaScript: nothing to compile"),
+        ..Default::default()
+    })
 }

@@ -328,7 +328,8 @@ impl SvelteDocument {
         let js = JsEngine::new()?;
         if let Some(resources) = &resources {
             let folder = resources.folder().clone();
-            js.set_modules(Box::new(move |url| folder.module(url)));
+            let bytecode = crate::bytecode::finder(folder.clone(), app.dev);
+            js.set_modules(Box::new(move |url| folder.module(url)), Some(bytecode));
         }
         // Outside a window, time is the caller's to move (`advance_time`), for
         // scripts as for animations: one clock, or a script that waits for an

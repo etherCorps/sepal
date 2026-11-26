@@ -1,8 +1,16 @@
 //! Windows gives a program's main thread 1 MB of stack unless the program asks
 //! for more when it is linked; macOS and Linux give 8 MB. The JavaScript engine
 //! alone may use 4 MB (`src/js/quickjs.rs`), so ask for what the others have.
+//!
+//! It also tells the crate which target it is built for.
 
 fn main() {
+    // The target this host is built for, which compiled modules record
+    // (`src/bytecode.rs`): bytecode from another platform is not loaded.
+    println!(
+        "cargo:rustc-env=SEPAL_TARGET={}",
+        std::env::var("TARGET").expect("cargo sets TARGET for build scripts")
+    );
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         let msvc = std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc");
         let stack = if msvc {

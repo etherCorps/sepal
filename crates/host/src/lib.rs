@@ -9,6 +9,7 @@
 pub mod api;
 pub mod app;
 pub mod bundle;
+pub mod bytecode;
 pub mod document;
 mod hud;
 pub mod js;

@@ -5,6 +5,8 @@
 //!        [--update-key <file>] [--update-notes <text>]`
 //!                                        write <name>.app (default: next to <dist>, in bundle/),
 //!                                        and with a key also the signed update for it
+//! `calyx --compile <dist>`               compile the app's modules to bytecode, next to them
+//!                                        (QuickJS only; what changed since the last time)
 //! `calyx --updater-keygen <file>`        make an update signing key; prints the public half
 //! `calyx --version`                      the version, the same as the npm package it ships in
 //!
@@ -41,7 +43,7 @@ fn parse_size(size: &str) -> Option<(u32, u32)> {
 }
 
 fn run(args: &[String]) -> Result<(), String> {
-    const USAGE: &str = "usage: calyx [--watch | --screenshot out.png] <dist> [WIDTHxHEIGHT]\n       calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       calyx --updater-keygen <private-key-file>\n       calyx --version";
+    const USAGE: &str = "usage: calyx [--watch | --screenshot out.png] <dist> [WIDTHxHEIGHT]\n       calyx --bundle <dist> [out-dir] [--sign <identity>] [--notarize <keychain-profile>] [--update-key <file>] [--update-notes <text>]\n       calyx --compile <dist>\n       calyx --updater-keygen <private-key-file>\n       calyx --version";
 
     // Launched from Finder or the Dock: no arguments, the app is inside the bundle.
     if args.is_empty()
@@ -68,6 +70,12 @@ fn run(args: &[String]) -> Result<(), String> {
         && flag == "--updater-keygen"
     {
         return keygen(rest.first().ok_or(USAGE)?);
+    }
+
+    if let [flag, dist] = args
+        && flag == "--compile"
+    {
+        return compile(Path::new(dist));
     }
 
     if let [flag, rest @ ..] = args
@@ -99,6 +107,29 @@ fn run(args: &[String]) -> Result<(), String> {
             window(app, watch.then(|| Box::new(reload) as _))
         }
     }
+}
+
+/// `--compile <dist>`: the app's modules to bytecode, with this binary, so
+/// that the bytecode always fits the host that wrote it.
+fn compile(dist: &Path) -> Result<(), String> {
+    let started = std::time::Instant::now();
+    let done = sepal::js::compile_folder(dist)?;
+    if let Some(note) = done.note {
+        println!("calyx: {note}");
+        return Ok(());
+    }
+    for (module, reason) in &done.left {
+        eprintln!("{module} stays JavaScript: {reason}");
+    }
+    let modules = |n: usize| format!("{n} module{}", if n == 1 { "" } else { "s" });
+    println!(
+        "calyx: compiled {} to bytecode in {:.0} ms ({} up to date, {} removed)",
+        modules(done.compiled),
+        started.elapsed().as_secs_f64() * 1000.0,
+        done.current,
+        done.removed
+    );
+    Ok(())
 }
 
 /// `--bundle <dist> [out-dir] [--sign <identity>] [--notarize <profile>]`.

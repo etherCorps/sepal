@@ -25,7 +25,7 @@ import { join, relative, resolve } from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { preprocess } from 'svelte/compiler';
 import { normalizePath } from 'vite';
-import { dev_window, kit, load_config, manifest } from './app.js';
+import { compile_bytecode, dev_window, keep_bytecode, kit, load_config, manifest, restore_bytecode } from './app.js';
 import { element_bindings } from './bindings.js';
 import { head } from './head.js';
 import { check_css, check_page } from './page.js';
@@ -165,6 +165,8 @@ export function sepal(inline = {}) {
 	let static_dir = '';
 	let out_dir = '';
 	let watching = false;
+	/** The last build's bytecode, between `buildStart` and `writeBundle`. */
+	let bytecode = new Map();
 	const show = dev_window(() => ({ root, out_dir, name: options.app?.name }));
 
 	/** @type {import('vite').Plugin} */
@@ -331,9 +333,18 @@ export function sepal(inline = {}) {
 		config_plugin,
 		{
 			name: 'sepal:dev',
+			// Vite empties the app folder before it writes a build. The last
+			// build's bytecode is put back, so only what changed is compiled.
+			buildStart() {
+				bytecode = keep_bytecode(out_dir);
+			},
 			// `writeBundle`, not `closeBundle`: it only runs when the build
 			// succeeded, so a syntax error leaves the last good build on screen.
 			writeBundle() {
+				restore_bytecode(out_dir, bytecode);
+				bytecode = new Map();
+				const compiled = compile_bytecode(out_dir, (message) => logger?.warn(message));
+				if (compiled) logger?.info(compiled);
 				if (watching) show();
 			}
 		}
