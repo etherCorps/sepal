@@ -52,6 +52,10 @@ Also:
   or a path that leads out of the folder. No `permissions.http` is needed
   for it, and it never reaches the network. `fetch('not a url')` is now a
   404 instead of an error.
+- **A minimum window size:** `window.minWidth` and `window.minHeight` in
+  `sepal.config.ts` say how small the window can be made, for a layout
+  that cannot work below some size. The window never opens smaller. The
+  Tracker sets 720 x 520.
 - **The title needs no permission.** `document.title` and
   `<svelte:head><title>` set the window's title without
   `permissions.window`, as a page's title on the web; so does

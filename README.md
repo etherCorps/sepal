@@ -192,6 +192,7 @@ export default defineConfig({
 		id: 'com.example.counter',
 		// icon: static/icon.png when it exists (PNG, square, 1024×1024 recommended); the Sepal icon otherwise
 		window: { title: 'Svelte on Blitz', width: 800, height: 600 }
+		// window.minWidth, window.minHeight: how small the window can be made
 		// version: defaults to the one in package.json
 		// updater: see "Updates"
 	},
