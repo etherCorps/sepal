@@ -1038,6 +1038,10 @@ What the time is spent on, from sampling:
   renderer's glyph atlas is now on (a patch to the vendored
   `anyrender_vello_hybrid`), which cut the time spent painting by half. A
   page with an endless animation, such as a `Skeleton`, still never idles.
+- **Navigation.** After every navigation SvelteKit looks at each link on
+  the page, to set up preloading, and walks the page for `[autofocus]`: on
+  the Tracker's Board, 316 links of 3,500 elements, that is about 4 ms in the
+  DOM layer (7.3 µs a link and two walks of under 1 ms).
 - **Start-up.** Modules load as bytecode, compiled when the app is built:
   the Tracker's page starts 19-20 ms sooner than when QuickJS parsed and
   compiled its 36 modules at every launch (`compare/results/bytecode.md`).

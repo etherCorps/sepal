@@ -121,6 +121,19 @@ What changes for apps:
 - **`calyx --bundle` compiles again** inside the bundle, with the binary
   it bundles.
 
+### Navigation in SvelteKit apps is faster
+
+After every navigation SvelteKit walks the page for its links, to set up
+preloading, and for `[autofocus]`. The DOM layer now resolves a link's
+`href` once per attribute and page, builds a selector's test once instead
+of matching it from scratch on every element, and makes a `URL`'s
+`searchParams` only when it is asked for. SvelteKit's look at each link
+went from 16.3 to 7.3 µs; in the Tracker the turn that renders the Board
+is 5.5 ms shorter and Issues' 3.2 (`compare/results/nav-cost.md`).
+
+- `searchParams` on the DOM layer's `URL` is no longer an own property of
+  each URL, as in browsers and Node: `Object.keys(url)` no longer lists it.
+
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
 ### Breaking: SvelteKit is the only router

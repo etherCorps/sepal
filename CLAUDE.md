@@ -534,6 +534,10 @@ at the size when a change adds crates or features.
   AppKit: it cannot show a problem in how macOS delivers events.
   `key <name>` (`key Escape`) and `type <text>` press keys; those start one
   step later, at the document, because winit cannot build a key event.
+- Timing a step headless, put `drive`'s `gc:` before it: a cycle
+  collection, so that none lands in one run and not the next (a Board visit
+  varies from 78 to 117 ms without it). Time with `Date.now()` in an
+  `eval:`: `performance.now()` stands still headless.
 - `drive`'s `time:` moves virtual time and returns at once, so a `fetch`
   over the network is still on its way. `real:SECONDS` lets real time pass
   while the host's answers come in: `drive <app> real:4 text:SEL`.
