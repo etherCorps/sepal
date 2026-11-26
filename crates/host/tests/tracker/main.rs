@@ -171,11 +171,42 @@ fn click(doc: &mut SvelteDocument, selector: &str) {
 }
 
 fn click_node(doc: &mut SvelteDocument, node: blitz_dom::NodeId) {
+    // As a user would: what is not under the pointer at its middle (scrolled
+    // out of its box, which clips clicks, or under a toast) is scrolled to
+    // the middle of its box first.
+    let (x, y, width, height) = doc.rect(node).expect("node has no layout");
+    let hit = doc
+        .base()
+        .hit((x + width / 2.0) as f32, (y + height / 2.0) as f32)
+        .map(|hit| hit.node_id);
+    let reaches = |mut at: Option<blitz_dom::NodeId>| {
+        while let Some(id) = at {
+            if id == node {
+                return true;
+            }
+            at = doc.base().get_node(id).and_then(|n| n.parent);
+        }
+        false
+    };
+    if !reaches(hit) {
+        doc.scroll_into_view(node);
+    }
     doc.click(node);
     doc.settle();
     doc.resolve();
     // SvelteKit lets the page repaint before it follows a link: a
     // `requestAnimationFrame`, then a `setTimeout(0)`, which runs a turn later.
+    doc.wait(0.04);
+}
+
+/// Scroll the list back to its top: "Show more" and "Show all" are at its
+/// end, and clicking one scrolls down to it first (`click_node`).
+fn list_to_top(doc: &mut SvelteDocument) {
+    js(
+        doc,
+        "document.querySelector('[data-testid=list]').scrollTop = 0, ''",
+    );
+    doc.settle();
     doc.wait(0.04);
 }
 

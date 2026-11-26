@@ -404,13 +404,16 @@ at the size when a change adds crates or features.
   needs `doc.wait(0.04)` after it settles (the frame comes in the first
   step, the timer in the second); the Tracker's and router_dom's `click()`
   do that. `goto` does not wait.
-- **SvelteKit's route announcer** (`#svelte-announcer`) is a 1px
-  `overflow: hidden` box at the top left whose text overflows it, and Blitz
-  hit-tests overflowing content. `sepal/adapter` gives it `pointer-events:
-  none` in a `<style>` in `index.html`; without that it took clicks at the top left after
-  the first navigation. The real fix is a Blitz patch that clips hit
-  testing to `overflow: hidden`, which also changes what the Tracker tests
-  can click (they click rows far below the window).
+- **A box that clips its overflow clips clicks too** (blitz-dom patch 14):
+  outside an `overflow: scroll`/`hidden`/`auto` box's padding box nothing
+  inside it is hit, as nothing inside it is drawn there. Upstream hit
+  content scrolled out of a list under the buttons above it. A test that
+  clicks something out of view (a row far down a list) has to scroll it in
+  first, as a user would: `SvelteDocument::scroll_into_view`, which the
+  Tracker's `click()` calls when its target is not under the pointer.
+  SvelteKit's route announcer (`#svelte-announcer`, a 1px `overflow:
+  hidden` box whose text overflows it) took clicks at the top left before
+  this; `sepal/adapter` still gives it `pointer-events: none`.
 - **An unknown address needs a route in a SvelteKit app.** SvelteKit
   answers it with a page load from the server; an app has none, so `goto`
   rejects (`navigation_route_missing`) and a link changes nothing on
@@ -461,7 +464,7 @@ at the size when a change adds crates or features.
   brings it back; check with `footprint` while frames are drawn. See its
   `PATCH.md`. Same rules as below.
 - **`crates/blitz-dom` is a patched copy**, wired in with `[patch.crates-io]`.
-  It differs from crates.io 0.3.0-beta.4 in thirteen places, all marked
+  It differs from crates.io 0.3.0-beta.4 in fourteen places, all marked
   `sepal patch` (as are the changes in the other patched copies) and
   described in `crates/blitz-dom/PATCH.md`. Do not
   edit anything else there, and do not run `cargo fmt` on it.

@@ -1,7 +1,7 @@
 # Patched copy of blitz-dom 0.3.0-beta.4
 
 This is the crates.io source of `blitz-dom` 0.3.0-beta.4 (MIT OR Apache-2.0,
-https://github.com/DioxusLabs/blitz) with thirteen changes. `crates/host/Cargo.toml`
+https://github.com/DioxusLabs/blitz) with fourteen changes. `crates/host/Cargo.toml`
 swaps it in through `[patch.crates-io]`.
 
 ## The changes
@@ -161,8 +161,26 @@ and `src/document.rs` (`laid_out_in`):
   tree; subtrees without damage are now skipped, by the same test
   `propagate_damage_flags` uses (1.5 ms on that page).
 
+**14. A box that clips its overflow clips clicks too.** `src/node/node.rs`,
+`hit_inner`, with `clips_descendants`: an element that clips its overflow
+(as blitz-paint decides in `render.rs`, `should_clip`: `overflow` other than
+`visible` on either axis, or paint containment; never the root element)
+draws nothing of its descendants outside its padding box, and now nothing
+there is hit either. Outside the padding box the element itself is hit on
+its border, and nothing otherwise.
+
+Upstream tests the descendants anyway, and in the box's scrolled
+coordinates, where a point above a list scrolled down by 40 px counts as
+inside it. Rows scrolled out of the top of a list took the clicks meant for
+the buttons drawn above it (`examples/counter`: scroll the list a little and
+"start timer" stops working), and text overflowing an `overflow: hidden` box
+took clicks outside the box (SvelteKit's route announcer, which
+`sepal/adapter` gives `pointer-events: none` for that reason). Tests that
+clicked rows far below the window scroll them into view first now
+(`SvelteDocument::scroll_into_view`).
+
 ## Updating
 
 Do not edit anything else here. To move to a new blitz-dom version, replace the
-directory with that version's source and reapply the thirteen changes (search for
+directory with that version's source and reapply the fourteen changes (search for
 `sepal patch`).

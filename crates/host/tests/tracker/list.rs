@@ -87,6 +87,7 @@ fn paging_and_collapsing_groups() {
     click(&mut doc, "[data-testid=show-all]");
     assert_eq!(paged(&doc), 1000);
     assert!(doc.query("[data-testid=show-more]").is_none());
+    list_to_top(&mut doc);
 
     // Collapsing the first group pages out its rows and keeps its header;
     // the next group's header comes up under it.
@@ -128,6 +129,7 @@ fn show_all_mounts_only_the_rows_in_view() {
     click(&mut doc, "[data-testid=show-all]");
     assert_eq!(paged(&doc), 5000);
     assert!(doc.query("[data-testid=show-all]").is_none());
+    list_to_top(&mut doc);
     assert_eq!(count(&doc, "[data-testid=row]"), mounted, "the same window");
     assert!(doc.live_nodes() < 20_000, "{} live nodes", doc.live_nodes());
     // The list is as tall as every row would make it: 36px a row, 32 a group header.
@@ -149,6 +151,7 @@ fn the_wheel_scrolls_the_list_and_mounts_the_rows_in_view() {
     let mut doc = load();
     pick(&mut doc, "[data-testid=group-by]", "none");
     click(&mut doc, "[data-testid=show-all]");
+    list_to_top(&mut doc);
     let order = order(&doc);
     assert_eq!(order.len(), 5000);
     let list = doc.query("[data-testid=list]").unwrap();
@@ -471,7 +474,13 @@ fn detail_pane_edits() {
     let comments: usize = text(&doc, "[data-testid=tab-comments] span")
         .parse()
         .unwrap();
-    click(&mut doc, "[data-testid=comment-input]");
+    // The rename's toast covers the right of the field (toasts sit at the
+    // bottom right for 5 s): click its left end, as a user would.
+    let input = doc.query("[data-testid=comment-input]").unwrap();
+    doc.scroll_into_view(input);
+    let (x, y, _, height) = doc.rect(input).unwrap();
+    doc.click_at((x + 12.0) as f32, (y + height / 2.0) as f32);
+    doc.settle();
     doc.type_text("Looks good");
     doc.press("Enter");
     doc.settle();

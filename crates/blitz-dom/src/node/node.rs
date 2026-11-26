@@ -1452,6 +1452,36 @@ impl Node {
             *scrollbar = Some(sb);
         }
 
+        // sepal patch: an element that clips its overflow (as blitz-paint
+        // decides, see `clips_descendants`) shows nothing of its descendants
+        // outside its padding box, so nothing there can be hit either.
+        // Upstream tests the descendants anyway, in this node's scrolled
+        // coordinates: rows scrolled out of the top of a list took the
+        // clicks meant for buttons drawn above it, and text overflowing an
+        // `overflow: hidden` box took clicks outside the box. On its border,
+        // the element itself is hit.
+        if self.clips_descendants() {
+            let layout = self.final_layout();
+            let unscrolled_x = x - self.scroll_offset().x as f32;
+            let unscrolled_y = y - self.scroll_offset().y as f32;
+            let in_padding_box = unscrolled_x >= layout.border.left
+                && unscrolled_x <= layout.size.width - layout.border.right
+                && unscrolled_y >= layout.border.top
+                && unscrolled_y <= layout.size.height - layout.border.bottom;
+            if !in_padding_box {
+                let in_border_box = unscrolled_x >= 0.0
+                    && unscrolled_x <= layout.size.width
+                    && unscrolled_y >= 0.0
+                    && unscrolled_y <= layout.size.height;
+                return (in_border_box && !pointer_events_none).then_some(HitResult {
+                    node_id: self.id,
+                    x,
+                    y,
+                    is_text: false,
+                });
+            }
+        }
+
         let content_box_offset = taffy::Point {
             x: self.final_layout().padding.left + self.final_layout().border.left,
             y: self.final_layout().padding.top + self.final_layout().border.top,
@@ -1567,6 +1597,36 @@ impl Node {
         }
 
         None
+    }
+
+    /// sepal patch: whether this element clips its descendants to its padding
+    /// box, decided as blitz-paint's `render.rs` decides it (`should_clip`):
+    /// `overflow` other than `visible` on either axis, or paint containment.
+    /// Never the root element, whose overflow is the viewport's. (Paint also
+    /// clips images, sub-documents and text inputs, which have no children to
+    /// hit.)
+    fn clips_descendants(&self) -> bool {
+        use style::values::computed::{Contain, Overflow};
+        use style::values::specified::box_::{DisplayInside, DisplayOutside};
+        let Some(style) = self.primary_styles() else {
+            return false;
+        };
+        let is_root_element = self
+            .parent
+            .is_some_and(|parent| matches!(self.with(parent).data, NodeData::Document(_)));
+        if is_root_element {
+            return false;
+        }
+        let box_style = style.get_box();
+        let contain_paint = box_style.clone_contain().contains(Contain::PAINT) && {
+            let display = style.clone_display();
+            let internal_table_box_other_than_cell = display.outside() == DisplayOutside::InternalTable
+                && display.inside() != DisplayInside::TableCell;
+            !display.is_inline_flow() && !internal_table_box_other_than_cell
+        };
+        contain_paint
+            || !matches!(box_style.overflow_x, Overflow::Visible)
+            || !matches!(box_style.overflow_y, Overflow::Visible)
     }
 
     /// Find the inline root ancestor of this node (or self if this is an inline root).
