@@ -87,6 +87,7 @@ fn paging_and_collapsing_groups() {
     click(&mut doc, "[data-testid=show-all]");
     assert_eq!(paged(&doc), 1000);
     assert!(doc.query("[data-testid=show-more]").is_none());
+    list_to_top(&mut doc);
 
     // Collapsing the first group pages out its rows and keeps its header;
     // the next group's header comes up under it.
@@ -128,6 +129,7 @@ fn show_all_mounts_only_the_rows_in_view() {
     click(&mut doc, "[data-testid=show-all]");
     assert_eq!(paged(&doc), 5000);
     assert!(doc.query("[data-testid=show-all]").is_none());
+    list_to_top(&mut doc);
     assert_eq!(count(&doc, "[data-testid=row]"), mounted, "the same window");
     assert!(doc.live_nodes() < 20_000, "{} live nodes", doc.live_nodes());
     // The list is as tall as every row would make it: 36px a row, 32 a group header.
@@ -149,6 +151,7 @@ fn the_wheel_scrolls_the_list_and_mounts_the_rows_in_view() {
     let mut doc = load();
     pick(&mut doc, "[data-testid=group-by]", "none");
     click(&mut doc, "[data-testid=show-all]");
+    list_to_top(&mut doc);
     let order = order(&doc);
     assert_eq!(order.len(), 5000);
     let list = doc.query("[data-testid=list]").unwrap();
@@ -471,7 +474,13 @@ fn detail_pane_edits() {
     let comments: usize = text(&doc, "[data-testid=tab-comments] span")
         .parse()
         .unwrap();
-    click(&mut doc, "[data-testid=comment-input]");
+    // The rename's toast covers the right of the field (toasts sit at the
+    // bottom right for 5 s): click its left end, as a user would.
+    let input = doc.query("[data-testid=comment-input]").unwrap();
+    doc.scroll_into_view(input);
+    let (x, y, _, height) = doc.rect(input).unwrap();
+    doc.click_at((x + 12.0) as f32, (y + height / 2.0) as f32);
+    doc.settle();
     doc.type_text("Looks good");
     doc.press("Enter");
     doc.settle();
@@ -652,4 +661,92 @@ fn the_toolbar_stays_out_of_the_pane_at_the_1200px_window() {
         assert!(x + w <= pane.0, "{id} ends at {} under the pane at {}", x + w, pane.0);
     }
     assert!(doc.query("[data-testid=filter-assignee]").is_none(), "Assignee hides beside the pane");
+}
+
+/// Every control of the list's toolbar, where it is and whether a click at
+/// its middle reaches it.
+fn toolbar_controls(doc: &SvelteDocument) -> Vec<(&'static str, (f64, f64, f64, f64), bool)> {
+    let ids = ["search", "filter-status", "filter-priority", "filter-assignee", "filter-project", "group-by", "sort-by"];
+    ids.into_iter()
+        .filter_map(|id| {
+            let node = doc.query(&format!("[data-testid={id}]"))?;
+            let (x, y, w, h) = doc.rect(node)?;
+            Some((id, (x, y, w, h), reaches(doc, x + w / 2.0, y + h / 2.0, node)))
+        })
+        .collect()
+}
+
+/// In a narrow window the toolbar wraps onto more lines: every control stays
+/// in the list's column, where it can be seen and clicked.
+#[test]
+fn the_toolbar_wraps_in_a_narrow_window() {
+    let mut doc = load();
+    doc.layout(700, 800);
+    doc.settle();
+    let list = doc.rect(doc.query("[data-testid=list]").unwrap()).unwrap();
+    let controls = toolbar_controls(&doc);
+    assert_eq!(controls.len(), 7, "{controls:?}");
+    for (id, (x, _, w, _), clickable) in controls {
+        assert!(x >= list.0 && x + w <= list.0 + list.2, "{id} runs past the list: {x} + {w}");
+        assert!(clickable, "{id} cannot be clicked");
+    }
+    // The rows give the room to the title: labels show only in a wider list.
+    for title in doc.query_all("[data-testid=row] a span.truncate") {
+        let (_, _, w, _) = doc.rect(title).unwrap();
+        assert!(w >= 100.0, "a title squeezed to {w}px");
+    }
+}
+
+/// Side by side, the list is at least 400px wide (1120px window): the toolbar
+/// and the bulk bar stay in it, and the pane beside it takes its own clicks.
+#[test]
+fn beside_the_pane_the_list_keeps_its_controls_in_its_column() {
+    let mut doc = load();
+    doc.layout(1120, 800);
+    let first = keys(&doc)[0].clone();
+    click(&mut doc, &format!("{} input", row(&first)));
+    click(&mut doc, "[data-testid=row] a");
+    doc.wait(0.1);
+    doc.layout(1120, 800);
+    let pane_node = doc.query("[data-testid=pane]").unwrap();
+    let pane = doc.rect(pane_node).unwrap();
+    let list = doc.rect(doc.query("[data-testid=list]").unwrap()).unwrap();
+    assert_eq!(list.0 + list.2, pane.0, "side by side");
+    for (id, (x, _, w, _), clickable) in toolbar_controls(&doc) {
+        assert!(x + w <= pane.0, "{id} reaches the pane at {}", x + w);
+        assert!(clickable, "{id} cannot be clicked");
+    }
+    let bar = doc.rect(doc.query("[data-testid=bulk-bar]").unwrap()).unwrap();
+    assert!(bar.0 >= list.0 && bar.0 + bar.2 <= pane.0, "bulk bar {bar:?} out of the list {list:?}");
+    let search = doc.rect(doc.query("[data-testid=search]").unwrap()).unwrap();
+    assert!(reaches(&doc, pane.0 + 30.0, search.1 + 14.0, pane_node), "the pane's own clicks");
+}
+
+/// In a window too narrow for the list and the pane side by side, the pane
+/// takes the list's place, and closing it brings the list back.
+#[test]
+fn in_a_narrow_window_the_pane_takes_the_lists_place() {
+    let mut doc = load();
+    doc.layout(1000, 800);
+    click(&mut doc, "[data-testid=row] a");
+    doc.wait(0.1);
+    doc.layout(1000, 800);
+    let pane_node = doc.query("[data-testid=pane]").unwrap();
+    let pane = doc.rect(pane_node).unwrap();
+    assert_eq!((pane.0, pane.0 + pane.2), (240.0, 1000.0), "the pane fills the space beside the sidebar");
+    let title = doc.query("[data-testid=page-title]").unwrap();
+    let (x, y, w, h) = doc.rect(title).unwrap();
+    assert!(!reaches(&doc, x + w / 2.0, y + h / 2.0, title), "the list's header is not drawn under the pane");
+    assert!(reaches(&doc, x + w / 2.0, y + h / 2.0, pane_node));
+    let close = doc.query("[data-testid=detail-close]").unwrap();
+    let (x, _, w, _) = doc.rect(close).unwrap();
+    assert!(x + w <= 1000.0, "the close button is in the window");
+
+    click(&mut doc, "[data-testid=detail-close]");
+    doc.wait(0.1);
+    doc.layout(1000, 800);
+    assert!(doc.query("[data-testid=pane]").is_none());
+    let row = doc.query("[data-testid=row] a").unwrap();
+    let (x, y, w, h) = doc.rect(row).unwrap();
+    assert!(reaches(&doc, x + w / 2.0, y + h / 2.0, row), "the list is back");
 }

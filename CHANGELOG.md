@@ -70,6 +70,11 @@ Also:
 - **Selectors that end in a tag do not walk the page** in the DOM layer,
   and URL parses are cached: SvelteKit's split build looks for
   `meta[property=csp-nonce]` several times a navigation.
+- **A list scrolled down no longer takes clicks meant for what is above
+  it.** Rows scrolled out of the top of a scroll box were still hit where
+  they would have been, under the buttons drawn there; in the counter
+  example "start timer" stopped working once the list was scrolled a little.
+  A box that clips its overflow now clips clicks too (a Blitz patch).
 - **A crash when an element came and went within one turn is fixed.** A
   form control, `<style>` or `<title>` that was added and garbage-collected
   before the turn ended (rare on QuickJS, seen on V8) stopped the app with

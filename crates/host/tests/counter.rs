@@ -309,3 +309,25 @@ fn a_fresh_document_can_replace_a_running_one() {
     assert_eq!(new.text(inc), "count is 1");
     assert_eq!(new.text(new.query("#seconds").unwrap()), "0s");
 }
+
+/// A scroll box clips what it holds, for clicks as for pixels. Scrolled a
+/// little, the list's first rows sit above its top, under the buttons, and
+/// are not drawn there: a click on "start timer" is the button's, not a
+/// hidden row's.
+#[test]
+fn rows_scrolled_out_of_the_list_do_not_take_clicks() {
+    let mut doc = load();
+    doc.layout(800, 600);
+    let (lx, ly, lw, _) = doc.rect(doc.query("#rows").unwrap()).unwrap();
+    doc.wheel((lx + lw / 2.0) as f32, (ly + 40.0) as f32, 0.0, 60.0);
+    doc.wait(0.1);
+    assert_eq!(doc.text(doc.query("#scrolled").unwrap()), "scrolled 60px");
+
+    let tick = doc.query("#tick").unwrap();
+    let (tx, ty, tw, th) = doc.rect(tick).unwrap();
+    assert!(ty + th / 2.0 > ly - 60.0, "the button's middle is over a scrolled-out row");
+    doc.click_at((tx + tw / 2.0) as f32, (ty + th / 2.0) as f32);
+    doc.wait(0.1);
+    assert_eq!(doc.text(tick).trim(), "stop timer", "the click reached the button");
+    assert!(doc.query("#rows > li.selected").is_none(), "and no hidden row");
+}

@@ -12,8 +12,10 @@
 	import Pick from './Pick.svelte';
 	import { people_items, priority_items, project_items, status_items } from './edit';
 
-	// compact: the list beside the detail pane (480px at the 1200px window) has no room
-	// for four filters; Assignee and Project stay only while they filter something.
+	// compact: the list beside the detail pane (400px to 480px at the 1200px window, see
+	// routes/issues/+layout.svelte) has no room for four filters; Assignee and Project stay
+	// only while they filter something, and the search starts at its smallest and grows into
+	// what is left. The list's toolbar wraps onto another line when they still do not fit.
 	let { scope = {}, compact = false }: { scope?: { assignee?: string; project?: string }; compact?: boolean } = $props();
 
 	// Bits UI treats '' as "nothing chosen"; the store uses '' for "all".
@@ -33,7 +35,7 @@
 	}
 </script>
 
-<div class="relative flex w-[260px] min-w-[160px] shrink">
+<div class={['relative flex', compact ? 'w-[160px] max-w-[260px] grow' : 'w-[260px] min-w-[160px] shrink']}>
 	<SearchIcon class="text-muted-foreground pointer-events-none absolute top-1.5 left-2 size-4" strokeWidth={1.75} />
 	<Input
 		data-testid="search"

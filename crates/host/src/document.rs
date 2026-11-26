@@ -459,6 +459,28 @@ impl SvelteDocument {
             .map_or(0, |resources| resources.folder().files_read())
     }
 
+    /// Scroll the boxes around a node until it is in the middle of them, as
+    /// the app's `scrollIntoView({ block: 'center' })` does, then settle, so
+    /// the app hears where they went. For tests and `drive`: a scroll box
+    /// clips clicks as it clips what it draws, so what a user would scroll to
+    /// before clicking, a test has to as well.
+    pub fn scroll_into_view(&mut self, node: NodeId) {
+        {
+            let mut page = self.page.borrow_mut();
+            if page.has_size() {
+                page.layout_if_stale();
+            }
+            let Page { doc, scrolled, .. } = &mut *page;
+            let request = crate::scroll::Request::IntoView(
+                node,
+                crate::scroll::Align::Center,
+                crate::scroll::Align::Nearest,
+            );
+            crate::scroll::apply(doc, request, scrolled);
+        }
+        self.settle();
+    }
+
     /// The id JavaScript knows a node by, if it knows it.
     pub fn js_id(&self, node: NodeId) -> Option<u32> {
         self.page.borrow().nodes.js(node)

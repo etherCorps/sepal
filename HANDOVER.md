@@ -51,9 +51,10 @@ Left for later, each its own job:
    stand-in with no children. `href`, attribute reads and `closest` are
    where it can come down (`preload-fix.md`). Without it the Board is still
    4.7 ms behind main on a repeat visit: not looked into.
-4. **Blitz hit testing clipped to `overflow: hidden`** (below, item 3 of the
-   SvelteKit list): `sepal/adapter` still gives the route announcer
-   `pointer-events: none`.
+4. ~~**Blitz hit testing clipped to `overflow: hidden`**~~: done, blitz-dom
+   patch 14, for every box that clips its overflow (a scroll box too: the
+   counter's buttons stopped taking clicks once its list was scrolled).
+   `sepal/adapter`'s `pointer-events: none` on the route announcer can go.
 
 ## Native layer: backend, OS APIs and per-app host builds (24 Nov 2026)
 
@@ -131,7 +132,7 @@ always `crates/host`, so the patches always applied.
 
 With per-app builds, the top level is the app's `native/` crate. Without the
 patch lines, it compiles against the stock crates and quietly loses what each
-`PATCH.md` lists: the thirteen changes to `blitz-dom`, the eleven to
+`PATCH.md` lists: the fourteen changes to `blitz-dom`, the eleven to
 `anyrender_vello_hybrid` (the glyph atlas, damage tracking), and the GPU
 memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
 first blit costs about 80 MB of driver memory). Step 1 makes that
@@ -354,7 +355,8 @@ Next, each its own job after this branch:
    `raf-frames` (above).
 2. **Then a fresh comparison session**, and `compare.md` regenerated from it
    (`make_compare_report.py` reads sessions by name).
-3. **Blitz hit testing clipped to `overflow: hidden`.** Blitz descends into
+3. ~~**Blitz hit testing clipped to `overflow: hidden`.**~~ Done (blitz-dom patch 14, 26 Nov).
+    Blitz descends into
    content that overflows an `overflow: hidden` box, so invisible text can
    take clicks. In `Node::hit_inner` (`crates/blitz-dom/src/node/node.rs`), a
    point outside the box on an axis whose overflow is `hidden` or `clip`

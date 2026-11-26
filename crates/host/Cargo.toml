@@ -98,7 +98,7 @@ path = "src/main.rs"
 name = "drive"
 required-features = ["screenshot"]
 
-# Thirteen small changes; see crates/blitz-dom/PATCH.md.
+# Fourteen small changes; see crates/blitz-dom/PATCH.md.
 [patch.crates-io]
 blitz-dom = { path = "../blitz-dom" }
 # Glyph atlas on with small pages, large images, drawing without a window; see its PATCH.md.
