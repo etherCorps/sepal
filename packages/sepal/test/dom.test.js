@@ -35,6 +35,19 @@ for (const selector of ['div', 'DIV', '[data-slot]', '#count', '.flex', 'button[
 	assert.equal(fast, general, selector);
 }
 assert.equal(run(`document.querySelector('[data-none]')`), null);
+// Selectors with generated ids in them, a few thousand: the caches stay at
+// their limit, and each still finds what it names.
+run(`
+	globalThis.marked = document.createElement('i');
+	marked.setAttribute('data-n', '2999');
+	document.body.appendChild(marked);
+	globalThis.found = 0;
+	for (let i = 0; i < 3000; i++) if (document.querySelector('[data-n="' + i + '"]') === (i === 2999 ? marked : null)) found++;
+`);
+assert.equal(run('found'), 3000);
+assert.deepEqual(run('JSON.stringify([__sb.stats().caches.selectors, __sb.stats().caches["selector tests"]])'), '[256,256]');
+assert.equal(run(`document.querySelector('[data-n="2999"]') === marked && document.querySelector('[data-n="0"]') === null`), true, 'dropped ones parse again');
+run('marked.remove()');
 assert.equal(run(`document.body.matches('body') && !document.body.matches('[id]') && document.getElementById('count').matches('#count')`), true);
 
 // A selector that ends in a tag tries only the elements of that tag. The
@@ -242,6 +255,19 @@ assert.equal(run(`document.getElementById('link').href`), 'http://app.localhost/
 run(`history.back()`);
 host.advance(1);
 assert.equal(run(`location.pathname + ' ' + document.getElementById('link').href`), '/one http://app.localhost/next');
+// A link whose address keeps changing, a few thousand times: the cache stays
+// at its limit, and every answer is where the link leads now.
+run(`
+	globalThis.right = 0;
+	const moving = document.getElementById('link');
+	for (let i = 0; i < 3000; i++) {
+		moving.setAttribute('href', 'item-' + i);
+		if (moving.href === 'http://app.localhost/item-' + i) right++;
+	}
+	moving.setAttribute('href', 'next');
+`);
+assert.equal(run('right'), 3000);
+assert.equal(run('__sb.stats().caches.links'), 1024);
 run(`document.getElementById('link').remove(); sessionStorage.setItem('k', 'v'); sessionStorage.other = 1`);
 assert.equal(run(`[sessionStorage.getItem('k'), sessionStorage.k, sessionStorage.getItem('other'), sessionStorage.length, sessionStorage.getItem('none')].join()`), 'v,v,1,2,');
 assert.equal(run(`new TextDecoder().decode(new TextEncoder().encode('héllo'))`), 'héllo');

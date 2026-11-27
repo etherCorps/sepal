@@ -36,8 +36,9 @@ Found on the way, and not changed:
 
 - **A first visit pays for growth.** The Board's first visit costs ~50 ms
   over a repeat, on the old main too, spread evenly over its 300 cards.
-  Making and dropping 20,000 of the renderer's nodes beforehand takes all of
-  it away; plain objects, `Map`s or `WeakRef`s alone take 4-16 ms of it.
+  Making and dropping 20,000 of the renderer's nodes beforehand takes nearly
+  all of it away (5-6 ms remains); plain objects, `Map`s or `WeakRef`s alone
+  take 4-16 ms of it.
   Not `cn()`, Svelte's templates, Bits UI, the data, QuickJS's collector or
   its warm-up. Which part of the growth costs is the next job; startup's
   first screen probably pays the same.
@@ -48,8 +49,11 @@ Found on the way, and not changed:
   behind the old main, ~9 of it the two walks before these changes; ~5 ms
   is not accounted for.
 - The ancestor walk (4.1 µs a link) is SvelteKit's own calls.
-- The parsed-selector cache and the new test cache are unbounded: an app
-  that builds selectors with ids in them grows both.
+- The caches keyed by text are least-recently-used, with limits
+  (`lru.js`; their sizes in `__sb.stats().caches`): selectors and their
+  tests 256 each, links 1,024, URLs 2,048. A desktop app runs for days, and
+  Bits UI and app code build selectors and URLs with generated ids. Moving
+  an entry on a hit costs ~0.2 µs, ~0.1 ms a Board navigation.
 
 ## Modules load as QuickJS bytecode (26 Nov 2026, branch `bytecode`)
 

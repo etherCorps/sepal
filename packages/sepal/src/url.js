@@ -7,6 +7,8 @@
 // of what was already there. A URL without `//` (`mailto:a@b`, `a:`) keeps what
 // follows the scheme as its path, untouched. `test/url.test.js` compares it with Node's own.
 
+import { lru } from './lru.js';
+
 const ABSOLUTE = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/([^/?#]*)([^?#]*)(\?[^#]*)?(#.*)?$/;
 /** Schemes whose URLs always have a host and a path, and an origin to speak of. */
 const SPECIAL = /^(https?|wss?|ftp):$/;
@@ -130,12 +132,12 @@ function clean(part, unsafe) {
  * preload helper parse the same few URLs on every navigation; each `new URL`
  * still gets its own object, copied from the cached parts, which nothing
  * writes to. A base `URL` is keyed by its `href` (and whether it has an
- * authority), which is everything `parse` reads from it.
- * ponytail: dropped whole at 1,000 entries; an LRU if apps with many
- * distinct URLs show it.
- * @type {Map<string, ReturnType<typeof parse>>}
+ * authority), which is everything `parse` reads from it. SvelteKit's look
+ * at a page's links after a navigation parses two per link (the Tracker's
+ * Board has 316): the limit leaves room for a few such pages.
+ * @type {ReturnType<typeof lru<string, ReturnType<typeof parse>>>}
  */
-const parsed = new Map();
+const parsed = lru('urls', 2048);
 
 /** @param {string} input @param {string | URL | undefined} base */
 function parse_cached(input, base) {
@@ -146,7 +148,6 @@ function parse_cached(input, base) {
 	if (parts === undefined) {
 		const against = base === undefined ? undefined : base instanceof URL ? base : new URL(String(base));
 		parts = parse(input, against);
-		if (parsed.size >= 1000) parsed.clear();
 		parsed.set(key, parts);
 	}
 	return parts;

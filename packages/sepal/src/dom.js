@@ -14,6 +14,7 @@
 // write goes through the renderer into the same op buffer as Svelte's.
 
 import { TextDecoder, TextEncoder } from './text.js';
+import { lru } from './lru.js';
 import { URL, URLSearchParams } from './url.js';
 import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, elements_named, head, host_hooks, html, lookup, outer_targets, remove_listener, request_focus, request_measure, root, scroll_state } from './renderer.js';
 
@@ -41,8 +42,12 @@ function define(target, properties) {
 const SIMPLE =
 	/^(?:([a-zA-Z][\w-]*|\*)|#((?:\\.|[\w-])+)|\.((?:\\.|[\w-])+)|\[\s*([\w:-]+)\s*(?:([~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))\s*(?:[is]\s*)?)?\]|:not\(((?:[^()]|\([^()]*\))*)\)|:([\w-]+)(?:\([^)]*\))?)/;
 
-/** @type {Map<string, { compounds: Compound[], combinators: string[] }[]>} */
-const parsed = new Map();
+/**
+ * Selectors as parsed, by their text. Libraries build selectors with
+ * generated ids in them, so it has a limit.
+ * @type {ReturnType<typeof lru<string, { compounds: Compound[], combinators: string[] }[]>>}
+ */
+const parsed = lru('selectors', 256);
 
 /** @param {string} selector */
 function parse_selector(selector) {
@@ -150,10 +155,11 @@ function matches_complex(node, complex, index = complex.compounds.length - 1) {
  * 3,500 elements on the Tracker's Board, and going through the general
  * matcher for each cost 1.8 and 2.4 ms. One tag, one attribute that must be
  * there, one id or one class gets a test of its own; any other compound
- * without combinators is matched directly; the rest as a list.
- * @type {Map<string, (node: any) => boolean>}
+ * without combinators is matched directly; the rest as a list. Kept by
+ * selector, as many as the parsed ones.
+ * @type {ReturnType<typeof lru<string, (node: any) => boolean>>}
  */
-const tests = new Map();
+const tests = lru('selector tests', 256);
 
 /** @param {string} selector */
 function test_for(selector) {
@@ -1012,11 +1018,11 @@ function is_focusable(node) {
  * every link's `href` after each navigation, to set up preloading, and
  * resolving one builds a whole `URL`: 316 of them were 1.8 ms of a Board
  * visit in the Tracker. Keyed by the page's address as well, which a
- * relative attribute depends on.
- * ponytail: dropped whole at 4,096 entries, as url.js's parses are.
- * @type {Map<string, string>}
+ * relative attribute depends on. One entry per link and page: the limit is
+ * a few pages of links.
+ * @type {ReturnType<typeof lru<string, string>>}
  */
-const resolved_hrefs = new Map();
+const resolved_hrefs = lru('links', 1024);
 
 /** @param {string} written @param {string} base */
 function resolve_href(written, base) {
@@ -1025,7 +1031,6 @@ function resolve_href(written, base) {
 	let href = resolved_hrefs.get(key);
 	if (href === undefined) {
 		href = URL.parse(written, base)?.href ?? written;
-		if (resolved_hrefs.size >= 4096) resolved_hrefs.clear();
 		resolved_hrefs.set(key, href);
 	}
 	return href;

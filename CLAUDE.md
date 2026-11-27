@@ -95,8 +95,9 @@ at the size when a change adds crates or features.
   `host-call.js` (async calls to the host), `updater.js` (the update API),
   `fetch.js` (global `fetch`), `fs.js`, `dialog.js`, `clipboard.js`,
   `shell.js`, `window.js` (desktop APIs; public names are camelCase),
-  `dom.js` (the opt-in DOM layer for web component libraries). Runs in
-  QuickJS: no Node code belongs here.
+  `dom.js` (the opt-in DOM layer for web component libraries), `lru.js`
+  (the caches keyed by text, selectors, links and URLs, each with a limit:
+  an app runs for days). Runs in QuickJS: no Node code belongs here.
 - `packages/sepal/vite/` — the build side. `vite.js` (`sepal/vite`:
   `sepal()`, a web build from `index.html`, and next to `sveltekit()` the
   edits to SvelteKit's client, see the `patch` table there before touching

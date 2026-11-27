@@ -1,6 +1,7 @@
 // Our URL and URLSearchParams against Node's, on the kinds of URL an app meets.
 import assert from 'node:assert/strict';
 import { URL as Ours, URLSearchParams as OurParams } from '../src/url.js';
+import { cache_sizes, lru } from '../src/lru.js';
 
 const PARTS = ['href', 'origin', 'protocol', 'username', 'password', 'host', 'hostname', 'port', 'pathname', 'search', 'hash'];
 const describe = (url) => Object.fromEntries(PARTS.map((part) => [part, url[part]]));
@@ -103,4 +104,25 @@ for (const [Class, Params] of [[URL, URLSearchParams], [Ours, OurParams]]) {
 	assert.equal(moved.search, '?d=4');
 	assert.ok(!Object.keys(moved).includes('searchParams'), 'searchParams is not an own property, as in Node');
 }
+// The caches have limits: least recently used goes first, a hit counts as a
+// use, and what is stored (a failed parse is `null`) comes back as it was.
+const cache = lru('test', 3);
+cache.set('a', 1);
+cache.set('b', null);
+cache.set('c', 3);
+assert.equal(cache.get('a'), 1, 'a hit');
+cache.set('d', 4);
+assert.deepEqual([cache.get('b'), cache.get('a'), cache.get('c'), cache.get('d')], [undefined, 1, 3, 4], 'b was the oldest after a was used');
+cache.set('e', null);
+assert.equal(cache.get('e'), null);
+assert.equal(cache_sizes().test, 3);
+
+// URL's parse cache holds 2,048, and past that still parses right.
+for (let i = 0; i < 5000; i++) {
+	const url = new Ours(`/items/${i}?n=${i}`, 'http://app.localhost/base/');
+	if (i % 997 === 0) assert.equal(url.href, new URL(`/items/${i}?n=${i}`, 'http://app.localhost/base/').href);
+}
+assert.equal(cache_sizes().urls, 2048);
+assert.equal(new Ours('/items/0?n=0', 'http://app.localhost/base/').href, 'http://app.localhost/items/0?n=0', 'one that was dropped');
+
 console.log(`url: ok (${compared} URLs compared with Node's)`);
