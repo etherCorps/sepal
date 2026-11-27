@@ -12,6 +12,7 @@
 import './shims.js';
 import { createRenderer } from 'svelte/renderer';
 import { OP, DISPATCH_PREVENT_DEFAULT, DISPATCH_STOP_PROPAGATION } from './protocol.js';
+import { cache_sizes } from './lru.js';
 
 const ELEMENT = 'element';
 const TEXT = 'text';
@@ -344,7 +345,7 @@ export const keep_alive = { finalizer, root: /** @type {BlitzNode | null} */ (nu
 export function stats() {
 	let live_elements = 0;
 	for (const id of elements.keys()) if (lookup(id) !== null) live_elements++;
-	return { created: next_id - page.next_id, live_elements, pending_ops: ops.length };
+	return { created: next_id - page.next_id, live_elements, pending_ops: ops.length, caches: cache_sizes() };
 }
 
 /**

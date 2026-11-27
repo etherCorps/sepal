@@ -25,6 +25,31 @@ assert.equal(run('document.body instanceof HTMLElement && !(document.body instan
 assert.equal(run(`document.querySelector('#count').tagName`), 'BUTTON');
 assert.equal(run(`document.querySelectorAll('main > div [data-slot=button]').length`), 8);
 assert.equal(run(`document.getElementById('count').closest('main') === document.querySelector('main')`), true);
+// A selector of one tag, attribute, id or class has a test of its own, which a
+// walk of the page calls on every element. Each answers what the general
+// matcher does, which `:not(:not(…))` goes through.
+for (const selector of ['div', 'DIV', '[data-slot]', '#count', '.flex', 'button[data-slot]', 'main div']) {
+	const fast = run(`[...document.querySelectorAll(${JSON.stringify(selector)})].map((node) => node.node_id).join()`);
+	const general = selector.includes(' ') ? fast : run(`[...document.querySelectorAll(${JSON.stringify(`:not(:not(${selector}))`)})].map((node) => node.node_id).join()`);
+	assert.ok(fast.length > 0, `${selector} finds something`);
+	assert.equal(fast, general, selector);
+}
+assert.equal(run(`document.querySelector('[data-none]')`), null);
+// Selectors with generated ids in them, a few thousand: the caches stay at
+// their limit, and each still finds what it names.
+run(`
+	globalThis.marked = document.createElement('i');
+	marked.setAttribute('data-n', '2999');
+	document.body.appendChild(marked);
+	globalThis.found = 0;
+	for (let i = 0; i < 3000; i++) if (document.querySelector('[data-n="' + i + '"]') === (i === 2999 ? marked : null)) found++;
+`);
+assert.equal(run('found'), 3000);
+assert.deepEqual(run('JSON.stringify([__sb.stats().caches.selectors, __sb.stats().caches["selector tests"]])'), '[256,256]');
+assert.equal(run(`document.querySelector('[data-n="2999"]') === marked && document.querySelector('[data-n="0"]') === null`), true, 'dropped ones parse again');
+run('marked.remove()');
+assert.equal(run(`document.body.matches('body') && !document.body.matches('[id]') && document.getElementById('count').matches('#count')`), true);
+
 // A selector that ends in a tag tries only the elements of that tag. The
 // answers are the walk's (`*` always walks): document order, below the scope,
 // nothing detached or removed.
@@ -221,6 +246,28 @@ assert.throws(() => run(`history.pushState(null, '', 'http://elsewhere.test/')`)
 // A link's `href` is where it leads from here, whatever was written in the attribute.
 run(`const link = document.createElement('a'); link.id = 'link'; link.setAttribute('href', '../up?q#h'); document.body.appendChild(link);`);
 assert.equal(run(`document.getElementById('link').href + ' ' + document.getElementById('link').getAttribute('href')`), 'http://app.localhost/up?q#h ../up?q#h');
+// Asked again, it answers from what is written now and from where the page is
+// now: a changed attribute, or a navigation, gives a fresh answer.
+run(`document.getElementById('link').setAttribute('href', 'next')`);
+assert.equal(run(`document.getElementById('link').href`), 'http://app.localhost/next');
+run(`history.pushState(null, '', '/deep/page')`);
+assert.equal(run(`document.getElementById('link').href`), 'http://app.localhost/deep/next');
+run(`history.back()`);
+host.advance(1);
+assert.equal(run(`location.pathname + ' ' + document.getElementById('link').href`), '/one http://app.localhost/next');
+// A link whose address keeps changing, a few thousand times: the cache stays
+// at its limit, and every answer is where the link leads now.
+run(`
+	globalThis.right = 0;
+	const moving = document.getElementById('link');
+	for (let i = 0; i < 3000; i++) {
+		moving.setAttribute('href', 'item-' + i);
+		if (moving.href === 'http://app.localhost/item-' + i) right++;
+	}
+	moving.setAttribute('href', 'next');
+`);
+assert.equal(run('right'), 3000);
+assert.equal(run('__sb.stats().caches.links'), 1024);
 run(`document.getElementById('link').remove(); sessionStorage.setItem('k', 'v'); sessionStorage.other = 1`);
 assert.equal(run(`[sessionStorage.getItem('k'), sessionStorage.k, sessionStorage.getItem('other'), sessionStorage.length, sessionStorage.getItem('none')].join()`), 'v,v,1,2,');
 assert.equal(run(`new TextDecoder().decode(new TextEncoder().encode('héllo'))`), 'héllo');

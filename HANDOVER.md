@@ -7,6 +7,54 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## Navigation costs (27 Nov 2026, branch `nav-cost`)
+
+After every navigation SvelteKit walks the whole page twice: `a`, to set
+up link preloading (each link's `href`, a `new URL` of it, five
+`getAttribute`s on every ancestor), and `[autofocus]`. Three changes in
+the DOM layer, each its own commit:
+
+- A link's `href` is resolved once per attribute value and page address
+  (`resolve_href` in `dom.js`): 4.9 to 0.47 µs a link.
+- A selector's test is built once (`test_for` in `dom.js`): one tag, one
+  attribute that must be there, one id or one class gets a test of its
+  own, any other compound is matched directly. `querySelectorAll('a')` on
+  the Board went from 1,775 to 800 µs, `[autofocus]` from 2,475 to 750.
+- `url.js`: `searchParams` is made on first use, and the raw query and the
+  no-authority flag are private fields: `new URL` from 4.27 to 0.87 µs.
+  `searchParams` is no longer an own property, as in Node.
+
+SvelteKit's loop went from 16.3 to 7.28 µs a link. In a window (session
+`nav-1`, `compare/results/nav-cost.md`) the Board's render turn is 5.5 ms
+shorter and Issues' 3.2. Insights' mark is 7.6 ms later with the same
+render turn: the click's `requestAnimationFrame` waits for the next vsync,
+and where the click lands in a 13 ms frame moves the mark. `drive` has a
+`gc:` step for timing headless: without it, a Board visit varied from 78 to
+117 ms, with it from 80 to 87.
+
+Found on the way, and not changed:
+
+- **A first visit pays for growth.** The Board's first visit costs ~50 ms
+  over a repeat, on the old main too, spread evenly over its 300 cards.
+  Making and dropping 20,000 of the renderer's nodes beforehand takes nearly
+  all of it away (5-6 ms remains); plain objects, `Map`s or `WeakRef`s alone
+  take 4-16 ms of it.
+  Not `cn()`, Svelte's templates, Bits UI, the data, QuickJS's collector or
+  its warm-up. Which part of the growth costs is the next job; startup's
+  first screen probably pays the same.
+- The split build's first visits trail a single bundle by 1-1.5 ms, and
+  not on the Board: no turn waits for a route's stylesheet, and the chunk
+  is read in the turn that renders it.
+- With the growth taken out of both, the Board's first visit is ~14 ms
+  behind the old main, ~9 of it the two walks before these changes; ~5 ms
+  is not accounted for.
+- The ancestor walk (4.1 µs a link) is SvelteKit's own calls.
+- The caches keyed by text are least-recently-used, with limits
+  (`lru.js`; their sizes in `__sb.stats().caches`): selectors and their
+  tests 256 each, links 1,024, URLs 2,048. A desktop app runs for days, and
+  Bits UI and app code build selectors and URLs with generated ids. Moving
+  an entry on a hit costs ~0.2 µs, ~0.1 ms a Board navigation.
+
 ## Modules load as QuickJS bytecode (26 Nov 2026, branch `bytecode`)
 
 `calyx --compile <dist>` compiles every module of the app folder with the
@@ -87,13 +135,9 @@ Left for later, each its own job:
    and **the server build** (the backend thread), which the adapter
    refuses today.
 2. **The host's size on Linux**, under the 30 MB budget.
-3. **SvelteKit's link scan.** After every navigation SvelteKit looks at
-   each `<a>` on the page (its URL, its `data-sveltekit-*` options up the
-   ancestors) to set up preloading: about 32 µs a link in the DOM layer,
-   10 ms on the Board's 316. Main never paid it, because its `<html>` was a
-   stand-in with no children. `href`, attribute reads and `closest` are
-   where it can come down (`preload-fix.md`). Without it the Board is still
-   4.7 ms behind main on a repeat visit: not looked into.
+3. ~~**SvelteKit's link scan**~~: done, branch `nav-cost` (above): 16.3 to
+   7.3 µs a link. The 4.7 ms the Board was still behind main without it
+   was the `[autofocus]` walk.
 4. ~~**Blitz hit testing clipped to `overflow: hidden`**~~: done, blitz-dom
    patch 14, for every box that clips its overflow (a scroll box too: the
    counter's buttons stopped taking clicks once its list was scrolled).

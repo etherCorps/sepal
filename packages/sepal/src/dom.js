@@ -14,6 +14,7 @@
 // write goes through the renderer into the same op buffer as Svelte's.
 
 import { TextDecoder, TextEncoder } from './text.js';
+import { lru } from './lru.js';
 import { URL, URLSearchParams } from './url.js';
 import renderer, { BlitzEvent, BlitzNode, add_listener, deliver, elements_named, head, host_hooks, html, lookup, outer_targets, remove_listener, request_focus, request_measure, root, scroll_state } from './renderer.js';
 
@@ -41,8 +42,12 @@ function define(target, properties) {
 const SIMPLE =
 	/^(?:([a-zA-Z][\w-]*|\*)|#((?:\\.|[\w-])+)|\.((?:\\.|[\w-])+)|\[\s*([\w:-]+)\s*(?:([~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))\s*(?:[is]\s*)?)?\]|:not\(((?:[^()]|\([^()]*\))*)\)|:([\w-]+)(?:\([^)]*\))?)/;
 
-/** @type {Map<string, { compounds: Compound[], combinators: string[] }[]>} */
-const parsed = new Map();
+/**
+ * Selectors as parsed, by their text. Libraries build selectors with
+ * generated ids in them, so it has a limit.
+ * @type {ReturnType<typeof lru<string, { compounds: Compound[], combinators: string[] }[]>>}
+ */
+const parsed = lru('selectors', 256);
 
 /** @param {string} selector */
 function parse_selector(selector) {
@@ -144,8 +149,43 @@ function matches_complex(node, complex, index = complex.compounds.length - 1) {
 	return false;
 }
 
+/**
+ * The test for a selector, built once. Walks of the page call it on every
+ * element: SvelteKit looks for `a` and `[autofocus]` after every navigation,
+ * 3,500 elements on the Tracker's Board, and going through the general
+ * matcher for each cost 1.8 and 2.4 ms. One tag, one attribute that must be
+ * there, one id or one class gets a test of its own; any other compound
+ * without combinators is matched directly; the rest as a list. Kept by
+ * selector, as many as the parsed ones.
+ * @type {ReturnType<typeof lru<string, (node: any) => boolean>>}
+ */
+const tests = lru('selector tests', 256);
+
+/** @param {string} selector */
+function test_for(selector) {
+	let test = tests.get(selector);
+	if (test !== undefined) return test;
+	const list = parse_selector(selector);
+	const one = list.length === 1 && list[0].compounds.length === 1 ? list[0].compounds[0] : null;
+	if (one === null) {
+		test = (node) => list.some((complex) => matches_complex(node, complex));
+	} else {
+		const parts = (one.tag !== null ? 1 : 0) + (one.id !== null ? 1 : 0) + one.classes.length + one.attrs.length + one.nots.length + one.pseudos.length;
+		const { tag, id } = one;
+		const [name] = one.classes;
+		const attr = one.attrs[0];
+		if (parts === 1 && tag !== null) test = (node) => node.type === 'element' && (node.name === tag || node.name.toLowerCase() === tag);
+		else if (parts === 1 && id !== null) test = (node) => node.type === 'element' && node.attrs !== null && node.attrs.get('id') === id;
+		else if (parts === 1 && name !== undefined) test = (node) => node.type === 'element' && node.attrs !== null && (node.attrs.get('class') ?? '').split(/\s+/).includes(name);
+		else if (parts === 1 && attr !== undefined && attr.op === null) test = (node) => node.type === 'element' && node.attrs !== null && node.attrs.has(attr.name);
+		else test = (node) => matches_compound(node, one);
+	}
+	tests.set(selector, test);
+	return test;
+}
+
 /** @param {any} node @param {string} selector */
-const matches = (node, selector) => parse_selector(selector).some((complex) => matches_complex(node, complex));
+const matches = (node, selector) => test_for(selector)(node);
 
 /** Every element below `scope`, in document order. @param {any} scope @param {(node: any) => boolean | void} visit returns true to stop */
 function walk(scope, visit) {
@@ -213,8 +253,9 @@ function query_all(scope, selector) {
 	if (candidates !== null) return [...candidates].sort((a, b) => (precedes(a, b) ? -1 : 1));
 	/** @type {any[]} */
 	const found = [];
+	const test = test_for(selector);
 	walk(scope, (node) => {
-		if (matches(node, selector)) found.push(node);
+		if (test(node)) found.push(node);
 	});
 	return found;
 }
@@ -228,8 +269,9 @@ function query(scope, selector) {
 		return first;
 	}
 	let found = null;
+	const test = test_for(selector);
 	walk(scope, (node) => {
-		if (!matches(node, selector)) return false;
+		if (!test(node)) return false;
 		found = node;
 		return true;
 	});
@@ -748,7 +790,7 @@ define(proto, {
 		get() {
 			const written = this.attrs?.get('href');
 			if (written === undefined) return '';
-			return URL.parse(written, address.href)?.href ?? written;
+			return resolve_href(written, address.href);
 		},
 		/** @this {any} @param {any} value */
 		set(value) {
@@ -969,6 +1011,29 @@ function is_focusable(node) {
 	if (node.type !== 'element' || node.attrs?.has('disabled')) return false;
 	if (node.attrs?.has('tabindex') || node.attrs?.has('contenteditable')) return true;
 	return /^(button|input|select|textarea|summary)$/i.test(node.name) || (/^(a|area)$/i.test(node.name) && node.attrs?.has('href'));
+}
+
+/**
+ * Where a link's `href` attribute leads from a page, by both. SvelteKit reads
+ * every link's `href` after each navigation, to set up preloading, and
+ * resolving one builds a whole `URL`: 316 of them were 1.8 ms of a Board
+ * visit in the Tracker. Keyed by the page's address as well, which a
+ * relative attribute depends on. One entry per link and page: the limit is
+ * a few pages of links.
+ * @type {ReturnType<typeof lru<string, string>>}
+ */
+const resolved_hrefs = lru('links', 1024);
+
+/** @param {string} written @param {string} base */
+function resolve_href(written, base) {
+	// The base's length first, so that no attribute can make two pairs one key.
+	const key = `${base.length}:${base}${written}`;
+	let href = resolved_hrefs.get(key);
+	if (href === undefined) {
+		href = URL.parse(written, base)?.href ?? written;
+		resolved_hrefs.set(key, href);
+	}
+	return href;
 }
 
 /** A DOM class that elements with one of these tag names count as. @param {((node: any) => boolean)} test */

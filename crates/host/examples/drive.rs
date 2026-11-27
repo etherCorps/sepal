@@ -11,7 +11,9 @@
 //! answers arrive: for `fetch` and other host calls that wait on the network
 //! or the disk), `text:SELECTOR`, `count:SELECTOR`,
 //! `rect:SELECTOR`, `attr:SELECTOR@NAME`, `eval:JAVASCRIPT`, `files:` (how
-//! many files the app has read from its folder), `hud:on`/`hud:off`
+//! many files the app has read from its folder), `gc:` (a cycle collection,
+//! with the `DROP`s it queues applied: before a step that is timed, so that
+//! no collection lands in one run and not in the next), `hud:on`/`hud:off`
 //! (the performance overlay), `shot:FILE.png`
 //! (CPU renderer), `gpushot:FILE.png` (the window's renderer; needs a GPU).
 //!
@@ -72,6 +74,11 @@ fn main() {
                 println!("  type {rest}")
             }
             "eval" => println!("  eval: {:?}", doc.js().eval_string(rest)),
+            "gc" => {
+                doc.js().collect_garbage();
+                doc.settle();
+                println!("  gc")
+            }
             "hud" => {
                 doc.set_hud(rest == "on");
                 println!("  hud {rest}")
