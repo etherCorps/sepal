@@ -108,10 +108,11 @@ fn fonts() -> FontContext {
         .unwrap_or_else(font_context)
 }
 
-/// What `BaseDocument::new` makes when it is given no fonts: the system's,
-/// and Blitz's bullet font.
+/// What `BaseDocument::new` makes when it is given no fonts (the system's,
+/// and Blitz's bullet font), with the one fallback list the first layout
+/// waits for already asked for.
 fn font_context() -> FontContext {
-    use parley::fontique::{Blob, Collection, CollectionOptions, SourceCache};
+    use parley::fontique::{Blob, Collection, CollectionOptions, FallbackKey, Script, SourceCache};
     let mut fonts = FontContext {
         source_cache: SourceCache::new_shared(),
         collection: Collection::new(CollectionOptions {
@@ -122,6 +123,13 @@ fn font_context() -> FontContext {
     fonts
         .collection
         .register_fonts(Blob::new(Arc::new(blitz_dom::BULLET_FONT) as _), None);
+    // The first text laid out asks the system for a fallback list for Han,
+    // whatever the page's script: fontique adds Han to every fallback query
+    // (`Query::set_fallbacks`). That one query is ~4 ms on macOS, the only
+    // font work of the first layout that takes time; asked for here, it is
+    // cached in the collection the document gets.
+    let han = FallbackKey::new(Script::from_bytes(*b"Hani"), None);
+    let _ = fonts.collection.fallback_families(han).count();
     fonts
 }
 
