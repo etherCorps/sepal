@@ -14,10 +14,12 @@
 
 use std::io::BufRead;
 use std::sync::mpsc::{self, Receiver};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use anyrender_vello_hybrid::VelloHybridWindowRenderer;
+use blitz_dom::FontContext;
 use blitz_shell::{BlitzApplication, BlitzShellProxy, WindowConfig, create_default_event_loop};
 use winit::application::ApplicationHandler;
 use winit::application::macos::ApplicationHandlerExtMacOS;
@@ -83,6 +85,46 @@ impl Dev {
     }
 }
 
+/// The system's fonts, being listed on a thread since launch (`start_fonts`).
+static FONTS: Mutex<Option<thread::JoinHandle<FontContext>>> = Mutex::new(None);
+
+/// Start listing the system's fonts, for the window's document. On macOS
+/// that takes ~30 ms, half of it waiting on the system, and nothing needs
+/// it before the page is parsed: on a thread, it runs while the event loop
+/// is made. Call it as soon as a window is sure to open.
+pub fn start_fonts() {
+    let spawned = thread::Builder::new()
+        .name("sepal-fonts".into())
+        .spawn(font_context);
+    *FONTS.lock().unwrap() = spawned.ok();
+}
+
+/// The fonts `start_fonts` listed, or listed now if it was not called or
+/// its thread failed.
+fn fonts() -> FontContext {
+    let thread = FONTS.lock().unwrap().take();
+    thread
+        .and_then(|thread| thread.join().ok())
+        .unwrap_or_else(font_context)
+}
+
+/// What `BaseDocument::new` makes when it is given no fonts: the system's,
+/// and Blitz's bullet font.
+fn font_context() -> FontContext {
+    use parley::fontique::{Blob, Collection, CollectionOptions, SourceCache};
+    let mut fonts = FontContext {
+        source_cache: SourceCache::new_shared(),
+        collection: Collection::new(CollectionOptions {
+            shared: false,
+            system_fonts: true,
+        }),
+    };
+    fonts
+        .collection
+        .register_fonts(Blob::new(Arc::new(blitz_dom::BULLET_FONT) as _), None);
+    fonts
+}
+
 /// Run an app until its window is closed. With `reload`, also follow stdin:
 /// every line reloads the app, end of input quits.
 pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
@@ -92,16 +134,18 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     if std::env::var_os("SEPAL_GLYPH_CACHE").is_some_and(|value| value == "0") {
         anyrender_vello_hybrid::set_glyph_cache(false);
     }
-    let mut doc = SvelteDocument::for_window(&app)?;
+    // Before the event loop exists: winit builds the menu bar from this name.
+    if let Some(name) = &app.manifest.name {
+        set_app_name(name);
+    }
+    // Made while the fonts are listed (`start_fonts`): mostly waiting on
+    // the system too.
+    let event_loop = create_default_event_loop();
+    let mut doc = SvelteDocument::for_window_with_fonts(&app, fonts())?;
     if std::env::var_os("SEPAL_HUD").is_some_and(|value| value == "1") {
         doc.set_hud(true);
     }
     let manifest = app.manifest;
-    // Before the event loop exists: winit builds the menu bar from this name.
-    if let Some(name) = &manifest.name {
-        set_app_name(name);
-    }
-    let event_loop = create_default_event_loop();
 
     let (dev_sender, dev_events) = mpsc::channel();
     if reload.is_some() {

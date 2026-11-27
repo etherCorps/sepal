@@ -43,6 +43,9 @@ anyrender_vello_hybrid = { version = "0.11", optional = true }
 # Same pin as blitz-shell. Needed directly for window attributes and to wrap
 # the application handler.
 winit = { version = "=0.31.0-beta.3", optional = true }
+# fontique's types, to list the system's fonts on a thread at launch
+# (`window::start_fonts`). The crate blitz-dom uses: no new code.
+parley = { version = "0.12", optional = true, default-features = false, features = ["std"] }
 
 # headless screenshots (CPU rasteriser, no GPU or display needed)
 blitz-paint = { version = "=0.3.0-beta.4", optional = true, features = ["scrollbars"] }
@@ -80,6 +83,7 @@ window = [
     # draws no inline SVG and no scrollbars (only `screenshot` builds did).
     "dep:blitz-paint",
     "dep:winit",
+    "dep:parley",
     "dep:objc2",
     "dep:objc2-app-kit",
     "dep:objc2-foundation",

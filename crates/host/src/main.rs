@@ -49,6 +49,8 @@ fn run(args: &[String]) -> Result<(), String> {
     if args.is_empty()
         && let Some(resources) = bundled_resources()
     {
+        #[cfg(feature = "window")]
+        sepal::window::start_fonts();
         let mut app = App::from_dir(&resources)?;
         // Resources -> Contents -> Name.app
         app.bundle = resources
@@ -89,6 +91,10 @@ fn run(args: &[String]) -> Result<(), String> {
         [flag, rest @ ..] if flag == "--watch" => (None, true, rest),
         _ => (None, false, args),
     };
+    #[cfg(feature = "window")]
+    if shot.is_none() {
+        sepal::window::start_fonts();
+    }
     let (mut app, rest) = load(args)?.ok_or(USAGE)?;
     app.dev = watch;
 
