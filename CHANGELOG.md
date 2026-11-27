@@ -149,6 +149,17 @@ Start-up, idle, memory and the host's size do not change.
 Upstream fixed it in quickjs-ng #1931, which no release has yet; the
 patched copy goes once rquickjs ships one that does.
 
+### Files and `fetch` start while the window opens
+
+A host call made while the app starts used to wait until the window
+existed. Now only calls that need the window wait for it: window
+controls, dialogs and the clipboard. Reading a file, `fetch`, opening a
+link and the updater start as soon as the app asks, while the window is
+being created. Their answers reach the app on its first turn in the
+window, as before, so a call the app makes only once another has been
+answered starts there too. The Tracker reads its fixture that way and
+starts as fast as before (`compare/results/early-calls.md`).
+
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
 ### Breaking: SvelteKit is the only router

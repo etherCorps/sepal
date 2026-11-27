@@ -7,6 +7,74 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## Early host calls (27 Nov 2026, branch `early-calls`)
+
+A document made for a window held every host call until the window's
+first poll. Now only `window.*`, `dialog.*` and `clipboard.*` wait
+(`needs_window` in `document.rs`); the rest start at the end of the turn
+that made them. Answers use the same channel and wake; one that arrives
+before the event loop runs waits for the next turn, which before the window
+is its first poll.
+
+On the Tracker it changes nothing measurable (session `early-1`,
+`compare/results/early-calls.md`): in bench mode it reads `bench.json`
+and only then `fixture.json`, and that second call is made in answer to
+the first, so it still starts at the first poll. The issues are never in
+the first frame painted, on either build: the fixture lands 1-12 ms after
+it. Getting them there needs the fixture read started before the first
+poll: the app asking for both files at once, or the host running another
+turn between the page's start and the window's first poll (not done).
+
+## Prerendering the first screen: looked at, put off (27 Nov 2026)
+
+The idea: show the app's first screen from HTML before any JavaScript
+runs, then swap in the live UI in one batch. Not done, because the window
+does not wait for JavaScript: the page, the app's chrome mounted, is
+ready ~160 ms before macOS shows the window, and the first frame painted
+already shows it. Everything on the way runs on the UI thread, one after
+the other (ms from exec, bench Tracker): Blitz's `BaseDocument::new` 10-37,
+the page and its JavaScript 37-65, winit's event loop 65-87, `run_app` to
+`can_create_surfaces` 87-114, window creation 114-161, GPU device and
+renderer 161-169, then ~60 ms in AppKit until the window is visible (a
+50 ms sleep after creating the window delayed it by 50 ms: page work
+cannot overlap it). Either way below helps only if the host opens the
+window before the page's JavaScript runs, and then saves about those
+28 ms.
+
+**A, prerendering through SvelteKit** (tried on the Tracker, `ssr = true`,
+`prerender = 'auto'`):
+
+- Svelte compiles a custom-renderer component to an empty function for the
+  server (`transform-server.js`: "no meaningful server representation"),
+  so the pages came out empty. It needs a server compile without
+  `customRenderer`: `withSepal()` can pass vite-plugin-svelte a
+  `dynamicCompileOptions` that drops it when `generate` is `'server'`
+  (SvelteKit 3 forwards options it does not use).
+- Apps guard what runs at module top level with `browser`: Sepal's modules
+  import in Node (`host-call.js` reads `globalThis.__sb_host ?? {}`), but a
+  call fails there, and the Tracker reads files from `store.svelte.ts` and
+  `bench.ts` at load. `ssr` has to be `true` (the starter's is `false`).
+- The adapter writes the start address's prerendered page as `index.html`
+  (following `/`'s redirect), keeps the fallback shell for other addresses,
+  and wraps the markup in a marker.
+- `bind:` values would be missing from prerendered inputs: the rewrite
+  makes them attachments, which do not run on the server.
+- The handover works with no new edit to SvelteKit's `client.js`: `kit.start`
+  hydrates only when given `data`, so the adapter drops the start script's
+  hydration payload and SvelteKit mounts fresh (`navigate({ type: 'enter' })`).
+  `mount` appends to the target; the renderer removes the marker just
+  before its first insert there, in the same batch and so the same `settle()`.
+- It shows chrome only, never the user's data.
+
+**B, a launch snapshot** (the page's HTML saved when the app quits or
+hides, painted at the next launch): shows more (the last screen, data
+included) and works without SvelteKit, but writes screen content to disk
+(opt-in, the data directory), is stale, and shows the last screen when a
+deep link opens another.
+
+With either, input before the swap must be dropped by the host: queued
+behind the JavaScript, it would be hit-tested against the live tree.
+
 ## First visits: QuickJS-ng's Map hash (27 Nov 2026, branch `alloc`)
 
 The job was the ~50 ms a screen's first visit cost over a repeat (below).

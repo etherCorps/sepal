@@ -509,9 +509,14 @@ at the size when a change adds crates or features.
 - **Desktop APIs are default-deny.** A new one needs: a permission in
   `api::Permissions`, the check in the host (never in JS), a refusal message
   built with `denied()`, and a line in the "refused without permission" test.
-- **Host calls made during startup are held** until the window polls the
-  document (`SvelteDocument::for_window`). Before that there is no window and
-  no running event loop: window calls would be lost and rfd dialogs panic.
+- **Host calls that need the window are held during startup** until the
+  window polls the document (`SvelteDocument::for_window`, `needs_window`):
+  window controls, dialogs and the clipboard. Before that there is no window
+  and no running event loop: window calls would be lost and rfd dialogs
+  panic. Every other call (files, `fetch`, `open`, the updater) starts at
+  the end of the turn that made it; its answer waits in the channel for the
+  next turn, which before the window is its first poll. A call made only
+  after another's answer therefore waits for that poll too.
 - **Tests must not open dialogs, write the clipboard or open links.** They
   would act on the machine of whoever runs them.
 - **App settings live in `sepal.config.ts`**, loaded by the preset with
