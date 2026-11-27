@@ -178,11 +178,15 @@ clipboard, open, window, updater)?
 - **The prebuilt host (calyx, the four platform packages) stays** for apps
   without `native/`, and those apps never need Rust or cargo. It gets a few
   more commonly used APIs (below). Everything else becomes a plugin.
-- **The patches stay patches.** All four patched crates remain in this repo:
-  `crates/blitz-dom` and `crates/anyrender_vello_hybrid` (Blitz's), and
-  `crates/vello_gpu` and `crates/wgpu-hal` (the GPU memory fixes). Apps get
-  them through `[patch.crates-io]` lines that the CLI writes into
-  `native/Cargo.toml`, the same four lines `crates/host/Cargo.toml` has.
+- **The patches stay patches.** All five patched crates remain in this repo:
+  `crates/blitz-dom` and `crates/anyrender_vello_hybrid` (Blitz's),
+  `crates/vello_gpu` and `crates/wgpu-hal` (the GPU memory fixes), and
+  `crates/rquickjs-sys` (QuickJS-ng's Map and Set hash, added 27 Nov). Apps
+  get them through `[patch.crates-io]` lines that the CLI writes into
+  `native/Cargo.toml`, the same five lines `crates/host/Cargo.toml` has.
+  `crates/rquickjs-sys` is temporary: it goes, with its patch line, once
+  rquickjs ships a QuickJS-ng release that has quickjs-ng PR #1931 (its
+  `PATCH.md`).
 - **The JS engine stays** (decided 22 Nov). With per-app builds, V8 becomes a
   per-app choice: `features = ["engine-v8"]` in `native/Cargo.toml`. The
   prebuilt host stays on QuickJS.
@@ -220,10 +224,11 @@ always `crates/host`, so the patches always applied.
 With per-app builds, the top level is the app's `native/` crate. Without the
 patch lines, it compiles against the stock crates and quietly loses what each
 `PATCH.md` lists: the fifteen changes to `blitz-dom`, the eleven to
-`anyrender_vello_hybrid` (the glyph atlas, damage tracking), and the GPU
+`anyrender_vello_hybrid` (the glyph atlas, damage tracking), the GPU
 memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
-first blit costs about 80 MB of driver memory). Step 1 makes that
-impossible.
+first blit costs about 80 MB of driver memory), and the Map and Set hash in
+`rquickjs-sys` (one; without it the Board's first visit is about 25 ms slower).
+Step 1 makes that impossible.
 
 ### Order of work
 
@@ -231,9 +236,10 @@ Do these in order. Each ends with something Shivam can check.
 
 #### 1. Make an unpatched build fail
 
-Add a marker to each of the four patched crates, `pub const SEPAL_PATCHED: u32`,
-set to the number of changes its `PATCH.md` lists: 13 in `blitz-dom`, 11 in
-`anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`. Refer to all four
+Add a marker to each of the five patched crates, `pub const SEPAL_PATCHED: u32`,
+set to the number of changes its `PATCH.md` lists: 15 in `blitz-dom`, 11 in
+`anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`, 1 in
+`rquickjs-sys` (in `src/lib.rs`: its change is in C). Refer to all five
 from the host. A build against a stock crate then fails to compile, with an
 error that names the missing `[patch.crates-io]` line.
 
@@ -294,7 +300,7 @@ thread, with no window activity, reaches JS with one wake-up.
 #### 4. `native/` in the CLI
 
 - **`sepal native init`** writes `native/Cargo.toml`, depending on the `sepal`
-  crate from crates.io, with the four `[patch.crates-io]` lines pinned to this
+  crate from crates.io, with the five `[patch.crates-io]` lines pinned to this
   release's git tag, and `native/src/main.rs`.
 - **`sepal add <plugin>`** adds four things: the crate, the npm package,
   the `.plugin()` line and the `permissions` entry.

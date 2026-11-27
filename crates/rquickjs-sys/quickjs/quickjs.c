@@ -53380,7 +53380,22 @@ static uint32_t map_hash_key(JSContext *ctx, JSValueConst key)
         h = 0;
         break;
     }
-    return h ^ ctx->hash_seed ^ hash32(tag);
+    h ^= ctx->hash_seed ^ hash32(tag);
+    /* sepal patch: the bucket is the hash's low bits, and for numbers and
+       pointers the low bits barely change: a small integer's double ends in
+       zero bits, an object's address is aligned. Node ids 1 to 10,000 fell
+       in 64 buckets of 8192. Every key but a string goes through murmur3's
+       finalizer, so each bit of the hash depends on all the others. Equal
+       keys still hash the same: it is a function of the same h. Upstream
+       fixed this in quickjs-ng PR #1931, after 0.18.0; see PATCH.md. */
+    if (tag != JS_TAG_STRING && tag != JS_TAG_STRING_ROPE) {
+        h ^= h >> 16;
+        h *= 0x85ebca6b;
+        h ^= h >> 13;
+        h *= 0xc2b2ae35;
+        h ^= h >> 16;
+    }
+    return h;
 }
 
 static JSMapRecord *map_find_record(JSContext *ctx, JSMapState *s,
