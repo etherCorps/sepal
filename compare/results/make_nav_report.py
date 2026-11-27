@@ -89,14 +89,16 @@ def page_started(r):
     return None
 
 
-def turn(mark_name):
-    """The navigation's turn in the window trace: the `poll took` line after its MARK."""
+def turn(mark_name, line='poll took'):
+    """The navigation's turn in the window trace: the first `line` after its MARK.
+    A link waits for a frame and navigates from a timer (`poll`); Escape navigates
+    inside the key press (`KeyboardInput`)."""
     def get(r):
         lines = (RESULTS / r['log']).read_text().splitlines()
         i = next((k for k, l in enumerate(lines) if f'MARK {mark_name}' in l), None)
         if i is None:
             return None
-        m = next((re.search(r'poll took ([\d.]+)ms', l) for l in lines[i:] if 'poll took' in l), None)
+        m = next((re.search(rf'{line} ([\d.]+)ms', l) for l in lines[i:] if line in l), None)
         return float(m.group(1)) if m else None
     return get
 
@@ -128,7 +130,11 @@ table('Open an issue (scenario 5)', [5], [
     ('click row → frame, ms', step('click row', 'ms_to_frame'), 1),
     ('Escape → mark, ms', step('Escape', 'ms_to_mark'), 1),
     ('Escape → frame, ms', step('Escape', 'ms_to_frame'), 1),
+    ('click row: the turn that renders it, ms', turn('nav:/issues/'), 1),
+    ('Escape: the key press that renders it, ms', turn('nav:/issues ', 'KeyboardInput took'), 1),
 ])
+print('Opening an issue is 2.1 ms later to its mark and 7.1 ms sooner to its frame,\n'
+      'with the turn that renders it 1.8 ms shorter: the frame timing in the notes below.\n')
 SCREENS = ('board', 'insights', 'settings', 'issues')
 table('Switch screens (scenario 10)', [10], [
     *[(f'{to} → mark, ms', step(f'click nav-{to}', 'ms_to_mark'), 1) for to in SCREENS],
@@ -143,9 +149,9 @@ print('''### Notes
   shorter and Issues' 3.2; Settings and Insights are within 1 ms. The
   marks and frames add the wait before that turn: SvelteKit follows a
   link from a `requestAnimationFrame` callback, which waits for the next
-  vsync, and while the nav item's hover transition draws, frames are
-  coming every 13 ms. Where the click lands in that cycle moves a mark by
-  up to a frame. Insights shows it: the same render turn on both builds,
+  vsync, and while the nav item's hover transition draws, a frame comes at
+  every refresh of the 75 Hz display, 13.3 ms apart. Where the click lands
+  between two refreshes moves a mark by up to a frame. Insights shows it: the same render turn on both builds,
   and its mark 7.6 ms later on the branch. Headless, where there are no
   frames, its first visit is 1 ms quicker.
 - **Idle** is the same: no frames, 34 and 32 wake-ups in 20 s.
@@ -192,8 +198,9 @@ here), on the old main too. It is spread evenly over the 300 cards it
 draws (210-320 µs a card, against 130-145), and it is neither `cn()` (0.55
 ms), nor Svelte's templates (a custom renderer gets new nodes every time),
 nor Bits UI, the app's data, QuickJS's collector or its warm-up. Making and
-dropping 20,000 of the renderer's nodes before the first visit takes all of
-it away: the process makes nodes in numbers it has not before. Which part
+dropping 20,000 of the renderer's nodes before the first visit takes nearly
+all of it away (73 ms against a 67-68 ms repeat: 5-6 ms remains): the
+process makes nodes in numbers it has not before. Which part
 of that growth costs, JavaScript's or the allocator's, is the next job.
 
 | headless, ms | first visit | repeat | first, 20,000 nodes made first | repeat, same |

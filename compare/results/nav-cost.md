@@ -23,8 +23,13 @@ Session `nav-1`, interleaved, 1 warm-up and 3 runs per build and scenario, Stage
 | click row → frame, ms | 44.0<br><sub>38.1–45.1</sub> | 36.9<br><sub>36.1–40.6</sub> | -7.1 |
 | Escape → mark, ms | 30.3<br><sub>27.4–30.4</sub> | 24.7<br><sub>18.0–29.9</sub> | -5.6 |
 | Escape → frame, ms | 44.5<br><sub>43.1–44.5</sub> | 43.4<br><sub>36.6–44.6</sub> | -1.1 |
+| click row: the turn that renders it, ms | 27.2<br><sub>27.1–27.7</sub> | 25.4<br><sub>25.0–25.6</sub> | -1.8 |
+| Escape: the key press that renders it, ms | 23.3<br><sub>22.3–23.3</sub> | 20.6<br><sub>17.4–22.2</sub> | -2.7 |
 
 <sub>Runs: main: 3, branch: 3.</sub>
+
+Opening an issue is 2.1 ms later to its mark and 7.1 ms sooner to its frame,
+with the turn that renders it 1.8 ms shorter: the frame timing in the notes below.
 
 ### Switch screens (scenario 10)
 
@@ -51,9 +56,9 @@ Session `nav-1`, interleaved, 1 warm-up and 3 runs per build and scenario, Stage
   shorter and Issues' 3.2; Settings and Insights are within 1 ms. The
   marks and frames add the wait before that turn: SvelteKit follows a
   link from a `requestAnimationFrame` callback, which waits for the next
-  vsync, and while the nav item's hover transition draws, frames are
-  coming every 13 ms. Where the click lands in that cycle moves a mark by
-  up to a frame. Insights shows it: the same render turn on both builds,
+  vsync, and while the nav item's hover transition draws, a frame comes at
+  every refresh of the 75 Hz display, 13.3 ms apart. Where the click lands
+  between two refreshes moves a mark by up to a frame. Insights shows it: the same render turn on both builds,
   and its mark 7.6 ms later on the branch. Headless, where there are no
   frames, its first visit is 1 ms quicker.
 - **Idle** is the same: no frames, 34 and 32 wake-ups in 20 s.
@@ -100,8 +105,9 @@ here), on the old main too. It is spread evenly over the 300 cards it
 draws (210-320 µs a card, against 130-145), and it is neither `cn()` (0.55
 ms), nor Svelte's templates (a custom renderer gets new nodes every time),
 nor Bits UI, the app's data, QuickJS's collector or its warm-up. Making and
-dropping 20,000 of the renderer's nodes before the first visit takes all of
-it away: the process makes nodes in numbers it has not before. Which part
+dropping 20,000 of the renderer's nodes before the first visit takes nearly
+all of it away (73 ms against a 67-68 ms repeat: 5-6 ms remains): the
+process makes nodes in numbers it has not before. Which part
 of that growth costs, JavaScript's or the allocator's, is the next job.
 
 | headless, ms | first visit | repeat | first, 20,000 nodes made first | repeat, same |
