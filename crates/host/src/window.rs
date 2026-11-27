@@ -142,6 +142,11 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     if std::env::var_os("SEPAL_GLYPH_CACHE").is_some_and(|value| value == "0") {
         anyrender_vello_hybrid::set_glyph_cache(false);
     }
+    // The GPU device and the renderer's pipelines, made on a thread while
+    // the app starts; the window's surface is made on this one later (a
+    // patch to the vendored anyrender_vello_hybrid).
+    let mut renderer = VelloHybridWindowRenderer::new();
+    renderer.prepare();
     // Before the event loop exists: winit builds the menu bar from this name.
     if let Some(name) = &app.manifest.name {
         set_app_name(name);
@@ -208,7 +213,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     let mut application = BlitzApplication::new(proxy, receiver);
     application.add_window(WindowConfig::with_attributes(
         Box::new(doc),
-        VelloHybridWindowRenderer::new(),
+        renderer,
         attributes,
     ));
 

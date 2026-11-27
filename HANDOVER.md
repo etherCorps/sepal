@@ -329,7 +329,7 @@ always `crates/host`, so the patches always applied.
 
 With per-app builds, the top level is the app's `native/` crate. Without the
 patch lines, it compiles against the stock crates and quietly loses what each
-`PATCH.md` lists: the fifteen changes to `blitz-dom`, the eleven to
+`PATCH.md` lists: the fifteen changes to `blitz-dom`, the twelve to
 `anyrender_vello_hybrid` (the glyph atlas, damage tracking), the GPU
 memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
 first blit costs about 80 MB of driver memory), and the Map and Set hash in
@@ -343,7 +343,7 @@ Do these in order. Each ends with something Shivam can check.
 #### 1. Make an unpatched build fail
 
 Add a marker to each of the five patched crates, `pub const SEPAL_PATCHED: u32`,
-set to the number of changes its `PATCH.md` lists: 15 in `blitz-dom`, 11 in
+set to the number of changes its `PATCH.md` lists: 15 in `blitz-dom`, 12 in
 `anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`, 1 in
 `rquickjs-sys` (in `src/lib.rs`: its change is in C). Refer to all five
 from the host. A build against a stock crate then fails to compile, with an

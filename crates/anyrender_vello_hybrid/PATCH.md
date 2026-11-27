@@ -2,7 +2,7 @@
 
 This is the crates.io source of `anyrender_vello_hybrid` 0.11.0 (MIT OR
 Apache-2.0, https://github.com/DioxusLabs/anyrender), the renderer Blitz draws
-windows with, with eleven changes. `crates/host/Cargo.toml` swaps it in through
+windows with, with twelve changes. `crates/host/Cargo.toml` swaps it in through
 `[patch.crates-io]`. All are marked `sepal patch`.
 
 ## The changes
@@ -207,6 +207,24 @@ issues, 3 runs each): New issue dialog 123 -> 78 ms GPU, 350 -> 326 ms CPU;
 scrolling 622 -> 574 ms GPU; the clock and view switches the same within
 noise. With the dialog open, wgpu's textures and buffers 53.6 -> 39.6 MB
 (`compare/results/dialog-memory.md`).
+
+**12. The device and the pipelines are made before the window.**
+`src/window_renderer.rs`, `prepare` and the start of `resume` (the `Prepared`
+struct, the `prepared` field): `prepare` makes the wgpu device (an adapter
+requested without a surface) and the renderer's pipelines on a thread while
+the app starts. The first `resume` makes the surface on the UI thread, as
+before, then offers the prepared device to `find_compatible_device_handle`,
+which checks that it supports the surface; if it is the device taken, the
+prepared renderer is used, and anything else falls back to making both there,
+as upstream. The pipelines are made for a 1x1 target: the first frame sets
+the real size (`maybe_update_config_buffer`). The host calls `prepare` at the
+start of `window::run`.
+
+Measured on the bench Tracker, bundled, 5 launches each: the host's
+`can_create_surfaces` (making the window, the first layout, the renderer)
+took 39.5 ms instead of 52.8, and the window was visible 15 ms sooner. That
+is more than the device and the pipelines took inside `resume` when timed
+there (~8.5 ms); the rest was not broken down.
 
 ## Updating
 
