@@ -2,6 +2,9 @@
 // limit. A desktop app runs for days, and libraries make selectors and URLs
 // with generated ids in them (Bits UI's, an app's own), so a cache without
 // one grows for as long as the app runs.
+//
+// For module-level caches only: every cache made here is kept for
+// `__sb.stats()`, so one made per component or element would never be freed.
 
 /** The caches made so far, by name, for `__sb.stats()`. @type {Map<string, Map<any, any>>} */
 const made = new Map();

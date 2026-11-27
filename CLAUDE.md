@@ -475,6 +475,13 @@ at the size when a change adds crates or features.
   again once a large layer (a Dialog's backdrop) is gone, and a scene can be
   drawn at an offset (`set_root_offset`, for damage tracking). See its
   `PATCH.md`. Same rules as below.
+- **`crates/rquickjs-sys` is a patched copy as well**: QuickJS-ng 0.16.2's
+  Map and Set hash put numbers, objects and symbols in a few buckets, and
+  the renderer keys its node maps by id; `map_hash_key` now mixes every key
+  but a string. `tests/maps.rs` checks Map, Set and WeakMap semantics on
+  both engines. `build.rs` reruns only on environment changes: after
+  editing the C, `touch build.rs`. It goes once rquickjs ships a QuickJS-ng
+  with quickjs-ng #1931. See its `PATCH.md`. Same rules as below.
 - **`crates/wgpu-hal` is a patched copy as well**: on Apple GPUs, buffer
   clears and uploads run in render passes instead of blit encoders, because the
   first blit or compute work in a process costs ~80 MB of driver memory. A new

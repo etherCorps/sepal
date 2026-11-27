@@ -107,6 +107,8 @@ anyrender_vello_hybrid = { path = "../anyrender_vello_hybrid" }
 vello_gpu = { path = "../vello_gpu" }
 # Clears and uploads in render passes, not blits; see its PATCH.md.
 wgpu-hal = { path = "../wgpu-hal" }
+# Map and Set keys that spread over the buckets; see its PATCH.md.
+rquickjs-sys = { path = "../rquickjs-sys" }
 
 [profile.dev]
 opt-level = 1

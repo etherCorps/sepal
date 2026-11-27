@@ -1042,6 +1042,12 @@ What the time is spent on, from sampling:
   the page, to set up preloading, and walks the page for `[autofocus]`: on
   the Tracker's Board, 316 links of 3,500 elements, that is about 4 ms in the
   DOM layer (7.3 µs a link and two walks of under 1 ms).
+- **First visits.** A screen drawn for the first time makes thousands of
+  nodes, and the renderer keys them by id in Maps. QuickJS-ng 0.16.2 put
+  such keys in a few of a Map's buckets; the host carries a patched
+  `rquickjs-sys` that spreads them, which takes 21 ms off the turn that
+  renders the Tracker's Board (`compare/results/alloc.md`). A first visit
+  still costs ~40 ms more than a repeat, for reasons not yet found.
 - **Start-up.** Modules load as bytecode, compiled when the app is built:
   the Tracker's page starts 19-20 ms sooner than when QuickJS parsed and
   compiled its 36 modules at every launch (`compare/results/bytecode.md`).
