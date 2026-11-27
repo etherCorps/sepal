@@ -134,6 +134,21 @@ is 5.5 ms shorter and Issues' 3.2 (`compare/results/nav-cost.md`).
 - `searchParams` on the DOM layer's `URL` is no longer an own property of
   each URL, as in browsers and Node: `Object.keys(url)` no longer lists it.
 
+### Screens drawn for the first time are faster
+
+QuickJS-ng 0.16.2 put Map and Set keys that are numbers, objects or
+symbols in a few of a table's buckets: node ids 1 to 10,000 fell in 64 of
+8,192, and the renderer keys its node maps by id. The host now carries a
+patched copy of `rquickjs-sys` (`crates/rquickjs-sys`) whose hash spreads
+every key but a string over the buckets. In the Tracker the turn that
+renders the Board for the first time is 21 ms shorter, Insights' 6 ms and
+Issues' 5 ms (`compare/results/alloc.md`). A Map or Set of 10,000 integer
+keys is 27 times faster to fill and search, one of objects 7 times.
+Start-up, idle, memory and the host's size do not change.
+
+Upstream fixed it in quickjs-ng #1931, which no release has yet; the
+patched copy goes once rquickjs ships one that does.
+
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
 ### Breaking: SvelteKit is the only router

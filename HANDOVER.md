@@ -7,6 +7,44 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## First visits: QuickJS-ng's Map hash (27 Nov 2026, branch `alloc`)
+
+The job was the ~50 ms a screen's first visit cost over a repeat (below).
+About half of it was QuickJS-ng 0.16.2's Map and Set hash: a number key
+hashed as `(low word ^ high word) * 3163` of its double, an object or
+symbol as its address times 3163, and the bucket was the low bits, which
+hardly change from key to key. Node ids 1 to 10,000 fell in 64 of 8,192
+buckets, and the renderer keys `elements` and `by_tag` by id.
+
+- `crates/rquickjs-sys` is rquickjs-sys 0.14.0 as on crates.io, with one
+  change (`PATCH.md`): every key but a string goes through murmur3's
+  finalizer, the seed mixed in first. `tests/maps.rs` checks that equal
+  keys stay one key (1 and 1.0, 0 and -0, every NaN) and the rest stay
+  apart, on both engines.
+- **It is temporary.** Upstream fixed it in quickjs-ng PR #1931 (merged
+  22 Nov, in no release yet; issue #1815). Once rquickjs ships a
+  QuickJS-ng with it, remove the `[patch.crates-io]` line and the folder,
+  and bump rquickjs as its own commit.
+- In a window (session `alloc-1`, `compare/results/alloc.md`) the Board's
+  render turn is 21 ms shorter, Insights' 6, Issues' 5. Start-up, idle,
+  RAM and the host's size are unchanged.
+
+Tried and not taken: mimalloc as the host's allocator, QuickJS on Rust's
+allocator, and reserving Blitz's node storage moved the first visit by
+no more than run-to-run noise. An array of nodes instead of the
+`elements` Map was not taken either: the hash fix covers it, and every
+other Map keyed by numbers or objects too.
+
+**What remains: ~40 ms**, the Board's first visit (113-123 ms headless)
+over a repeat (73-76). Counters added to QuickJS for the purpose found the
+same work within 9% (objects, mallocs, shapes) and no other weak hash
+table (shapes and property tables take the top bits, atoms average one
+probe a lookup). Two automatic collections run on the first visit and
+none on the repeat, but turning them off saves only 3-6 ms. The rest is
+the same operations costing more the first time. A next step would be
+Instruments' CPU counters (cache and TLB misses), first visit against
+repeat. It is its own job.
+
 ## Navigation costs (27 Nov 2026, branch `nav-cost`)
 
 After every navigation SvelteKit walks the whole page twice: `a`, to set
