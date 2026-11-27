@@ -798,3 +798,83 @@ fn a_request_does_not_block_the_ui() {
         doc.settle();
     }
 }
+
+fn copy_dir(from: &Path, to: &Path) {
+    fs::create_dir_all(to).unwrap();
+    for entry in fs::read_dir(from).unwrap() {
+        let entry = entry.unwrap();
+        let target = to.join(entry.file_name());
+        if entry.file_type().unwrap().is_dir() {
+            copy_dir(&entry.path(), &target);
+        } else {
+            fs::copy(entry.path(), target).unwrap();
+        }
+    }
+}
+
+/// A file read at module top level, while the app starts and there is no
+/// window yet, is answered without waiting for one; a window call made in
+/// the same breath waits for the window. Headless, "the window exists"
+/// is the first poll with a task context, as in `timers_wake_the_event_loop`.
+#[test]
+fn calls_that_need_no_window_start_before_it_exists() {
+    use blitz_dom::Document;
+    use std::task::{Context, Waker};
+
+    let data = scratch("early-calls-data");
+    fs::write(data.join("early.txt"), "read early").unwrap();
+    let app_dir = scratch("early-calls");
+    copy_dir(
+        Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/desktop/dist"
+        )),
+        &app_dir,
+    );
+    // After the app's own module, which sets `__api`: modules run in order.
+    let file = data.join("early.txt");
+    let page = fs::read_to_string(app_dir.join("index.html")).unwrap().replace(
+        "</head>",
+        &format!(
+            "<script type=\"module\">
+                globalThis.early = {{ fs: 'pending', window: 'pending' }};
+                __api.fs.readTextFile({file:?}).then((text) => (early.fs = text), (error) => (early.fs = 'ERROR: ' + error.message));
+                __api.window.setTitle('early').then(() => (early.window = 'done'), (error) => (early.window = 'ERROR: ' + error.message));
+            </script>
+            </head>"
+        ),
+    );
+    fs::write(app_dir.join("index.html"), page).unwrap();
+    let mut app = App::from_dir(&app_dir).unwrap();
+    app.manifest.permissions = Permissions {
+        fs: Scope::Some(vec![data.to_string_lossy().into_owned()]),
+        ..Default::default()
+    };
+    let mut doc = SvelteDocument::for_window(&app).unwrap();
+    let early = |doc: &SvelteDocument| -> Value {
+        serde_json::from_str(&doc.js().eval_string("JSON.stringify(early)").unwrap()).unwrap()
+    };
+
+    // Turns, but no poll: the window does not exist.
+    let started = Instant::now();
+    while early(&doc)["fs"] == "pending" {
+        assert!(
+            started.elapsed() < Duration::from_secs(10),
+            "the file was not read before the window existed"
+        );
+        std::thread::sleep(Duration::from_millis(5));
+        doc.settle();
+    }
+    assert_eq!(early(&doc)["fs"], "read early");
+    assert_eq!(early(&doc)["window"], "pending", "the window call waits");
+
+    // The window polls the document for the first time: the held call starts.
+    doc.poll(Some(Context::from_waker(Waker::noop())));
+    let started = Instant::now();
+    while early(&doc)["window"] == "pending" {
+        assert!(started.elapsed() < Duration::from_secs(10));
+        std::thread::sleep(Duration::from_millis(5));
+        doc.settle();
+    }
+    assert_eq!(early(&doc)["window"], "done");
+}
