@@ -23,7 +23,7 @@ use keyboard_types::{Key, NamedKey};
 use crate::api::{Api, Work, denied};
 use crate::app::App;
 use crate::hud::{AppNumbers, Hud};
-use crate::js::{EventDetail, JsEngine, Mods};
+use crate::js::{EventDetail, HostCall, JsEngine, Mods};
 use crate::net::{AppResources, ORIGIN};
 use crate::ops::{self, ApplyStats, NodeMap};
 use crate::page::{self, Script};
@@ -204,9 +204,12 @@ pub struct SvelteDocument {
     answers: (Sender<Answer>, Receiver<Answer>),
     /// Wakes the event loop when an answer is ready. Set once there is a loop.
     waker: Arc<Mutex<Option<Waker>>>,
-    /// Host calls wait in the queue while this is set: the document is going
-    /// into a window that does not exist yet. See [`SvelteDocument::for_window`].
+    /// Set while the document is going into a window that does not exist
+    /// yet: calls that need the window wait in `held` until it does. See
+    /// [`SvelteDocument::for_window`].
     hold_host_calls: bool,
+    /// Calls that need the window, made before it existed, in order.
+    held: Vec<HostCall>,
     /// Nodes detached since the last collection the host asked for.
     detached_since_gc: usize,
     /// When to collect garbage (JS clock, ms). See [`GC_AFTER_DETACHED`].
@@ -269,10 +272,13 @@ impl SvelteDocument {
     /// Like [`for_app`](Self::for_app), for a document that is about to be
     /// shown in a window.
     ///
-    /// An app may call the host while it starts up (set the title, show a
-    /// dialog). At that point there is no window and the event loop is not
-    /// running, so those calls are kept until the window polls the document
-    /// for the first time, and start then.
+    /// An app may call the host while it starts up. There is no window and
+    /// no running event loop yet. A call that needs the window (window
+    /// controls, dialogs, the clipboard: see [`needs_window`]) is kept until
+    /// the window polls the document for the first time, and starts then;
+    /// any other (files, `fetch`, opening a link, the updater) starts at the
+    /// end of the turn that made it, as it would later. Its answer waits in
+    /// the channel for the next turn, the window's first poll at the latest.
     pub fn for_window(app: &App) -> Result<Self, String> {
         Self::for_app_in(app, true)
     }
@@ -402,6 +408,7 @@ impl SvelteDocument {
             answers: mpsc::channel(),
             waker: Arc::default(),
             hold_host_calls,
+            held: Vec::new(),
             detached_since_gc: 0,
             gc_at: None,
             hud: Hud::default(),
@@ -850,10 +857,15 @@ impl SvelteDocument {
     /// goes to a thread, which sends its answer back and wakes the event
     /// loop; the answer is delivered at the start of the next turn.
     fn start_host_calls(&mut self) {
+        let mut calls = self.js.take_calls();
         if self.hold_host_calls {
-            return;
+            let (wait, now) = calls.into_iter().partition(|call| needs_window(&call.name));
+            self.held.extend::<Vec<_>>(wait);
+            calls = now;
+        } else if !self.held.is_empty() {
+            calls.splice(0..0, std::mem::take(&mut self.held));
         }
-        for call in self.js.take_calls() {
+        for call in calls {
             let work = match self.host_work(&call.name, &call.args) {
                 Ok(Plan::Later(work)) => work,
                 Ok(Plan::Now(json)) => {
@@ -1058,6 +1070,19 @@ impl Document for SvelteDocument {
         }
         self.settle().changed()
     }
+}
+
+/// Whether a host call needs the window: before there is one, such a call
+/// waits (see [`SvelteDocument::for_window`]). Window controls go through
+/// the window, and are lost without one; dialogs need the running event
+/// loop (rfd panics without one); the clipboard is reached through the
+/// shell, which has none until the window exists. Files, `fetch`, opening a
+/// link and the updater need neither.
+fn needs_window(name: &str) -> bool {
+    matches!(
+        name.split_once('.').map_or(name, |(group, _)| group),
+        "window" | "dialog" | "clipboard"
+    )
 }
 
 struct JsEventHandler<'a> {
