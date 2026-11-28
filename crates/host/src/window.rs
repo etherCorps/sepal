@@ -20,7 +20,9 @@ use std::time::{Duration, Instant};
 
 use anyrender_vello_hybrid::VelloHybridWindowRenderer;
 use blitz_dom::FontContext;
-use blitz_shell::{BlitzApplication, BlitzShellProxy, WindowConfig, create_default_event_loop};
+use blitz_shell::{
+    BlitzApplication, BlitzShellEvent, BlitzShellProxy, WindowConfig, create_default_event_loop,
+};
 use winit::application::ApplicationHandler;
 use winit::application::macos::ApplicationHandlerExtMacOS;
 use winit::dpi::LogicalSize;
@@ -184,6 +186,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
     }
     let (proxy, receiver) = BlitzShellProxy::new(event_loop.create_proxy());
+    let shell_proxy = proxy.clone();
 
     let (width, height) = manifest.size();
     let min_size = manifest.min_size();
@@ -231,6 +234,8 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
                 started: Instant::now(),
                 first_frame: false,
             }),
+            proxy: shell_proxy,
+            before_first_paint: false,
         })
         .map_err(|e| e.to_string())
 }
@@ -254,6 +259,26 @@ struct Host {
     redraw_at: Option<(WindowId, Instant)>,
     /// Set by `SEPAL_TRACE`: report where the UI thread spends its time.
     trace: Option<Trace>,
+    /// blitz-shell's events, for the waker of the document's first poll.
+    proxy: BlitzShellProxy,
+    /// The window exists and blitz-shell has not painted it yet.
+    before_first_paint: bool,
+}
+
+/// Wakes the event loop to poll the window's document: what blitz-shell's
+/// own waker does, which it installs only once the renderer is ready.
+fn poll_waker(proxy: &BlitzShellProxy, window_id: WindowId) -> std::task::Waker {
+    struct Poll(BlitzShellProxy, WindowId);
+    impl std::task::Wake for Poll {
+        fn wake(self: Arc<Self>) {
+            self.wake_by_ref();
+        }
+        fn wake_by_ref(self: &Arc<Self>) {
+            self.0
+                .send_event(BlitzShellEvent::Poll { window_id: self.1 });
+        }
+    }
+    std::task::Waker::from(Arc::new(Poll(proxy.clone(), window_id)))
 }
 
 /// Timing of the UI thread, written to stderr as `[trace] +<since launch> …`.
@@ -440,6 +465,21 @@ impl ApplicationHandler for Host {
             set_dock_icon(&png);
         }
         self.application.can_create_surfaces(event_loop);
+        // blitz-shell polls the document only once the renderer says it is
+        // ready (`ResumeReady`), an event that waits behind AppKit's pass to
+        // show the window, ~45 ms. The document's first turn, which delivers
+        // the answers to calls made at start-up, does not need the renderer:
+        // with a waker of its own (the same `Poll` event blitz-shell's sends),
+        // the document is polled now. Until `ResumeReady`, the renderer draws
+        // nothing, so the first paint is still blitz-shell's, of a page that
+        // already has what those answers brought.
+        for view in self.application.windows.values_mut() {
+            if view.waker.is_none() {
+                view.waker = Some(poll_waker(&self.proxy, view.window_id()));
+            }
+            view.poll();
+        }
+        self.before_first_paint = true;
     }
 
     fn destroy_surfaces(&mut self, event_loop: &dyn ActiveEventLoop) {
@@ -591,6 +631,14 @@ impl ApplicationHandler for Host {
             self.reload();
         }
         let began = Instant::now();
+        // The first time blitz-shell handles its events, `ResumeReady` among
+        // them paints the first frame: answers that came in while AppKit
+        // showed the window reach the page before it does.
+        if std::mem::take(&mut self.before_first_paint) {
+            for view in self.application.windows.values_mut() {
+                view.poll();
+            }
+        }
         self.application.proxy_wake_up(event_loop);
         if let Some(trace) = &mut self.trace {
             // Polls the document, and updates the accessibility tree when it changed.
