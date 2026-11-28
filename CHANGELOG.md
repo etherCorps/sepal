@@ -160,6 +160,18 @@ window, as before, so a call the app makes only once another has been
 answered starts there too. The Tracker reads its fixture that way and
 starts as fast as before (`compare/results/early-calls.md`).
 
+### The window opens sooner, with the app's data in its first frame
+
+Start-up no longer does everything on the UI thread, one thing after
+another. The system's fonts are listed on a thread while the event loop
+is made, and the GPU device and the renderer's pipelines are made on
+another; the page's first turn, which delivers the answers to calls made
+at start-up, runs as soon as the window exists instead of after macOS has
+shown it. In the Tracker the window is on screen 16-17 ms sooner, its
+first frame 21-23 ms sooner, and that frame now has the issues in it
+(`compare/results/startup-parallel.md`). Idle and memory do not change;
+the host is 33 KB larger.
+
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
 ### Breaking: SvelteKit is the only router

@@ -1051,6 +1051,11 @@ What the time is spent on, from sampling:
 - **Start-up.** Modules load as bytecode, compiled when the app is built:
   the Tracker's page starts 19-20 ms sooner than when QuickJS parsed and
   compiled its 36 modules at every launch (`compare/results/bytecode.md`).
+  The system's fonts are listed and the GPU device made on threads while
+  the event loop starts, and the page's first turn comes before AppKit
+  shows the window: the Tracker's window is on screen 16-17 ms sooner and
+  its first frame already has the issues (`compare/results/startup-parallel.md`).
+  What remains is mostly macOS's: a bare winit window takes ~150 ms to show.
 - **The engine.** QuickJS is an interpreter. The host can be built on V8
   instead (`cargo build --features engine-v8`, experimental): long lists get
   about 3.5 times faster and components about 1.5 times once warm, for a
