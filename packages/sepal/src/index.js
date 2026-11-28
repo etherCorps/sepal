@@ -3,7 +3,7 @@ import { run_timers, next_timer, run_frame, frame_pending, track_rejection, repo
 import { mount as svelte_mount, unmount } from 'svelte';
 import renderer, { root, dispatch, take_batch, stats, keep_alive, host_hooks } from './renderer.js';
 import { settle_call } from './host-call.js';
-import { fetch, Headers, Request, Response } from './fetch.js';
+import './web.js';
 
 /**
  * Mount a component into the window: into the page's `<body>`, or into
@@ -23,12 +23,6 @@ export function mount(component, options = {}) {
 }
 
 export { unmount, renderer, root };
-
-// The engine has no `fetch`. This one asks the host, which checks the app's
-// permissions. The classes around it come along: libraries test for them.
-for (const [name, value] of Object.entries({ fetch, Headers, Request, Response })) {
-	if (typeof (/** @type {any} */ (globalThis)[name]) !== 'function') /** @type {any} */ (globalThis)[name] = value;
-}
 
 // The host's entry points into JS. It calls these and nothing else.
 /** @type {any} */ (globalThis).__sb = {

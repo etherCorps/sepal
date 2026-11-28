@@ -13,6 +13,7 @@
 // The tree is the renderer's own. An element here is a `BlitzNode`, and every
 // write goes through the renderer into the same op buffer as Svelte's.
 
+import { AbortController, AbortSignal } from './abort.js';
 import { TextDecoder, TextEncoder } from './text.js';
 import { lru } from './lru.js';
 import { URL, URLSearchParams } from './url.js';
@@ -430,31 +431,6 @@ function unlisten(target, type, handler, options) {
 	if (handler == null) return;
 	const capture = is_capture(options);
 	remove_listener(target, type, wrappers.get(handler)?.get(capture ? `${type} capture` : type) ?? handler, capture);
-}
-
-class AbortSignal extends EventTarget {
-	constructor() {
-		super();
-		this.aborted = false;
-		/** @type {any} */
-		this.reason = undefined;
-	}
-	throwIfAborted() {
-		if (this.aborted) throw this.reason;
-	}
-}
-
-class AbortController {
-	constructor() {
-		this.signal = new AbortSignal();
-	}
-	/** @param {any} [reason] */
-	abort(reason) {
-		if (this.signal.aborted) return;
-		this.signal.aborted = true;
-		this.signal.reason = reason ?? new Error('aborted');
-		this.signal.dispatchEvent(new Event('abort'));
-	}
 }
 
 // ---------------------------------------------------------------------------
