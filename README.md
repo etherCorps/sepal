@@ -792,11 +792,16 @@ How the permissions work:
 
 What to know:
 
-- **`fetch` is the everyday part of the Fetch API**: method, headers, a string
-  or byte body, and `text()`, `json()`, `arrayBuffer()`, `bytes()`. `Request`,
-  `Headers` and `Response` are there too, because libraries test for them
-  (SvelteKit's client checks `instanceof Request` on every fetch). No
-  streaming, no `AbortSignal`, no `FormData`.
+- **`fetch` is the Fetch API**: `Request`, `Response` and `Headers` with
+  bodies from strings, bytes, `Blob`s, `FormData` (multipart, files
+  included), `URLSearchParams` and `ReadableStream`s; `text()`, `json()`,
+  `bytes()`, `arrayBuffer()`, `blob()`, `formData()`; `response.body` as a
+  stream that hands over the body as it arrives; `AbortSignal` to stop a
+  request; `Response.json`, `redirect` and `error`; `getSetCookie()`. With
+  it, in every app, the rest of the web platform that is not ECMAScript:
+  `URL`, `URLSearchParams`, `TextEncoder`, `TextDecoder`, `AbortController`,
+  the streams (web-streams-polyfill) and `Blob`, `File`, `FormData`
+  (formdata-node). `location`, `history` and the DOM need `dom: true`.
 - **Calls made while the app starts** wait until the window exists.
 - **A message or confirm dialog blocks the app** until it is answered.
 - **Not run here:** writing to the real clipboard and opening a link in the
@@ -837,10 +842,12 @@ packages/sepal/           sepal: the runtime, the preset and the command
   src/protocol.js         opcodes shared with the host
   src/host-call.js        asking the host for work that takes time
   src/updater.js          check(), download(), install()
-  src/fetch.js            the global fetch
+  src/web.js              the web platform's globals for every app: fetch.js, url.js, text.js, abort.js, streams, FormData
+  src/fetch.js            fetch, Request, Response, Headers (form-data.js: multipart bodies)
+  src/async-context.js    AsyncLocalStorage, on the value the host carries through promise jobs
   src/fs.js, dialog.js, clipboard.js, shell.js, window.js   desktop APIs
   src/dom.js              window, document and element methods, for `dom: true`
-  src/url.js, text.js     URL, URLSearchParams, TextEncoder, TextDecoder (part of the DOM layer)
+  src/url.js, text.js     URL, URLSearchParams, TextEncoder, TextDecoder
   vite/vite.js            sepal/vite: sepal(), the Vite preset (a web build from index.html), and withSepal(), SvelteKit's options
   vite/bindings.js        rewrites `bind:` on elements, which Svelte refuses here
   vite/head.js            rewrites `<svelte:head>`, likewise

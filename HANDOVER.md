@@ -7,6 +7,60 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## The backend thread (phase 2, from 28 Nov 2026)
+
+SvelteKit's server code, run in the app on a second QuickJS runtime on its
+own thread: the stem. Designed and approved on 28 Nov; three PRs.
+
+**A (branch `backend`): async context and the web module.** Useful on its own.
+
+- rquickjs-sys's second patch: quickjs-ng PR #1920 at `372e423` (open and
+  unreviewed upstream), a value carried through promise jobs. QuickJS-ng
+  0.16.2's promise hooks fire nothing around reactions (#1740), so they
+  cannot. V8 has the same as continuation-preserved embedder data.
+  `__sb_host.continuation` and `set_continuation`; timers and frame
+  callbacks capture it in `shims.js`; `async-context.js` is
+  `AsyncLocalStorage`, which SvelteKit needs: it runs every remote function,
+  load and action as `with_request_store(store, () => fn())` and clears its
+  synchronous store at the first `await` (`get_request_store()` in every
+  remote function's implementation).
+- `web.js`: the web platform's classes for every app and the stem. Ours
+  where ours is small and fits (URL 10.7 KB of bytecode, text 2.6 KB,
+  `AbortController`, the Fetch API); web-streams-polyfill (82 KB, 0.32 ms
+  from bytecode) and formdata-node (9.4 KB, 0.03 ms) where a spec-complete
+  one costs little. Measured against whatwg-url (369 KB, 15 ms from source),
+  whatwg-fetch (no streams), formdata-polyfill (85 KB) and llrt's modules
+  (native, QuickJS only, tokio inside: not taken).
+- `fetch` resolves at the headers and streams its body (`http.read`).
+
+**B: the stem.** Its thread blocks on its channel (requests from the UI,
+answers to its own host calls, storage changes, reload and stop), with its
+own timers on the host's clock. Window, dialog and clipboard calls from it
+go to the main thread through a channel `proxy_wake_up` drains. Same-origin
+requests from the UI: a `GET` or `HEAD` of a file in the app folder is
+answered from it; with server code, anything else goes to the stem (other
+methods, unknown paths, `/_app/remote/*`, `__data.json`, endpoints, form
+actions). `_server/` is never served to the UI. Responses stream; the host
+drops chunks that are only SSE comments (`query.live`'s `: keep-alive`), so
+the UI is not woken for them, and the stem's 30 s keep-alive timer, while a
+live query is open, is the one periodic wake-up (like an app's own
+interval). A cookie jar for `app.localhost` in the host. It starts at
+launch when `app.json` says `server: true` (~2 ms of bytecode). By default
+it stops when the last window closes; `background: true` keeps it, with a
+way to quit (`app.quit()`) in the same PR. One `Api`, one manifest.
+
+**C: SvelteKit's server code on it.** `sepal()` sets `ssr.noExternal` (the
+bundle is then self-contained: 42 files, 466 KB for the Tracker, loading
+in ~1.5 ms from bytecode); the adapter writes `dist/_server`, an entry, and
+`server: true`, and the server-file check goes. **Server code is not
+secret**: everything in `_server`, `$env/static/private` included, ships
+inside the app; the adapter lists the private env values it compiles in
+and warns, and the README says not to put secrets there.
+`$env/dynamic/private` gets only what the manifest lists. Dev restarts only
+the stem when only server chunks changed. Done when the Tracker loads its
+data through a remote `query` and its idle numbers hold; the session also
+measures RAM with and without server code.
+
 ## Start-up in parallel (28 Nov 2026, branch `startup-parallel`)
 
 Before this, everything on the way to the first frame ran on the UI thread
