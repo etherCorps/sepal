@@ -6,10 +6,12 @@
 //! Everything else goes to the network, to what `permissions.http` allows.
 //!
 //! A response is handed over in two steps, as in the Fetch API: `fetch`
-//! resolves with the status and headers, and the body stays here until
-//! JavaScript asks for it as text or as bytes. That way a body crosses the
-//! boundary once, in the form it is wanted.
+//! resolves with the status and headers as soon as they arrive, and the body
+//! stays here, unread, until JavaScript asks for it: all of it, as text or as
+//! bytes (`http.body`), or a chunk at a time as it comes in (`http.read`,
+//! for `response.body`).
 
+use std::io::Read;
 use std::time::Duration;
 
 use base64::Engine;
@@ -26,6 +28,12 @@ const MAX_BODY_BYTES: u64 = 256 * 1024 * 1024;
 const MAX_REDIRECTS: usize = 10;
 /// Unread bodies kept at once. Old ones are dropped first.
 const MAX_HELD_BODIES: usize = 32;
+/// The most `http.read` hands over at once.
+const CHUNK_BYTES: usize = 64 * 1024;
+
+/// A response body not read yet: from the network as it arrives, or a file
+/// from the app folder, already in memory.
+pub(super) type Body = Box<dyn Read + Send>;
 
 fn default_port(scheme: &str) -> Option<u16> {
     match scheme {
@@ -94,6 +102,7 @@ pub(super) fn call(api: &Api, action: &str, args: &Value) -> Result<String, Stri
     match action {
         "fetch" => fetch(api, args),
         "body" => body(api, args),
+        "read" => read(api, args),
         _ => Err(format!("this host has no call named http.{action}")),
     }
 }
@@ -146,7 +155,7 @@ fn fetch(api: &Api, args: &Value) -> Result<String, String> {
         .into();
 
     let mut hops = 0;
-    let mut response = loop {
+    let response = loop {
         // The app's origin is the app folder, never a server: `app.localhost`
         // is this machine, and a redirect must not reach it through the network.
         if in_app(&url) {
@@ -199,19 +208,19 @@ fn fetch(api: &Api, args: &Value) -> Result<String, String> {
             Some([name.as_str().to_owned(), value.to_str().ok()?.to_owned()])
         })
         .collect();
-    let bytes = response
-        .body_mut()
-        .with_config()
+    // Read when JavaScript asks for it, not before.
+    let body = response
+        .into_body()
+        .into_with_config()
         .limit(MAX_BODY_BYTES)
-        .read_to_vec()
-        .map_err(|e| format!("cannot read the response from {url}: {e}"))?;
+        .reader();
     Ok(respond(
         api,
         status.as_u16(),
         &url,
         redirected,
         header_list,
-        bytes,
+        Box::new(body),
     ))
 }
 
@@ -240,7 +249,14 @@ fn app_file(api: &Api, url: &Url, method: &str) -> String {
             Vec::new(),
         ),
     };
-    respond(api, status, url, false, headers, bytes)
+    respond(
+        api,
+        status,
+        url,
+        false,
+        headers,
+        Box::new(std::io::Cursor::new(bytes)),
+    )
 }
 
 /// The type a static server would give a file, by its extension.
@@ -274,7 +290,7 @@ fn respond(
     url: &Url,
     redirected: bool,
     headers: Vec<[String; 2]>,
-    bytes: Vec<u8>,
+    body: Body,
 ) -> String {
     let id = {
         let mut next = api.next_body.lock().unwrap();
@@ -287,7 +303,7 @@ fn respond(
     {
         bodies.remove(&oldest);
     }
-    bodies.insert(id, bytes);
+    bodies.insert(id, body);
 
     let reason = ureq::http::StatusCode::from_u16(status)
         .ok()
@@ -303,18 +319,48 @@ fn respond(
     .to_string()
 }
 
-/// Hand over a response body, once, as text or as base64.
-fn body(api: &Api, args: &Value) -> Result<String, String> {
-    let id = args["id"].as_u64().ok_or("http.body needs an id")?;
-    let bytes = api
+/// The body with this id, taken out while it is read: the lock is not held
+/// while a read waits on the network.
+fn take_body(api: &Api, args: &Value) -> Result<(u64, Body), String> {
+    let id = args["id"].as_u64().ok_or("a response body needs an id")?;
+    let body = api
         .bodies
         .lock()
         .unwrap()
         .remove(&id)
         .ok_or("the response body was already read, or is no longer kept")?;
+    Ok((id, body))
+}
+
+/// Hand over what is left of a response body, once, as text or as base64.
+fn body(api: &Api, args: &Value) -> Result<String, String> {
+    let (_, mut body) = take_body(api, args)?;
+    let mut bytes = Vec::new();
+    body.read_to_end(&mut bytes)
+        .map_err(|e| format!("cannot read the response: {e}"))?;
     let value = match args["as"].as_str() {
         Some("base64") => BASE64.encode(bytes),
         _ => String::from_utf8_lossy(&bytes).into_owned(),
     };
     Ok(Value::String(value).to_string())
+}
+
+/// The next chunk of a response body, as it arrives: `{ chunk, done }`, the
+/// chunk in base64. The body is dropped once it is done.
+fn read(api: &Api, args: &Value) -> Result<String, String> {
+    let (id, mut body) = take_body(api, args)?;
+    let mut chunk = vec![0; CHUNK_BYTES];
+    let read = loop {
+        match body.read(&mut chunk) {
+            Ok(read) => break read,
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(error) => return Err(format!("cannot read the response: {error}")),
+        }
+    };
+    chunk.truncate(read);
+    let done = read == 0;
+    if !done {
+        api.bodies.lock().unwrap().insert(id, body);
+    }
+    Ok(json!({ "chunk": BASE64.encode(chunk), "done": done }).to_string())
 }
