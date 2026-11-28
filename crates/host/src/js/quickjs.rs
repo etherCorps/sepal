@@ -120,6 +120,15 @@ impl JsEngine {
                     })?,
                 )?;
 
+                // The value that follows the code through promise jobs
+                // (QuickJS-ng #1920, patched in: see crates/rquickjs-sys),
+                // for `AsyncLocalStorage` (`async-context.js`).
+                host.set("continuation", Function::new(ctx.clone(), continuation)?)?;
+                host.set(
+                    "set_continuation",
+                    Function::new(ctx.clone(), set_continuation)?,
+                )?;
+
                 ctx.globals().set("__sb_host", host)?;
                 Ok(())
             })
@@ -699,6 +708,32 @@ fn take_batch_in(ctx: &Ctx<'_>) -> rquickjs::Result<Option<Batch>> {
         None => Vec::new(),
     };
     Ok(Some(Batch { ops, strings }))
+}
+
+// QuickJS-ng #1920, backported into the vendored rquickjs-sys (its PATCH.md):
+// not in rquickjs's generated bindings.
+unsafe extern "C" {
+    fn JS_GetContinuationData(rt: *mut rquickjs::qjs::JSRuntime) -> rquickjs::qjs::JSValue;
+    fn JS_SetContinuationData(rt: *mut rquickjs::qjs::JSRuntime, val: rquickjs::qjs::JSValue);
+}
+
+/// `__sb_host.continuation()`.
+fn continuation<'js>(ctx: Ctx<'js>) -> Value<'js> {
+    // SAFETY: a live context's runtime; the getter returns a new reference,
+    // which `from_raw` takes over.
+    unsafe {
+        let rt = rquickjs::qjs::JS_GetRuntime(ctx.as_raw().as_ptr());
+        Value::from_raw(ctx.clone(), JS_GetContinuationData(rt))
+    }
+}
+
+/// `__sb_host.set_continuation(value)`.
+fn set_continuation<'js>(ctx: Ctx<'js>, value: Value<'js>) {
+    // SAFETY: as above; the setter keeps its own reference.
+    unsafe {
+        let rt = rquickjs::qjs::JS_GetRuntime(ctx.as_raw().as_ptr());
+        JS_SetContinuationData(rt, value.as_raw());
+    }
 }
 
 /// `globalThis.__sb`, installed by the `sepal` package.
