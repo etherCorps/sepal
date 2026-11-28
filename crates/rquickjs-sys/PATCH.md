@@ -2,15 +2,19 @@
 
 This is the crates.io source of `rquickjs-sys` 0.14.0 (MIT,
 https://github.com/DelSkayn/rquickjs), which carries QuickJS-ng 0.16.2 (MIT,
-https://github.com/quickjs-ng/quickjs) in `quickjs/`, with one change, in
-`quickjs/quickjs.c`. `crates/host/Cargo.toml` swaps it in through
-`[patch.crates-io]`. The change is marked `sepal patch`.
+https://github.com/quickjs-ng/quickjs) in `quickjs/`, with two changes, in
+`quickjs/quickjs.c` and `quickjs/quickjs.h`. `crates/host/Cargo.toml` swaps it
+in through `[patch.crates-io]`. The changes are marked `sepal patch` (the
+second `sepal patch 2`).
 
-**Drop this copy** once rquickjs ships a QuickJS-ng release that has
-quickjs-ng PR #1931 (see below): remove the `[patch.crates-io]` line and this
-folder together, and bump rquickjs as its own commit.
+**Drop this copy** only once rquickjs ships a QuickJS-ng release that has
+both quickjs-ng PR #1931 (change 1) and PR #1920 (change 2), and the
+release's continuation API is the one change 2 backports (it was not
+reviewed when it was taken, and may change before it is merged): remove the
+`[patch.crates-io]` line and this folder together, and bump rquickjs as its
+own commit.
 
-## The change
+## The changes
 
 **1. Map and Set keys spread over the buckets.** `quickjs/quickjs.c`,
 `map_hash_key`: the hash of every key that is not a string goes through
@@ -59,6 +63,37 @@ hash (wyhash on 64-bit targets), removes the old seed, stores each record's
 hash, and hardens the shape, property and object tables against crafted
 collisions. This change is smaller and only fixes the spread: murmur3's
 finalizer is not keyed, so keys chosen to collide still can.
+
+**2. A value carried through promise jobs.** `quickjs/quickjs.c` and
+`quickjs/quickjs.h`: a backport of quickjs-ng PR #1920 ("Add
+JS_GetContinuationData and JS_SetContinuationData", issue #1919) as it is at
+commit `372e423102820e0d9cbe08e0472f79007a7c751c`, its `quickjs.c` and
+`quickjs.h` parts unchanged (63 lines; `api-test.c` is not in this crate), with
+a `sepal patch 2` mark at each place it touches. The PR was open and not
+reviewed when it was taken (28 Nov 2026).
+
+It keeps one value per runtime and carries it from where work is queued to
+where it runs, like V8's continuation-preserved embedder data:
+
+- a job runs with the value that was current when `JS_EnqueueJob` queued it
+  (`queueMicrotask` too);
+- a promise reaction (`then`, `catch`, `finally`, `await`, async generators)
+  runs with the value that was current when it was registered, not when the
+  promise settles;
+- a thenable job gets the value of the code that called `resolve`;
+- the previous value is restored when the job ends;
+- `FinalizationRegistry` callbacks run with `undefined`;
+- callbacks that come from the embedder (for us timers and frame callbacks)
+  are not tracked: `shims.js` captures the value when they are scheduled.
+
+QuickJS-ng 0.16.2 has `JS_SetPromiseHook`, but it fires no BEFORE or AFTER
+around promise reactions, and `await` makes no promise of its own (issue
+#1740), so it cannot carry such a value. The host gives the two functions to
+JavaScript as `__sb_host.continuation()` and `__sb_host.set_continuation(value)`
+(`src/js/quickjs.rs`), and `packages/sepal/src/async-context.js` builds
+`AsyncLocalStorage` on them, as the V8 host does on its own embedder data.
+`crates/host/tests/continuation.rs` has a test for each rule above, on both
+engines (the `FinalizationRegistry` one on QuickJS only).
 
 ## Editing it
 

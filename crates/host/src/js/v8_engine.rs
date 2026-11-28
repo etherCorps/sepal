@@ -177,6 +177,11 @@ impl JsEngine {
                 ("now", v8::Function::new(scope, now)),
                 ("call", v8::Function::new(scope, call)),
                 ("measure", v8::Function::new(scope, measure)),
+                ("continuation", v8::Function::new(scope, continuation)),
+                (
+                    "set_continuation",
+                    v8::Function::new(scope, set_continuation),
+                ),
             ];
             for (name, function) in functions {
                 let function = function.ok_or("cannot create a host function")?;
@@ -917,6 +922,26 @@ fn now(scope: &mut v8::PinScope, _: v8::FunctionCallbackArguments, mut result: v
     if let Some(host) = host_of(scope) {
         result.set_double(host.now());
     }
+}
+
+/// `__sb_host.continuation()`: the value that follows the code through promise
+/// jobs, V8's continuation-preserved embedder data. The QuickJS host has the
+/// same, from a patch (QuickJS-ng #1920).
+fn continuation(
+    scope: &mut v8::PinScope,
+    _: v8::FunctionCallbackArguments,
+    mut result: v8::ReturnValue,
+) {
+    result.set(scope.get_continuation_preserved_embedder_data());
+}
+
+/// `__sb_host.set_continuation(value)`.
+fn set_continuation(
+    scope: &mut v8::PinScope,
+    args: v8::FunctionCallbackArguments,
+    _: v8::ReturnValue,
+) {
+    scope.set_continuation_preserved_embedder_data(args.get(0));
 }
 
 /// `__sb_host.call(id, name, args)`: only queues, as the QuickJS one does.

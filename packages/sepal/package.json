@@ -93,7 +93,9 @@
     "prepare": "tsc && tsc -p tsconfig.node.json"
   },
   "dependencies": {
-    "@ethercorps/calyx": "workspace:*"
+    "@ethercorps/calyx": "workspace:*",
+    "formdata-node": "6.0.3",
+    "web-streams-polyfill": "4.5.1"
   },
   "peerDependencies": {
     "svelte": "^5.59.0",

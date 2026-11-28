@@ -86,13 +86,28 @@ fn run(doc: &mut SvelteDocument, expression: &str) -> String {
 fn serve(other_origin: Option<String>) -> String {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let origin = format!("http://127.0.0.1:{}", listener.local_addr().unwrap().port());
+    // `/drip` sends the first part of its body and waits for a request to
+    // `/release` before the rest: one thread per connection.
+    let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
     std::thread::spawn(move || {
         for stream in listener.incoming() {
-            let Ok(mut stream) = stream else { continue };
+            let Ok(stream) = stream else { continue };
+            let (other_origin, gate) = (other_origin.clone(), gate.clone());
+            std::thread::spawn(move || answer(stream, other_origin, gate));
+        }
+    });
+    origin
+}
+
+type Gate = Arc<(std::sync::Mutex<bool>, std::sync::Condvar)>;
+
+fn answer(mut stream: std::net::TcpStream, other_origin: Option<String>, gate: Gate) {
+    {
+        {
             let mut reader = BufReader::new(stream.try_clone().unwrap());
             let mut request_line = String::new();
             if reader.read_line(&mut request_line).is_err() {
-                continue;
+                return;
             }
             let mut parts = request_line.split(' ');
             let method = parts.next().unwrap_or("").to_owned();
@@ -116,8 +131,25 @@ fn serve(other_origin: Option<String>) -> String {
 
             let redirect = |to: String| ("302 Found", format!("Location: {to}\r\n"), Vec::new());
             let ok = |body: Vec<u8>| ("200 OK", String::new(), body);
+            if path == "/drip" {
+                let head = "HTTP/1.1 200 OK\r\nContent-Length: 11\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\nfirst";
+                let _ = stream.write_all(head.as_bytes());
+                let _ = stream.flush();
+                let (released, signal) = &*gate;
+                let mut released = released.lock().unwrap();
+                while !*released {
+                    released = signal.wait(released).unwrap();
+                }
+                let _ = stream.write_all(b" later");
+                return;
+            }
+            if path == "/release" {
+                *gate.0.lock().unwrap() = true;
+                gate.1.notify_all();
+            }
             let (status, extra, body) = match path.as_str() {
                 "/hello" => ok(b"hello".to_vec()),
+                "/release" => ok(b"released".to_vec()),
                 "/json" => ok(br#"{"answer":42}"#.to_vec()),
                 "/bytes" => ok(vec![0, 255, 1, 254, 128]),
                 "/echo" => ok(format!(
@@ -144,8 +176,7 @@ fn serve(other_origin: Option<String>) -> String {
             let _ = stream.write_all(head.as_bytes());
             let _ = stream.write_all(&body);
         }
-    });
-    origin
+    }
 }
 
 #[test]
@@ -877,4 +908,77 @@ fn calls_that_need_no_window_start_before_it_exists() {
         doc.settle();
     }
     assert_eq!(early(&doc)["window"], "done");
+}
+
+/// The web platform's classes that `web.js` installs, in the engine itself:
+/// streams, `FormData` with a file both ways, the `Response` statics and
+/// `clone()`, `AbortController` with `fetch`, and a response body read a
+/// chunk at a time while the server is still sending it.
+#[test]
+fn the_web_platform_classes_run_in_the_engine() {
+    let origin = serve(None);
+    let mut doc = app_with(Permissions {
+        http: Scope::Some(vec![origin.clone()]),
+        ..Default::default()
+    });
+    let globals = run(
+        &mut doc,
+        "Promise.resolve(['URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder', 'AbortController',
+          'AbortSignal', 'fetch', 'Headers', 'Request', 'Response', 'ReadableStream', 'WritableStream',
+          'TransformStream', 'Blob', 'File', 'FormData'].filter((name) => typeof globalThis[name] !== 'function'))",
+    );
+    assert_eq!(globals, "[]", "missing globals");
+
+    let classes = run(
+        &mut doc,
+        "(async () => {
+            const stream = new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode('a ')); c.enqueue(new TextEncoder().encode('stream')); c.close(); } });
+            const from_stream = await new Response(stream).text();
+            const form = new FormData();
+            form.append('name', 'value');
+            form.append('file', new File(['contents'], 'a.txt', { type: 'text/plain' }));
+            const request = new Request('http://app.localhost/x', { method: 'POST', body: form });
+            const back = await new Response(await request.arrayBuffer(), { headers: { 'content-type': request.headers.get('content-type') } }).formData();
+            const file = back.get('file');
+            const json = await Response.json({ ok: 1 }).json();
+            const original = new Response('twice');
+            const copy = original.clone();
+            const both = [await original.text(), await copy.text()];
+            const controller = new AbortController();
+            controller.abort();
+            const aborted = await fetch('/index.html', { signal: controller.signal }).then(() => 'resolved', (e) => e.name);
+            return { from_stream, name: back.get('name'), file: [file.name, file.type, await file.text()], json, both, aborted };
+        })()",
+    );
+    let classes: Value = serde_json::from_str(&classes).unwrap();
+    assert_eq!(classes["from_stream"], "a stream");
+    assert_eq!(classes["name"], "value");
+    assert_eq!(classes["file"], json!(["a.txt", "text/plain", "contents"]));
+    assert_eq!(classes["json"], json!({ "ok": 1 }));
+    assert_eq!(classes["both"], json!(["twice", "twice"]));
+    assert_eq!(classes["aborted"], "AbortError");
+
+    // `/drip` sends "first" and holds " later" back until `/release` is
+    // asked for: a host that read the whole body before `fetch` resolved
+    // would never get there.
+    let dripped = run(
+        &mut doc,
+        &format!(
+            "(async () => {{
+                const response = await fetch('{origin}/drip');
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                const first = decoder.decode((await reader.read()).value);
+                await (await fetch('{origin}/release')).text();
+                let rest = '';
+                for (;;) {{
+                    const {{ done, value }} = await reader.read();
+                    if (done) break;
+                    rest += decoder.decode(value);
+                }}
+                return [first, rest];
+            }})()"
+        ),
+    );
+    assert_eq!(dripped, r#"["first"," later"]"#);
 }

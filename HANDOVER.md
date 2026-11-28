@@ -7,6 +7,60 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## The backend thread (phase 2, from 28 Nov 2026)
+
+SvelteKit's server code, run in the app on a second QuickJS runtime on its
+own thread: the stem. Designed and approved on 28 Nov; three PRs.
+
+**A (branch `backend`): async context and the web module.** Useful on its own.
+
+- rquickjs-sys's second patch: quickjs-ng PR #1920 at `372e423` (open and
+  unreviewed upstream), a value carried through promise jobs. QuickJS-ng
+  0.16.2's promise hooks fire nothing around reactions (#1740), so they
+  cannot. V8 has the same as continuation-preserved embedder data.
+  `__sb_host.continuation` and `set_continuation`; timers and frame
+  callbacks capture it in `shims.js`; `async-context.js` is
+  `AsyncLocalStorage`, which SvelteKit needs: it runs every remote function,
+  load and action as `with_request_store(store, () => fn())` and clears its
+  synchronous store at the first `await` (`get_request_store()` in every
+  remote function's implementation).
+- `web.js`: the web platform's classes for every app and the stem. Ours
+  where ours is small and fits (URL 10.7 KB of bytecode, text 2.6 KB,
+  `AbortController`, the Fetch API); web-streams-polyfill (82 KB, 0.32 ms
+  from bytecode) and formdata-node (9.4 KB, 0.03 ms) where a spec-complete
+  one costs little. Measured against whatwg-url (369 KB, 15 ms from source),
+  whatwg-fetch (no streams), formdata-polyfill (85 KB) and llrt's modules
+  (native, QuickJS only, tokio inside: not taken).
+- `fetch` resolves at the headers and streams its body (`http.read`).
+
+**B: the stem.** Its thread blocks on its channel (requests from the UI,
+answers to its own host calls, storage changes, reload and stop), with its
+own timers on the host's clock. Window, dialog and clipboard calls from it
+go to the main thread through a channel `proxy_wake_up` drains. Same-origin
+requests from the UI: a `GET` or `HEAD` of a file in the app folder is
+answered from it; with server code, anything else goes to the stem (other
+methods, unknown paths, `/_app/remote/*`, `__data.json`, endpoints, form
+actions). `_server/` is never served to the UI. Responses stream; the host
+drops chunks that are only SSE comments (`query.live`'s `: keep-alive`), so
+the UI is not woken for them, and the stem's 30 s keep-alive timer, while a
+live query is open, is the one periodic wake-up (like an app's own
+interval). A cookie jar for `app.localhost` in the host. It starts at
+launch when `app.json` says `server: true` (~2 ms of bytecode). By default
+it stops when the last window closes; `background: true` keeps it, with a
+way to quit (`app.quit()`) in the same PR. One `Api`, one manifest.
+
+**C: SvelteKit's server code on it.** `sepal()` sets `ssr.noExternal` (the
+bundle is then self-contained: 42 files, 466 KB for the Tracker, loading
+in ~1.5 ms from bytecode); the adapter writes `dist/_server`, an entry, and
+`server: true`, and the server-file check goes. **Server code is not
+secret**: everything in `_server`, `$env/static/private` included, ships
+inside the app; the adapter lists the private env values it compiles in
+and warns, and the README says not to put secrets there.
+`$env/dynamic/private` gets only what the manifest lists. Dev restarts only
+the stem when only server chunks changed. Done when the Tracker loads its
+data through a remote `query` and its idle numbers hold; the session also
+measures RAM with and without server code.
+
 ## Start-up in parallel (28 Nov 2026, branch `startup-parallel`)
 
 Before this, everything on the way to the first frame ran on the UI thread
@@ -129,7 +183,7 @@ hardly change from key to key. Node ids 1 to 10,000 fell in 64 of 8,192
 buckets, and the renderer keys `elements` and `by_tag` by id.
 
 - `crates/rquickjs-sys` is rquickjs-sys 0.14.0 as on crates.io, with one
-  change (`PATCH.md`): every key but a string goes through murmur3's
+  change for this (`PATCH.md`, change 1; change 2 came on 28 Nov): every key but a string goes through murmur3's
   finalizer, the seed mixed in first. `tests/maps.rs` checks that equal
   keys stay one key (1 and 1.0, 0 and -0, every NaN) and the rest stay
   apart, on both engines.
@@ -331,12 +385,13 @@ clipboard, open, window, updater)?
 - **The patches stay patches.** All five patched crates remain in this repo:
   `crates/blitz-dom` and `crates/anyrender_vello_hybrid` (Blitz's),
   `crates/vello_gpu` and `crates/wgpu-hal` (the GPU memory fixes), and
-  `crates/rquickjs-sys` (QuickJS-ng's Map and Set hash, added 27 Nov). Apps
+  `crates/rquickjs-sys` (QuickJS-ng's Map and Set hash, added 27 Nov, and
+  a value carried through promise jobs, 28 Nov). Apps
   get them through `[patch.crates-io]` lines that the CLI writes into
   `native/Cargo.toml`, the same five lines `crates/host/Cargo.toml` has.
   `crates/rquickjs-sys` is temporary: it goes, with its patch line, once
-  rquickjs ships a QuickJS-ng release that has quickjs-ng PR #1931 (its
-  `PATCH.md`).
+  rquickjs ships a QuickJS-ng release that has both quickjs-ng PR #1931 and
+  PR #1920 (its `PATCH.md`).
 - **The JS engine stays** (decided 22 Nov). With per-app builds, V8 becomes a
   per-app choice: `features = ["engine-v8"]` in `native/Cargo.toml`. The
   prebuilt host stays on QuickJS.
@@ -377,7 +432,9 @@ patch lines, it compiles against the stock crates and quietly loses what each
 `anyrender_vello_hybrid` (the glyph atlas, damage tracking), the GPU
 memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
 first blit costs about 80 MB of driver memory), and the Map and Set hash in
-`rquickjs-sys` (one; without it the Board's first visit is about 25 ms slower).
+`rquickjs-sys` (two: without the first the Board's first visit is about 25 ms
+slower, without the second `AsyncLocalStorage` loses its value at the first
+`await`).
 Step 1 makes that impossible.
 
 ### Order of work
@@ -388,8 +445,8 @@ Do these in order. Each ends with something Shivam can check.
 
 Add a marker to each of the five patched crates, `pub const SEPAL_PATCHED: u32`,
 set to the number of changes its `PATCH.md` lists: 15 in `blitz-dom`, 12 in
-`anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`, 1 in
-`rquickjs-sys` (in `src/lib.rs`: its change is in C). Refer to all five
+`anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`, 2 in
+`rquickjs-sys` (in `src/lib.rs`: its changes are in C). Refer to all five
 from the host. A build against a stock crate then fails to compile, with an
 error that names the missing `[patch.crates-io]` line.
 

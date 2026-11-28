@@ -8,6 +8,28 @@
 const g = /** @type {any} */ (globalThis);
 const host = g.__sb_host ?? {};
 
+// The value that follows the code through promise jobs (`async-context.js`).
+// Timers and frame callbacks come from the host, which does not track them:
+// each takes the value of the code that scheduled it.
+/** @type {() => unknown} */
+const continuation = typeof host.continuation === 'function' ? () => host.continuation() : () => undefined;
+/** @type {(value: unknown) => void} */
+const set_continuation = typeof host.set_continuation === 'function' ? (value) => host.set_continuation(value) : () => {};
+
+/**
+ * Call `fn` with the continuation value `value`, and restore the one before.
+ * @param {unknown} value @param {Function} fn @param {any[]} args
+ */
+function run_with(value, fn, args) {
+	const before = continuation();
+	set_continuation(value);
+	try {
+		return fn(...args);
+	} finally {
+		set_continuation(before);
+	}
+}
+
 const clock = () => (host.now ? host.now() : Date.now());
 
 /** @param {unknown} value */
@@ -106,7 +128,7 @@ if (typeof g.performance === 'undefined' || host.now) {
 // timer is pending.
 // ---------------------------------------------------------------------------
 
-/** @typedef {{ fn: Function, args: any[], at: number, every: number, level: number }} Timer */
+/** @typedef {{ fn: Function, args: any[], at: number, every: number, level: number, context: unknown }} Timer */
 
 /** @type {Map<number, Timer>} */
 const timers = new Map();
@@ -135,7 +157,7 @@ function add_timer(fn, delay, every, args) {
 	if (typeof fn !== 'function') return 0;
 	const id = next_timer_id++;
 	const at = clock() + clamped(Math.max(0, Number(delay) || 0));
-	timers.set(id, { fn, args, at, every, level: timer_level + 1 });
+	timers.set(id, { fn, args, at, every, level: timer_level + 1, context: continuation() });
 	return id;
 }
 
@@ -217,7 +239,7 @@ export function run_timers() {
 			timer.level++;
 		} else timers.delete(id);
 		try {
-			timer.fn(...timer.args);
+			run_with(timer.context, timer.fn, timer.args);
 		} catch (error) {
 			g.console.error('Error in timer callback:', error);
 		}
@@ -255,7 +277,7 @@ if (typeof g.setTimeout !== 'function') {
 // with no callback queued nothing is drawn and nothing wakes it.
 // ---------------------------------------------------------------------------
 
-/** Queued callbacks, in the order they were queued. @type {Map<number, (time: number) => void>} */
+/** Queued callbacks, in the order they were queued, with the continuation value of where. @type {Map<number, { fn: (time: number) => void, context: unknown }>} */
 const frame_callbacks = new Map();
 let next_frame_id = 1;
 /** The callbacks that were queued when the host started this frame. @type {number[] | null} */
@@ -281,11 +303,11 @@ export function run_frame(time) {
 			frame = null;
 			return false;
 		}
-		const fn = frame_callbacks.get(id);
-		if (fn === undefined) continue; // cancelled by an earlier callback
+		const callback = frame_callbacks.get(id);
+		if (callback === undefined) continue; // cancelled by an earlier callback
 		frame_callbacks.delete(id);
 		try {
-			fn(time);
+			run_with(callback.context, callback.fn, [time]);
 		} catch (error) {
 			g.console.error('Error in requestAnimationFrame callback:', error);
 		}
@@ -300,7 +322,7 @@ if (typeof g.requestAnimationFrame !== 'function') {
 	g.requestAnimationFrame = (/** @type {unknown} */ fn) => {
 		if (typeof fn !== 'function') throw new TypeError('requestAnimationFrame: the callback is not a function');
 		const id = next_frame_id++;
-		frame_callbacks.set(id, /** @type {(time: number) => void} */ (fn));
+		frame_callbacks.set(id, { fn: /** @type {(time: number) => void} */ (fn), context: continuation() });
 		return id;
 	};
 	g.cancelAnimationFrame = (/** @type {number} */ id) => void frame_callbacks.delete(id);

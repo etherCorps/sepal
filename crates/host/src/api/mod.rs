@@ -105,7 +105,7 @@ pub struct Api {
     /// it, for as long as the app runs.
     picked: Mutex<Vec<PathBuf>>,
     /// Response bodies that JavaScript has not read yet, by request id.
-    bodies: Mutex<HashMap<u64, Vec<u8>>>,
+    bodies: Mutex<HashMap<u64, http::Body>>,
     next_body: Mutex<u64>,
     /// The app folder, which answers the app's own origin (`fetch('/data.json')`).
     folder: Option<Arc<crate::net::AppFolder>>,

@@ -624,6 +624,12 @@ importers:
       '@ethercorps/calyx':
         specifier: workspace:*
         version: link:../host
+      formdata-node:
+        specifier: 6.0.3
+        version: 6.0.3
+      web-streams-polyfill:
+        specifier: 4.5.1
+        version: 4.5.1
     devDependencies:
       '@sveltejs/kit':
         specifier: ^3.4.0
@@ -1062,6 +1068,10 @@ packages:
       picomatch:
         optional: true
 
+  formdata-node@6.0.3:
+    resolution: {integrity: sha512-8e1++BCiTzUno9v5IZ2J6bv4RU+3UKDmqWUQD0MIMVCd9AdhWkO1gw57oo1mNEX1dMq2EGI+FbWz4B92pscSQg==}
+    engines: {node: '>= 18'}
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -1357,6 +1367,10 @@ packages:
     peerDependenciesMeta:
       vite:
         optional: true
+
+  web-streams-polyfill@4.5.1:
+    resolution: {integrity: sha512-pFmV/G8K9uKW3I3xx3vqpKYLBer7K1wZej5uU66zhtjzG1bfE6e+OHNxhmGb9UsXe+geX4/lndxJDgs7wbYO9g==}
+    engines: {node: '>= 8'}
 
   world-atlas@2.0.2:
     resolution: {integrity: sha512-IXfV0qwlKXpckz1FhwXVwKRjiIhOnWttOskm5CtxMsjgE/MXAYRHWJqgXOpM8IkcPBoXnyTU5lFHcYa5ChG0LQ==}
@@ -1687,6 +1701,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.7
 
+  formdata-node@6.0.3: {}
+
   fsevents@2.3.3:
     optional: true
 
@@ -1927,6 +1943,8 @@ snapshots:
   vitefu@1.1.4(vite@8.3.8(@types/node@26.6.6)(jiti@2.7.0)):
     optionalDependencies:
       vite: 8.3.8(@types/node@26.6.6)(jiti@2.7.0)
+
+  web-streams-polyfill@4.5.1: {}
 
   world-atlas@2.0.2: {}
 

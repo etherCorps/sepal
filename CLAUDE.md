@@ -93,7 +93,9 @@ at the size when a change adds crates or features.
   (node mirror, op buffer, event bubbling), `shims.js` (console, timers),
   `index.js` (`mount`, `__sb` entry points), `protocol.js` (opcodes),
   `host-call.js` (async calls to the host), `updater.js` (the update API),
-  `fetch.js` (global `fetch`), `fs.js`, `dialog.js`, `clipboard.js`,
+  `web.js` (the web platform's globals for every app: `fetch.js` with
+  `form-data.js`, `url.js`, `text.js`, `abort.js`, web-streams-polyfill and
+  formdata-node), `async-context.js` (`AsyncLocalStorage`), `fs.js`, `dialog.js`, `clipboard.js`,
   `shell.js`, `window.js` (desktop APIs; public names are camelCase),
   `dom.js` (the opt-in DOM layer for web component libraries), `lru.js`
   (the caches keyed by text, selectors, links and URLs, each with a limit:
@@ -401,9 +403,20 @@ at the size when a change adds crates or features.
   file's extension: `'#lib/format.ts'`, `'#lib/components/ui/card/index.ts'`.
   Components from the shadcn CLI or a SvelteKit 2 app import `$lib/…` and
   have to be changed. `sepal()` still aliases `$lib`, for apps without routes.
-- **No `URL`, `URLSearchParams`, `location` or `history` in QuickJS.** The
-  DOM layer provides them (`dom: true`, and every SvelteKit app); code that
-  runs without it must not reach for them.
+- **No `location` or `history` in QuickJS.** The DOM layer provides them
+  (`dom: true`, and every SvelteKit app); code that runs without it must not
+  reach for them. `URL`, `URLSearchParams`, `TextEncoder`, `AbortController`,
+  the streams, `FormData` and the Fetch API are every app's (`web.js`); its
+  `Event` and `EventTarget` are not, so that the DOM layer's stay its own.
+- **A value follows the code through promise jobs**: `__sb_host.continuation()`
+  and `set_continuation(value)`, from rquickjs-sys's second patch (QuickJS-ng
+  #1920) on QuickJS and from V8's continuation-preserved embedder data on V8.
+  A reaction runs with the value of where it was registered, a job with the
+  value of where it was queued. The engines do not track timers and frame
+  callbacks: `shims.js` captures the value when they are scheduled. Anything
+  else the host calls back into JavaScript from (event dispatch, answers)
+  runs with what was set outside any job. `async-context.js` builds
+  `AsyncLocalStorage` on it; `tests/continuation.rs` has a test per rule.
 - **The app's code runs in strict mode, and must stay that way.** It is
   ES modules, and the host loads them as modules, which are always strict.
   Only the page's inline classic scripts are sloppy, as in a browser (they
