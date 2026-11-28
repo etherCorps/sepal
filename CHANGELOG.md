@@ -172,6 +172,30 @@ first frame 21-23 ms sooner, and that frame now has the issues in it
 (`compare/results/startup-parallel.md`). Idle and memory do not change;
 the host is 33 KB larger.
 
+### The Fetch API in full, streams and FormData, in every app
+
+Every app now has the web platform's classes that are not ECMAScript, not
+only apps with the DOM layer: `URL`, `URLSearchParams`, `TextEncoder`,
+`TextDecoder`, `AbortController`, `AbortSignal`, the streams
+(`ReadableStream`, `WritableStream`, `TransformStream`, from
+web-streams-polyfill) and `Blob`, `File`, `FormData` (from formdata-node).
+`fetch` resolves as soon as the headers arrive, and `response.body` hands
+over the body as it comes in. `Request` and `Response` read and take every
+kind of body (strings, bytes, `Blob`s, `FormData` with files, form
+parameters, streams), with `clone()`, `Response.json`, `redirect` and
+`error`; `AbortSignal` stops a request; `Headers.getSetCookie()` keeps
+each cookie apart, and headers iterate in name order.
+
+The app's JavaScript grows by up to 90 KB (the counter; the Tracker by
+77 KB), the host by 17 KB. Start-up was 5 ms later to the Tracker's
+issues and its first frame 11-12 ms later in the measured session; idle
+does not change (`compare/results/backend-a.md`).
+
+Underneath, for SvelteKit's server code later: a value that follows the
+code through `await`, promise callbacks, microtasks, timers and host
+calls, on both engines (QuickJS-ng with a backport of quickjs-ng #1920,
+V8 natively), and `AsyncLocalStorage` on it.
+
 ## 0.2.0-alpha.0 (25 Nov 2026)
 
 ### Breaking: SvelteKit is the only router
