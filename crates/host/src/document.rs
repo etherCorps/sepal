@@ -266,7 +266,7 @@ impl SvelteDocument {
     /// Create the document for an app, able to load the app's own files and
     /// `data:` URLs. This is what screenshots and tests use.
     pub fn for_app(app: &App) -> Result<Self, String> {
-        Self::for_app_in(app, false)
+        Self::for_app_in(app, false, None)
     }
 
     /// Like [`for_app`](Self::for_app), for a document that is about to be
@@ -280,14 +280,25 @@ impl SvelteDocument {
     /// end of the turn that made it, as it would later. Its answer waits in
     /// the channel for the next turn, the window's first poll at the latest.
     pub fn for_window(app: &App) -> Result<Self, String> {
-        Self::for_app_in(app, true)
+        Self::for_app_in(app, true, None)
     }
 
-    fn for_app_in(app: &App, hold_host_calls: bool) -> Result<Self, String> {
+    /// [`for_window`](Self::for_window), with the fonts already listed
+    /// (see `window::start_fonts`). Blitz lists them itself otherwise.
+    pub fn for_window_with_fonts(app: &App, fonts: blitz_dom::FontContext) -> Result<Self, String> {
+        Self::for_app_in(app, true, Some(fonts))
+    }
+
+    fn for_app_in(
+        app: &App,
+        hold_host_calls: bool,
+        fonts: Option<blitz_dom::FontContext>,
+    ) -> Result<Self, String> {
         let resources = Arc::new(AppResources::new(app.dir.as_deref()));
         let config = DocumentConfig {
             base_url: resources.base_url(),
             net_provider: Some(resources.clone()),
+            font_ctx: fonts,
             ..Default::default()
         };
         let updater = app.manifest.updater.clone().map(|config| {

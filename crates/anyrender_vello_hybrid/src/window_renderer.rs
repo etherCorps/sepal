@@ -543,7 +543,18 @@ pub struct VelloHybridWindowRenderer {
     /// the kept frame and the depth buffer were let go since (`release_if_idle`).
     presented_at: Option<std::time::Instant>,
     released: bool,
+    /// sepal patch (start-up): a device and the renderer made on a thread
+    /// before there is a window (`prepare`), for the first `resume`.
+    prepared: Option<std::thread::JoinHandle<Option<Prepared>>>,
 }
+
+/// sepal patch (start-up): what `prepare` makes ahead of the window.
+struct Prepared {
+    device_handle: DeviceHandle,
+    renderer: VelloHybridRenderer,
+    resources: Resources,
+}
+
 impl VelloHybridWindowRenderer {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
@@ -567,7 +578,34 @@ impl VelloHybridWindowRenderer {
             skipped: false,
             presented_at: None,
             released: false,
+            prepared: None,
         }
+    }
+
+    /// sepal patch (start-up): make the device and the renderer's pipelines
+    /// on a thread now, while the app starts, instead of on the UI thread when
+    /// the window's surface exists. Only the surface needs the window; the
+    /// first `resume` makes it, takes what was made here if the device
+    /// supports it, and makes its own otherwise. The size is the first
+    /// frame's to set (`maybe_update_config_buffer`).
+    pub fn prepare(&mut self) {
+        let instance = self.wgpu_context.instance.clone();
+        let features = self.wgpu_context.extra_features();
+        let limits = self.wgpu_context.override_limits();
+        let settings = self.config.render_settings;
+        self.prepared = std::thread::Builder::new()
+            .name("sepal-gpu".into())
+            .spawn(move || {
+                let device_handle = pollster::block_on(DeviceHandle::new_from_compatible_surface(
+                    instance, None, features, limits,
+                ))
+                .ok()?;
+                let target = RenderTargetConfig { format: DEFAULT_TEXTURE_FORMAT, width: 1, height: 1 };
+                let (renderer, resources) =
+                    VelloHybridRenderer::new_with(&device_handle.device, &target, settings);
+                Some(Prepared { device_handle, renderer, resources })
+            })
+            .ok();
     }
 
     /// sepal patch (damage): whether the last frame was skipped because
@@ -752,9 +790,24 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             }
         };
         let desired_maximum_frame_latency = self.config.desired_maximum_frame_latency;
+        // sepal patch (start-up): what `prepare` made, offered as an existing
+        // device that has to support this surface; its renderer is used only
+        // if that device is the one taken. `complete_resume` pools the device
+        // taken, so it is only in the pool while `find` looks.
+        let pool_was_empty = self.wgpu_context.device_pool.is_empty();
+        let mut prepared = self.prepared.take().and_then(|thread| thread.join().ok()).flatten();
+        if let Some(prepared) = &prepared {
+            self.wgpu_context.device_pool.push(prepared.device_handle.clone());
+        }
         let existing_device_handle = self
             .wgpu_context
             .find_compatible_device_handle(Some(&surface));
+        if prepared.is_some() {
+            self.wgpu_context.device_pool.pop();
+            if !(pool_was_empty && existing_device_handle.is_some()) {
+                prepared = None;
+            }
+        }
 
         spawn_init(async move {
             let device_handle = match existing_device_handle {
@@ -843,15 +896,18 @@ impl WindowRenderer for VelloHybridWindowRenderer {
             )
             .expect("Error creating SurfaceRenderer");
 
-            let (renderer, resources) = VelloHybridRenderer::new_with(
-                render_surface.device(),
-                &RenderTargetConfig {
-                    format: DEFAULT_TEXTURE_FORMAT,
-                    width: width as u16,
-                    height: height as u16,
-                },
-                render_settings,
-            );
+            let (renderer, resources) = match prepared {
+                Some(Prepared { renderer, resources, .. }) => (renderer, resources),
+                None => VelloHybridRenderer::new_with(
+                    render_surface.device(),
+                    &RenderTargetConfig {
+                        format: DEFAULT_TEXTURE_FORMAT,
+                        width: width as u16,
+                        height: height as u16,
+                    },
+                    render_settings,
+                ),
+            };
             let depth_texture_view = depth_texture(render_surface.device(), width, height);
             let kept = crate::damage::enabled().then(|| {
                 let copy = SurfaceCopy::new(render_surface.device(), render_surface.config.format);

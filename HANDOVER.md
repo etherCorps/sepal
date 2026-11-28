@@ -7,6 +7,50 @@ standing rules and `README.md` the architecture; this file is the work.
 what was published before the rename, and under which names, is in
 `CHANGELOG.md`.
 
+## Start-up in parallel (28 Nov 2026, branch `startup-parallel`)
+
+Before this, everything on the way to the first frame ran on the UI thread
+in turn. Four changes, each measured alone (`compare/results/startup-parallel.md`):
+
+1. The system's fonts are listed on a thread from `main`
+   (`window::start_fonts`) while `run` makes the event loop; the document
+   gets the list (`for_window_with_fonts`). Window visible 253 -> 228 ms.
+2. That thread also asks for the Han fallback list, the one font call of the
+   first layout that takes time (4.3 ms): fontique adds Han to every
+   fallback query. Families, files and matching total ~1 ms.
+3. The GPU device and the pipelines are made on a thread
+   (`VelloHybridWindowRenderer::prepare`, anyrender patch 12); the surface
+   is still made on the UI thread. 217 -> 197 ms.
+4. The host polls the document as soon as the window exists, with a waker
+   of its own; blitz-shell's first poll waited for `ResumeReady`, after
+   AppKit's pass to show the window. The issues are on the page 37 ms
+   before the window is visible. A first form called `complete_resume`
+   early and painted 2-3 dropped frames before the window was shown; the
+   final one leaves the first paint to blitz-shell.
+
+Against main (session `startup-1`): window on screen -16 to -17 ms, first
+frame -21 to -23, issues -70 to -72, and the first frame has the issues
+(3 of 3 against 0 of 3). "The page started" no longer compares: the fonts
+moved out of it.
+
+Left as they are:
+
+- **The first layout's ~14 ms that is not font work.** `construct` takes
+  18-22 ms of the first style and layout's 20-24; fonts are ~5 of it
+  (now ~1), the 192 inline layouts under 0.12 ms each. The rest was not
+  traced.
+- **blitz-shell renders before the window is shown**: its `complete_resume`
+  paints on `ResumeReady`, and redraws render once the renderer is active,
+  while macOS may not have shown the window yet; those frames are dropped
+  (the surface is occluded). 1 (0-2) such render a launch, on main too.
+  A fix for Blitz would be not to paint while the window is occluded or
+  not yet shown.
+- **What remains is mostly macOS's.** A bare winit window, same probes,
+  bundled, nothing drawn, is visible ~150 ms from exec; event loop,
+  launch and window creation are winit and AppKit, 80-95 ms on the UI
+  thread whatever the app does. The page's JavaScript (~28 ms) is still on the
+  UI thread.
+
 ## Early host calls (27 Nov 2026, branch `early-calls`)
 
 A document made for a window held every host call until the window's
@@ -329,7 +373,7 @@ always `crates/host`, so the patches always applied.
 
 With per-app builds, the top level is the app's `native/` crate. Without the
 patch lines, it compiles against the stock crates and quietly loses what each
-`PATCH.md` lists: the fifteen changes to `blitz-dom`, the eleven to
+`PATCH.md` lists: the fifteen changes to `blitz-dom`, the twelve to
 `anyrender_vello_hybrid` (the glyph atlas, damage tracking), the GPU
 memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
 first blit costs about 80 MB of driver memory), and the Map and Set hash in
@@ -343,7 +387,7 @@ Do these in order. Each ends with something Shivam can check.
 #### 1. Make an unpatched build fail
 
 Add a marker to each of the five patched crates, `pub const SEPAL_PATCHED: u32`,
-set to the number of changes its `PATCH.md` lists: 15 in `blitz-dom`, 11 in
+set to the number of changes its `PATCH.md` lists: 15 in `blitz-dom`, 12 in
 `anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`, 1 in
 `rquickjs-sys` (in `src/lib.rs`: its change is in C). Refer to all five
 from the host. A build against a stock crate then fails to compile, with an

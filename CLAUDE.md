@@ -516,7 +516,17 @@ at the size when a change adds crates or features.
   panic. Every other call (files, `fetch`, `open`, the updater) starts at
   the end of the turn that made it; its answer waits in the channel for the
   next turn, which before the window is its first poll. A call made only
-  after another's answer therefore waits for that poll too.
+  after another's answer therefore waits for that poll too. That first poll
+  is the host's, right after the window is made (`Host::can_create_surfaces`,
+  with a waker of its own): blitz-shell's own waits for `ResumeReady`, which
+  comes only after AppKit's pass to show the window.
+- **Start-up runs on three threads.** `window::start_fonts` lists the
+  system's fonts (and asks for the Han fallback list) on a thread from
+  `main`, while `run` makes the event loop; `VelloHybridWindowRenderer::prepare`
+  (anyrender patch 12) makes the GPU device and the pipelines on another.
+  Both are joined before they are needed and leave nothing running. The
+  event loop is made before the document now, so the page's JavaScript
+  runs after it. Headless documents (`for_app`) list fonts as before.
 - **Tests must not open dialogs, write the clipboard or open links.** They
   would act on the machine of whoever runs them.
 - **App settings live in `sepal.config.ts`**, loaded by the preset with

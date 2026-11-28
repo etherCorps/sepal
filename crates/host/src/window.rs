@@ -14,11 +14,15 @@
 
 use std::io::BufRead;
 use std::sync::mpsc::{self, Receiver};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use anyrender_vello_hybrid::VelloHybridWindowRenderer;
-use blitz_shell::{BlitzApplication, BlitzShellProxy, WindowConfig, create_default_event_loop};
+use blitz_dom::FontContext;
+use blitz_shell::{
+    BlitzApplication, BlitzShellEvent, BlitzShellProxy, WindowConfig, create_default_event_loop,
+};
 use winit::application::ApplicationHandler;
 use winit::application::macos::ApplicationHandlerExtMacOS;
 use winit::dpi::LogicalSize;
@@ -83,6 +87,54 @@ impl Dev {
     }
 }
 
+/// The system's fonts, being listed on a thread since launch (`start_fonts`).
+static FONTS: Mutex<Option<thread::JoinHandle<FontContext>>> = Mutex::new(None);
+
+/// Start listing the system's fonts, for the window's document. On macOS
+/// that takes ~30 ms, half of it waiting on the system, and nothing needs
+/// it before the page is parsed: on a thread, it runs while the event loop
+/// is made. Call it as soon as a window is sure to open.
+pub fn start_fonts() {
+    let spawned = thread::Builder::new()
+        .name("sepal-fonts".into())
+        .spawn(font_context);
+    *FONTS.lock().unwrap() = spawned.ok();
+}
+
+/// The fonts `start_fonts` listed, or listed now if it was not called or
+/// its thread failed.
+fn fonts() -> FontContext {
+    let thread = FONTS.lock().unwrap().take();
+    thread
+        .and_then(|thread| thread.join().ok())
+        .unwrap_or_else(font_context)
+}
+
+/// What `BaseDocument::new` makes when it is given no fonts (the system's,
+/// and Blitz's bullet font), with the one fallback list the first layout
+/// waits for already asked for.
+fn font_context() -> FontContext {
+    use parley::fontique::{Blob, Collection, CollectionOptions, FallbackKey, Script, SourceCache};
+    let mut fonts = FontContext {
+        source_cache: SourceCache::new_shared(),
+        collection: Collection::new(CollectionOptions {
+            shared: false,
+            system_fonts: true,
+        }),
+    };
+    fonts
+        .collection
+        .register_fonts(Blob::new(Arc::new(blitz_dom::BULLET_FONT) as _), None);
+    // The first text laid out asks the system for a fallback list for Han,
+    // whatever the page's script: fontique adds Han to every fallback query
+    // (`Query::set_fallbacks`). That one query is ~4 ms on macOS, the only
+    // font work of the first layout that takes time; asked for here, it is
+    // cached in the collection the document gets.
+    let han = FallbackKey::new(Script::from_bytes(*b"Hani"), None);
+    let _ = fonts.collection.fallback_families(han).count();
+    fonts
+}
+
 /// Run an app until its window is closed. With `reload`, also follow stdin:
 /// every line reloads the app, end of input quits.
 pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
@@ -92,16 +144,23 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     if std::env::var_os("SEPAL_GLYPH_CACHE").is_some_and(|value| value == "0") {
         anyrender_vello_hybrid::set_glyph_cache(false);
     }
-    let mut doc = SvelteDocument::for_window(&app)?;
+    // The GPU device and the renderer's pipelines, made on a thread while
+    // the app starts; the window's surface is made on this one later (a
+    // patch to the vendored anyrender_vello_hybrid).
+    let mut renderer = VelloHybridWindowRenderer::new();
+    renderer.prepare();
+    // Before the event loop exists: winit builds the menu bar from this name.
+    if let Some(name) = &app.manifest.name {
+        set_app_name(name);
+    }
+    // Made while the fonts are listed (`start_fonts`): mostly waiting on
+    // the system too.
+    let event_loop = create_default_event_loop();
+    let mut doc = SvelteDocument::for_window_with_fonts(&app, fonts())?;
     if std::env::var_os("SEPAL_HUD").is_some_and(|value| value == "1") {
         doc.set_hud(true);
     }
     let manifest = app.manifest;
-    // Before the event loop exists: winit builds the menu bar from this name.
-    if let Some(name) = &manifest.name {
-        set_app_name(name);
-    }
-    let event_loop = create_default_event_loop();
 
     let (dev_sender, dev_events) = mpsc::channel();
     if reload.is_some() {
@@ -127,6 +186,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
     }
     let (proxy, receiver) = BlitzShellProxy::new(event_loop.create_proxy());
+    let shell_proxy = proxy.clone();
 
     let (width, height) = manifest.size();
     let min_size = manifest.min_size();
@@ -156,7 +216,7 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
     let mut application = BlitzApplication::new(proxy, receiver);
     application.add_window(WindowConfig::with_attributes(
         Box::new(doc),
-        VelloHybridWindowRenderer::new(),
+        renderer,
         attributes,
     ));
 
@@ -174,6 +234,8 @@ pub fn run(app: App, reload: Option<Reload>) -> Result<(), String> {
                 started: Instant::now(),
                 first_frame: false,
             }),
+            proxy: shell_proxy,
+            before_first_paint: false,
         })
         .map_err(|e| e.to_string())
 }
@@ -197,6 +259,26 @@ struct Host {
     redraw_at: Option<(WindowId, Instant)>,
     /// Set by `SEPAL_TRACE`: report where the UI thread spends its time.
     trace: Option<Trace>,
+    /// blitz-shell's events, for the waker of the document's first poll.
+    proxy: BlitzShellProxy,
+    /// The window exists and blitz-shell has not painted it yet.
+    before_first_paint: bool,
+}
+
+/// Wakes the event loop to poll the window's document: what blitz-shell's
+/// own waker does, which it installs only once the renderer is ready.
+fn poll_waker(proxy: &BlitzShellProxy, window_id: WindowId) -> std::task::Waker {
+    struct Poll(BlitzShellProxy, WindowId);
+    impl std::task::Wake for Poll {
+        fn wake(self: Arc<Self>) {
+            self.wake_by_ref();
+        }
+        fn wake_by_ref(self: &Arc<Self>) {
+            self.0
+                .send_event(BlitzShellEvent::Poll { window_id: self.1 });
+        }
+    }
+    std::task::Waker::from(Arc::new(Poll(proxy.clone(), window_id)))
 }
 
 /// Timing of the UI thread, written to stderr as `[trace] +<since launch> …`.
@@ -383,6 +465,21 @@ impl ApplicationHandler for Host {
             set_dock_icon(&png);
         }
         self.application.can_create_surfaces(event_loop);
+        // blitz-shell polls the document only once the renderer says it is
+        // ready (`ResumeReady`), an event that waits behind AppKit's pass to
+        // show the window, ~45 ms. The document's first turn, which delivers
+        // the answers to calls made at start-up, does not need the renderer:
+        // with a waker of its own (the same `Poll` event blitz-shell's sends),
+        // the document is polled now. Until `ResumeReady`, the renderer draws
+        // nothing, so the first paint is still blitz-shell's, of a page that
+        // already has what those answers brought.
+        for view in self.application.windows.values_mut() {
+            if view.waker.is_none() {
+                view.waker = Some(poll_waker(&self.proxy, view.window_id()));
+            }
+            view.poll();
+        }
+        self.before_first_paint = true;
     }
 
     fn destroy_surfaces(&mut self, event_loop: &dyn ActiveEventLoop) {
@@ -534,6 +631,14 @@ impl ApplicationHandler for Host {
             self.reload();
         }
         let began = Instant::now();
+        // The first time blitz-shell handles its events, `ResumeReady` among
+        // them paints the first frame: answers that came in while AppKit
+        // showed the window reach the page before it does.
+        if std::mem::take(&mut self.before_first_paint) {
+            for view in self.application.windows.values_mut() {
+                view.poll();
+            }
+        }
         self.application.proxy_wake_up(event_loop);
         if let Some(trace) = &mut self.trace {
             // Polls the document, and updates the accessibility tree when it changed.
