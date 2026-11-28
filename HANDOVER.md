@@ -129,7 +129,7 @@ hardly change from key to key. Node ids 1 to 10,000 fell in 64 of 8,192
 buckets, and the renderer keys `elements` and `by_tag` by id.
 
 - `crates/rquickjs-sys` is rquickjs-sys 0.14.0 as on crates.io, with one
-  change (`PATCH.md`): every key but a string goes through murmur3's
+  change for this (`PATCH.md`, change 1; change 2 came on 28 Nov): every key but a string goes through murmur3's
   finalizer, the seed mixed in first. `tests/maps.rs` checks that equal
   keys stay one key (1 and 1.0, 0 and -0, every NaN) and the rest stay
   apart, on both engines.
@@ -331,12 +331,13 @@ clipboard, open, window, updater)?
 - **The patches stay patches.** All five patched crates remain in this repo:
   `crates/blitz-dom` and `crates/anyrender_vello_hybrid` (Blitz's),
   `crates/vello_gpu` and `crates/wgpu-hal` (the GPU memory fixes), and
-  `crates/rquickjs-sys` (QuickJS-ng's Map and Set hash, added 27 Nov). Apps
+  `crates/rquickjs-sys` (QuickJS-ng's Map and Set hash, added 27 Nov, and
+  a value carried through promise jobs, 28 Nov). Apps
   get them through `[patch.crates-io]` lines that the CLI writes into
   `native/Cargo.toml`, the same five lines `crates/host/Cargo.toml` has.
   `crates/rquickjs-sys` is temporary: it goes, with its patch line, once
-  rquickjs ships a QuickJS-ng release that has quickjs-ng PR #1931 (its
-  `PATCH.md`).
+  rquickjs ships a QuickJS-ng release that has both quickjs-ng PR #1931 and
+  PR #1920 (its `PATCH.md`).
 - **The JS engine stays** (decided 22 Nov). With per-app builds, V8 becomes a
   per-app choice: `features = ["engine-v8"]` in `native/Cargo.toml`. The
   prebuilt host stays on QuickJS.
@@ -377,7 +378,9 @@ patch lines, it compiles against the stock crates and quietly loses what each
 `anyrender_vello_hybrid` (the glyph atlas, damage tracking), the GPU
 memory fixes in `vello_gpu` (two) and `wgpu-hal` (three; without them the
 first blit costs about 80 MB of driver memory), and the Map and Set hash in
-`rquickjs-sys` (one; without it the Board's first visit is about 25 ms slower).
+`rquickjs-sys` (two: without the first the Board's first visit is about 25 ms
+slower, without the second `AsyncLocalStorage` loses its value at the first
+`await`).
 Step 1 makes that impossible.
 
 ### Order of work
@@ -388,8 +391,8 @@ Do these in order. Each ends with something Shivam can check.
 
 Add a marker to each of the five patched crates, `pub const SEPAL_PATCHED: u32`,
 set to the number of changes its `PATCH.md` lists: 15 in `blitz-dom`, 12 in
-`anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`, 1 in
-`rquickjs-sys` (in `src/lib.rs`: its change is in C). Refer to all five
+`anyrender_vello_hybrid`, 2 in `vello_gpu`, 3 in `wgpu-hal`, 2 in
+`rquickjs-sys` (in `src/lib.rs`: its changes are in C). Refer to all five
 from the host. A build against a stock crate then fails to compile, with an
 error that names the missing `[patch.crates-io]` line.
 

@@ -384,6 +384,9 @@ struct JSRuntime {
 
     JSPromiseHook *promise_hook;
     void *promise_hook_opaque;
+    // sepal patch 2 (quickjs-ng #1920): carried by every job and promise reaction from where it is queued to
+    // where it runs, see JS_SetContinuationData
+    JSValue continuation_data;
     // for smuggling the parent promise from js_promise_then
     // to js_promise_constructor
     JSValueLink *parent_promise;
@@ -1074,6 +1077,7 @@ typedef struct JSJobEntry {
     struct list_head link;
     JSContext *ctx;
     JSJobFunc *job_func;
+    JSValue continuation_data; /* sepal patch 2 (quickjs-ng #1920) */
     int argc;
     JSValue argv[];
 } JSJobEntry;
@@ -2335,6 +2339,8 @@ JSRuntime *JS_NewRuntime2(const JSMallocFunctions *mf, void *opaque)
     js_arena_init(rt);
     rt->malloc_gc_threshold = 256 * 1024;
 
+    rt->continuation_data = JS_UNDEFINED; /* sepal patch 2 (quickjs-ng #1920) */
+
     init_list_head(&rt->context_list);
     init_list_head(&rt->gc_obj_list);
     init_list_head(&rt->gc_zero_ref_count_list);
@@ -2491,8 +2497,10 @@ void JS_SetSharedArrayBufferFunctions(JSRuntime *rt,
 }
 
 /* return 0 if OK, < 0 if exception */
-int JS_EnqueueJob(JSContext *ctx, JSJobFunc *job_func,
-                  int argc, JSValueConst *argv)
+/* sepal patch 2 (quickjs-ng #1920) */
+static int enqueue_job(JSContext *ctx, JSJobFunc *job_func,
+                       JSValueConst continuation_data,
+                       int argc, JSValueConst *argv)
 {
     JSRuntime *rt = ctx->rt;
     JSJobEntry *e;
@@ -2505,12 +2513,20 @@ int JS_EnqueueJob(JSContext *ctx, JSJobFunc *job_func,
         return -1;
     e->ctx = ctx;
     e->job_func = job_func;
+    e->continuation_data = js_dup(continuation_data); /* sepal patch 2 (quickjs-ng #1920) */
     e->argc = argc;
     for(i = 0; i < argc; i++) {
         e->argv[i] = js_dup(argv[i]);
     }
     list_add_tail(&e->link, &rt->job_list);
     return 0;
+}
+
+/* sepal patch 2 (quickjs-ng #1920) */
+int JS_EnqueueJob(JSContext *ctx, JSJobFunc *job_func,
+                  int argc, JSValueConst *argv)
+{
+    return enqueue_job(ctx, job_func, ctx->rt->continuation_data, argc, argv);
 }
 
 bool JS_IsJobPending(JSRuntime *rt)
@@ -2532,7 +2548,7 @@ int JS_ExecutePendingJob(JSRuntime *rt, JSContext **pctx)
 {
     JSContext *ctx;
     JSJobEntry *e;
-    JSValue res;
+    JSValue res, saved, data; /* sepal patch 2 (quickjs-ng #1920) */
     int i, ret;
 
     if (list_empty(&rt->job_list)) {
@@ -2544,7 +2560,14 @@ int JS_ExecutePendingJob(JSRuntime *rt, JSContext **pctx)
     e = list_entry(rt->job_list.next, JSJobEntry, link);
     list_del(&e->link);
     ctx = e->ctx;
+    /* sepal patch 2 (quickjs-ng #1920): the job runs with the continuation data of where it was queued */
+    saved = rt->continuation_data;
+    rt->continuation_data = e->continuation_data;
     res = e->job_func(e->ctx, e->argc, vc(e->argv));
+    /* sepal patch 2 (quickjs-ng #1920): restore first, freeing the data can run a finalizer that queues a job */
+    data = rt->continuation_data;
+    rt->continuation_data = saved;
+    JS_FreeValue(ctx, data);
     for(i = 0; i < e->argc; i++)
         JS_FreeValue(ctx, e->argv[i]);
     if (JS_IsException(res))
@@ -2649,9 +2672,11 @@ void JS_FreeRuntime(JSRuntime *rt)
 
     rt->in_free = true;
     JS_FreeValueRT(rt, rt->current_exception);
+    JS_SetContinuationData(rt, JS_UNDEFINED); /* sepal patch 2 (quickjs-ng #1920) */
 
     list_for_each_safe(el, el1, &rt->job_list) {
         JSJobEntry *e = list_entry(el, JSJobEntry, link);
+        JS_FreeValueRT(rt, e->continuation_data); /* sepal patch 2 (quickjs-ng #1920) */
         for(i = 0; i < e->argc; i++)
             JS_FreeValueRT(rt, e->argv[i]);
         js_free_rt(rt, e);
@@ -55490,6 +55515,7 @@ typedef struct JSPromiseReactionData {
     struct list_head link; /* not used in promise_reaction_job */
     JSValue resolving_funcs[2];
     JSValue handler;
+    JSValue continuation_data; /* sepal patch 2 (quickjs-ng #1920): of where the reaction was registered */
 } JSPromiseReactionData;
 
 JSPromiseStateEnum JS_PromiseState(JSContext *ctx, JSValueConst promise)
@@ -55557,6 +55583,7 @@ static void promise_reaction_data_free(JSRuntime *rt,
     JS_FreeValueRT(rt, rd->resolving_funcs[0]);
     JS_FreeValueRT(rt, rd->resolving_funcs[1]);
     JS_FreeValueRT(rt, rd->handler);
+    JS_FreeValueRT(rt, rd->continuation_data); /* sepal patch 2 (quickjs-ng #1920) */
     js_free_rt(rt, rd);
 }
 
@@ -55620,6 +55647,19 @@ void JS_SetPromiseHook(JSRuntime *rt, JSPromiseHook promise_hook, void *opaque)
     rt->promise_hook_opaque = opaque;
 }
 
+/* sepal patch 2 (quickjs-ng #1920) */
+JSValue JS_GetContinuationData(JSRuntime *rt)
+{
+    return js_dup(rt->continuation_data);
+}
+
+void JS_SetContinuationData(JSRuntime *rt, JSValueConst val)
+{
+    JSValue old = rt->continuation_data;
+    rt->continuation_data = js_dup(val);
+    JS_FreeValueRT(rt, old);
+}
+
 void JS_SetHostPromiseRejectionTracker(JSRuntime *rt,
                                        JSHostPromiseRejectionTracker *cb,
                                        void *opaque)
@@ -55660,7 +55700,9 @@ static void fulfill_or_reject_promise(JSContext *ctx, JSValueConst promise,
         args[2] = rd->handler;
         args[3] = js_bool(is_reject);
         args[4] = value;
-        JS_EnqueueJob(ctx, promise_reaction_job, 5, args);
+        /* sepal patch 2 (quickjs-ng #1920): the job gets the continuation data of the registration, not of the
+           code that settles the promise */
+        enqueue_job(ctx, promise_reaction_job, rd->continuation_data, 5, args); /* sepal patch 2 (quickjs-ng #1920) */
         list_del(&rd->link);
         promise_reaction_data_free(ctx->rt, rd);
     }
@@ -55869,6 +55911,7 @@ static void js_promise_mark(JSRuntime *rt, JSValueConst val,
             JS_MarkValue(rt, rd->resolving_funcs[0], mark_func);
             JS_MarkValue(rt, rd->resolving_funcs[1], mark_func);
             JS_MarkValue(rt, rd->handler, mark_func);
+            JS_MarkValue(rt, rd->continuation_data, mark_func); /* sepal patch 2 (quickjs-ng #1920) */
         }
     }
     JS_MarkValue(rt, s->promise_result, mark_func);
@@ -56466,6 +56509,7 @@ static __exception int perform_promise_then(JSContext *ctx,
         if (!JS_IsFunction(ctx, handler))
             handler = JS_UNDEFINED;
         rd->handler = js_dup(handler);
+        rd->continuation_data = js_dup(ctx->rt->continuation_data); /* sepal patch 2 (quickjs-ng #1920) */
         rd_array[i] = rd;
     }
 
@@ -56482,7 +56526,7 @@ static __exception int perform_promise_then(JSContext *ctx,
         args[2] = rd->handler;
         args[3] = js_bool(i);
         args[4] = s->promise_result;
-        JS_EnqueueJob(ctx, promise_reaction_job, 5, args);
+        enqueue_job(ctx, promise_reaction_job, rd->continuation_data, 5, args); /* sepal patch 2 (quickjs-ng #1920) */
         for(i = 0; i < 2; i++)
             promise_reaction_data_free(ctx->rt, rd_array[i]);
     }
@@ -63399,7 +63443,8 @@ static void reset_weak_ref(JSRuntime *rt, JSWeakRefRecord **first_weak_ref)
                 JSValueConst args[2];
                 args[0] = fre->cb;
                 args[1] = fre->held_val;
-                JS_EnqueueJob(fre->ctx, js_finrec_job, 2, args);
+                /* sepal patch 2 (quickjs-ng #1920): not the data of the code that happened to free the object */
+                enqueue_job(fre->ctx, js_finrec_job, JS_UNDEFINED, 2, args);
             }
             js_finrec_free(rt, fre);
             break;
